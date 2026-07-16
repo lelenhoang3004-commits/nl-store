@@ -15,14 +15,27 @@ const SORT_COLUMNS = Object.freeze({
   updatedAt: "c.updated_at"
 });
 
+const normalizePagination = (pagination = {}) => {
+  const parsedLimit = Number.parseInt(pagination?.limit, 10);
+  const parsedOffset = Number.parseInt(pagination?.offset, 10);
+
+  return {
+    limit: Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 20,
+    offset: Number.isInteger(parsedOffset) && parsedOffset >= 0 ? parsedOffset : 0
+  };
+};
+
+const normalizeSqlParams = (params = []) => params.map((value) => value === undefined ? null : value);
+
 export class CategoryRepository extends BaseRepository {
   async findAll(options, extra = {}) {
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const { limit, offset } = normalizePagination(options.pagination);
 
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT
         c.id,
         c.name,
@@ -40,8 +53,8 @@ export class CategoryRepository extends BaseRepository {
       ${whereSql.replace("categories", "c")}
       GROUP BY c.id, c.name, c.slug, c.description, c.parent_id, c.image_url, c.status, c.sort_order, c.created_at, c.updated_at
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${limit} OFFSET ${offset}`,
+      params
     );
 
     logger.sql("Category list query executed.", {
@@ -56,7 +69,7 @@ export class CategoryRepository extends BaseRepository {
   async countAll(options) {
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT COUNT(*) AS total
       FROM categories c
       ${whereSql.replace("categories", "c")}`,
@@ -72,9 +85,13 @@ export class CategoryRepository extends BaseRepository {
     return Number(rows[0]?.total || 0);
   }
 
+  execute(sql, params = []) {
+    return this.client.getPool().execute(sql, normalizeSqlParams(params));
+  }
+
   async findById(id, options = {}) {
     const startedAt = Date.now();
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT
         c.id,
         c.name,
@@ -113,7 +130,7 @@ export class CategoryRepository extends BaseRepository {
       params.push(excludedId);
     }
 
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT id, name, slug, status
       FROM categories
       WHERE slug = ? AND deleted_at IS NULL ${excludedSql}
@@ -132,7 +149,7 @@ export class CategoryRepository extends BaseRepository {
 
   async create(payload) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `INSERT INTO categories
         (name, slug, description, parent_id, image_url, status, sort_order)
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -158,7 +175,7 @@ export class CategoryRepository extends BaseRepository {
 
   async update(id, payload) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE categories
       SET name = ?,
         slug = ?,
@@ -192,7 +209,7 @@ export class CategoryRepository extends BaseRepository {
 
   async updateStatus(id, status) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE categories
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`,
@@ -210,7 +227,7 @@ export class CategoryRepository extends BaseRepository {
 
   async countProductsByCategoryId(id) {
     const startedAt = Date.now();
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT COUNT(*) AS total FROM products WHERE category_id = ? AND deleted_at IS NULL`,
       [id]
     );
@@ -226,7 +243,7 @@ export class CategoryRepository extends BaseRepository {
 
   async softDelete(id) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `UPDATE categories
       SET deleted_at = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP

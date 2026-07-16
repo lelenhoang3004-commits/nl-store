@@ -50,18 +50,31 @@ const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT.replace(
   "    NULL AS product_attributes,"
 );
 
+const normalizePagination = (pagination = {}) => {
+  const parsedLimit = Number.parseInt(pagination?.limit, 10);
+  const parsedOffset = Number.parseInt(pagination?.offset, 10);
+
+  return {
+    limit: Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 12,
+    offset: Number.isInteger(parsedOffset) && parsedOffset >= 0 ? parsedOffset : 0
+  };
+};
+
+const normalizeSqlParams = (params = []) => params.map((value) => value === undefined ? null : value);
+
 export class ProductRepository extends BaseRepository {
   async findAll(options) {
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const { limit, offset } = normalizePagination(options.pagination);
 
     const rows = await this.executeProductSelect(
       `${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${limit} OFFSET ${offset}`,
+      params
     );
 
     logger.sql("Product list query executed.", {
@@ -75,7 +88,7 @@ export class ProductRepository extends BaseRepository {
 
   async executeProductSelect(suffixSql, params) {
     try {
-      const [rows] = await this.client.getPool().execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
+      const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
       return rows;
     } catch (error) {
       if (error?.code !== "ER_BAD_FIELD_ERROR" || !String(error.sqlMessage || error.message).includes("product_attributes")) {
@@ -86,15 +99,19 @@ export class ProductRepository extends BaseRepository {
         code: error.code,
         sqlMessage: error.sqlMessage
       });
-      const [rows] = await this.client.getPool().execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+      const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
       return rows;
     }
+  }
+
+  execute(sql, params = []) {
+    return this.client.getPool().execute(sql, normalizeSqlParams(params));
   }
 
   async countAll(options) {
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT COUNT(*) AS total
       FROM products p
       LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
@@ -146,7 +163,7 @@ export class ProductRepository extends BaseRepository {
       params.push(excludedId);
     }
 
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT id, name, slug, sku, status
       FROM products
       WHERE ${column} = ? AND deleted_at IS NULL ${excludedSql}
@@ -166,7 +183,7 @@ export class ProductRepository extends BaseRepository {
 
   async create(payload) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, status, thumbnail_url, gallery_urls, tags, product_attributes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -184,7 +201,7 @@ export class ProductRepository extends BaseRepository {
 
   async update(id, payload) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE products
       SET name = ?,
         slug = ?,
@@ -218,7 +235,7 @@ export class ProductRepository extends BaseRepository {
 
   async updateStock(id, stock) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE products
       SET stock = ?,
         status = CASE
@@ -241,7 +258,7 @@ export class ProductRepository extends BaseRepository {
 
   async updateStatus(id, status) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE products
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`,
@@ -258,7 +275,7 @@ export class ProductRepository extends BaseRepository {
 
   async softDelete(id) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `UPDATE products
       SET deleted_at = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP

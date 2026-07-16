@@ -55,6 +55,76 @@ test("product list falls back when Railway schema lacks product_attributes", asy
   assert.match(queries[1], /NULL AS product_attributes/);
 });
 
+test("product list sanitizes pagination and does not bind LIMIT/OFFSET", async () => {
+  let capturedSql = "";
+  let capturedParams = [];
+  const repository = new ProductRepository({
+    getPool() {
+      return {
+        async execute(sql, params) {
+          capturedSql = sql;
+          capturedParams = params;
+          return [[], []];
+        }
+      };
+    }
+  });
+
+  await repository.findAll({
+    ...options,
+    pagination: { limit: undefined, offset: undefined }
+  });
+
+  assert.match(capturedSql, /LIMIT 12 OFFSET 0/);
+  assert.doesNotMatch(capturedSql, /LIMIT \? OFFSET \?/);
+  assert.deepEqual(capturedParams, ["active"]);
+  assert.equal(capturedParams.includes(undefined), false);
+});
+
+test("category list sanitizes pagination and does not bind LIMIT/OFFSET", async () => {
+  let capturedSql = "";
+  let capturedParams = [];
+  const repository = new CategoryRepository({
+    getPool() {
+      return {
+        async execute(sql, params) {
+          capturedSql = sql;
+          capturedParams = params;
+          return [[], []];
+        }
+      };
+    }
+  });
+
+  await repository.findAll({
+    ...options,
+    pagination: { limit: "invalid", offset: -1 }
+  });
+
+  assert.match(capturedSql, /LIMIT 20 OFFSET 0/);
+  assert.doesNotMatch(capturedSql, /LIMIT \? OFFSET \?/);
+  assert.deepEqual(capturedParams, ["active"]);
+  assert.equal(capturedParams.includes(undefined), false);
+});
+
+test("repository execute normalizes undefined SQL params", async () => {
+  const received = [];
+  const client = {
+    getPool() {
+      return {
+        async execute(_sql, params) {
+          received.push(params);
+          return [[], []];
+        }
+      };
+    }
+  };
+
+  await new ProductRepository(client).execute("SELECT ?", [undefined]);
+  await new CategoryRepository(client).execute("SELECT ?", [undefined]);
+
+  assert.deepEqual(received, [[null], [null]]);
+});
 test("public product list tolerates unavailable optional variant schema", async () => {
   const repository = new ProductVariantRepository({});
   repository.ensureSchema = async () => {
