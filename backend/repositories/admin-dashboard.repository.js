@@ -40,8 +40,8 @@ export class AdminDashboardRepository extends BaseRepository {
         AND ${REVENUE_CONDITION}
         AND created_at >= ?
         AND created_at < DATE_ADD(?, INTERVAL 1 DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY DATE(created_at) ASC`,
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+      ORDER BY DATE_FORMAT(created_at, '%Y-%m-%d') ASC`,
       [dateFrom, dateTo]
     );
     this.log("getRevenueByDateRange", startedAt);
