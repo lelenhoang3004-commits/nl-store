@@ -16,11 +16,14 @@ export function errorHandler(error, request, response, next) {
     : null;
 
   logger.error(normalizedError.message, {
-    code: normalizedError.code,
+    message: error?.message || normalizedError.message,
+    stack: error?.stack,
+    code: error?.code || normalizedError.code,
+    sqlMessage: error?.sqlMessage,
+    sql: error?.sql,
     statusCode: normalizedError.statusCode,
-    path: request.originalUrl,
     method: request.method,
-    stack: appConfig.env === "development" ? error.stack : undefined
+    originalUrl: request.originalUrl
   });
 
   return response

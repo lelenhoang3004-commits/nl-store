@@ -1,5 +1,6 @@
 import { BaseRepository } from "./base.repository.js";
 import { ProductVariant } from "../models/product-variant.model.js";
+import { logger } from "../utils/logger.util.js";
 
 const SELECT = `SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at FROM product_variants`;
 let schemaReadyPromise = null;
@@ -58,16 +59,28 @@ export class ProductVariantRepository extends BaseRepository {
   }
 
   async findByProductIds(productIds, { customerOnly = false } = {}) {
-    await this.ensureSchema();
     if (!productIds.length) return new Map();
-    const placeholders = productIds.map(() => "?").join(",");
-    const [rows] = await this.client.getPool().execute(`${SELECT} WHERE product_id IN (${placeholders}) AND deleted_at IS NULL ${customerOnly ? "AND status = 'active'" : ""} ORDER BY product_id, color, size, id`, productIds);
-    return rows.reduce((map, row) => {
-      const item = new ProductVariant(row);
-      if (!map.has(item.productId)) map.set(item.productId, []);
-      map.get(item.productId).push(item);
-      return map;
-    }, new Map());
+
+    try {
+      await this.ensureSchema();
+      const placeholders = productIds.map(() => "?").join(",");
+      const [rows] = await this.client.getPool().execute(`${SELECT} WHERE product_id IN (${placeholders}) AND deleted_at IS NULL ${customerOnly ? "AND status = 'active'" : ""} ORDER BY product_id, color, size, id`, productIds);
+      return rows.reduce((map, row) => {
+        const item = new ProductVariant(row);
+        if (!map.has(item.productId)) map.set(item.productId, []);
+        map.get(item.productId).push(item);
+        return map;
+      }, new Map());
+    } catch (error) {
+      if (!isOptionalVariantSchemaError(error)) throw error;
+
+      logger.warn("Product variants are unavailable; returning products without variants.", {
+        code: error.code,
+        sqlMessage: error.sqlMessage,
+        message: error.message
+      });
+      return new Map();
+    }
   }
 
   async findById(id, { connection = null, forUpdate = false } = {}) {
@@ -138,4 +151,14 @@ export class ProductVariantRepository extends BaseRepository {
   }
 
   params(payload) { return [payload.productId, payload.sku, payload.size, payload.color, payload.colorCode, payload.price, payload.salePrice, payload.stock, payload.sold, payload.status]; }
+}
+
+function isOptionalVariantSchemaError(error) {
+  return new Set([
+    "ER_NO_SUCH_TABLE",
+    "ER_BAD_FIELD_ERROR",
+    "ER_TABLEACCESS_DENIED_ERROR",
+    "ER_DBACCESS_DENIED_ERROR",
+    "ER_SPECIFIC_ACCESS_DENIED_ERROR"
+  ]).has(error?.code);
 }

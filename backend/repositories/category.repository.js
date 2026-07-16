@@ -7,12 +7,12 @@ import { Category } from "../models/category.model.js";
 import { logger } from "../utils/logger.util.js";
 
 const SORT_COLUMNS = Object.freeze({
-  name: "name",
-  slug: "slug",
-  status: "status",
-  sortOrder: "sort_order",
-  createdAt: "created_at",
-  updatedAt: "updated_at"
+  name: "c.name",
+  slug: "c.slug",
+  status: "c.status",
+  sortOrder: "c.sort_order",
+  createdAt: "c.created_at",
+  updatedAt: "c.updated_at"
 });
 
 export class CategoryRepository extends BaseRepository {

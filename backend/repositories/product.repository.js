@@ -45,6 +45,11 @@ const PRODUCT_SELECT = `
   LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
 `;
 
+const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT.replace(
+  "    p.product_attributes,",
+  "    NULL AS product_attributes,"
+);
+
 export class ProductRepository extends BaseRepository {
   async findAll(options) {
     const startedAt = Date.now();
@@ -52,9 +57,8 @@ export class ProductRepository extends BaseRepository {
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
 
-    const [rows] = await this.client.getPool().execute(
-      `${PRODUCT_SELECT}
-      ${whereSql}
+    const rows = await this.executeProductSelect(
+      `${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
       LIMIT ? OFFSET ?`,
       [...params, options.pagination.limit, options.pagination.offset]
@@ -67,6 +71,24 @@ export class ProductRepository extends BaseRepository {
     });
 
     return rows.map((row) => new Product(row));
+  }
+
+  async executeProductSelect(suffixSql, params) {
+    try {
+      const [rows] = await this.client.getPool().execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
+      return rows;
+    } catch (error) {
+      if (error?.code !== "ER_BAD_FIELD_ERROR" || !String(error.sqlMessage || error.message).includes("product_attributes")) {
+        throw error;
+      }
+
+      logger.warn("Products schema is missing product_attributes; using legacy-compatible select.", {
+        code: error.code,
+        sqlMessage: error.sqlMessage
+      });
+      const [rows] = await this.client.getPool().execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+      return rows;
+    }
   }
 
   async countAll(options) {
@@ -91,9 +113,8 @@ export class ProductRepository extends BaseRepository {
 
   async findById(id) {
     const startedAt = Date.now();
-    const [rows] = await this.client.getPool().execute(
-      `${PRODUCT_SELECT}
-      WHERE p.id = ? AND p.deleted_at IS NULL
+    const rows = await this.executeProductSelect(
+      `WHERE p.id = ? AND p.deleted_at IS NULL
       LIMIT 1`,
       [id]
     );
