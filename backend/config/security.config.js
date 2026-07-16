@@ -12,7 +12,8 @@ export const securityConfig = Object.freeze({
     allowedHeaders: ["Content-Type", "Authorization", appConfig.csrfHeaderName, "X-CSRF-Token"]
   },
   helmet: {
-    crossOriginResourcePolicy: { policy: "same-site" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {

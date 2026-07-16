@@ -32,11 +32,11 @@ app.use("/public", express.static(appConfig.publicPath, {
 }));
 app.use("/uploads", express.static(appConfig.uploadPath, {
   fallthrough: false,
-  maxAge: appConfig.isProduction ? "1h" : 0,
+  maxAge: appConfig.isProduction ? "1y" : 0,
   setHeaders(response) {
-    // The storefront/admin are commonly served by Live Server on another
-    // origin, so uploaded product images must be embeddable cross-origin.
     response.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Cache-Control", "public, max-age=31536000");
   }
 }));
 app.get("/health", async (request, response) => {
