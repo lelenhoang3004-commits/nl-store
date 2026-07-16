@@ -1455,7 +1455,7 @@ function renderPageError(error) { return `<section class="admin-product-page-err
 function stockBadge(stock) { const n = Number(stock || 0); return n === 0 ? '<span class="admin-stock-badge is-empty">Hết hàng · 0</span>' : n <= 5 ? `<span class="admin-stock-badge is-low">Sắp hết · ${n}</span>` : `<span class="admin-stock-badge">${n}</span>`; }
 function statusBadge(status) { return `<span class="admin-product-status is-${escapeHtml(status || "unknown")}">${escapeHtml(statusLabel(status))}</span>`; }
 function statusLabel(status) { return ({ active: "Đang bán", inactive: "Tạm ẩn", out_of_stock: "Hết hàng" })[status] || status || "-"; }
-function resolveImageUrl(url) { if (!url) return PLACEHOLDER; if (/^https?:\/\//i.test(url) || url.startsWith("data:")) return url; if (url.startsWith("/uploads")) return `${API_ORIGIN}${url}`; if (url.startsWith("uploads")) return `${API_ORIGIN}/${url}`; return url; }
+function resolveImageUrl(url) { if (!url) return PLACEHOLDER; return globalThis.normalizeImageUrl?.(url) ?? url; }
 function bindImageFallbacks(root) { root.querySelectorAll("[data-product-image]").forEach(img => img.addEventListener("error", () => { img.src = PLACEHOLDER; }, { once: true })); }
 function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("button,input,select").forEach(el => { el.disabled = busy; }); }
 function setFormBusy(form, busy) { form.querySelectorAll("button,input,select,textarea").forEach(el => { el.disabled = busy; }); const submit = form.querySelector("[data-product-submit]"); if (submit) submit.innerHTML = busy ? '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...' : submit.dataset.idleLabel; }

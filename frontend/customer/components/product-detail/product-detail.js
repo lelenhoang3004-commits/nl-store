@@ -499,19 +499,8 @@ function getProductImages(product = {}) {
 }
 
 function resolveAssetUrl(url) {
-  if (!url) {
-    return "";
-  }
-
-  if (/^(https?:)?\/\//i.test(url) || url.startsWith("data:")) {
-    return url;
-  }
-
-  if (url.startsWith("/")) {
-    return `${API_ORIGIN}${url}`;
-  }
-
-  return url;
+  if (!url) return FALLBACK_PRODUCT_IMAGE;
+  return globalThis.normalizeImageUrl?.(url) ?? url;
 }
 
 function normalizeOptionList(value) {

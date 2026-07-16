@@ -65,16 +65,8 @@ function getListFromApiPayload(payload, key) {
 }
 
 function resolveAssetUrl(value) {
-  const url = String(value || "").trim();
-  if (!url) return FALLBACK_PRODUCT_IMAGE;
-  if (/^(?:https?:)?\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) {
-    return url;
-  }
-
-
-  if (url.startsWith("/uploads/")) return `${API_ORIGIN}${url}`;
-  if (url.startsWith("uploads/")) return `${API_ORIGIN}/${url}`;
-  return url;
+  if (!value) return FALLBACK_PRODUCT_IMAGE;
+  return globalThis.normalizeImageUrl?.(value) ?? value;
 }
 
 function mapApiProduct(product = {}) {

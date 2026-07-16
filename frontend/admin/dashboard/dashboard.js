@@ -168,7 +168,7 @@ function emptyDashboard() { return { summary: {}, revenueChart: [], ordersByStat
 function emptyState(message) { return `<p class="dashboard-empty">${escapeHtml(message)}</p>`; }
 function silentErrors() { return { showErrorToast: false }; }
 function setBusy(root, busy) { root.querySelectorAll("button, select").forEach((element) => { element.disabled = busy; }); }
-function resolveImageUrl(url) { if (!url) return PLACEHOLDER_IMAGE; if (/^https?:\/\//i.test(url) || url.startsWith("data:")) return url; if (url.startsWith("/uploads")) return `${API_ORIGIN}${url}`; if (url.startsWith("uploads")) return `${API_ORIGIN}/${url}`; return url; }
+function resolveImageUrl(url) { if (!url) return PLACEHOLDER_IMAGE; return globalThis.normalizeImageUrl?.(url) ?? url; }
 function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", confirmed: "Đã xác nhận", processing: "Đang xử lý", shipping: "Đang giao", completed: "Hoàn thành", cancelled: "Đã hủy", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
 function paymentStatusLabel(status) { return ({ unpaid: "Chưa thanh toán", partial: "Thanh toán một phần", paid: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
 function paymentMethodLabel(method) { return ({ cod: "COD", bank_transfer: "Bank Transfer", vnpay: "VNPay", momo: "MoMo", unknown: "Chưa xác định" })[method] || method || "—"; }
