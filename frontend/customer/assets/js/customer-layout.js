@@ -2317,7 +2317,11 @@ function formatCurrency(value) {
 function resolveAssetUrl(url) {
   if (!url) return FALLBACK_PRODUCT_IMAGE;
   if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
-  const apiOrigin = (globalThis.FASHION_API_BASE_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '');
+  const fallbackApiBaseUrl = ['localhost', '127.0.0.1'].includes(globalThis.location?.hostname)
+    ? 'http://localhost:5000/api/v1'
+    : 'https://nl-store.onrender.com/api/v1';
+  const apiOrigin = globalThis.FASHION_API_ORIGIN
+    ?? (globalThis.FASHION_API_BASE_URL || fallbackApiBaseUrl).replace(/\/api\/v1\/?$/, '');
   if (url.startsWith('/')) return `${apiOrigin}${url}`;
   return url;
 }

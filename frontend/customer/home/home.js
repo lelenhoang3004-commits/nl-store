@@ -9,7 +9,12 @@ import { createBrandShowcaseSection, initBrandShowcaseSection } from "../compone
 import { createCustomerReviewsSection, initCustomerReviewsSection } from "../components/customer-reviews/customer-reviews.js";
 import { createNewsletterSection, initNewsletterSection } from "../components/newsletter-section/newsletter-section.js";
 
-const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? "http://localhost:5000/api/v1";
+const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+  ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
+    ? "http://localhost:5000/api/v1"
+    : "https://nl-store.onrender.com/api/v1"
+);
+const API_ORIGIN = globalThis.FASHION_API_ORIGIN ?? API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 const contentShape = {
   hero: {
@@ -66,9 +71,9 @@ function resolveAssetUrl(value) {
     return url;
   }
 
-  const apiOrigin = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
-  if (url.startsWith("/uploads/")) return `${apiOrigin}${url}`;
-  if (url.startsWith("uploads/")) return `${apiOrigin}/${url}`;
+
+  if (url.startsWith("/uploads/")) return `${API_ORIGIN}${url}`;
+  if (url.startsWith("uploads/")) return `${API_ORIGIN}/${url}`;
   return url;
 }
 

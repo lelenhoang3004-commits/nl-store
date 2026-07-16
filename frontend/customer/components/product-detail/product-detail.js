@@ -1,7 +1,12 @@
 import { createProductGrid, initProductGrid } from "../product-grid/product-grid.js";
 import { showCustomerToast } from "../../assets/js/customer-cart.js";
 
-const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? "http://localhost:5000/api/v1";
+const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+  ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
+    ? "http://localhost:5000/api/v1"
+    : "https://nl-store.onrender.com/api/v1"
+);
+const API_ORIGIN = globalThis.FASHION_API_ORIGIN ?? API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 const FALLBACK_PRODUCT_IMAGE = "https://placehold.co/900x1125/f1f5f9/334155?text=Fashion+Store";
 
 export function createProductDetailPage() {
@@ -503,7 +508,7 @@ function resolveAssetUrl(url) {
   }
 
   if (url.startsWith("/")) {
-    return `${API_BASE_URL.replace("/api/v1", "")}${url}`;
+    return `${API_ORIGIN}${url}`;
   }
 
   return url;

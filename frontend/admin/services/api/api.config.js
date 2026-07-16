@@ -1,6 +1,10 @@
 // Central API configuration for the admin frontend.
-// Change window.FASHION_API_BASE_URL or this fallback when the backend URL changes.
-const DEFAULT_API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? "http://localhost:5000/api/v1";
+// app-config.js provides the production URL; this fallback is only for local development.
+const DEFAULT_API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+  ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
+    ? "http://localhost:5000/api/v1"
+    : "https://nl-store.onrender.com/api/v1"
+);
 
 export const API_CONFIG = Object.freeze({
   baseURL: DEFAULT_API_BASE_URL,
