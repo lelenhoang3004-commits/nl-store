@@ -46,8 +46,8 @@ export function createProductCard(product) {
       <div class="product-card-media-wrap">
         <a class="product-media" href="#product-detail/${item.id}" aria-label="${item.name}">
           <span class="${badgeClass}">${item.badge}</span>
-          <img class="product-media-image primary-image" src="${item.image}" alt="${item.imageAlt || item.name}" loading="lazy" decoding="async">
-          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${item.hoverImage}" alt="${item.imageAlt || item.name} alternate" loading="lazy" decoding="async">` : ""}
+          <img class="product-media-image primary-image" src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${item.image}" alt="${item.imageAlt || item.name}" loading="lazy" decoding="async">
+          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${item.hoverImage}" alt="${item.imageAlt || item.name} alternate" loading="lazy" decoding="async">` : ""}
         </a>
         <div class="product-card-actions" aria-label="Hành động sản phẩm">
           <button class="icon-pill product-action-btn ${item.isWishlist ? "is-active" : ""}" type="button" aria-label="Thêm vào yêu thích" data-wishlist-toggle="${item.id}">

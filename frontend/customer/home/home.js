@@ -79,7 +79,7 @@ function mapApiProduct(product = {}) {
     name: product.name,
     category: product.categoryName || "Sản phẩm",
     image: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
-    hoverImage: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
+    hoverImage: "",
     price: finalPrice,
     comparePrice: salePrice ? price : null,
     discount: salePrice && price > salePrice

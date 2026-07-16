@@ -604,7 +604,7 @@ function mapApiProductForCard(product = {}) {
     name: product.name || "",
     category: product.categoryName || product.category_name || "Sản phẩm",
     image: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
-    hoverImage: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
+    hoverImage: "",
     price,
     comparePrice: hasSalePrice ? originalPrice : null,
     discount: hasSalePrice && originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
@@ -975,7 +975,7 @@ async function renderCartPage() {
                     <input type="checkbox" data-cart-select-item="${item.id}" ${item.isSelected ? "checked" : ""}>
                   </label>
                   <div class="customer-cart-item-media">
-                    <img src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}">
+                    <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
                   </div>
                   <div class="customer-cart-item-body">
                     <div class="customer-cart-item-header">
@@ -1579,7 +1579,7 @@ async function renderCheckoutPage() {
             <div class="customer-checkout-items">
               ${checkoutSummary.items.map((item) => `
                 <div class="customer-checkout-item">
-                  <img src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}">
+                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
                   <div class="customer-checkout-item-details">
                     <strong>${escapeHtml(item.productName || "Sản phẩm")}</strong>
                     <div class="customer-checkout-item-meta">
@@ -1980,7 +1980,7 @@ async function renderOrderDetailPage(orderId) {
               <div class="customer-order-panel-title">Sản phẩm đã đặt</div>
               ${items.length ? items.map((item) => `
                 <article class="customer-order-item">
-                  <img src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}">
+                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
                   <div>
                     <strong>${escapeHtml(item.productName || "Sản phẩm")}</strong>
                     <div class="customer-order-item-meta">
@@ -2120,7 +2120,7 @@ function mapWishlistProductForCard(product = {}) {
     name: product.name || product.productName || product.product_name || "",
     category: product.categoryName || product.category || product.category_name || "Sản phẩm",
     image: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.productImageUrl || ""),
-    hoverImage: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.productImageUrl || ""),
+    hoverImage: "",
     price,
     comparePrice: discount > 0 ? originalPrice : null,
     discount,

@@ -214,7 +214,7 @@ function renderShippingCard(shipping, order) {
 
 function renderOrderItem(item) {
   const variants = [item.size || item.variantSize, item.color || item.variantColor].filter(Boolean);
-  return `<div class="admin-order-item"><img src="${escapeHtml(resolveImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" data-order-product-image><div><strong>${escapeHtml(item.productName || "—")}</strong><span>SKU: ${escapeHtml(item.productSku || "—")}</span>${variants.length ? `<span>Size / Màu: ${escapeHtml(variants.join(" / "))}</span>` : ""}<span>Số lượng: ${Number(item.quantity || 0)}</span><span>Đơn giá: ${formatCurrency(item.unitPrice)}</span></div><strong>${formatCurrency(item.totalPrice)}</strong></div>`;
+  return `<div class="admin-order-item"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image data-order-product-image><div><strong>${escapeHtml(item.productName || "—")}</strong><span>SKU: ${escapeHtml(item.productSku || "—")}</span>${variants.length ? `<span>Size / Màu: ${escapeHtml(variants.join(" / "))}</span>` : ""}<span>Số lượng: ${Number(item.quantity || 0)}</span><span>Đơn giá: ${formatCurrency(item.unitPrice)}</span></div><strong>${formatCurrency(item.totalPrice)}</strong></div>`;
 }
 
 function renderHistory(entry) {

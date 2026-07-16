@@ -62,12 +62,12 @@ function createProductDetailMarkup(product, relatedProducts = []) {
     <section class="premium-section product-detail" data-product-detail>
       <div class="product-detail-gallery">
         <div class="product-detail-main-image" data-product-zoom>
-          <img src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" data-product-main-image>
+          <img src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" loading="lazy" decoding="async" data-product-main-image data-product-image>
         </div>
         <div class="product-detail-thumbs" aria-label="Thư viện ảnh sản phẩm">
           ${images.map((image, index) => `
             <button class="product-detail-thumb ${index === 0 ? "is-active" : ""}" type="button" data-product-thumb="${escapeAttr(image)}" aria-label="Ảnh ${index + 1}">
-              <img src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}">
+              <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-gallery-image-src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}" loading="lazy" decoding="async" data-product-image>
             </button>
           `).join("")}
         </div>
@@ -237,6 +237,11 @@ function initProductDetailInteractions(root, product, options = {}) {
       button.setAttribute("aria-pressed", "true");
       // dataset holds the raw attribute (may be escaped); use it as the selected image URL
       selectedImageUrl = button.dataset.productThumb || selectedImageUrl;
+      const thumbnail = button.querySelector("img[data-gallery-image-src]");
+      if (thumbnail) {
+        thumbnail.src = thumbnail.dataset.galleryImageSrc;
+        thumbnail.removeAttribute("data-gallery-image-src");
+      }
       mainImage.src = selectedImageUrl;
     });
   });
@@ -478,7 +483,7 @@ function mapRelatedProduct(product = {}) {
     name: product.name,
     category: product.categoryName || "Sản phẩm",
     image: resolveAssetUrl(product.thumbnailUrl || getProductImages(product)[0]),
-    hoverImage: resolveAssetUrl(getProductImages(product)[1] || product.thumbnailUrl || getProductImages(product)[0]),
+    hoverImage: "",
     price: salePrice || price,
     comparePrice: salePrice ? price : null,
     discount: salePrice && price > salePrice ? Math.round(((price - salePrice) / price) * 100) : 0,

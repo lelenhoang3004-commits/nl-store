@@ -142,7 +142,7 @@ function renderPaymentsByMethod(root, rows) {
 function renderTopProducts(root, products) {
   const target = root.querySelector("[data-top-products]");
   if (!target) return;
-  target.innerHTML = products.length ? products.map((product, index) => `<div class="product-item"><span class="product-rank">${index + 1}</span><img src="${escapeHtml(resolveImageUrl(product.productImageUrl))}" alt="${escapeHtml(product.productName || "Sản phẩm")}" data-dashboard-image><div class="item-copy"><strong>${escapeHtml(product.productName || "—")}</strong><span>SKU: ${escapeHtml(product.productSku || "—")} · Đã bán ${formatNumber(product.totalQuantity)}</span></div><span class="item-value">${formatCurrency(product.totalRevenue)}</span></div>`).join("") : emptyState("Chưa có sản phẩm bán chạy.");
+  target.innerHTML = products.length ? products.map((product, index) => `<div class="product-item"><span class="product-rank">${index + 1}</span><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product.productImageUrl))}" alt="${escapeHtml(product.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image data-dashboard-image><div class="item-copy"><strong>${escapeHtml(product.productName || "—")}</strong><span>SKU: ${escapeHtml(product.productSku || "—")} · Đã bán ${formatNumber(product.totalQuantity)}</span></div><span class="item-value">${formatCurrency(product.totalRevenue)}</span></div>`).join("") : emptyState("Chưa có sản phẩm bán chạy.");
 }
 
 function renderRecentOrders(root, orders) {
