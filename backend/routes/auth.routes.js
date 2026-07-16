@@ -1,0 +1,17 @@
+﻿import { Router } from "express";
+import { AuthController } from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/authentication.middleware.js";
+import { authRateLimiter } from "../middleware/rate-limit.middleware.js";
+import { validateRequest } from "../middleware/validate-request.middleware.js";
+import { validateLoginRequest, validateRegisterRequest, validateSendOtpRequest, validateVerifyOtpRequest } from "../validators/auth.validator.js";
+const router = Router(); const c = new AuthController();
+router.post("/login", authRateLimiter, validateRequest(validateLoginRequest), c.login);
+router.post("/register", authRateLimiter, validateRequest(validateRegisterRequest), c.register);
+router.get("/google", c.oauthStart("google"));
+router.get("/google/callback", c.oauthCallback("google"));
+router.get("/facebook", c.oauthStart("facebook"));
+router.get("/facebook/callback", c.oauthCallback("facebook"));
+router.post("/phone/send-otp", authRateLimiter, validateRequest(validateSendOtpRequest), c.sendPhoneOtp);
+router.post("/phone/verify-otp", authRateLimiter, validateRequest(validateVerifyOtpRequest), c.verifyPhoneOtp);
+router.post("/refresh", authRateLimiter, c.refresh); router.post("/logout", c.logout); router.get("/me", authenticate, c.me);
+export default router;

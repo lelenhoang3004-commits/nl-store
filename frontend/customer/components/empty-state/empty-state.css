@@ -1,0 +1,53 @@
+/* Empty State Component Styles */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--color-text, #111827);
+  opacity: 0;
+  transform: translateY(6px) scale(.995);
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 320ms ease;
+}
+
+.empty-state--visible { opacity: 1; transform: translateY(0) scale(1); }
+
+.empty-state-inner { max-width: 640px; }
+.empty-icon { color: var(--color-muted, #6b7280); margin-bottom: 12px; display:flex; align-items:center; justify-content:center; }
+.empty-icon i { font-size: 42px; }
+.empty-title { font-size: 1.25rem; margin: 6px 0; font-weight:700; }
+.empty-message { margin: 8px 0 12px; color: var(--color-muted, #6b7280); }
+.empty-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.empty-action { border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; background: var(--color-primary); color: #fff; font-weight: 600; }
+
+/* sizes */
+.empty-state--sm .empty-icon i { font-size: 28px; }
+.empty-state--sm .empty-title { font-size: 1rem; }
+.empty-state--lg .empty-icon i { font-size: 64px; }
+.empty-state--lg .empty-title { font-size: 1.5rem; }
+
+/* Animations */
+.empty-state--anim-pop { transform: scale(.96) translateY(6px); opacity: 0; }
+.empty-state--anim-pop.empty-state--visible { transform: scale(1) translateY(0); opacity: 1; }
+
+.empty-state--anim-fade { opacity: 0; transform: translateY(8px); }
+.empty-state--anim-fade.empty-state--visible { opacity: 1; transform: translateY(0); }
+
+.empty-state--anim-float { transform: translateY(6px); }
+.empty-state--anim-float.empty-state--visible { animation: empty-float 2.6s ease-in-out infinite; transform:none; }
+@keyframes empty-float { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
+
+/* icon color variants (allow using data-empty-type or classes) */
+.empty-state[data-empty-type="not-found"] .empty-icon { color: var(--color-danger, #ef4444); }
+.empty-state[data-empty-type="no-wishlist"] .empty-icon { color: var(--color-accent, #f97316); }
+.empty-state[data-empty-type="no-cart"] .empty-icon { color: var(--color-primary, #3b82f6); }
+.empty-state[data-empty-type="no-order"] .empty-icon { color: var(--color-muted, #6b7280); }
+.empty-state[data-empty-type="no-search"] .empty-icon { color: var(--color-info, #06b6d4); }
+
+/* responsive */
+@media (max-width: 720px) {
+  .empty-state { padding: 22px 12px; }
+  .empty-state-inner { padding: 0 8px; }
+  .empty-icon i { font-size: 36px; }
+}

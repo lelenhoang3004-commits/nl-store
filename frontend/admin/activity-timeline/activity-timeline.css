@@ -1,0 +1,371 @@
+.activity-timeline-page {
+  display: grid;
+  gap: 22px;
+}
+
+.activity-timeline-heading,
+.activity-timeline-live,
+.activity-timeline-stats article,
+.activity-timeline-toolbar,
+.activity-range-tabs,
+.activity-type-tabs,
+.activity-timeline-page .activity-card header,
+.activity-timeline-page .activity-card footer {
+  display: flex;
+  align-items: center;
+}
+
+.activity-timeline-heading {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.activity-timeline-eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.activity-timeline-heading h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+.activity-timeline-heading p {
+  margin: 10px 0 0;
+  color: var(--color-muted);
+}
+
+.activity-timeline-live {
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 16px;
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+  box-shadow: var(--shadow-soft);
+}
+
+.activity-timeline-live span {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.42);
+  animation: activity-pulse 1500ms ease infinite;
+}
+
+.activity-timeline-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.activity-timeline-stats article,
+.activity-timeline-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.activity-timeline-stats article {
+  gap: 14px;
+  min-height: 104px;
+  padding: 18px;
+}
+
+.activity-timeline-stats article > span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+}
+
+.activity-timeline-stats strong,
+.activity-timeline-stats small {
+  display: block;
+}
+
+.activity-timeline-stats strong {
+  color: var(--color-text);
+  font-size: 1.35rem;
+}
+
+.activity-timeline-stats small {
+  margin-top: 3px;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.activity-timeline-panel {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.activity-timeline-toolbar {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.activity-range-tabs,
+.activity-type-tabs {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-range-tabs button,
+.activity-type-tabs button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text-soft);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.activity-range-tabs button:hover,
+.activity-type-tabs button:hover {
+  transform: translateY(-1px);
+}
+
+.activity-range-tabs button.is-active,
+.activity-type-tabs button.is-active {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+}
+
+.activity-timeline-summary {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.activity-timeline-list {
+  display: grid;
+  gap: 20px;
+}
+
+.activity-date-group {
+  display: grid;
+  gap: 12px;
+}
+
+.activity-date-group h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.92rem;
+}
+
+.activity-date-list {
+  position: relative;
+  display: grid;
+  gap: 14px;
+}
+
+.activity-date-list::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 21px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--color-border);
+  content: "";
+}
+
+.activity-timeline-page .activity-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  animation: activity-item-in 220ms ease both;
+}
+
+.activity-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.activity-success .activity-marker {
+  color: var(--color-success);
+}
+
+.activity-warning .activity-marker {
+  color: var(--color-warning);
+}
+
+.activity-danger .activity-marker {
+  color: var(--color-danger);
+}
+
+.activity-timeline-page .activity-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-background);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.activity-timeline-page .activity-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.activity-timeline-page .activity-card header {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.activity-timeline-page .activity-card strong,
+.activity-timeline-page .activity-card span {
+  display: block;
+}
+
+.activity-timeline-page .activity-card strong {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.activity-timeline-page .activity-card header span,
+.activity-timeline-page .activity-card p,
+.activity-timeline-page .activity-card time {
+  color: var(--color-muted);
+}
+
+.activity-timeline-page .activity-card header span {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.activity-timeline-page .activity-card time {
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.activity-timeline-page .activity-card p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.activity-timeline-page .activity-card footer {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-timeline-page .activity-card footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--color-card);
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.activity-timeline-empty {
+  display: none;
+  place-items: center;
+  gap: 8px;
+  min-height: 220px;
+  border: 1px dashed var(--color-border);
+  border-radius: 16px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.activity-timeline-empty.is-visible {
+  display: grid;
+}
+
+.activity-timeline-empty i {
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+.activity-timeline-empty strong {
+  color: var(--color-text);
+}
+
+@keyframes activity-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes activity-pulse {
+  70% {
+    box-shadow: 0 0 0 9px rgba(34, 197, 94, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .activity-timeline-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .activity-timeline-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .activity-timeline-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .activity-timeline-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-timeline-page .activity-card header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

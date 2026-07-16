@@ -1,0 +1,55 @@
+<section class="dashboard-page" aria-labelledby="dashboard-title">
+  <div class="dashboard-heading">
+    <div>
+      <p class="dashboard-eyebrow">Phân tích quản trị</p>
+      <h1 id="dashboard-title">Bảng điều khiển</h1>
+      <p>Doanh thu và tình hình đơn hàng từ dữ liệu thực tế.</p>
+    </div>
+    <label class="dashboard-period">
+      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+      <span>Biểu đồ</span>
+      <select data-dashboard-days aria-label="Khoảng thời gian biểu đồ">
+        <option value="7">7 ngày</option>
+        <option value="14">14 ngày</option>
+        <option value="30">30 ngày</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="dashboard-error" data-dashboard-error hidden></div>
+
+  <section class="stats-grid" aria-label="Thống kê tổng quan" data-dashboard-stats></section>
+  <section class="dashboard-secondary" aria-label="Thống kê bổ sung" data-dashboard-secondary></section>
+
+  <section class="dashboard-grid">
+    <article class="dashboard-card revenue-card">
+      <div class="card-header"><div><h2>Doanh thu theo ngày</h2><p>Chỉ tính đơn hoàn thành và đã thanh toán</p></div></div>
+      <div class="revenue-bars" data-revenue-chart></div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header"><div><h2>Đơn hàng theo trạng thái</h2><p>Phân bổ toàn bộ đơn hàng</p></div></div>
+      <div class="dashboard-stat-list" data-orders-status></div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header"><div><h2>Thanh toán theo phương thức</h2><p>Số đơn và tổng giá trị</p></div></div>
+      <div class="dashboard-stat-list" data-payment-methods></div>
+    </article>
+
+    <article class="dashboard-card">
+      <div class="card-header"><div><h2>Sản phẩm bán chạy</h2><p>Từ đơn hoàn thành và đã thanh toán</p></div></div>
+      <div class="product-list" data-top-products></div>
+    </article>
+
+    <article class="dashboard-card orders-card">
+      <div class="card-header"><div><h2>Đơn hàng mới nhất</h2><p>Cập nhật trực tiếp từ hệ thống</p></div><a href="#orders" data-page="orders">Xem tất cả</a></div>
+      <div class="table-wrap">
+        <table class="orders-table">
+          <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th><th>Ngày tạo</th><th></th></tr></thead>
+          <tbody data-recent-orders></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</section>

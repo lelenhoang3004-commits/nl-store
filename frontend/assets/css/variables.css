@@ -1,0 +1,55 @@
+:root {
+  --color-primary: #2563EB;
+  --color-sidebar: #0F172A;
+  --color-background: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-text: #0F172A;
+  --color-text-soft: #334155;
+  --color-muted: #64748B;
+  --color-border: rgba(148, 163, 184, 0.24);
+  --color-hover: rgba(37, 99, 235, 0.08);
+  --surface-glass: rgba(248, 250, 252, 0.82);
+  --color-success: #22C55E;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --font-main: "Poppins", Arial, sans-serif;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+  --shadow-soft: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 24px 56px rgba(15, 23, 42, 0.16);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --container-max: 1180px;
+  --transition-fast: 180ms ease;
+  --transition-medium: 240ms ease;
+  --transition-slow: 360ms ease;
+  --breakpoint-md: 980px;
+  --breakpoint-sm: 720px;
+  --breakpoint-xs: 560px;
+  --sidebar-width: 292px;
+  --sidebar-collapsed-width: 88px;
+}
+
+body.theme-dark {
+  --color-background: #0B1120;
+  --color-card: #111827;
+  --color-text: #F8FAFC;
+  --color-text-soft: #CBD5E1;
+  --color-muted: #94A3B8;
+  --color-border: rgba(148, 163, 184, 0.2);
+  --color-hover: rgba(37, 99, 235, 0.18);
+  --surface-glass: rgba(15, 23, 42, 0.82);
+  --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.28);
+}

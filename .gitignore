@@ -1,0 +1,49 @@
+﻿node_modules/
+.env
+.DS_Store
+Thumbs.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+# Node
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Env secrets
+.env
+.env.*
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+
+# Database backup
+*.sql
+n_l_shop.sql
+fashion_shop_backup.sql
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Upload local
+backend/uploads/
+
+# Codex / temp files
+.codex-write-test.txt
+temp_layout.js
+ANALYSIS_AND_FIXES.md
+COMPLETE_REFRESH_ANALYSIS.md
+EXACT_CHANGES_REFERENCE.md
+FINAL_COMPREHENSIVE_REPORT.md
+FIXES_APPLIED_SUMMARY.md
+MODIFIED_FILES_SUMMARY.md
+QUICK_REFERENCE.md
+ROOT_CAUSE_ANALYSIS_COMPLETE.md
+ROOT_CAUSE_SUMMARY.md

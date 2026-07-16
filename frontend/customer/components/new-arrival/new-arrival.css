@@ -1,0 +1,25 @@
+/* New arrival section. */
+.new-arrival-section {
+  display: grid;
+  gap: 18px;
+}
+
+.new-arrival-heading {
+  margin-bottom: 0;
+}
+
+.new-arrival-section .product-grid {
+  animation: newArrivalFade 360ms ease;
+}
+
+@keyframes newArrivalFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

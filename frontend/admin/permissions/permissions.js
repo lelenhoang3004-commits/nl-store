@@ -1,0 +1,38 @@
+﻿export const PERMISSIONS = Object.freeze({
+  DASHBOARD_VIEW: "dashboard:view",
+  CATEGORY_VIEW: "category:view",
+  CATEGORY_CREATE: "category:create",
+  CATEGORY_UPDATE: "category:update",
+  CATEGORY_DELETE: "category:delete",
+  CATEGORY_MANAGE: "category:manage",
+  PRODUCT_VIEW: "product:view",
+  PRODUCT_CREATE: "product:create",
+  PRODUCT_UPDATE: "product:update",
+  PRODUCT_DELETE: "product:delete",
+  INVENTORY_VIEW: "inventory:view",
+  INVENTORY_UPDATE: "inventory:update",
+  USER_VIEW: "user:view",
+  USER_UPDATE: "user:update",
+  USER_MANAGE: "user:manage",
+  USER_LOCK: "user:lock",
+  ORDER_VIEW: "order:view",
+  ORDER_MANAGE: "order:manage",
+  ORDER_CANCEL: "order:manage",
+  PAYMENT_VIEW: "payment:view",
+  PAYMENT_UPDATE: "payment:update",
+  PAYMENT_MANAGE: "payment:manage",
+  VOUCHER_VIEW: "voucher:view",
+  VOUCHER_CREATE: "voucher:create",
+  VOUCHER_UPDATE: "voucher:update",
+  VOUCHER_DELETE: "voucher:delete",
+  EMAIL_VIEW: "email:view",
+  NEWSLETTER_VIEW: "newsletter:view",
+  NEWSLETTER_UPDATE: "newsletter:update",
+  NEWSLETTER_DELETE: "newsletter:delete",
+  NEWSLETTER_MANAGE: "newsletter:manage",
+  STATISTIC_VIEW: "statistic:view",
+  SETTING_VIEW: "setting:view"
+});
+
+
+

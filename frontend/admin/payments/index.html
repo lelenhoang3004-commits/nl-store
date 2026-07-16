@@ -1,0 +1,74 @@
+<section class="admin-payments-page" aria-labelledby="payments-title">
+  <header class="admin-payments-hero">
+    <div>
+      <p class="admin-payments-eyebrow">Quản lý thanh toán</p>
+      <h1 id="payments-title">Quản lý thanh toán</h1>
+      <p>Theo dõi và xử lý các giao dịch thanh toán từ đơn hàng.</p>
+    </div>
+    <button type="button" class="admin-payment-refresh" data-payment-refresh>
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i> Làm mới
+    </button>
+  </header>
+
+  <form class="admin-payment-filters" data-payment-filters>
+    <label>
+      <span>Tìm kiếm</span>
+      <input name="search" type="search" maxlength="150" placeholder="Mã giao dịch, đơn hàng, khách hàng...">
+    </label>
+    <label>
+      <span>Trạng thái</span>
+      <select name="status">
+        <option value="">Tất cả trạng thái</option>
+        <option value="pending">Chờ thanh toán</option>
+        <option value="paid">Đã thanh toán</option>
+        <option value="failed">Thanh toán thất bại</option>
+        <option value="refunded">Đã hoàn tiền</option>
+      </select>
+    </label>
+    <label>
+      <span>Phương thức</span>
+      <select name="method">
+        <option value="">Tất cả phương thức</option>
+        <option value="cod">Thanh toán khi nhận hàng</option>
+        <option value="bank_transfer">Chuyển khoản ngân hàng</option>
+        <option value="vnpay">VNPay</option>
+        <option value="momo">MoMo</option>
+      </select>
+    </label>
+    <label>
+      <span>Nhà cung cấp</span>
+      <select name="provider">
+        <option value="">Tất cả Nhà cung cấp</option>
+        <option value="cod">COD</option>
+        <option value="manual">Manual</option>
+        <option value="bank">Bank</option>
+        <option value="vnpay">VNPay</option>
+        <option value="momo">MoMo</option>
+        <option value="paypal">PayPal</option>
+        <option value="stripe">Stripe</option>
+      </select>
+    </label>
+    <div class="admin-payment-filter-actions">
+      <button type="submit">Lọc</button>
+      <button type="button" class="is-secondary" data-payment-reset>Đặt lại</button>
+    </div>
+  </form>
+
+  <article class="admin-payment-card">
+    <div class="admin-payment-table-wrap">
+      <table class="admin-payment-table">
+        <thead>
+          <tr>
+            <th>Mã giao dịch</th><th>Mã đơn hàng</th><th>Khách hàng</th><th>Provider</th>
+            <th>Method</th><th>Số tiền</th><th>Tiền tệ</th><th>Trạng thái</th>
+            <th>Ngày thanh toán</th><th>Ngày tạo</th><th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody data-payment-rows>
+          <tr><td colspan="11" class="admin-payment-empty">Đang tải giao dịch...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="admin-payment-pagination" aria-label="Phân trang thanh toán" data-payment-pagination></nav>
+  </article>
+</section>

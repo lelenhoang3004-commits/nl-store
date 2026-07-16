@@ -1,0 +1,132 @@
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.58);
+  opacity: 0;
+  visibility: hidden;
+  backdrop-filter: blur(6px);
+  transition: opacity 170ms ease, visibility 170ms ease;
+  z-index: 160;
+}
+
+.confirm-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 18px;
+  width: min(440px, 100%);
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-card);
+  color: var(--color-text);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+  transform: translateY(14px) scale(0.96);
+  transition: transform 170ms ease;
+}
+
+.confirm-overlay.is-visible .confirm-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: var(--confirm-soft-color);
+  color: var(--confirm-color);
+  font-size: 1.25rem;
+}
+
+.confirm-content h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.confirm-content p {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-cancel,
+.confirm-ok {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.confirm-cancel {
+  background: var(--color-card);
+  color: var(--color-text-soft);
+}
+
+.confirm-ok {
+  background: var(--confirm-color);
+  color: #ffffff;
+}
+
+.confirm-cancel:hover,
+.confirm-ok:hover {
+  transform: translateY(-1px);
+}
+
+.confirm-danger {
+  --confirm-color: var(--color-danger);
+  --confirm-soft-color: rgba(239, 68, 68, 0.12);
+}
+
+.confirm-warning {
+  --confirm-color: var(--color-warning);
+  --confirm-soft-color: rgba(245, 158, 11, 0.14);
+}
+
+.confirm-info {
+  --confirm-color: var(--color-primary);
+  --confirm-soft-color: rgba(37, 99, 235, 0.12);
+}
+
+body.confirm-open {
+  overflow: hidden;
+}
+
+@media (max-width: 520px) {
+  .confirm-overlay {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .confirm-dialog {
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-cancel,
+  .confirm-ok {
+    width: 100%;
+  }
+}

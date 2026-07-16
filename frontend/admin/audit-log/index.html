@@ -1,0 +1,45 @@
+<section class="audit-log-page" aria-labelledby="audit-log-title">
+  <header class="audit-log-heading">
+    <div>
+      <p class="audit-log-eyebrow">Hoạt động của hệ thống</p>
+      <h1 id="audit-log-title">Nhật ký kiểm toán</h1>
+      <p>Theo dõi thao tác quản trị quan trọng bằng dữ liệu giả, sẵn sàng thay bằng API sau này.</p>
+    </div>
+    <div class="audit-log-period">
+      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+      <span>7 ngày gần nhất</span>
+    </div>
+  </header>
+
+  <section class="audit-log-stats" aria-label="Tổng quan audit log">
+    <article data-audit-stat="total"></article>
+    <article data-audit-stat="security"></article>
+    <article data-audit-stat="commerce"></article>
+    <article data-audit-stat="danger"></article>
+  </section>
+
+  <section class="audit-log-panel">
+    <div class="audit-log-toolbar">
+      <label class="audit-log-search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input type="search" placeholder="Tìm theo người dùng, hành động, module, IP" data-audit-search>
+      </label>
+
+      <div class="audit-log-filters" aria-label="Lọc audit log">
+        <select data-audit-filter="type" aria-label="Loại hành động"></select>
+        <select data-audit-filter="module" aria-label="Module"></select>
+        <select data-audit-filter="severity" aria-label="Mức độ"></select>
+      </div>
+    </div>
+
+    <div class="audit-log-results">
+      <div class="audit-log-summary" data-audit-summary></div>
+      <div class="audit-timeline" data-audit-timeline></div>
+      <div class="audit-log-empty" data-audit-empty>
+        <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+        <strong>Không tìm thấy log</strong>
+        <span>Thử đổi từ khóa tìm kiếm hoặc bộ lọc.</span>
+      </div>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,46 @@
+<section class="activity-timeline-page" aria-labelledby="activity-timeline-title">
+  <header class="activity-timeline-heading">
+    <div>
+      <p class="activity-timeline-eyebrow">Vận hành trực tiếp</p>
+      <h1 id="activity-timeline-title">Dòng thời gian hoạt động</h1>
+      <p>Theo dõi hoạt động Admin, User, Order và Product bằng dữ liệu giả.</p>
+    </div>
+    <div class="activity-timeline-live">
+      <span></span>
+      <strong>Sẵn sàng thời gian thực</strong>
+    </div>
+  </header>
+
+  <section class="activity-timeline-stats" aria-label="Tổng quan hoạt động">
+    <article data-activity-stat="today"></article>
+    <article data-activity-stat="admin"></article>
+    <article data-activity-stat="order"></article>
+    <article data-activity-stat="product"></article>
+  </section>
+
+  <section class="activity-timeline-panel">
+    <div class="activity-timeline-toolbar">
+      <div class="activity-range-tabs" role="tablist" aria-label="Khoảng thời gian">
+        <button type="button" class="is-active" data-activity-range="today">Hôm nay</button>
+        <button type="button" data-activity-range="7">7 ngày</button>
+        <button type="button" data-activity-range="30">30 ngày</button>
+      </div>
+
+      <div class="activity-type-tabs" role="tablist" aria-label="Loại hoạt động">
+        <button type="button" class="is-active" data-activity-type="all">Tất cả</button>
+        <button type="button" data-activity-type="admin">Admin</button>
+        <button type="button" data-activity-type="user">User</button>
+        <button type="button" data-activity-type="order">Order</button>
+        <button type="button" data-activity-type="product">Product</button>
+      </div>
+    </div>
+
+    <div class="activity-timeline-summary" data-activity-summary></div>
+    <div class="activity-timeline-list" data-activity-list></div>
+    <div class="activity-timeline-empty" data-activity-empty>
+      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+      <strong>Không có hoạt động</strong>
+      <span>Thử đổi khoảng thời gian hoặc loại hoạt động.</span>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,49 @@
+<section class="admin-newsletter-page" data-admin-newsletter-page>
+  <header class="admin-newsletter-hero">
+    <div>
+      <span class="admin-newsletter-kicker">Bản tin</span>
+      <h1>Đăng ký Email</h1>
+      <p>Quản lý danh sách khách hàng đăng ký nhận tin và ưu đãi thời trang.</p>
+    </div>
+    <button class="admin-newsletter-refresh" type="button" data-newsletter-refresh>
+      <i class="fa-solid fa-rotate"></i>
+      Làm mới
+    </button>
+  </header>
+
+  <form class="admin-newsletter-filters" data-newsletter-filters>
+    <label class="admin-newsletter-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" name="search" placeholder="Tìm theo email hoặc họ tên">
+    </label>
+    <label>
+      <span>Trạng thái</span>
+      <select name="status">
+        <option value="">Tất cả trạng thái</option>
+        <option value="subscribed">Đã đăng ký</option>
+        <option value="unsubscribed">Đã hủy đăng ký</option>
+      </select>
+    </label>
+  </form>
+
+  <section class="admin-newsletter-card">
+    <div class="admin-newsletter-table-wrap">
+      <table class="admin-newsletter-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Họ tên</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Ngày đăng ký</th>
+            <th>Ngày hủy</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody data-newsletter-body></tbody>
+      </table>
+    </div>
+    <footer class="admin-newsletter-pagination" data-newsletter-pagination></footer>
+  </section>
+</section>

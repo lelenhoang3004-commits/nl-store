@@ -1,0 +1,74 @@
+/* Flash sale section. */
+.flash-sale-section {
+  display: grid;
+  gap: 20px;
+  padding: 26px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.flash-sale-heading {
+  margin-bottom: 0;
+}
+
+.flash-sale-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(248, 250, 252, 0.96));
+}
+
+.flash-sale-banner h3 {
+  margin: 10px 0 0;
+  color: var(--color-text);
+  font-size: 1.2rem;
+}
+
+.flash-sale-timer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flash-sale-timer div {
+  display: grid;
+  gap: 4px;
+  min-width: 72px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: #FFFFFF;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.flash-sale-timer strong {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.flash-sale-timer span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 720px) {
+  .flash-sale-section {
+    padding: 20px;
+  }
+
+  .flash-sale-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .flash-sale-timer {
+    justify-content: space-between;
+  }
+}

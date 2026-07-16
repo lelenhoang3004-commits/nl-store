@@ -1,0 +1,291 @@
+/* Customer design system tokens and shared UI primitives. */
+:root {
+  --ds-font-size-display: clamp(2.4rem, 4.8vw, 4.2rem);
+  --ds-font-size-h1: clamp(1.8rem, 3.4vw, 2.5rem);
+  --ds-font-size-h2: clamp(1.3rem, 2.2vw, 1.7rem);
+  --ds-font-size-h3: 1.05rem;
+  --ds-font-size-body: 0.96rem;
+  --ds-font-size-caption: 0.84rem;
+  --ds-line-height-body: 1.7;
+  --ds-line-height-tight: 1.25;
+}
+
+body {
+  font-size: var(--ds-font-size-body);
+  line-height: var(--ds-line-height-body);
+}
+
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--ds-font-size-h1);
+  line-height: var(--ds-line-height-tight);
+}
+
+h2 {
+  font-size: var(--ds-font-size-h2);
+  line-height: var(--ds-line-height-tight);
+}
+
+h3 {
+  font-size: var(--ds-font-size-h3);
+  line-height: var(--ds-line-height-tight);
+}
+
+p {
+  color: var(--color-muted);
+}
+
+.customer-container {
+  width: min(var(--container-max), calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.customer-shell {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.ds-card,
+.customer-card,
+.layout-card,
+.service-card,
+.review-card,
+.category-card,
+.feature-card-main,
+.mini-card,
+.premium-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.ds-button,
+.customer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-full);
+  color: #FFFFFF;
+  background: var(--color-primary);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.ds-button:hover,
+.customer-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+}
+
+.ds-button.secondary,
+.customer-button.secondary {
+  color: var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.ds-input,
+input[type="text"],
+input[type="email"],
+input[type="search"],
+input[type="password"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: var(--color-card);
+  outline: 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ds-input:focus,
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.ds-badge,
+.badge,
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  color: #FFFFFF;
+  background: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ds-tag,
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-soft);
+  background: rgba(248, 250, 252, 0.9);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ds-chip,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  background: var(--color-hover);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ds-container,
+.customer-section-shell {
+  width: min(var(--container-max), calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.ds-grid,
+.customer-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.ds-grid-2,
+.customer-grid-2 {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ds-grid-3,
+.customer-grid-3 {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ds-grid-4,
+.customer-grid-4 {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ds-surface,
+.surface-glass {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-glass);
+  backdrop-filter: blur(18px);
+}
+
+.ds-skeleton,
+.skeleton-block,
+.skeleton-pill,
+.skeleton-card,
+.skeleton-media,
+.skeleton-line {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.8), rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.8));
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.25s infinite linear;
+}
+
+.ds-hover,
+.hover-lift {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ds-hover:hover,
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+.ds-focus:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.ds-image,
+img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.ds-icon,
+.icon-pill {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  background: var(--color-hover);
+}
+
+@keyframes ds-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .ds-grid-4,
+  .customer-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ds-grid-3,
+  .customer-grid-3,
+  .ds-grid-2,
+  .customer-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .ds-grid-4,
+  .customer-grid-4,
+  .ds-grid-3,
+  .customer-grid-3,
+  .ds-grid-2,
+  .customer-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

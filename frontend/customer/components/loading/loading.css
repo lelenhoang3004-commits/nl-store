@@ -1,0 +1,65 @@
+/* Global Loading System Styles */
+.global-loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.45);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+.global-loading-overlay.visible { opacity: 1; pointer-events: auto; }
+.global-loading-inner { display:flex; gap:12px; flex-direction:column; align-items:center; color:#fff; }
+.global-loading-message { font-size: 1rem; color: rgba(255,255,255,0.92); }
+
+.loading-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.12);
+  border-top-color: var(--spinner-color, #3b82f6);
+  animation: loading-spin 800ms linear infinite;
+}
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+
+/* Top loading bar */
+.global-top-loading-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.global-top-loading-bar.visible { opacity: 1; }
+.global-top-loading-bar .global-top-loading-indicator {
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  width: 0%;
+  transition: width 240ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* Section loading overlay */
+.section-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  z-index: 50; opacity:0; pointer-events:none; transition: opacity 200ms ease;
+}
+.section-loading-overlay.visible { opacity:1; pointer-events:auto; }
+.section-loading-inner { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.section-loading-message { color: var(--color-muted, #6b7280); }
+
+/* Button loading re-use: btn--loading already styled in button.css but add common spinner */
+.btn--loading { position: relative; }
+.btn--loading .loading-spinner { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-width: 2px; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .global-loading-message { font-size: 0.95rem; }
+  .global-loading-inner { gap:8px; }
+}

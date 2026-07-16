@@ -1,0 +1,72 @@
+/* Skeleton System CSS - global and component utilities */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.skeleton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%);
+}
+
+/* shimmer layer */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -150%;
+  height: 100%;
+  width: 150%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  transform: translateX(0);
+  transition: none;
+}
+
+.skeleton--visible::after {
+  animation: skeleton-shimmer 1.2s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* Types */
+.skeleton--image { background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02)); }
+.skeleton--text { padding: 6px 0; }
+.skeleton-line { height: 10px; background: rgba(0,0,0,0.05); margin: 8px 0; border-radius: 4px; }
+.skeleton--avatar { background: rgba(0,0,0,0.06); }
+
+/* sizes */
+.skeleton--xs { height: 10px; }
+.skeleton--sm { height: 12px; }
+.skeleton--md { height: 14px; }
+.skeleton--lg { height: 18px; }
+
+/* grid */
+.skeleton-grid { display: grid; gap: 16px; }
+
+/* card layout */
+.skeleton-card { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+.skeleton-card .skeleton--image { width: 100%; height: 160px; }
+.skeleton-card .skeleton-content { padding: 8px 0; }
+
+/* detail layout */
+.skeleton-detail { display: block; }
+.skeleton-detail-body { display: grid; grid-template-columns: 1fr 320px; gap: 24px; margin-top: 18px; }
+.skeleton-detail-side { display: flex; flex-direction: column; gap: 12px; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .skeleton-detail-body { grid-template-columns: 1fr; }
+}
+
+/* utility */
+.skeleton--visible { opacity: 1; }
+
+/* subtle pulse option */
+.skeleton--pulse { animation: skeleton-pulse 1.6s ease-in-out infinite; }
+@keyframes skeleton-pulse { 0% { opacity: .85 } 50% { opacity: .95 } 100% { opacity: .85 } }

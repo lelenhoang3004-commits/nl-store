@@ -1,0 +1,25 @@
+/* Featured products section. */
+.featured-products-section {
+  display: grid;
+  gap: 18px;
+}
+
+.featured-products-heading {
+  margin-bottom: 0;
+}
+
+.featured-products-section .product-grid {
+  animation: featuredProductsReveal 420ms ease;
+}
+
+@keyframes featuredProductsReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

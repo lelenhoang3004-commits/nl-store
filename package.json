@@ -1,0 +1,14 @@
+﻿{
+  "name": "fashion-store-website",
+  "version": "1.0.0",
+  "description": "Professional fashion e-commerce website using HTML, CSS, Vanilla JavaScript, Node.js, Express.js and MySQL.",
+  "type": "module",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js"
+  },
+  "keywords": ["fashion", "ecommerce", "mvc", "node", "express", "mysql"],
+  "author": "",
+  "license": "MIT"
+}

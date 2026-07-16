@@ -1,0 +1,34 @@
+/* Carousel styles */
+.carousel { position:relative; width:100%; overflow:hidden; }
+.carousel-track { display:flex; align-items:stretch; transition: transform 360ms cubic-bezier(.2,.9,.2,1); will-change: transform; }
+.carousel-slide { flex:0 0 auto; box-sizing:border-box; }
+.carousel-slide > * { display:block; }
+
+.carousel--js .carousel-track { transition: transform 360ms cubic-bezier(.2,.9,.2,1); }
+.carousel.is-dragging { cursor: grabbing; user-select: none; }
+
+/* Navigation */
+.carousel-nav { position:absolute; top:50%; left:0; right:0; display:flex; justify-content:space-between; transform:translateY(-50%); pointer-events:none; }
+.carousel-nav button { pointer-events:auto; background:rgba(255,255,255,0.9); border:none; width:36px; height:36px; border-radius:50%; box-shadow:var(--shadow-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+/* Indicators */
+.carousel-indicators { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+.carousel-ind { width:8px; height:8px; background:rgba(255,255,255,0.6); border-radius:50%; border:none; cursor:pointer; }
+.carousel-ind.active { background:var(--color-primary,#3b82f6); box-shadow:0 0 0 4px rgba(59,130,246,0.12); }
+
+/* clones: hide outline */
+.carousel-clone { opacity:1; }
+
+/* simple fade animation support */
+.carousel--js[data-animation="fade"] .carousel-slide { transition: opacity 360ms ease; }
+
+/* responsive helper: ensure images are fluid */
+.carousel img { display:block; width:100%; height:auto; object-fit:cover; }
+
+/* lazy placeholder */
+.carousel img[data-src] { opacity:0.6; filter: blur(4px); }
+
+@media (max-width: 900px) {
+  .carousel-nav button { width:30px; height:30px; }
+  .carousel-indicators { bottom:8px; }
+}

@@ -1,0 +1,76 @@
+<section class="admin-orders-page" aria-labelledby="admin-orders-title">
+  <div class="admin-orders-hero">
+    <div>
+      <p class="admin-orders-eyebrow">Quản lý đơn hàng</p>
+      <h1 id="admin-orders-title">Quản lý đơn hàng</h1>
+      <p>Theo dõi đơn hàng, thanh toán và cập nhật tiến trình xử lý.</p>
+    </div>
+    <button type="button" class="admin-order-refresh" data-order-reset>
+      <i class="fa-solid fa-rotate"></i> Làm mới
+    </button>
+  </div>
+
+  <form class="admin-order-filters" data-order-filters>
+    <label>
+      <span>Tìm kiếm</span>
+      <input name="search" type="search" placeholder="Tìm mã đơn, tên khách hàng, số điện thoại...">
+    </label>
+    <label>
+      <span>Trạng thái đơn</span>
+      <select name="status">
+        <option value="">Tất cả</option>
+        <option value="pending">Chờ xác nhận</option>
+        <option value="confirmed">Đã xác nhận</option>
+        <option value="processing">Đang xử lý</option>
+        <option value="shipping">Đang giao</option>
+        <option value="completed">Hoàn thành</option>
+        <option value="cancelled">Đã hủy</option>
+        <option value="refunded">Đã hoàn tiền</option>
+      </select>
+    </label>
+    <label>
+      <span>Trạng thái thanh toán</span>
+      <select name="paymentStatus">
+        <option value="">Tất cả</option>
+        <option value="unpaid">Chưa thanh toán</option>
+        <option value="partial">Thanh toán một phần</option>
+        <option value="paid">Đã thanh toán</option>
+        <option value="refunded">Đã hoàn tiền</option>
+        <option value="failed">Thanh toán thất bại</option>
+      </select>
+    </label>
+    <label>
+      <span>Phương thức thanh toán</span>
+      <select name="paymentMethod">
+        <option value="">Tất cả</option>
+        <option value="cod">COD</option>
+        <option value="bank_transfer">Chuyển khoản</option>
+        <option value="vnpay">VNPay</option>
+        <option value="momo">MoMo</option>
+      </select>
+    </label>
+    <button type="submit"><i class="fa-solid fa-filter"></i> Lọc</button>
+  </form>
+
+  <section class="admin-order-card">
+    <div class="admin-order-table-wrap">
+      <table class="admin-order-table">
+        <thead>
+          <tr>
+            <th>Mã đơn hàng</th>
+            <th>Khách hàng</th>
+            <th>Số điện thoại</th>
+            <th>Tổng tiền</th>
+            <th>Phương thức thanh toán</th>
+            <th>Trạng thái thanh toán</th>
+            <th>Trạng thái đơn hàng</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody data-order-rows></tbody>
+      </table>
+    </div>
+    <div class="admin-order-pagination" data-order-pagination></div>
+  </section>
+</section>

@@ -1,0 +1,38 @@
+{
+  "name": "fashion-store-backend",
+  "version": "1.0.0",
+  "description": "Enterprise-style Node.js Express backend architecture for a fashion e-commerce website.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "lint": "node --check server.js && node --check app.js"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "mysql",
+    "mvc",
+    "fashion",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-validator": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "mysql2": "^3.22.6",
+    "uuid": "^14.0.1"
+  }
+}

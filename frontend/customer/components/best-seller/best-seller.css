@@ -1,0 +1,25 @@
+/* Best seller section. */
+.best-seller-section {
+  display: grid;
+  gap: 18px;
+}
+
+.best-seller-heading {
+  margin-bottom: 0;
+}
+
+.best-seller-section .product-grid {
+  animation: bestSellerReveal 360ms ease;
+}
+
+@keyframes bestSellerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

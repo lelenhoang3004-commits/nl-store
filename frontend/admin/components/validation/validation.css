@@ -1,0 +1,78 @@
+.validation-field {
+  position: relative;
+}
+
+.validation-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--color-danger, #ef4444);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  animation: validation-message-in 180ms ease;
+}
+
+.validation-message i {
+  font-size: 12px;
+}
+
+.is-invalid {
+  border-color: var(--color-danger, #ef4444) !important;
+  background: color-mix(in srgb, var(--color-danger, #ef4444) 8%, transparent) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-danger, #ef4444) 12%, transparent) !important;
+  animation: validation-field-shake 220ms ease;
+}
+
+.is-valid {
+  border-color: color-mix(in srgb, var(--color-success, #22c55e) 72%, var(--color-border, #dbe3ef)) !important;
+}
+
+.validation-summary {
+  display: none;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-danger, #ef4444) 24%, transparent);
+  border-radius: 16px;
+  color: var(--color-danger, #ef4444);
+  background: color-mix(in srgb, var(--color-danger, #ef4444) 8%, var(--color-card, #ffffff));
+  font-size: 13px;
+  font-weight: 600;
+  animation: validation-message-in 180ms ease;
+}
+
+.validation-summary.is-visible {
+  display: block;
+}
+
+.modal-form-grid .validation-summary {
+  grid-column: 1 / -1;
+}
+
+@keyframes validation-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes validation-field-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  35% {
+    transform: translateX(-3px);
+  }
+
+  70% {
+    transform: translateX(3px);
+  }
+}

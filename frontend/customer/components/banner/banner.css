@@ -1,0 +1,49 @@
+/* Banner component styles */
+.banner { display:block; width:100%; overflow:hidden; position:relative; }
+.banner--visible { opacity:1; transform:none; }
+.banner { opacity:0; transform: translateY(8px); transition: opacity 360ms ease, transform 360ms cubic-bezier(.2,.9,.2,1); }
+
+/* horizontal */
+.banner--horizontal .banner-horizontal { display:flex; gap:18px; align-items:center; }
+.banner-media { flex: 0 0 45%; max-width:45%; position:relative; }
+.banner-media img { display:block; width:100%; height:auto; border-radius:8px; }
+.banner-horizontal-meta { flex:1; }
+
+/* vertical */
+.banner--vertical .banner-vertical { display:block; }
+.banner-vertical .banner-media img { width:100%; height:auto; border-radius:8px; }
+.banner-vertical-meta { padding-top:12px; }
+
+/* promo */
+.banner--promotion .banner-promo { position:relative; overflow:hidden; border-radius:10px; }
+.banner-promo img { width:100%; height:100%; object-fit:cover; display:block; }
+.banner-promo-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:28px; background: linear-gradient(90deg, rgba(0,0,0,0.28), rgba(0,0,0,0.08)); color:#fff; }
+
+.banner-content { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.banner-title { font-size:1.4rem; margin:0 0 6px; }
+.banner-subtitle { margin:0; color:var(--color-muted,#6b7280); }
+
+.banner-badge { position:absolute; top:12px; left:12px; background:var(--color-danger,#ef4444); color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.75rem; }
+
+/* collection */
+.banner-collection { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
+.banner-collection-item { display:block; background:#fff; border-radius:8px; overflow:hidden; text-decoration:none; color:inherit; box-shadow:var(--shadow-soft); }
+.banner-collection-item img { width:100%; height:140px; object-fit:cover; display:block; }
+.banner-collection-meta { padding:10px; }
+
+/* animations */
+.banner--anim-fade { opacity:0; transform: translateY(6px); }
+.banner--anim-fade.banner--visible { opacity:1; transform:none; }
+.banner--anim-slide { opacity:0; transform: translateX(-10px); }
+.banner--anim-slide.banner--visible { opacity:1; transform:none; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .banner--horizontal .banner-horizontal { flex-direction:column; }
+  .banner-media { max-width:100%; flex-basis:auto; }
+  .banner-collection { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 480px) {
+  .banner-collection { grid-template-columns: 1fr; }
+  .banner-title { font-size:1.1rem; }
+}

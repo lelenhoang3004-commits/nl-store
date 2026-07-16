@@ -1,0 +1,17 @@
+<section class="admin-products-page" aria-labelledby="products-title">
+  <header class="admin-products-hero">
+    <div><p class="admin-products-eyebrow">Quản lý sản phẩm</p><h1 id="products-title">Quản lý sản phẩm</h1><p>Quản lý sản phẩm, giá bán, tồn kho và trạng thái hiển thị trên cửa hàng.</p></div>
+    <button type="button" data-product-create><i class="fa-solid fa-plus"></i> Thêm sản phẩm</button>
+  </header>
+  <form class="admin-product-filters" data-product-filters>
+    <label><span>Tìm kiếm</span><input type="search" name="search" maxlength="150" placeholder="Tên, SKU, thương hiệu..."></label>
+    <label><span>Danh mục</span><select name="categoryId" data-product-category-filter><option value="">Tất cả danh mục</option></select></label>
+    <label><span>Trạng thái</span><select name="status"><option value="">Tất cả trạng thái</option><option value="active">Đang bán</option><option value="inactive">Tạm ẩn</option><option value="out_of_stock">Hết hàng</option></select></label>
+    <label class="admin-product-low-stock"><input type="checkbox" name="lowStock" value="true"><span>Tồn kho thấp (≤ 5)</span></label>
+    <div><button type="submit">Lọc</button><button type="button" class="is-secondary" data-product-reset>Làm mới</button></div>
+  </form>
+  <article class="admin-product-card">
+    <div class="admin-product-table-wrap"><table class="admin-product-table"><thead><tr><th>Ảnh</th><th>Tên sản phẩm</th><th>SKU</th><th>Danh mục</th><th>Giá</th><th>Giá sale</th><th>Tồn kho</th><th>Đã bán</th><th>Trạng thái</th><th>Ngày cập nhật</th><th>Hành động</th></tr></thead><tbody data-product-rows><tr><td colspan="11" class="admin-product-empty">Đang tải sản phẩm...</td></tr></tbody></table></div>
+    <nav class="admin-product-pagination" data-product-pagination aria-label="Phân trang sản phẩm"></nav>
+  </article>
+</section>

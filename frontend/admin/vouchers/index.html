@@ -1,0 +1,26 @@
+<section class="admin-vouchers-page" aria-labelledby="admin-vouchers-title">
+  <div class="admin-vouchers-hero">
+    <div>
+      <p class="admin-vouchers-eyebrow">Khuyến mãi</p>
+      <h1 id="admin-vouchers-title">Quản lý mã giảm giá</h1>
+      <p>Tạo, chỉnh sửa và kiểm soát mã giảm giá dùng trong checkout.</p>
+    </div>
+    <button type="button" class="admin-voucher-primary" data-voucher-create><i class="fa-solid fa-plus"></i> Thêm mã giảm giá</button>
+  </div>
+
+  <form class="admin-voucher-filters" data-voucher-filters>
+    <label><span>Tìm kiếm</span><input type="search" name="search" placeholder="Code hoặc tên mã"></label>
+    <label><span>Trạng thái</span><select name="status"><option value="">Tất cả</option><option value="active">hoạt động</option><option value="inactive">không hoạt động</option><option value="expired">hết hạn</option></select></label>
+    <button type="button" data-voucher-refresh>Làm mới</button>
+  </form>
+
+  <section class="admin-voucher-card">
+    <div class="admin-voucher-table-wrap">
+      <table class="admin-voucher-table">
+        <thead><tr><th>ID</th><th>Code</th><th>Tên mã</th><th>Loại giảm</th><th>Giá trị</th><th>Đơn tối thiểu</th><th>Giảm tối đa</th><th>Lượt dùng</th><th>Thời hạn</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+        <tbody data-vouchers-body><tr><td colspan="11" class="admin-voucher-empty">Đang tải mã giảm giá...</td></tr></tbody>
+      </table>
+    </div>
+    <footer class="admin-voucher-pagination" data-vouchers-pagination></footer>
+  </section>
+</section>

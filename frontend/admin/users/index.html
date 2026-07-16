@@ -1,0 +1,71 @@
+<section class="admin-users-page" aria-labelledby="admin-users-title">
+  <div class="admin-users-hero">
+    <div>
+      <p class="admin-users-eyebrow">Kiểm soát truy cập</p>
+      <h1 id="admin-users-title">Quản lý người dùng</h1>
+      <p>Quản lý tài khoản, vai trò, trạng thái và quyền truy cập trong hệ thống.</p>
+    </div>
+    <button type="button" class="admin-users-refresh" data-user-refresh>
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+      Làm mới
+    </button>
+  </div>
+
+  <form class="admin-users-filters" data-user-filters>
+    <label class="admin-users-search">
+      <span>Tìm kiếm</span>
+      <div class="admin-users-control">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input type="search" name="search" placeholder="Tên, email hoặc số điện thoại" autocomplete="off">
+      </div>
+    </label>
+    <label>
+      <span>Vai trò</span>
+      <div class="admin-users-control">
+        <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+        <select name="role">
+          <option value="">Tất cả vai trò</option>
+          <option value="ADMIN">ADMIN</option>
+          <option value="STAFF">NHÂN VIÊN</option>
+          <option value="CUSTOMER">KHÁCH HÀNG</option>
+        </select>
+      </div>
+    </label>
+    <label>
+      <span>Trạng thái</span>
+      <div class="admin-users-control">
+        <i class="fa-solid fa-toggle-on" aria-hidden="true"></i>
+        <select name="status">
+          <option value="">Tất cả Trạng thái</option>
+          <option value="active">Hoạt động</option>
+          <option value="inactive">không hoạt động</option>
+          <option value="locked">Đã khóa</option>
+        </select>
+      </div>
+    </label>
+  </form>
+
+  <section class="admin-users-card" aria-label="Danh sách người dùng">
+    <div class="admin-users-table-wrap">
+      <table class="admin-users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Quyền</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody data-users-body>
+          <tr><td colspan="9" class="admin-users-empty">Đang tải người dùng...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="admin-users-pagination" data-users-pagination></footer>
+  </section>
+</section>

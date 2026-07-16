@@ -1,0 +1,338 @@
+.datatable {
+  display: grid;
+  gap: 16px;
+  animation: datatable-in 220ms ease both;
+}
+
+.datatable-header,
+.datatable-toolbar,
+.datatable-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.datatable-header {
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.datatable-eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.datatable-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.22rem;
+}
+
+.datatable-header span,
+.datatable-footer {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.datatable-primary-action,
+.datatable-secondary-action,
+.datatable-search,
+.datatable-filter,
+.datatable-pagination button {
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-card);
+  color: var(--color-text-soft);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.datatable-primary-action {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.datatable-header-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.datatable-primary-action,
+.datatable-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 9px;
+  padding: 0 14px;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.datatable-secondary-action {
+  background: var(--color-card);
+  color: var(--color-text-soft);
+}
+
+.datatable-primary-action:hover,
+.datatable-secondary-action:hover {
+  transform: translateY(-1px);
+}
+
+.datatable-toolbar {
+  flex-wrap: wrap;
+}
+
+.datatable-search,
+.datatable-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.datatable-search {
+  flex: 1 1 320px;
+}
+
+.datatable-filter {
+  flex: 0 0 240px;
+}
+
+.datatable-search input,
+.datatable-filter select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--color-text);
+  font: inherit;
+  background: transparent;
+}
+
+.datatable-surface {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.datatable-scroll {
+  overflow-x: auto;
+}
+
+.datatable table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.datatable th,
+.datatable td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-soft);
+  font-size: 0.86rem;
+  text-align: left;
+}
+
+.datatable th {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.datatable tbody tr {
+  animation: row-in 180ms ease both;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.datatable tbody tr:hover {
+  background: var(--color-hover);
+}
+
+.checkbox-column,
+.index-column {
+  width: 54px;
+}
+
+.action-column {
+  width: 132px;
+}
+
+.datatable-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-transform: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.datatable-sort:disabled {
+  cursor: default;
+}
+
+.datatable-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.datatable-status.is-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+}
+
+.datatable-status.is-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.datatable-status.is-muted {
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--color-muted);
+}
+
+.row-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.row-actions button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.row-actions button:hover {
+  color: var(--color-primary);
+  background: var(--color-hover);
+  transform: translateY(-1px);
+}
+
+.datatable-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.datatable-pagination button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+}
+
+.datatable-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.datatable-empty {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 240px;
+  padding: 28px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.datatable-empty i {
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+.datatable-empty strong {
+  color: var(--color-text);
+}
+
+.datatable-skeleton {
+  display: grid;
+  gap: 1px;
+  padding: 12px;
+}
+
+.skeleton-row {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  min-width: 920px;
+  min-height: 54px;
+}
+
+.skeleton-row span {
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.32), rgba(148, 163, 184, 0.16));
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.1s ease-in-out infinite;
+}
+
+@media (max-width: 760px) {
+  .datatable-header,
+  .datatable-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .datatable-primary-action,
+  .datatable-secondary-action,
+  .datatable-filter {
+    width: 100%;
+  }
+
+  .datatable-header-actions {
+    width: 100%;
+  }
+}
+
+@keyframes datatable-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

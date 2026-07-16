@@ -1,0 +1,67 @@
+<section class="inventory-page" aria-labelledby="inventory-title">
+  <div class="inventory-hero">
+    <div>
+      <p class="inventory-eyebrow">Hàng tồn kho</p>
+      <h1 id="inventory-title">Quản lý tồn kho</h1>
+      <p>Theo dõi tồn kho, cảnh báo hết hàng, nhập xuất kho và lịch sử biến động hàng hóa bằng dữ liệu giả.</p>
+    </div>
+    <div class="inventory-actions">
+      <button type="button" data-inventory-action="stock-in">
+        <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+        <span>Nhập kho</span>
+      </button>
+      <button type="button" data-inventory-action="stock-out">
+        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+        <span>Xuất kho</span>
+      </button>
+    </div>
+  </div>
+
+  <section class="inventory-stat-grid" aria-label="Thống kê tồn kho">
+    <article><span>Tổng tồn kho</span><strong data-inventory-stat="totalStock">0</strong></article>
+    <article><span>Hết hàng</span><strong data-inventory-stat="outOfStock">0</strong></article>
+    <article><span>Sắp hết</span><strong data-inventory-stat="lowStock">0</strong></article>
+    <article><span>SKU đang theo dõi</span><strong data-inventory-stat="skuCount">0</strong></article>
+  </section>
+
+  <section class="inventory-main-grid">
+    <article class="inventory-card">
+      <div class="inventory-card-header">
+        <div>
+          <p class="inventory-eyebrow">Biểu đồ</p>
+          <h2>Nhập xuất kho trong tuần</h2>
+        </div>
+      </div>
+      <div class="inventory-chart" data-inventory-chart></div>
+    </article>
+
+    <article class="inventory-card">
+      <div class="inventory-card-header">
+        <div>
+          <p class="inventory-eyebrow">Lịch sử</p>
+          <h2>Lịch sử tồn kho</h2>
+        </div>
+      </div>
+      <div class="inventory-history" data-inventory-history></div>
+    </article>
+  </section>
+
+  <section class="inventory-card">
+    <div class="inventory-card-header">
+      <div>
+        <p class="inventory-eyebrow">Stock</p>
+        <h2>Danh sách tồn kho</h2>
+      </div>
+      <label class="inventory-filter">
+        <i class="fa-solid fa-filter" aria-hidden="true"></i>
+        <select data-inventory-filter>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="Còn hàng">Còn hàng</option>
+          <option value="Sắp hết">Sắp hết</option>
+          <option value="Hết hàng">Hết hàng</option>
+        </select>
+      </label>
+    </div>
+    <div class="inventory-table-wrap" data-inventory-table></div>
+  </section>
+</section>

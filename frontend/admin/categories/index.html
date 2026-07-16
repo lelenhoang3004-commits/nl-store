@@ -1,0 +1,35 @@
+<section class="categories-page" aria-labelledby="categories-title">
+  <div class="categories-hero">
+    <div>
+      <p class="categories-eyebrow">Danh mục</p>
+      <h1 id="categories-title">Quản lý danh mục</h1>
+      <p>Tổ chức nhóm sản phẩm, trạng thái hiển thị và số lượng sản phẩm trong từng danh mục.</p>
+    </div>
+    <div class="categories-hero-actions">
+      <button type="button" class="admin-category-primary" data-category-create>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Thêm danh mục</span>
+      </button>
+      <div class="categories-hero-icon" aria-hidden="true">
+        <i class="fa-solid fa-tags"></i>
+      </div>
+    </div>
+  </div>
+
+  <section class="category-summary-grid" aria-label="Tổng quan danh mục">
+    <article>
+      <span>Tổng danh mục</span>
+      <strong data-category-summary="total">0</strong>
+    </article>
+    <article>
+      <span>Đang hiển thị</span>
+      <strong data-category-summary="active">0</strong>
+    </article>
+    <article>
+      <span>Tạm ẩn</span>
+      <strong data-category-summary="hidden">0</strong>
+    </article>
+  </section>
+
+  <div data-categories-table></div>
+</section>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Giao diện khách hàng của N&amp;L Store dành cho trải nghiệm mua sắm thời trang cao cấp.">
+  <title>N&L Store | Trang web của khách hàng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/variables.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="./assets/css/design-system.css?v=20260714-utf8">
+  <link rel="stylesheet" href="./assets/css/customer.css?v=20260716-auth-fix">
+  <link rel="stylesheet" href="./components/navigation/navigation.css">
+  <link rel="stylesheet" href="./components/header/header.css?v=20260716-google-avatar-fix1">
+  <link rel="stylesheet" href="./components/product-card/product-card.css">
+  <link rel="stylesheet" href="./components/product-detail/product-detail.css">
+  <link rel="stylesheet" href="./components/footer/footer.css">
+  <link rel="stylesheet" href="./components/hero/hero.css">
+  <link rel="stylesheet" href="./components/flash-sale/flash-sale.css">
+  <link rel="stylesheet" href="./components/featured-products/featured-products.css">
+  <link rel="stylesheet" href="./components/new-arrival/new-arrival.css">
+  <link rel="stylesheet" href="./components/best-seller/best-seller.css">
+  <link rel="stylesheet" href="./components/category-showcase/category-showcase.css">
+  <link rel="stylesheet" href="./components/brand-showcase/brand-showcase.css">
+  <link rel="stylesheet" href="./components/customer-reviews/customer-reviews.css">
+  <link rel="stylesheet" href="./components/newsletter-section/newsletter-section.css">
+  <link rel="stylesheet" href="./components/product-grid/product-grid.css">
+  <link rel="stylesheet" href="./components/badge/badge.css">
+  <link rel="stylesheet" href="./components/skeleton/skeleton.css">
+  <link rel="stylesheet" href="./components/empty-state/empty-state.css">
+  <link rel="stylesheet" href="./components/loading/loading.css">
+  <link rel="stylesheet" href="./components/banner/banner.css">
+  <link rel="stylesheet" href="./components/carousel/carousel.css">
+  <link rel="stylesheet" href="./home/home.css">
+  <script>
+    (function() {
+      if (!window || window.__customerDevServerReloadGuard) return;
+      window.__customerDevServerReloadGuard = true;
+
+      const OriginalWebSocket = window.WebSocket;
+      const OriginalEventSource = window.EventSource;
+      const shouldSuppress = (payload) => {
+        try {
+          if (typeof payload !== 'string') return false;
+          const text = payload.toLowerCase();
+          return text.includes('reload') || text.includes('refresh') || text.includes('livereload') || text.includes('live-reload');
+        } catch (err) {
+          return false;
+        }
+      };
+
+      if (OriginalWebSocket) {
+        const WrappedWebSocket = function(url, protocols) {
+          const socket = new OriginalWebSocket(url, protocols);
+          const originalAddEventListener = socket.addEventListener.bind(socket);
+
+          socket.addEventListener = function(type, handler, options) {
+            if (type === 'message' && typeof handler === 'function') {
+              return originalAddEventListener('message', function(event) {
+                if (shouldSuppress(event.data)) {
+                  console.debug('[customer] suppressed dev-server reload message', event.data);
+                  return;
+                }
+                handler(event);
+              }, options);
+            }
+            return originalAddEventListener(type, handler, options);
+          };
+
+          Object.defineProperty(socket, 'onmessage', {
+            get() {
+              return this._onmessage;
+            },
+            set(fn) {
+              if (typeof fn === 'function') {
+                this._onmessage = function(event) {
+                  if (shouldSuppress(event.data)) {
+                    console.debug('[customer] suppressed dev-server reload message', event.data);
+                    return;
+                  }
+                  fn(event);
+                };
+              } else {
+                this._onmessage = fn;
+              }
+            }
+          });
+
+          return socket;
+        };
+
+        try {
+          WrappedWebSocket.prototype = OriginalWebSocket.prototype;
+          Object.keys(OriginalWebSocket).forEach((key) => {
+            try { WrappedWebSocket[key] = OriginalWebSocket[key]; } catch (e) {}
+          });
+          window.WebSocket = WrappedWebSocket;
+        } catch (e) {
+          console.debug('[customer] failed to wrap WebSocket', e);
+        }
+      }
+
+      if (OriginalEventSource) {
+        const WrappedEventSource = function(url, config) {
+          const source = new OriginalEventSource(url, config);
+          const originalAddEventListener = source.addEventListener.bind(source);
+
+          source.addEventListener = function(type, handler, options) {
+            if (type === 'message' && typeof handler === 'function') {
+              return originalAddEventListener('message', function(event) {
+                if (shouldSuppress(event.data)) {
+                  console.debug('[customer] suppressed dev-server reload SSE', event.data);
+                  return;
+                }
+                handler(event);
+              }, options);
+            }
+            return originalAddEventListener(type, handler, options);
+          };
+
+          return source;
+        };
+
+        try {
+          WrappedEventSource.prototype = OriginalEventSource.prototype;
+          window.EventSource = WrappedEventSource;
+        } catch (e) {
+          console.debug('[customer] failed to wrap EventSource', e);
+        }
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="customer-shell">
+    <header id="customer-header" class="customer-header"></header>
+    <main id="customer-main" class="customer-main" tabindex="-1"></main>
+    <footer id="customer-footer" class="customer-footer"></footer>
+  </div>
+  <script type="module" src="./assets/js/customer-layout.js?v=20260716-oauth-popup-fix3"></script>
+</body>
+</html>
+
+
