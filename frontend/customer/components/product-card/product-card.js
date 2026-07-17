@@ -134,6 +134,15 @@ export function initProductCard(root = document) {
   });
 }
 
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
