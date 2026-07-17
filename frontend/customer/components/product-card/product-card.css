@@ -271,7 +271,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
   width: 100%;
   min-width: 0;
   height: 42px;
@@ -280,7 +279,7 @@
   overflow: hidden;
   border-radius: 14px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -299,11 +298,6 @@
   transform: translateY(-1px);
 }
 
-.product-card-button i,
-.product-card-button svg {
-  flex: 0 0 auto;
-  font-size: 0.9em;
-}
 
 .product-card-skeleton {
   pointer-events: none;
@@ -353,5 +347,4 @@
     min-height: 40px;
     font-size: 12px;
   }
-  .product-card-button i { font-size: .85em; }
 }

@@ -87,7 +87,6 @@ export function createProductCard(product) {
         </div>
         <div class="product-card-button-row">
           <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
-            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
             Thêm giỏ
           </button>
           <button class="ds-button product-card-button product-card-buy-now" type="button"
@@ -103,7 +102,6 @@ export function createProductCard(product) {
             data-product-variant-count="${Number(item.variantCount || 0)}"
             data-product-has-variants="${item.hasVariants ? "true" : "false"}"
             data-product-stock="${Number(item.stock || 0)}">
-            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
             Mua ngay
           </button>
         </div>
