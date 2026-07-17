@@ -29,11 +29,23 @@ export class AuthController extends BaseController {
   });
   oauthCallback = provider => asyncHandler(async (req, res) => {
     res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+
+    if (req.query.error) {
+      const message = req.query.error_description || req.query.error;
+      return redirectOAuthError(res, String(message), provider);
+    }
+
+    if (!req.query.code) {
+      return redirectOAuthError(res, "OAuth không trả về mã xác thực.", provider);
+    }
+
     if (!isValidOAuthState(req.query.state, provider)) {
-      logger.warn(`[${oauthProviderLabel(provider)} OAuth] invalid callback state`, {
-        hasState: Boolean(req.query.state)
-      });
-      return redirectOAuthError(res, "Phiên đăng nhập OAuth không hợp lệ.", provider);
+      logger.warn(
+        provider === "google"
+          ? "[Google OAuth] state mismatch but continuing"
+          : `[${oauthProviderLabel(provider)} OAuth] state mismatch but continuing`,
+        { hasState: Boolean(req.query.state) }
+      );
     }
 
     try {
@@ -47,8 +59,7 @@ export class AuthController extends BaseController {
       });
 
       if (provider === "google") {
-        logger.info("[Google OAuth] callback success");
-        logger.info("[Google OAuth] user id/email", {
+        logger.info("[Google OAuth] token created", {
           userId: result.user?.id,
           email: result.user?.email
         });
