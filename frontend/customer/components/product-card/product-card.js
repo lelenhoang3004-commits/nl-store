@@ -88,7 +88,7 @@ export function createProductCard(product) {
         <div class="product-card-button-row">
           <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
             <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-            Thêm vào giỏ
+            Thêm giỏ
           </button>
           <button class="ds-button product-card-button product-card-buy-now" type="button"
             data-buy-now

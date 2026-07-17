@@ -268,29 +268,42 @@
 }
 
 .product-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   width: 100%;
   min-width: 0;
+  height: 42px;
   min-height: 42px;
-  padding-inline: 10px;
+  padding: 0 8px;
   overflow: hidden;
-  font-size: .82rem;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .product-card-buy-now {
-  border-color: rgba(245, 158, 11, 0.55);
-  background: linear-gradient(135deg, #f97316, #f59e0b);
+  border-color: rgba(245, 158, 11, 0.48);
+  background: linear-gradient(135deg, #fb923c, #f59e0b);
   color: #fff;
-  box-shadow: 0 12px 24px rgba(249, 115, 22, 0.22);
+  box-shadow: 0 10px 22px rgba(249, 115, 22, 0.18);
 }
 
 .product-card-buy-now:hover {
-  border-color: rgba(249, 115, 22, 0.8);
-  box-shadow: 0 16px 28px rgba(249, 115, 22, 0.28);
+  border-color: rgba(249, 115, 22, 0.68);
+  box-shadow: 0 14px 26px rgba(249, 115, 22, 0.24);
+  transform: translateY(-1px);
 }
 
-.product-card-button i { flex: 0 0 auto; }
+.product-card-button i,
+.product-card-button svg {
+  flex: 0 0 auto;
+  font-size: 0.9em;
+}
 
 .product-card-skeleton {
   pointer-events: none;
@@ -320,13 +333,14 @@
   }
 
   .product-card-button {
+    height: 40px;
     min-height: 40px;
-    padding-inline: 8px;
-    font-size: .78rem;
+    padding-inline: 7px;
+    font-size: 12px;
   }
 
   .product-card-button-row {
-    gap: 6px;
+    gap: 8px;
   }
 }
 
@@ -334,6 +348,10 @@
   .product-card-content { padding: 14px; }
   .product-price-row { grid-template-columns: 1fr; }
   .product-sold { justify-self: start; }
-  .product-card-button { font-size: .74rem; }
-  .product-card-button i { display: none; }
+  .product-card-button {
+    height: 40px;
+    min-height: 40px;
+    font-size: 12px;
+  }
+  .product-card-button i { font-size: .85em; }
 }
