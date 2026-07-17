@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/async-handler.util.js";
 import { clearRefreshCookie, createRefreshCookieOptions } from "../utils/token.util.js";
 import { logger } from "../utils/logger.util.js";
 
-const OAUTH_STATE_COOKIE = "fashion_oauth_state";
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 
 export class AuthController extends BaseController {
   constructor(service = new AuthService()) { super(); this.service = service; }
@@ -23,19 +23,18 @@ export class AuthController extends BaseController {
   });
   oauthStart = provider => asyncHandler(async (req, res) => {
     res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
-    const state = crypto.randomBytes(24).toString("hex");
+    const state = createOAuthState(provider);
     const authorizationUrl = this.service.getOAuthAuthorization(provider, state);
-    res.cookie(OAUTH_STATE_COOKIE, state, { httpOnly: true, signed: true, secure: appConfig.isProduction, sameSite: "lax", maxAge: 10 * 60 * 1000, path: "/api/v1/auth" });
     return res.redirect(authorizationUrl);
   });
   oauthCallback = provider => asyncHandler(async (req, res) => {
     res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
-    const state = req.signedCookies?.[OAUTH_STATE_COOKIE];
-    if (!state || state !== req.query.state) {
+    if (!isValidOAuthState(req.query.state, provider)) {
+      logger.warn(`[${oauthProviderLabel(provider)} OAuth] invalid callback state`, {
+        hasState: Boolean(req.query.state)
+      });
       return redirectOAuthError(res, "Phiên đăng nhập OAuth không hợp lệ.", provider);
     }
-
-    res.clearCookie(OAUTH_STATE_COOKIE, { path: "/api/v1/auth" });
 
     try {
       const result = await this.service.handleOAuthCallback(provider, req.query.code);
@@ -78,6 +77,47 @@ export class AuthController extends BaseController {
   setRefreshCookie(res, result, remember) { res.cookie(appConfig.refreshCookieName, result.refreshToken, createRefreshCookieOptions(remember)); }
 }
 function publicTokenResult(r) { return { user: r.user, accessToken: r.accessToken, tokenType: r.tokenType, expiresIn: r.expiresIn }; }
+
+function createOAuthState(provider) {
+  const payload = Buffer.from(JSON.stringify({
+    provider,
+    nonce: crypto.randomBytes(24).toString("hex"),
+    expiresAt: Date.now() + OAUTH_STATE_TTL_MS
+  })).toString("base64url");
+  const signature = signOAuthState(payload);
+  return `${payload}.${signature}`;
+}
+
+function isValidOAuthState(value, provider) {
+  try {
+    const [payload, signature, extra] = String(value || "").split(".");
+    if (!payload || !signature || extra) return false;
+
+    const expectedSignature = signOAuthState(payload);
+    const providedBuffer = Buffer.from(signature, "base64url");
+    const expectedBuffer = Buffer.from(expectedSignature, "base64url");
+    if (providedBuffer.length !== expectedBuffer.length) return false;
+    if (!crypto.timingSafeEqual(providedBuffer, expectedBuffer)) return false;
+
+    const state = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return state.provider === provider
+      && Number.isFinite(Number(state.expiresAt))
+      && Number(state.expiresAt) >= Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function signOAuthState(payload) {
+  return crypto
+    .createHmac("sha256", appConfig.cookieSecret)
+    .update(payload)
+    .digest("base64url");
+}
+
+function oauthProviderLabel(provider) {
+  return provider === "google" ? "Google" : provider === "facebook" ? "Facebook" : "OAuth";
+}
 function createOAuthSuccessRedirectUrl(callbackUrl, params) {
   const url = new URL(callbackUrl);
   const rawHash = url.hash.replace(/^#/, "");
