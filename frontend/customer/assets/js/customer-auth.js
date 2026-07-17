@@ -81,34 +81,24 @@ export const customerAuth = {
     }, remember);
 
     if (isGoogle) {
-      console.info("[Google OAuth] token saved key", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
-      console.info("[Google OAuth] auth/me has bearer", Boolean(accessToken));
+      console.info("[Google OAuth] saved token", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
+      console.info("[Google OAuth] /me with bearer", Boolean(accessToken));
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: "GET",
-      headers: {
-        ...jsonHeaders(),
-        Authorization: `Bearer ${accessToken}`
-      },
-      credentials: "include"
-    });
-
-    if (response.status === 401) {
-      if (isGoogle) {
-        console.error("[Google OAuth] auth/me rejected token; bearer present", Boolean(accessToken));
+    let verifiedUser;
+    try {
+      verifiedUser = await this.loadCurrentUser(accessToken);
+    } catch (error) {
+      if (error?.status === 401) {
+        if (isGoogle) {
+          console.error("[Google OAuth] /me rejected token; bearer present", Boolean(accessToken));
+        }
+        throw createOAuthTokenError(isGoogle
+          ? "Token đăng nhập Google không hợp lệ hoặc chưa được lưu."
+          : "Token đăng nhập không hợp lệ hoặc chưa được lưu.", 401);
       }
-      throw createOAuthTokenError(isGoogle
-        ? "Token đăng nhập Google không hợp lệ hoặc chưa được lưu."
-        : "Token đăng nhập không hợp lệ hoặc chưa được lưu.", 401);
+      throw error;
     }
-
-    if (!response.ok) {
-      throw await createApiError(response);
-    }
-
-    const result = await response.json();
-    const verifiedUser = result?.data?.user || null;
     if (!verifiedUser) {
       throw createOAuthTokenError("Không thể xác thực tài khoản OAuth.");
     }
@@ -200,28 +190,61 @@ export const customerAuth = {
     }
   },
 
+  async loadCurrentUser(tokenOverride = null) {
+    const token = normalizeAccessToken(tokenOverride || this.getAccessToken());
+    console.info("[Auth] token exists", Boolean(token));
+
+    if (!token) {
+      accessTokenMemory = null;
+      localStorage.removeItem(USER_KEY);
+      console.info("[Auth] skip /me because no token");
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        ...jsonHeaders(),
+        Authorization: `Bearer ${token}`
+      },
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      throw await createApiError(response);
+    }
+
+    const result = await response.json();
+    return result?.data?.user || null;
+  },
+
   async restoreSession() {
-    if (this.isAuthenticated()) {
+    const token = normalizeAccessToken(this.getAccessToken());
+    console.info("[Auth] token exists", Boolean(token));
+
+    if (!token) {
+      accessTokenMemory = null;
+      localStorage.removeItem(USER_KEY);
+      console.info("[Auth] skip /me because no token");
+      authInitialized = true;
+      hasTriedInitialRefresh = true;
+      return null;
+    }
+
+    if (this.getUser()) {
       return this.getUser();
     }
 
     if (authInitialized) return null;
     authInitialized = true;
 
-    if (!hasStoredAuthSession()) {
-      hasTriedInitialRefresh = true;
-      return null;
-    }
-
-    if (hasTriedInitialRefresh) return null;
-    hasTriedInitialRefresh = true;
-
     try {
-      const token = await this.refresh();
-      return token ? this.getUser() : null;
-    } catch (error) {
-      clearSession("refresh-error");
-      notifyAuthChanged("guest");
+      const user = await this.loadCurrentUser(token);
+      if (!user) return null;
+      saveSession({ accessToken: token, user }, isRemembered());
+      return user;
+    } catch {
+      clearSession("restore-session-failed");
       return null;
     }
   }

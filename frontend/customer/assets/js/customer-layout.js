@@ -4,7 +4,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
-import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-google-jwt-callback-fix";
+import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-auth-me-token-guard";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 
@@ -262,6 +262,14 @@ function bootstrapCustomerWebsite() {
 
   // Initialize password visibility toggles and observe SPA content changes
   observePasswordTogglesOnMain();
+
+  // OAuth callback must save/verify its token before normal session restoration or login routing.
+  const initialOAuthCallback = readOAuthCallback();
+  const isOAuthCallbackRoute = normalizeRoute(window.location.hash) === "auth-callback";
+  if (initialOAuthCallback.hasCallbackData || isOAuthCallbackRoute) {
+    renderRoute();
+    return;
+  }
 
   // Try restore session but do not block UI
   let settled = false;
@@ -815,6 +823,9 @@ function renderPhoneLoginPage() {
 async function renderAuthCallbackPage() {
   currentRoute = "auth-callback";
   const callback = readOAuthCallback();
+  if (callback.provider === "google") {
+    console.info("[Google OAuth] callback token found", Boolean(callback.token));
+  }
 
   layoutState.main.innerHTML = renderPageShell(
     "Đang hoàn tất đăng nhập",
@@ -823,7 +834,7 @@ async function renderAuthCallbackPage() {
 
   if (callback.error || !callback.token) {
     customerAuth.clearExternalLogin("oauth-callback-error");
-    finishOAuthFailure(callback.error || "Đăng nhập thất bại");
+    finishOAuthFailure(callback.error || (callback.provider === "google" ? "Không nhận được token Google" : "Đăng nhập thất bại"));
     return;
   }
 
@@ -849,6 +860,9 @@ function forwardOAuthCallbackToOpener() {
   if (!window.opener) return false;
 
   const provider = callback.provider === "google" ? "google" : callback.provider === "facebook" ? "facebook" : "oauth";
+  if (provider === "google") {
+    console.info("[Google OAuth] callback token found", Boolean(callback.token));
+  }
   const successType = provider === "google" ? "GOOGLE_AUTH_SUCCESS" : provider === "facebook" ? "FACEBOOK_AUTH_SUCCESS" : "OAUTH_AUTH_SUCCESS";
   const errorType = provider === "google" ? "GOOGLE_AUTH_ERROR" : provider === "facebook" ? "FACEBOOK_AUTH_ERROR" : "OAUTH_AUTH_ERROR";
 
