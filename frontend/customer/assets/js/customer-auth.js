@@ -59,22 +59,32 @@ export const customerAuth = {
   },
 
   async completeExternalLogin(payload, remember = true) {
+    const provider = String(payload?.provider || "oauth").toLowerCase();
+    const isGoogle = provider === "google";
     const accessToken = normalizeAccessToken(payload?.accessToken);
-    console.info("[OAuth] token found:", Boolean(accessToken));
-    console.info("[OAuth] token length:", accessToken.length);
+    const hasValidToken = Boolean(accessToken) && (!isGoogle || isJwtAccessToken(accessToken));
 
-    if (!accessToken) {
-      throw createOAuthTokenError("Token đăng nhập Google không hợp lệ hoặc chưa được lưu.");
+    if (isGoogle) {
+      console.info("[Google OAuth] token found", hasValidToken);
     }
 
-    // Persist before /auth/me so every customer API request reads the same token key.
+    if (!hasValidToken) {
+      throw createOAuthTokenError(isGoogle
+        ? "Không nhận được token Google"
+        : "Token đăng nhập không hợp lệ hoặc chưa được lưu.");
+    }
+
+    // Save only the access token key; sync/reason keys are never used as Bearer tokens.
     saveSession({
       accessToken,
       user: payload?.user || this.getUser() || null
     }, remember);
-    console.info("[OAuth] localStorage key saved:", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
 
-    console.info("[OAuth] /auth/me bearer token present:", Boolean(accessToken));
+    if (isGoogle) {
+      console.info("[Google OAuth] token saved key", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
+      console.info("[Google OAuth] auth/me has bearer", Boolean(accessToken));
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
@@ -85,8 +95,12 @@ export const customerAuth = {
     });
 
     if (response.status === 401) {
-      console.error("[OAuth] /auth/me unauthorized; bearer token present:", Boolean(accessToken));
-      throw createOAuthTokenError("Token đăng nhập Google không hợp lệ hoặc chưa được lưu.", 401);
+      if (isGoogle) {
+        console.error("[Google OAuth] auth/me rejected token; bearer present", Boolean(accessToken));
+      }
+      throw createOAuthTokenError(isGoogle
+        ? "Token đăng nhập Google không hợp lệ hoặc chưa được lưu."
+        : "Token đăng nhập không hợp lệ hoặc chưa được lưu.", 401);
     }
 
     if (!response.ok) {
@@ -326,6 +340,10 @@ function normalizeAccessToken(value) {
   return token && token !== "undefined" && token !== "null" ? token : "";
 }
 
+function isJwtAccessToken(token) {
+  return token.startsWith("eyJ") && token.split(".").length === 3;
+}
+
 function createOAuthTokenError(message, status = 0) {
   const error = new Error(message);
   error.status = status;
@@ -375,7 +393,10 @@ function clearSession(reason) {
 }
 
 function readStoredAccessToken() {
-  return sessionStorage.getItem(ACCESS_TOKEN_SESSION_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY) || "";
+  return normalizeAccessToken(
+    sessionStorage.getItem(ACCESS_TOKEN_SESSION_KEY)
+      || localStorage.getItem(ACCESS_TOKEN_KEY)
+  );
 }
 
 function isRemembered() {

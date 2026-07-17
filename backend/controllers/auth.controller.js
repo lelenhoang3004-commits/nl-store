@@ -63,6 +63,9 @@ export class AuthController extends BaseController {
           userId: result.user?.id,
           email: result.user?.email
         });
+        logger.info("[Google OAuth] callback url", {
+          redirectUrl: redactOAuthToken(redirectUrl)
+        });
         logger.info("[Google OAuth] redirect url", {
           redirectUrl: redactOAuthToken(redirectUrl)
         });

@@ -4,7 +4,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
-import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-oauth-token-storage-fix";
+import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-google-jwt-callback-fix";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 
@@ -732,7 +732,8 @@ async function handleOAuthMessage(event) {
   try {
     await customerAuth.completeExternalLogin({
       accessToken: event.data.token,
-      user: event.data.user || null
+      user: event.data.user || null,
+      provider
     }, true);
     layoutState.pendingRoute = "";
     window.history.replaceState(null, "", "index.html#home");
@@ -827,7 +828,7 @@ async function renderAuthCallbackPage() {
   }
 
   try {
-    await customerAuth.completeExternalLogin({ accessToken: callback.token, user: callback.user }, true);
+    await customerAuth.completeExternalLogin({ accessToken: callback.token, user: callback.user, provider: callback.provider }, true);
     window.history.replaceState(null, "", "index.html#home");
     currentRoute = "";
     renderHeader();
@@ -855,7 +856,7 @@ function forwardOAuthCallbackToOpener() {
     ? {
         type: errorType,
         provider,
-        message: callback.error || "Đăng nhập thất bại"
+        message: callback.error || (provider === "google" ? "Không nhận được token Google" : "Đăng nhập thất bại")
       }
     : {
         type: successType,
