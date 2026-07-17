@@ -6,25 +6,21 @@ window.FASHION_IMAGE_PLACEHOLDER = "data:image/svg+xml;charset=UTF-8,%3Csvg xmln
 window.normalizeImageUrl = function normalizeImageUrl(value) {
   const url = String(value || "").trim();
   if (!url) return window.FASHION_IMAGE_PLACEHOLDER;
-  if (/^https?:\/\//i.test(url) || /^data:/i.test(url) || /^blob:/i.test(url) || /^\/\//.test(url)) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
 
   const apiOrigin = String(window.FASHION_API_ORIGIN || "https://nl-store.onrender.com").replace(/\/$/, "");
-  const relativePath = url.replace(/^\.\/?/, "").replace(/^\//, "");
-  if (url.startsWith("/uploads") || relativePath.startsWith("uploads")) {
-    return `${apiOrigin}/${relativePath}`;
-  }
+  if (url.startsWith("/uploads")) return `${apiOrigin}${url}`;
+  if (url.startsWith("uploads")) return `${apiOrigin}/${url}`;
 
   return url;
 };
-window.resolveImageUrl = window.normalizeImageUrl;
 window.initializeProductImages = function initializeProductImages(root = document) {
-  const images = root.querySelectorAll?.("img[data-product-image-src], img[data-gallery-image-src]") || [];
+  const images = root.querySelectorAll?.("img[data-product-image-src]") || [];
   const loadImage = (image) => {
-    const source = image.dataset.productImageSrc || image.dataset.galleryImageSrc;
+    const source = image.dataset.productImageSrc;
     if (!source) return;
     image.src = window.normalizeImageUrl(source);
     image.removeAttribute("data-product-image-src");
-    image.removeAttribute("data-gallery-image-src");
   };
 
   images.forEach((image) => {
@@ -32,7 +28,6 @@ window.initializeProductImages = function initializeProductImages(root = documen
     image.decoding = "async";
     image.addEventListener("error", () => {
       image.removeAttribute("data-product-image-src");
-      image.removeAttribute("data-gallery-image-src");
       image.src = window.FASHION_IMAGE_PLACEHOLDER;
     }, { once: true });
 

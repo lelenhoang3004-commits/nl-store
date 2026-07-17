@@ -236,13 +236,13 @@ function initProductDetailInteractions(root, product, options = {}) {
       button.classList.add("is-active");
       button.setAttribute("aria-pressed", "true");
       // dataset holds the raw attribute (may be escaped); use it as the selected image URL
-      selectedImageUrl = window.normalizeImageUrl?.(button.dataset.productThumb || selectedImageUrl) ?? button.dataset.productThumb || selectedImageUrl;
+      selectedImageUrl = button.dataset.productThumb || selectedImageUrl;
       const thumbnail = button.querySelector("img[data-gallery-image-src]");
       if (thumbnail) {
-        thumbnail.src = window.normalizeImageUrl?.(thumbnail.dataset.galleryImageSrc) ?? thumbnail.dataset.galleryImageSrc;
+        thumbnail.src = thumbnail.dataset.galleryImageSrc;
         thumbnail.removeAttribute("data-gallery-image-src");
       }
-      mainImage.src = window.normalizeImageUrl?.(selectedImageUrl) ?? selectedImageUrl;
+      mainImage.src = selectedImageUrl;
     });
   });
 
@@ -495,15 +495,9 @@ function mapRelatedProduct(product = {}) {
 }
 
 function getProductImages(product = {}) {
-  const galleryImages = Array.isArray(product.galleryUrls)
-    ? product.galleryUrls
-    : Array.isArray(product.gallery_urls)
-      ? product.gallery_urls
-      : [];
-
   const images = [
-    product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url,
-    ...galleryImages
+    product.thumbnailUrl,
+    ...(Array.isArray(product.galleryUrls) ? product.galleryUrls : [])
   ].filter(Boolean).map(resolveAssetUrl);
 
   return [...new Set(images)].length ? [...new Set(images)] : [FALLBACK_PRODUCT_IMAGE];

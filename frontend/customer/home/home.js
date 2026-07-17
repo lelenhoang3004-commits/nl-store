@@ -127,7 +127,10 @@ async function loadCategoriesFromApi() {
       id: category.id,
       name: category.name,
       productCount: category.productCount || 0,
-      image: resolveAssetUrl(category.imageUrl || category.image_url)
+      image:
+        category.imageUrl ||
+        category.image_url ||
+        FALLBACK_PRODUCT_IMAGE
     }));
 
     return categories;
