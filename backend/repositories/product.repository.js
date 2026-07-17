@@ -47,9 +47,11 @@ const PRODUCT_SELECT = `
   LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
 `;
 
-const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT
+const PRODUCT_SELECT_WITHOUT_RATING_COUNT = PRODUCT_SELECT
+  .replace("    p.rating_count,", "    0 AS rating_count,");
+
+const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT_WITHOUT_RATING_COUNT
   .replace("    p.rating_average,", "    4.8 AS rating_average,")
-  .replace("    p.rating_count,", "    0 AS rating_count,")
   .replace("    p.product_attributes,", "    NULL AS product_attributes,");
 
 const normalizePagination = (pagination = {}) => {
@@ -93,16 +95,40 @@ export class ProductRepository extends BaseRepository {
       const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
       return rows;
     } catch (error) {
-      if (error?.code !== "ER_BAD_FIELD_ERROR") {
-        throw error;
+      if (!isMissingColumnError(error, "rating_count")) {
+        if (error?.code !== "ER_BAD_FIELD_ERROR") {
+          throw error;
+        }
+
+        logger.warn("Products schema is missing optional product columns; using legacy-compatible select.", {
+          code: error.code,
+          sqlMessage: error.sqlMessage
+        });
+        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+        return rows;
       }
 
-      logger.warn("Products schema is missing optional product columns; using legacy-compatible select.", {
+      logger.warn("Products schema is missing rating_count; selecting rating_average with default rating_count.", {
+        repository: "ProductRepository",
         code: error.code,
         sqlMessage: error.sqlMessage
       });
-      const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
-      return rows;
+      try {
+        const [rows] = await this.execute(`${PRODUCT_SELECT_WITHOUT_RATING_COUNT}\n${suffixSql}`, params);
+        return rows;
+      } catch (fallbackError) {
+        if (fallbackError?.code !== "ER_BAD_FIELD_ERROR") {
+          throw fallbackError;
+        }
+
+        logger.warn("Products schema is missing rating_average; using legacy rating defaults.", {
+          repository: "ProductRepository",
+          code: fallbackError.code,
+          sqlMessage: fallbackError.sqlMessage
+        });
+        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+        return rows;
+      }
     }
   }
 
@@ -188,10 +214,13 @@ export class ProductRepository extends BaseRepository {
     const sql = `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, rating_average, rating_count, status, thumbnail_url, gallery_urls, tags, product_attributes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sqlWithoutRatingCount = `INSERT INTO products
+        (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, rating_average, status, thumbnail_url, gallery_urls, tags, product_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const legacySql = `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, status, thumbnail_url, gallery_urls, tags, product_attributes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await this.executeProductWrite(sql, this.toSqlParams(payload), legacySql, this.toLegacySqlParams(payload), "create");
+    const [result] = await this.executeProductWrite(sql, this.toSqlParams(payload), sqlWithoutRatingCount, this.toSqlParamsWithoutRatingCount(payload), legacySql, this.toLegacySqlParams(payload), "create");
 
     logger.sql("Product create query executed.", {
       repository: "ProductRepository",
@@ -225,6 +254,26 @@ export class ProductRepository extends BaseRepository {
         product_attributes = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`;
+    const sqlWithoutRatingCount = `UPDATE products
+      SET name = ?,
+        slug = ?,
+        sku = ?,
+        category_id = ?,
+        brand = ?,
+        short_description = ?,
+        description = ?,
+        price = ?,
+        sale_price = ?,
+        stock = ?,
+        sold = ?,
+        rating_average = ?,
+        status = ?,
+        thumbnail_url = ?,
+        gallery_urls = ?,
+        tags = ?,
+        product_attributes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL`;
     const legacySql = `UPDATE products
       SET name = ?,
         slug = ?,
@@ -244,7 +293,7 @@ export class ProductRepository extends BaseRepository {
         product_attributes = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`;
-    await this.executeProductWrite(sql, [...this.toSqlParams(payload), id], legacySql, [...this.toLegacySqlParams(payload), id], "update");
+    await this.executeProductWrite(sql, [...this.toSqlParams(payload), id], sqlWithoutRatingCount, [...this.toSqlParamsWithoutRatingCount(payload), id], legacySql, [...this.toLegacySqlParams(payload), id], "update");
 
     logger.sql("Product update query executed.", {
       repository: "ProductRepository",
@@ -255,7 +304,7 @@ export class ProductRepository extends BaseRepository {
     return this.findById(id);
   }
 
-  async executeProductWrite(sql, params, legacySql, legacyParams, operation) {
+  async executeProductWrite(sql, params, sqlWithoutRatingCount, paramsWithoutRatingCount, legacySql, legacyParams, operation) {
     try {
       return await this.execute(sql, params);
     } catch (error) {
@@ -263,7 +312,24 @@ export class ProductRepository extends BaseRepository {
         throw error;
       }
 
-      logger.warn("Products schema is missing rating columns; using legacy-compatible write. Run the product ratings migration to persist ratings.", {
+      if (isMissingColumnError(error, "rating_count")) {
+        logger.warn("Products schema is missing rating_count; writing rating_average without rating_count. Run the product ratings migration to persist rating_count.", {
+          repository: "ProductRepository",
+          operation,
+          code: error.code,
+          sqlMessage: error.sqlMessage || error.message
+        });
+        try {
+          return await this.execute(sqlWithoutRatingCount, paramsWithoutRatingCount);
+        } catch (fallbackError) {
+          if (!isMissingColumnError(fallbackError, "rating_average")) {
+            throw fallbackError;
+          }
+          error = fallbackError;
+        }
+      }
+
+      logger.warn("Products schema is missing rating_average; using legacy-compatible write. Run the product ratings migration to persist ratings.", {
         repository: "ProductRepository",
         operation,
         code: error.code,
@@ -413,6 +479,28 @@ export class ProductRepository extends BaseRepository {
       JSON.stringify(payload.productAttributes || {})
     ];
   }
+  toSqlParamsWithoutRatingCount(payload) {
+    return [
+      payload.name,
+      payload.slug,
+      payload.sku,
+      payload.categoryId,
+      payload.brand,
+      payload.shortDescription,
+      payload.description,
+      payload.price,
+      payload.salePrice,
+      payload.stock,
+      payload.sold,
+      payload.ratingAverage,
+      payload.status,
+      payload.thumbnailUrl,
+      JSON.stringify(payload.galleryUrls || []),
+      JSON.stringify(payload.tags || []),
+      JSON.stringify(payload.productAttributes || {})
+    ];
+  }
+
   toLegacySqlParams(payload) {
     return [
       payload.name,
@@ -435,8 +523,11 @@ export class ProductRepository extends BaseRepository {
   }
 }
 
-function isMissingRatingColumnError(error) {
+function isMissingColumnError(error, columnName) {
   if (error?.code !== "ER_BAD_FIELD_ERROR") return false;
-  const message = String(error.sqlMessage || error.message || "").toLowerCase();
-  return message.includes("rating_average") || message.includes("rating_count");
+  return String(error.sqlMessage || error.message || "").toLowerCase().includes(columnName);
+}
+
+function isMissingRatingColumnError(error) {
+  return isMissingColumnError(error, "rating_average") || isMissingColumnError(error, "rating_count");
 }
