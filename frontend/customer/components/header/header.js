@@ -52,10 +52,10 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
           <i class="fa-regular fa-bell" aria-hidden="true"></i>
           <span class="header-badge">3</span>
         </button>
-        <button class="header-icon-button" type="button" aria-label="Giỏ hàng" data-popover-toggle="cart">
+        <a class="header-icon-button" href="#cart" aria-label="Xem giỏ hàng" data-cart-link>
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
           <span class="header-badge" data-cart-badge>${cartQuantity}</span>
-        </button>
+        </a>
         <button class="user-menu-button" type="button" aria-label="Tài khoản" data-popover-toggle="user">
           ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer">` : `<span>${initials}</span>`}
         </button>
@@ -120,6 +120,12 @@ export function initCustomerHeader(root = document, options = {}) {
     button.addEventListener("click", () => {
       togglePopover(root, button.dataset.popoverToggle);
     });
+  });
+
+  root.querySelector("[data-cart-link]")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    closeHeaderOverlays(root);
+    window.location.hash = "#cart";
   });
 
   root.querySelector("[data-customer-logout]")?.addEventListener("click", (event) => {
