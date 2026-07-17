@@ -1,5 +1,6 @@
 import { BaseRepository } from "./base.repository.js";
 import { logger } from "../utils/logger.util.js";
+import { sanitizePagination } from "../utils/sql-query.util.js";
 
 const REVENUE_EXPRESSION = "COALESCE(NULLIF(paid_amount, 0), grand_total)";
 const REVENUE_CONDITION = "status = 'completed' AND payment_status = 'paid'";
@@ -73,6 +74,7 @@ export class AdminDashboardRepository extends BaseRepository {
   }
 
   async getTopProducts(limit) {
+    const pagination = sanitizePagination(limit, 0, 5);
     const [rows] = await this.client.getPool().execute(
       `SELECT od.product_id AS productId,
         od.product_name AS productName,
@@ -87,13 +89,13 @@ export class AdminDashboardRepository extends BaseRepository {
         AND o.payment_status = 'paid'
       GROUP BY od.product_id, od.product_name, od.product_sku, od.product_image_url
       ORDER BY totalQuantity DESC, totalRevenue DESC
-      LIMIT ?`,
-      [limit]
+      LIMIT ${pagination.limit}`
     );
     return rows;
   }
 
   async getRecentOrders(limit) {
+    const pagination = sanitizePagination(limit, 0, 10);
     const [rows] = await this.client.getPool().execute(
       `SELECT id, order_code AS orderCode, customer_name AS customerName,
         payment_method AS paymentMethod, payment_status AS paymentStatus,
@@ -101,8 +103,7 @@ export class AdminDashboardRepository extends BaseRepository {
       FROM orders
       WHERE deleted_at IS NULL
       ORDER BY created_at DESC, id DESC
-      LIMIT ?`,
-      [limit]
+      LIMIT ${pagination.limit}`
     );
     return rows;
   }

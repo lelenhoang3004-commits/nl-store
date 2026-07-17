@@ -5,6 +5,7 @@
 import { BaseRepository } from "./base.repository.js";
 import { Order, OrderDetail, OrderHistory, OrderTransaction } from "../models/order.model.js";
 import { logger } from "../utils/logger.util.js";
+import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
 const SORT_COLUMNS = Object.freeze({
   orderCode: "order_code",
@@ -44,13 +45,14 @@ export class OrderRepository extends BaseRepository {
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
     const [rows] = await this.execute(
       `SELECT ${ORDER_COLUMNS}
       FROM orders
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     logger.sql("Order list query executed.", {
@@ -382,8 +384,9 @@ export class OrderRepository extends BaseRepository {
   }
 
   execute(sql, params = [], connection = null) {
+    const safeParams = normalizeSqlParams(params);
     return connection
-      ? connection.execute(sql, params)
-      : this.client.getPool().execute(sql, params);
+      ? connection.execute(sql, safeParams)
+      : this.client.getPool().execute(sql, safeParams);
   }
 }

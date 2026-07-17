@@ -5,6 +5,7 @@
 import { BaseRepository } from "./base.repository.js";
 import { PaymentHistory, PaymentMethod, PaymentTransaction } from "../models/payment.model.js";
 import { logger } from "../utils/logger.util.js";
+import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
 const METHOD_SORT_COLUMNS = Object.freeze({
   name: "name",
@@ -29,13 +30,14 @@ export class PaymentRepository extends BaseRepository {
     const { whereSql, params } = this.buildMethodWhereClause(options);
     const sortColumn = METHOD_SORT_COLUMNS[options.sort.field] || METHOD_SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
     const [rows] = await this.execute(
       `SELECT id, code, name, provider, type, description, is_active, config, created_at, updated_at
       FROM payment_methods
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     logger.sql("Payment method list query executed.", {
@@ -152,6 +154,7 @@ export class PaymentRepository extends BaseRepository {
     const { whereSql, params } = this.buildTransactionWhereClause(options);
     const sortColumn = TRANSACTION_SORT_COLUMNS[options.sort.field] || TRANSACTION_SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
     const [rows] = await this.execute(
       `SELECT
         pt.id,
@@ -175,8 +178,8 @@ export class PaymentRepository extends BaseRepository {
       LEFT JOIN orders o ON o.id = pt.order_id AND o.deleted_at IS NULL
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     return rows.map((row) => new PaymentTransaction(row));
@@ -487,8 +490,9 @@ export class PaymentRepository extends BaseRepository {
   }
 
   execute(sql, params = [], connection = null) {
+    const safeParams = normalizeSqlParams(params);
     return connection
-      ? connection.execute(sql, params)
-      : this.client.getPool().execute(sql, params);
+      ? connection.execute(sql, safeParams)
+      : this.client.getPool().execute(sql, safeParams);
   }
 }

@@ -1,6 +1,7 @@
-﻿import { BaseRepository } from "./base.repository.js";
+import { BaseRepository } from "./base.repository.js";
 import { NewsletterSubscriber } from "../models/newsletter.model.js";
 import { logger } from "../utils/logger.util.js";
+import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
 const SORT_COLUMNS = Object.freeze({
   email: "email",
@@ -25,7 +26,7 @@ const NEWSLETTER_COLUMNS = `
 
 export class NewsletterRepository extends BaseRepository {
   async ensureSchema() {
-    await this.client.getPool().execute(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    await this.execute(`CREATE TABLE IF NOT EXISTS newsletter_subscribers (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       email VARCHAR(190) NOT NULL UNIQUE,
       full_name VARCHAR(120) NULL,
@@ -39,19 +40,24 @@ export class NewsletterRepository extends BaseRepository {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   }
 
+  execute(sql, params = []) {
+    return this.client.getPool().execute(sql, normalizeSqlParams(params));
+  }
+
   async findAll(options) {
     await this.ensureSchema();
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
-    const [rows] = await this.client.getPool().execute(
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
+    const [rows] = await this.execute(
       `SELECT ${NEWSLETTER_COLUMNS}
       FROM newsletter_subscribers
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     logger.sql("Newsletter subscriber list query executed.", { repository: "NewsletterRepository", operation: "findAll", durationMs: Date.now() - startedAt });
@@ -61,19 +67,19 @@ export class NewsletterRepository extends BaseRepository {
   async countAll(options) {
     await this.ensureSchema();
     const { whereSql, params } = this.buildWhereClause(options);
-    const [rows] = await this.client.getPool().execute(`SELECT COUNT(*) AS total FROM newsletter_subscribers ${whereSql}`, params);
+    const [rows] = await this.execute(`SELECT COUNT(*) AS total FROM newsletter_subscribers ${whereSql}`, params);
     return Number(rows[0]?.total || 0);
   }
 
   async findById(id) {
     await this.ensureSchema();
-    const [rows] = await this.client.getPool().execute(`SELECT ${NEWSLETTER_COLUMNS} FROM newsletter_subscribers WHERE id = ? LIMIT 1`, [id]);
+    const [rows] = await this.execute(`SELECT ${NEWSLETTER_COLUMNS} FROM newsletter_subscribers WHERE id = ? LIMIT 1`, [id]);
     return rows[0] ? new NewsletterSubscriber(rows[0]) : null;
   }
 
   async findByEmail(email) {
     await this.ensureSchema();
-    const [rows] = await this.client.getPool().execute(`SELECT ${NEWSLETTER_COLUMNS} FROM newsletter_subscribers WHERE email = ? LIMIT 1`, [email]);
+    const [rows] = await this.execute(`SELECT ${NEWSLETTER_COLUMNS} FROM newsletter_subscribers WHERE email = ? LIMIT 1`, [email]);
     return rows[0] ? new NewsletterSubscriber(rows[0]) : null;
   }
 
@@ -84,7 +90,7 @@ export class NewsletterRepository extends BaseRepository {
   async create(payload) {
     await this.ensureSchema();
     const source = payload.source || "website";
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `INSERT INTO newsletter_subscribers (email, full_name, source, status, subscribed_at)
       VALUES (?, ?, ?, 'subscribed', NOW())`,
       [payload.email, payload.fullName, source]
@@ -95,7 +101,7 @@ export class NewsletterRepository extends BaseRepository {
   async resubscribe(id, payload) {
     await this.ensureSchema();
     const source = payload.source || "website";
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE newsletter_subscribers
       SET full_name = ?, source = ?, status = 'subscribed', subscribed_at = NOW(), unsubscribed_at = NULL
       WHERE id = ?`,
@@ -106,7 +112,7 @@ export class NewsletterRepository extends BaseRepository {
 
   async updateStatus(id, status) {
     await this.ensureSchema();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE newsletter_subscribers
       SET status = ?,
         subscribed_at = CASE WHEN ? = 'subscribed' THEN NOW() ELSE subscribed_at END,
@@ -123,7 +129,7 @@ export class NewsletterRepository extends BaseRepository {
 
   async delete(id) {
     await this.ensureSchema();
-    const [result] = await this.client.getPool().execute(`DELETE FROM newsletter_subscribers WHERE id = ?`, [id]);
+    const [result] = await this.execute(`DELETE FROM newsletter_subscribers WHERE id = ?`, [id]);
     return result.affectedRows > 0;
   }
 

@@ -1,6 +1,7 @@
-﻿import { BaseRepository } from "./base.repository.js";
+import { BaseRepository } from "./base.repository.js";
 import { Voucher } from "../models/voucher.model.js";
 import { logger } from "../utils/logger.util.js";
+import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
 const SORT_COLUMNS = Object.freeze({
   code: "code",
@@ -38,22 +39,27 @@ export class VoucherRepository extends BaseRepository {
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
-    const [rows] = await this.client.getPool().execute(
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
+    const [rows] = await this.execute(
       `SELECT ${VOUCHER_COLUMNS}
       FROM vouchers
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     logger.sql("Voucher list query executed.", { repository: "VoucherRepository", operation: "findAll", durationMs: Date.now() - startedAt });
     return rows.map((row) => new Voucher(row));
   }
 
+  execute(sql, params = []) {
+    return this.client.getPool().execute(sql, normalizeSqlParams(params));
+  }
+
   async countAll(options) {
     const { whereSql, params } = this.buildWhereClause(options);
-    const [rows] = await this.client.getPool().execute(`SELECT COUNT(*) AS total FROM vouchers ${whereSql}`, params);
+    const [rows] = await this.execute(`SELECT COUNT(*) AS total FROM vouchers ${whereSql}`, params);
     return Number(rows[0]?.total || 0);
   }
 
@@ -76,7 +82,7 @@ export class VoucherRepository extends BaseRepository {
   }
 
   async create(payload) {
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `INSERT INTO vouchers
         (code, name, description, discount_type, discount_value, min_order_amount, max_discount_amount, quantity, used_quantity, starts_at, expires_at, status, conditions)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -86,7 +92,7 @@ export class VoucherRepository extends BaseRepository {
   }
 
   async update(id, payload) {
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE vouchers
       SET code = ?, name = ?, description = ?, discount_type = ?, discount_value = ?, min_order_amount = ?, max_discount_amount = ?, quantity = ?, used_quantity = ?, starts_at = ?, expires_at = ?, status = ?, conditions = ?
       WHERE id = ?`,
@@ -96,7 +102,7 @@ export class VoucherRepository extends BaseRepository {
   }
 
   async updateStatus(id, status) {
-    await this.client.getPool().execute(`UPDATE vouchers SET status = ? WHERE id = ?`, [status, id]);
+    await this.execute(`UPDATE vouchers SET status = ? WHERE id = ?`, [status, id]);
     return this.findById(id);
   }
 
@@ -106,7 +112,7 @@ export class VoucherRepository extends BaseRepository {
   }
 
   async softDelete(id) {
-    const [result] = await this.client.getPool().execute(`DELETE FROM vouchers WHERE id = ?`, [id]);
+    const [result] = await this.execute(`DELETE FROM vouchers WHERE id = ?`, [id]);
     return result.affectedRows > 0;
   }
 

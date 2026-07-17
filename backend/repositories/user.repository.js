@@ -5,6 +5,7 @@
 import { BaseRepository } from "./base.repository.js";
 import { User } from "../models/user.model.js";
 import { logger } from "../utils/logger.util.js";
+import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
 const SORT_COLUMNS = Object.freeze({
   fullName: "full_name",
@@ -37,14 +38,15 @@ export class UserRepository extends BaseRepository {
     const { whereSql, params } = this.buildWhereClause(options);
     const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
     const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const pagination = sanitizePagination(options.pagination.limit, options.pagination.offset);
 
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT ${USER_COLUMNS}
       FROM users
       ${whereSql}
       ORDER BY ${sortColumn} ${sortDirection}
-      LIMIT ? OFFSET ?`,
-      [...params, options.pagination.limit, options.pagination.offset]
+      LIMIT ${pagination.limit} OFFSET ${pagination.offset}`,
+      params
     );
 
     logger.sql("User list query executed.", {
@@ -56,10 +58,14 @@ export class UserRepository extends BaseRepository {
     return rows.map((row) => new User(row));
   }
 
+  execute(sql, params = []) {
+    return this.client.getPool().execute(sql, normalizeSqlParams(params));
+  }
+
   async countAll(options) {
     const startedAt = Date.now();
     const { whereSql, params } = this.buildWhereClause(options);
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT COUNT(*) AS total
       FROM users
       ${whereSql}`,
@@ -77,7 +83,7 @@ export class UserRepository extends BaseRepository {
 
   async findById(id) {
     const startedAt = Date.now();
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT ${USER_COLUMNS}
       FROM users
       WHERE id = ? AND deleted_at IS NULL
@@ -103,7 +109,7 @@ export class UserRepository extends BaseRepository {
       params.push(excludedId);
     }
 
-    const [rows] = await this.client.getPool().execute(
+    const [rows] = await this.execute(
       `SELECT ${USER_COLUMNS}
       FROM users
       WHERE email = ? AND deleted_at IS NULL ${excludedSql}
@@ -122,7 +128,7 @@ export class UserRepository extends BaseRepository {
 
   async create(payload) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `INSERT INTO users
         (email, full_name, phone, avatar_url, password_hash, role, permissions, status, address_json)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -177,7 +183,7 @@ export class UserRepository extends BaseRepository {
       params.splice(4, 0, payload.passwordHash);
     }
 
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE users
       SET ${fields.join(", ")}
       WHERE id = ? AND deleted_at IS NULL`,
@@ -213,7 +219,7 @@ export class UserRepository extends BaseRepository {
     const assignments = entries.map(([key]) => `${columnMap[key]} = ?`);
     const params = entries.map(([key, value]) => key === "permissions" ? JSON.stringify(value || []) : value);
 
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE users
       SET ${assignments.join(", ")},
         updated_at = CURRENT_TIMESTAMP
@@ -232,7 +238,7 @@ export class UserRepository extends BaseRepository {
 
   async updateProfile(id, payload) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE users
       SET full_name = ?,
         phone = ?,
@@ -260,7 +266,7 @@ export class UserRepository extends BaseRepository {
 
   async updateAvatar(id, avatarUrl) {
     const startedAt = Date.now();
-    await this.client.getPool().execute(
+    await this.execute(
       `UPDATE users
       SET avatar_url = ?,
         updated_at = CURRENT_TIMESTAMP
@@ -279,7 +285,7 @@ export class UserRepository extends BaseRepository {
 
   async softDelete(id) {
     const startedAt = Date.now();
-    const [result] = await this.client.getPool().execute(
+    const [result] = await this.execute(
       `UPDATE users
       SET deleted_at = CURRENT_TIMESTAMP,
         refresh_token_hash = NULL,
