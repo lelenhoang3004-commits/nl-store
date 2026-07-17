@@ -56,9 +56,16 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
           <span class="header-badge" data-cart-badge>${cartQuantity}</span>
         </a>
-        <button class="user-menu-button" type="button" aria-label="Tài khoản" data-popover-toggle="user">
-          ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer">` : `<span>${initials}</span>`}
-        </button>
+        ${user ? `
+          <button class="user-menu-button" type="button" aria-label="Tài khoản" data-popover-toggle="user">
+            ${avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer">` : `<span>${initials}</span>`}
+          </button>
+        ` : `
+          <a class="header-login-button" href="#login" aria-label="Đăng nhập">
+            <i class="fa-regular fa-user" aria-hidden="true"></i>
+            <span>Đăng nhập</span>
+          </a>
+        `}
       </div>
     </div>
 

@@ -53,7 +53,8 @@
 
 .header-icon-button,
 .mobile-menu-button,
-.user-menu-button {
+.user-menu-button,
+.header-login-button {
   position: relative;
   display: grid;
   width: 42px;
@@ -69,10 +70,35 @@
 
 .header-icon-button:hover,
 .mobile-menu-button:hover,
-.user-menu-button:hover {
+.user-menu-button:hover,
+.header-login-button:hover {
   color: var(--color-primary);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   transform: translateY(-1px);
+}
+
+.header-login-button {
+  display: inline-flex;
+  width: auto;
+  min-width: 116px;
+  padding: 0 15px;
+  gap: 8px;
+  border-color: rgba(37, 99, 235, 0.22);
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.08);
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.header-login-button i {
+  flex: 0 0 auto;
+  font-size: 0.95em;
+}
+
+.header-login-button:hover {
+  border-color: rgba(37, 99, 235, 0.34);
+  background: rgba(37, 99, 235, 0.12);
 }
 
 .header-badge {
@@ -224,5 +250,11 @@
   .store-logo small,
   .header-icon-button[aria-label="Wishlist"] {
     display: none;
+  }
+
+  .header-login-button {
+    min-width: auto;
+    padding: 0 12px;
+    font-size: 0.8rem;
   }
 }
