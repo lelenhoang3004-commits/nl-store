@@ -62,10 +62,16 @@ export const appConfig = Object.freeze({
   authRateLimitMaxRequests: Number(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || 20),
   googleClientId: process.env.GOOGLE_CLIENT_ID || "",
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-  googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/v1/auth/google/callback",
+  googleCallbackUrl: resolveOAuthCallbackUrl(
+    process.env.GOOGLE_CALLBACK_URL,
+    "/api/v1/auth/google/callback"
+  ),
   facebookAppId: process.env.FACEBOOK_APP_ID || "",
   facebookAppSecret: process.env.FACEBOOK_APP_SECRET || "",
-  facebookCallbackUrl: process.env.FACEBOOK_CALLBACK_URL || "http://localhost:5000/api/v1/auth/facebook/callback",
+  facebookCallbackUrl: resolveOAuthCallbackUrl(
+    process.env.FACEBOOK_CALLBACK_URL,
+    "/api/v1/auth/facebook/callback"
+  ),
   customerAuthCallbackUrl: process.env.CUSTOMER_AUTH_CALLBACK_URL || "http://127.0.0.1:5500/frontend/customer/index.html#auth-callback",
   otpExpiresInSeconds: Number(process.env.OTP_EXPIRES_IN_SECONDS || 300),
   otpResendCooldownSeconds: Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60),
@@ -91,4 +97,27 @@ function hasUnsafeAuthSecret(config) {
     config.jwtRefreshSecret
   ].some((secret) => !secret || secret.startsWith("change-this"));
 }
+function resolveOAuthCallbackUrl(configuredUrl, callbackPath) {
+  const localFallback = "http://localhost:5000" + callbackPath;
+  const value = String(configuredUrl || localFallback).trim();
 
+  if (process.env.NODE_ENV !== "production" || !isLocalUrl(value)) {
+    return value;
+  }
+
+  const productionOrigin = String(
+    process.env.PUBLIC_BACKEND_ORIGIN
+      || process.env.RENDER_EXTERNAL_URL
+      || "https://nl-store.onrender.com"
+  ).replace(/\/$/, "");
+
+  return productionOrigin + callbackPath;
+}
+
+function isLocalUrl(value) {
+  try {
+    return ["localhost", "127.0.0.1"].includes(new URL(value).hostname);
+  } catch {
+    return true;
+  }
+}

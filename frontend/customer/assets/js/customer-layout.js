@@ -4,7 +4,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
-import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-auth-me-no-token-v2";
+import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-google-oauth-production-final";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 
@@ -824,7 +824,8 @@ async function renderAuthCallbackPage() {
   currentRoute = "auth-callback";
   const callback = readOAuthCallback();
   if (callback.provider === "google") {
-    console.info("[Google OAuth] callback token found", Boolean(callback.token));
+    console.info("[Google OAuth] callback URL =", redactOAuthCallbackUrl(window.location.href));
+    console.info("[Google OAuth] token found =", Boolean(callback.token));
   }
 
   layoutState.main.innerHTML = renderPageShell(
@@ -861,7 +862,8 @@ function forwardOAuthCallbackToOpener() {
 
   const provider = callback.provider === "google" ? "google" : callback.provider === "facebook" ? "facebook" : "oauth";
   if (provider === "google") {
-    console.info("[Google OAuth] callback token found", Boolean(callback.token));
+    console.info("[Google OAuth] callback URL =", redactOAuthCallbackUrl(window.location.href));
+    console.info("[Google OAuth] token found =", Boolean(callback.token));
   }
   const successType = provider === "google" ? "GOOGLE_AUTH_SUCCESS" : provider === "facebook" ? "FACEBOOK_AUTH_SUCCESS" : "OAUTH_AUTH_SUCCESS";
   const errorType = provider === "google" ? "GOOGLE_AUTH_ERROR" : provider === "facebook" ? "FACEBOOK_AUTH_ERROR" : "OAUTH_AUTH_ERROR";
@@ -931,6 +933,10 @@ function getOAuthCallbackParams() {
   }
 
   return params;
+}
+
+function redactOAuthCallbackUrl(value) {
+  return String(value || "").replace(/([?&]token=)[^&#]+/i, "$1[REDACTED]");
 }
 
 function decodeOAuthUser(encodedUser) {

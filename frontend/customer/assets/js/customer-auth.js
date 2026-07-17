@@ -65,7 +65,7 @@ export const customerAuth = {
     const hasValidToken = Boolean(accessToken) && (!isGoogle || isJwtAccessToken(accessToken));
 
     if (isGoogle) {
-      console.info("[Google OAuth] token found", hasValidToken);
+      console.info("[Google OAuth] token found =", hasValidToken);
     }
 
     if (!hasValidToken) {
@@ -81,13 +81,13 @@ export const customerAuth = {
     }, remember);
 
     if (isGoogle) {
-      console.info("[Google OAuth] saved token", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
-      console.info("[Google OAuth] /me with bearer", Boolean(accessToken));
+      console.info("[Google OAuth] token saved key =", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
+      console.info("[Google OAuth] /me with bearer =", Boolean(accessToken));
     }
 
     let verifiedUser;
     try {
-      verifiedUser = await this.loadCurrentUser(accessToken);
+      verifiedUser = await this.loadCurrentUser(accessToken, { provider });
     } catch (error) {
       if (error?.status === 401) {
         if (isGoogle) {
@@ -190,9 +190,10 @@ export const customerAuth = {
     }
   },
 
-  async loadCurrentUser(tokenOverride = null) {
+  async loadCurrentUser(tokenOverride = null, options = {}) {
     const token = normalizeAccessToken(tokenOverride || this.getAccessToken());
-    console.info("[Auth] token exists", Boolean(token));
+    console.info("[Auth] token key =", ACCESS_TOKEN_KEY);
+    console.info("[Auth] token exists =", Boolean(token));
 
     if (!token) {
       setGuestAuthState();
@@ -200,6 +201,7 @@ export const customerAuth = {
       return null;
     }
 
+    console.info("[Auth] call /me with bearer =", Boolean(token));
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
@@ -208,6 +210,10 @@ export const customerAuth = {
       },
       credentials: "include"
     });
+
+    if (String(options.provider || "").toLowerCase() === "google") {
+      console.info("[Google OAuth] /me status =", response.status);
+    }
 
     if (!response.ok) {
       throw await createApiError(response);
@@ -219,7 +225,8 @@ export const customerAuth = {
 
   async restoreSession() {
     const token = normalizeAccessToken(this.getAccessToken());
-    console.info("[Auth] token exists", Boolean(token));
+    console.info("[Auth] token key =", ACCESS_TOKEN_KEY);
+    console.info("[Auth] token exists =", Boolean(token));
 
     if (!token) {
       setGuestAuthState();

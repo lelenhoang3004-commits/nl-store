@@ -1,0 +1,12 @@
+/customer/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/customer/assets/js/customer-auth.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/customer/assets/js/customer-layout.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/assets/js/app-config.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
