@@ -59,11 +59,22 @@ export const customerAuth = {
   },
 
   async completeExternalLogin(payload, remember = true) {
-    const accessToken = String(payload?.accessToken || "").trim();
+    const accessToken = normalizeAccessToken(payload?.accessToken);
+    console.info("[OAuth] token found:", Boolean(accessToken));
+    console.info("[OAuth] token length:", accessToken.length);
+
     if (!accessToken) {
-      throw new Error("Dữ liệu đăng nhập không hợp lệ.");
+      throw createOAuthTokenError("Token đăng nhập Google không hợp lệ hoặc chưa được lưu.");
     }
 
+    // Persist before /auth/me so every customer API request reads the same token key.
+    saveSession({
+      accessToken,
+      user: payload?.user || this.getUser() || null
+    }, remember);
+    console.info("[OAuth] localStorage key saved:", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
+
+    console.info("[OAuth] /auth/me bearer token present:", Boolean(accessToken));
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
@@ -73,6 +84,11 @@ export const customerAuth = {
       credentials: "include"
     });
 
+    if (response.status === 401) {
+      console.error("[OAuth] /auth/me unauthorized; bearer token present:", Boolean(accessToken));
+      throw createOAuthTokenError("Token đăng nhập Google không hợp lệ hoặc chưa được lưu.", 401);
+    }
+
     if (!response.ok) {
       throw await createApiError(response);
     }
@@ -80,7 +96,7 @@ export const customerAuth = {
     const result = await response.json();
     const verifiedUser = result?.data?.user || null;
     if (!verifiedUser) {
-      throw new Error("Không thể xác thực tài khoản OAuth.");
+      throw createOAuthTokenError("Không thể xác thực tài khoản OAuth.");
     }
 
     const session = {
@@ -94,7 +110,6 @@ export const customerAuth = {
     saveSession(session, remember);
     return session;
   },
-
   clearExternalLogin(reason = "oauth-failed") {
     clearSession(reason);
   },
@@ -306,8 +321,20 @@ async function createApiError(response) {
   return error;
 }
 
+function normalizeAccessToken(value) {
+  const token = typeof value === "string" ? value.trim() : "";
+  return token && token !== "undefined" && token !== "null" ? token : "";
+}
+
+function createOAuthTokenError(message, status = 0) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = "OAUTH_TOKEN_INVALID";
+  return error;
+}
+
 function saveSession(payload = {}, remember) {
-  const accessToken = payload.accessToken || "";
+  const accessToken = normalizeAccessToken(payload.accessToken);
   const user = payload.user || null;
 
   accessTokenMemory = accessToken;

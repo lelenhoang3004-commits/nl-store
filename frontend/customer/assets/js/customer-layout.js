@@ -4,7 +4,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
-import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js";
+import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-oauth-token-storage-fix";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 
@@ -748,7 +748,7 @@ async function handleOAuthMessage(event) {
     currentRoute = "";
     renderHeader();
     renderRoute();
-    showCustomerToast("Đăng nhập thất bại", "error");
+    showCustomerToast(error?.message || "Đăng nhập thất bại", "error");
   } finally {
     layoutState.isCompletingOAuth = false;
   }
@@ -838,7 +838,7 @@ async function renderAuthCallbackPage() {
   } catch (callbackError) {
     console.debug("[auth] OAuth callback failed", callbackError?.message || callbackError);
     customerAuth.clearExternalLogin("oauth-token-invalid");
-    finishOAuthFailure("Đăng nhập thất bại");
+    finishOAuthFailure(callbackError?.message || "Đăng nhập thất bại");
   }
 }
 
