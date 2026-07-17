@@ -4,6 +4,7 @@ import { BaseController } from "./base.controller.js";
 import { AuthService } from "../services/auth.service.js";
 import { asyncHandler } from "../utils/async-handler.util.js";
 import { clearRefreshCookie, createRefreshCookieOptions } from "../utils/token.util.js";
+import { logger } from "../utils/logger.util.js";
 
 const OAUTH_STATE_COOKIE = "fashion_oauth_state";
 
@@ -30,17 +31,41 @@ export class AuthController extends BaseController {
   oauthCallback = provider => asyncHandler(async (req, res) => {
     res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
     const state = req.signedCookies?.[OAUTH_STATE_COOKIE];
-    if (!state || state !== req.query.state) return redirectOAuthError(res, "Phiên đăng nhập OAuth không hợp lệ.", provider);
+    if (!state || state !== req.query.state) {
+      return redirectOAuthError(res, "Phiên đăng nhập OAuth không hợp lệ.", provider);
+    }
+
     res.clearCookie(OAUTH_STATE_COOKIE, { path: "/api/v1/auth" });
+
     try {
       const result = await this.service.handleOAuthCallback(provider, req.query.code);
       this.setRefreshCookie(res, result, true);
-      const url = new URL(appConfig.customerAuthCallbackUrl);
-      url.searchParams.set("token", result.accessToken);
-      url.searchParams.set("user", Buffer.from(JSON.stringify(result.user)).toString("base64url"));
-      url.searchParams.set("provider", provider);
-      return res.redirect(url.toString());
+
+      const redirectUrl = createOAuthSuccessRedirectUrl(appConfig.customerAuthCallbackUrl, {
+        token: result.accessToken,
+        user: Buffer.from(JSON.stringify(result.user)).toString("base64url"),
+        provider
+      });
+
+      if (provider === "google") {
+        logger.info("[Google OAuth] callback success");
+        logger.info("[Google OAuth] user id/email", {
+          userId: result.user?.id,
+          email: result.user?.email
+        });
+        logger.info("[Google OAuth] redirect url", {
+          redirectUrl: redactOAuthToken(redirectUrl)
+        });
+      }
+
+      return res.redirect(redirectUrl);
     } catch (error) {
+      if (provider === "google") {
+        logger.error("[Google OAuth] callback failed", {
+          message: error?.message,
+          code: error?.code
+        });
+      }
       return redirectOAuthError(res, error.message || "Đăng nhập OAuth thất bại.", provider);
     }
   });
@@ -53,4 +78,30 @@ export class AuthController extends BaseController {
   setRefreshCookie(res, result, remember) { res.cookie(appConfig.refreshCookieName, result.refreshToken, createRefreshCookieOptions(remember)); }
 }
 function publicTokenResult(r) { return { user: r.user, accessToken: r.accessToken, tokenType: r.tokenType, expiresIn: r.expiresIn }; }
-function redirectOAuthError(res, message, provider = "google") { const url = new URL(appConfig.customerAuthCallbackUrl); url.searchParams.set("error", message); url.searchParams.set("provider", provider); return res.redirect(url.toString()); }
+function createOAuthSuccessRedirectUrl(callbackUrl, params) {
+  const url = new URL(callbackUrl);
+  const rawHash = url.hash.replace(/^#/, "");
+  const separatorIndex = rawHash.indexOf("?");
+  const route = (separatorIndex >= 0 ? rawHash.slice(0, separatorIndex) : rawHash) || "auth-callback";
+  const hashParams = new URLSearchParams(separatorIndex >= 0 ? rawHash.slice(separatorIndex + 1) : "");
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      hashParams.set(key, String(value));
+    }
+  });
+
+  url.hash = [route, hashParams.toString()].filter(Boolean).join("?");
+  return url.toString();
+}
+
+function redirectOAuthError(res, message, provider = "google") {
+  const url = new URL(appConfig.customerAuthCallbackUrl);
+  const params = new URLSearchParams({ error: message, provider });
+  url.hash = `login?${params.toString()}`;
+  return res.redirect(url.toString());
+}
+
+function redactOAuthToken(redirectUrl) {
+  return redirectUrl.replace(/([?&]token=)[^&]+/i, "$1[REDACTED]");
+}
