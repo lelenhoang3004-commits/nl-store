@@ -1,6 +1,7 @@
 import { BaseController } from "./base.controller.js";
 import { AdminProductService } from "../services/admin-product.service.js";
 import { asyncHandler } from "../utils/async-handler.util.js";
+import { logger } from "../utils/logger.util.js";
 
 export class AdminProductController extends BaseController {
   constructor(service = new AdminProductService()) {
@@ -24,8 +25,20 @@ export class AdminProductController extends BaseController {
   });
 
   update = asyncHandler(async (request, response) => {
-    const product = await this.service.updateProduct(request.params.id, request.body, request.user);
-    return this.sendSuccess(response, { product }, "Product updated successfully.");
+    try {
+      const product = await this.service.updateProduct(request.params.id, request.body, request.user);
+      return this.sendSuccess(response, { product }, "Product updated successfully.");
+    } catch (error) {
+      logger.error("Admin product update failed.", {
+        productId: request.params.id,
+        bodyKeys: Object.keys(request.body || {}),
+        code: error?.code,
+        statusCode: error?.statusCode,
+        message: error?.message,
+        sqlMessage: error?.sqlMessage
+      });
+      throw error;
+    }
   });
 
   updateStock = asyncHandler(async (request, response) => {

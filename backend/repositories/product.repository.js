@@ -185,12 +185,13 @@ export class ProductRepository extends BaseRepository {
 
   async create(payload) {
     const startedAt = Date.now();
-    const [result] = await this.execute(
-      `INSERT INTO products
+    const sql = `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, rating_average, rating_count, status, thumbnail_url, gallery_urls, tags, product_attributes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      this.toSqlParams(payload)
-    );
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const legacySql = `INSERT INTO products
+        (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, status, thumbnail_url, gallery_urls, tags, product_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await this.executeProductWrite(sql, this.toSqlParams(payload), legacySql, this.toLegacySqlParams(payload), "create");
 
     logger.sql("Product create query executed.", {
       repository: "ProductRepository",
@@ -203,8 +204,7 @@ export class ProductRepository extends BaseRepository {
 
   async update(id, payload) {
     const startedAt = Date.now();
-    await this.execute(
-      `UPDATE products
+    const sql = `UPDATE products
       SET name = ?,
         slug = ?,
         sku = ?,
@@ -224,9 +224,27 @@ export class ProductRepository extends BaseRepository {
         tags = ?,
         product_attributes = ?,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND deleted_at IS NULL`,
-      [...this.toSqlParams(payload), id]
-    );
+      WHERE id = ? AND deleted_at IS NULL`;
+    const legacySql = `UPDATE products
+      SET name = ?,
+        slug = ?,
+        sku = ?,
+        category_id = ?,
+        brand = ?,
+        short_description = ?,
+        description = ?,
+        price = ?,
+        sale_price = ?,
+        stock = ?,
+        sold = ?,
+        status = ?,
+        thumbnail_url = ?,
+        gallery_urls = ?,
+        tags = ?,
+        product_attributes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL`;
+    await this.executeProductWrite(sql, [...this.toSqlParams(payload), id], legacySql, [...this.toLegacySqlParams(payload), id], "update");
 
     logger.sql("Product update query executed.", {
       repository: "ProductRepository",
@@ -237,6 +255,23 @@ export class ProductRepository extends BaseRepository {
     return this.findById(id);
   }
 
+  async executeProductWrite(sql, params, legacySql, legacyParams, operation) {
+    try {
+      return await this.execute(sql, params);
+    } catch (error) {
+      if (!isMissingRatingColumnError(error)) {
+        throw error;
+      }
+
+      logger.warn("Products schema is missing rating columns; using legacy-compatible write. Run the product ratings migration to persist ratings.", {
+        repository: "ProductRepository",
+        operation,
+        code: error.code,
+        sqlMessage: error.sqlMessage || error.message
+      });
+      return this.execute(legacySql, legacyParams);
+    }
+  }
   async updateStock(id, stock) {
     const startedAt = Date.now();
     await this.execute(
@@ -378,4 +413,30 @@ export class ProductRepository extends BaseRepository {
       JSON.stringify(payload.productAttributes || {})
     ];
   }
+  toLegacySqlParams(payload) {
+    return [
+      payload.name,
+      payload.slug,
+      payload.sku,
+      payload.categoryId,
+      payload.brand,
+      payload.shortDescription,
+      payload.description,
+      payload.price,
+      payload.salePrice,
+      payload.stock,
+      payload.sold,
+      payload.status,
+      payload.thumbnailUrl,
+      JSON.stringify(payload.galleryUrls || []),
+      JSON.stringify(payload.tags || []),
+      JSON.stringify(payload.productAttributes || {})
+    ];
+  }
+}
+
+function isMissingRatingColumnError(error) {
+  if (error?.code !== "ER_BAD_FIELD_ERROR") return false;
+  const message = String(error.sqlMessage || error.message || "").toLowerCase();
+  return message.includes("rating_average") || message.includes("rating_count");
 }
