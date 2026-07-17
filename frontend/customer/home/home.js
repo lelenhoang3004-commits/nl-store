@@ -80,7 +80,12 @@ function mapApiProduct(product = {}) {
     category: product.categoryName || "Sản phẩm",
     image: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
     hoverImage: "",
+    thumbnailUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
+    imageUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url),
+    selectedImageUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url),
     price: finalPrice,
+    salePrice,
+    finalPrice,
     comparePrice: salePrice ? price : null,
     discount: salePrice && price > salePrice
       ? Math.round(((price - salePrice) / price) * 100)
@@ -88,7 +93,11 @@ function mapApiProduct(product = {}) {
     rating: Number(product.rating || 4.8),
     sold: Number(product.sold || 0),
     badge: salePrice ? "GIẢM GIÁ" : "MỚI",
-    inStock: Number(product.stock || 0) > 0
+    inStock: Number(product.stock || 0) > 0,
+    stock: Number(product.stock || 0),
+    variantCount: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)),
+    hasVariants: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)) > 0,
+    variants: Array.isArray(product.variants) ? product.variants : []
   };
 }
 

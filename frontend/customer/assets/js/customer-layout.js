@@ -318,6 +318,16 @@ function bindGlobalEvents() {
   window.addEventListener("message", handleOAuthMessage);
 
   document.addEventListener("click", (event) => {
+    const buyNowButton = event.target.closest("[data-buy-now]");
+    if (buyNowButton) {
+      event.preventDefault();
+      const productId = buyNowButton.dataset.productId;
+      if (productId) {
+        handleProductCardBuyNow(buyNowButton);
+      }
+      return;
+    }
+
     const addToCartButton = event.target.closest("[data-add-to-cart]");
     if (addToCartButton) {
       event.preventDefault();
@@ -618,7 +628,16 @@ function mapApiProductForCard(product = {}) {
     rating: Number(product.rating || 4.8),
     sold: Number(product.sold || 0),
     badge: hasSalePrice ? "GIẢM GIÁ" : "SẢN PHẨM",
-    inStock: Number(product.stock || 0) > 0
+    inStock: Number(product.stock || 0) > 0,
+    stock: Number(product.stock || 0),
+    salePrice: product.salePrice ?? product.sale_price ?? null,
+    finalPrice: price,
+    thumbnailUrl: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
+    imageUrl: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
+    selectedImageUrl: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
+    variantCount: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)),
+    hasVariants: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)) > 0,
+    variants: Array.isArray(product.variants) ? product.variants : []
   };
 }
 
@@ -2241,6 +2260,95 @@ async function handleAddToCart(productId) {
     productId,
     quantity: 1
   });
+}
+
+async function handleProductCardBuyNow(button) {
+  const productId = button?.dataset?.productId;
+  if (!productId) return;
+
+  button.disabled = true;
+  try {
+    const detail = await getProductForBuyNow(button);
+    const variantCount = Number(detail.variantCount ?? detail.variant_count ?? (Array.isArray(detail.variants) ? detail.variants.length : 0));
+
+    if (variantCount > 0) {
+      showCustomerToast("Vui lòng chọn size/màu trước khi mua ngay.", "warning");
+      navigateToRoute(`product-detail/${encodeURIComponent(productId)}`);
+      return;
+    }
+
+    const stock = Number(detail.stock ?? button.dataset.productStock ?? 0);
+    if (stock <= 0) {
+      showCustomerToast("Sản phẩm này đã hết hàng.", "warning");
+      return;
+    }
+
+    startBuyNowCheckout(createProductCardBuyNowItem(detail, button));
+  } catch (error) {
+    showCustomerToast(error?.message || "Không thể mua ngay sản phẩm này. Vui lòng thử lại.", "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function getProductForBuyNow(button) {
+  const productId = button?.dataset?.productId;
+  const hasKnownVariants = button.dataset.productHasVariants === "true" || Number(button.dataset.productVariantCount || 0) > 0;
+  if (hasKnownVariants) {
+    return { ...button.dataset, id: productId, variantCount: Number(button.dataset.productVariantCount || 1) };
+  }
+
+  try {
+    const response = await customerApi(`/products/${encodeURIComponent(productId)}`, { auth: false });
+    return response?.data?.product || response?.product || response?.data || createProductFromBuyNowDataset(button);
+  } catch {
+    return createProductFromBuyNowDataset(button);
+  }
+}
+
+function createProductFromBuyNowDataset(button) {
+  return {
+    id: button.dataset.productId,
+    name: button.dataset.productName,
+    price: Number(button.dataset.productPrice || 0),
+    salePrice: button.dataset.productSalePrice ? Number(button.dataset.productSalePrice) : null,
+    finalPrice: Number(button.dataset.productFinalPrice || button.dataset.productSalePrice || button.dataset.productPrice || 0),
+    thumbnailUrl: button.dataset.productThumbnailUrl || button.dataset.productImageUrl || null,
+    imageUrl: button.dataset.productImageUrl || button.dataset.productThumbnailUrl || null,
+    selectedImageUrl: button.dataset.productSelectedImageUrl || button.dataset.productImageUrl || button.dataset.productThumbnailUrl || null,
+    stock: Number(button.dataset.productStock || 0),
+    variantCount: Number(button.dataset.productVariantCount || 0),
+    variants: []
+  };
+}
+
+function createProductCardBuyNowItem(product, button) {
+  const productId = product.id ?? product.productId ?? button.dataset.productId;
+  const price = Number(product.price ?? button.dataset.productPrice ?? 0);
+  const salePrice = product.salePrice ?? product.sale_price ?? (button.dataset.productSalePrice ? Number(button.dataset.productSalePrice) : null);
+  const finalPrice = Number(product.finalPrice ?? product.final_price ?? salePrice ?? button.dataset.productFinalPrice ?? price);
+  const imageUrl = resolveProductImageUrl(
+    product.selectedImageUrl || product.selected_image_url || product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url || button.dataset.productSelectedImageUrl || button.dataset.productImageUrl || button.dataset.productThumbnailUrl || ""
+  );
+
+  return {
+    product_id: Number(productId),
+    product_name: product.name || button.dataset.productName || "Sản phẩm",
+    product_sku: product.sku || null,
+    price,
+    sale_price: salePrice !== null && salePrice !== undefined && salePrice !== "" ? Number(salePrice) : null,
+    final_price: finalPrice,
+    quantity: 1,
+    unit_price: finalPrice,
+    thumbnail_url: imageUrl,
+    image_url: imageUrl,
+    product_image_url: imageUrl,
+    selected_image_url: imageUrl,
+    variant_id: null,
+    variant_key: `${productId}|base`,
+    size: null,
+    color: null
+  };
 }
 
 function startBuyNowCheckout(item) {

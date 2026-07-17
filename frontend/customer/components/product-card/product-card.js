@@ -29,6 +29,14 @@ export function normalizeProductCardData(product = {}) {
     sold: product.sold ?? defaultProduct.sold,
     badge: product.badge ?? defaultProduct.badge,
     inStock: product.inStock ?? defaultProduct.inStock,
+    stock: Number(product.stock ?? (product.inStock === false ? 0 : 1)),
+    salePrice: product.salePrice ?? product.sale_price ?? null,
+    finalPrice: product.finalPrice ?? product.final_price ?? product.price ?? defaultProduct.price,
+    thumbnailUrl: globalThis.normalizeImageUrl?.(product.thumbnailUrl || product.thumbnail_url || product.image) ?? (product.thumbnailUrl || product.thumbnail_url || product.image || defaultProduct.image),
+    imageUrl: globalThis.normalizeImageUrl?.(product.imageUrl || product.image_url || product.image) ?? (product.imageUrl || product.image_url || product.image || defaultProduct.image),
+    selectedImageUrl: globalThis.normalizeImageUrl?.(product.selectedImageUrl || product.selected_image_url || product.image) ?? (product.selectedImageUrl || product.selected_image_url || product.image || defaultProduct.image),
+    variantCount: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)),
+    hasVariants: Boolean(product.hasVariants ?? product.has_variants ?? Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)) > 0),
     isWishlist: Boolean(product.isWishlist),
     isCompare: Boolean(product.isCompare)
   };
@@ -77,10 +85,28 @@ export function createProductCard(product) {
           </div>
           <span class="product-sold">${item.sold} đã bán</span>
         </div>
-        <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
-          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-          Thêm vào giỏ
-        </button>
+        <div class="product-card-button-row">
+          <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
+            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+            Thêm vào giỏ
+          </button>
+          <button class="ds-button product-card-button product-card-buy-now" type="button"
+            data-buy-now
+            data-product-id="${item.id}"
+            data-product-name="${escapeHtml(item.name)}"
+            data-product-price="${Number(item.price || 0)}"
+            data-product-sale-price="${item.salePrice !== null && item.salePrice !== undefined ? Number(item.salePrice) : ""}"
+            data-product-final-price="${Number(item.finalPrice || item.price || 0)}"
+            data-product-thumbnail-url="${escapeHtml(item.thumbnailUrl || item.image || "")}"
+            data-product-image-url="${escapeHtml(item.imageUrl || item.image || "")}"
+            data-product-selected-image-url="${escapeHtml(item.selectedImageUrl || item.image || "")}"
+            data-product-variant-count="${Number(item.variantCount || 0)}"
+            data-product-has-variants="${item.hasVariants ? "true" : "false"}"
+            data-product-stock="${Number(item.stock || 0)}">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+            Mua ngay
+          </button>
+        </div>
       </div>
     </article>
   `;
