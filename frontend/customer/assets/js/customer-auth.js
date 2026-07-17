@@ -195,8 +195,7 @@ export const customerAuth = {
     console.info("[Auth] token exists", Boolean(token));
 
     if (!token) {
-      accessTokenMemory = null;
-      localStorage.removeItem(USER_KEY);
+      setGuestAuthState();
       console.info("[Auth] skip /me because no token");
       return null;
     }
@@ -223,8 +222,7 @@ export const customerAuth = {
     console.info("[Auth] token exists", Boolean(token));
 
     if (!token) {
-      accessTokenMemory = null;
-      localStorage.removeItem(USER_KEY);
+      setGuestAuthState();
       console.info("[Auth] skip /me because no token");
       authInitialized = true;
       hasTriedInitialRefresh = true;
@@ -399,6 +397,14 @@ function saveSession(payload = {}, remember) {
     // ignore
   }
   notifyAuthChanged("login");
+}
+
+function setGuestAuthState() {
+  accessTokenMemory = null;
+  sessionStorage.removeItem(ACCESS_TOKEN_SESSION_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(REMEMBER_KEY);
 }
 
 function clearSession(reason) {
