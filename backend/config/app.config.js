@@ -21,11 +21,8 @@ export const appConfig = Object.freeze({
   isProduction: process.env.NODE_ENV === "production",
   port: Number(process.env.PORT || 5000),
   apiPrefix: process.env.API_PREFIX || "/api/v1",
-  clientOrigin: process.env.CLIENT_ORIGIN || "http://127.0.0.1:5500",
-  clientOrigins: (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN || "http://127.0.0.1:5500,http://localhost:5500")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean),
+  clientOrigin: resolvePrimaryClientOrigin(),
+  clientOrigins: resolveClientOrigins(),
   requestBodyLimit: process.env.REQUEST_BODY_LIMIT || "1mb",
   csrfEnabled: process.env.CSRF_ENABLED
     ? process.env.CSRF_ENABLED === "true"
@@ -72,7 +69,7 @@ export const appConfig = Object.freeze({
     process.env.FACEBOOK_CALLBACK_URL,
     "/api/v1/auth/facebook/callback"
   ),
-  customerAuthCallbackUrl: process.env.CUSTOMER_AUTH_CALLBACK_URL || "http://127.0.0.1:5500/frontend/customer/index.html#auth-callback",
+  customerAuthCallbackUrl: resolveCustomerAuthCallbackUrl(),
   otpExpiresInSeconds: Number(process.env.OTP_EXPIRES_IN_SECONDS || 300),
   otpResendCooldownSeconds: Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60),
   uploadRateLimitWindowMs: Number(process.env.UPLOAD_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
@@ -97,6 +94,45 @@ function hasUnsafeAuthSecret(config) {
     config.jwtRefreshSecret
   ].some((secret) => !secret || secret.startsWith("change-this"));
 }
+function resolvePrimaryClientOrigin() {
+  if (process.env.NODE_ENV === "production") {
+    return productionFrontendOrigin();
+  }
+  return process.env.CLIENT_ORIGIN || "http://127.0.0.1:5500";
+}
+
+function resolveClientOrigins() {
+  const configured = String(
+    process.env.CLIENT_ORIGINS
+      || process.env.CLIENT_ORIGIN
+      || "http://127.0.0.1:5500,http://localhost:5500"
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (process.env.NODE_ENV === "production") {
+    configured.push(productionFrontendOrigin());
+  }
+
+  return [...new Set(configured)];
+}
+
+function resolveCustomerAuthCallbackUrl() {
+  if (process.env.NODE_ENV === "production") {
+    return productionFrontendOrigin() + "/customer/index.html#auth-callback";
+  }
+
+  return process.env.CUSTOMER_AUTH_CALLBACK_URL
+    || "http://127.0.0.1:5500/frontend/customer/index.html#auth-callback";
+}
+
+function productionFrontendOrigin() {
+  return String(
+    process.env.PUBLIC_FRONTEND_ORIGIN || "https://nl-store.pages.dev"
+  ).replace(/\/$/, "");
+}
+
 function resolveOAuthCallbackUrl(configuredUrl, callbackPath) {
   const localFallback = "http://localhost:5000" + callbackPath;
   const value = String(configuredUrl || localFallback).trim();

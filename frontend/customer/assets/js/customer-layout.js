@@ -4,7 +4,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
-import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-google-oauth-production-final";
+import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 
@@ -711,7 +711,7 @@ function openOAuthLoginPopup(provider, button) {
 
 async function handleOAuthMessage(event) {
   const allowedOrigins = [
-    "https://voluble-naiad-217946.netlify.app",
+    "https://nl-store.pages.dev",
     "http://localhost:5500",
     "http://127.0.0.1:5500"
   ];
@@ -883,7 +883,7 @@ function forwardOAuthCallbackToOpener() {
 
   const targetOrigins = [...new Set([
     window.location.origin,
-    "https://voluble-naiad-217946.netlify.app",
+    "https://nl-store.pages.dev",
     "http://localhost:5500",
     "http://127.0.0.1:5500"
   ])];
