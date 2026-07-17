@@ -54,7 +54,7 @@ function createProductDetailMarkup(product, relatedProducts = []) {
   const displayPrice = getInitialProductPrice(product, variants);
   const activePrice = displayPrice.activePrice;
   const comparePrice = displayPrice.comparePrice;
-  const rating = Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8);
+  const rating = Number(product.rating_average ?? product.ratingAverage ?? product.rating ?? 4.8);
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
   const colors = Array.isArray(product.colors) ? product.colors : [];
 

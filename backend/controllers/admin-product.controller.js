@@ -26,6 +26,12 @@ export class AdminProductController extends BaseController {
 
   update = asyncHandler(async (request, response) => {
     try {
+      logger.info("Admin product update received.", {
+        productId: request.params.id,
+        rating_average: request.body?.rating_average,
+        ratingAverage: request.body?.ratingAverage,
+        bodyKeys: Object.keys(request.body || {})
+      });
       const product = await this.service.updateProduct(request.params.id, request.body, request.user);
       return this.sendSuccess(response, { product }, "Product updated successfully.");
     } catch (error) {

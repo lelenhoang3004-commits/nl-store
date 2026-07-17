@@ -51,6 +51,7 @@ export class AdminProductService {
   async updateProduct(id, payload) {
     const current = await this.getProductById(id);
     const normalized = this.normalizePayload(payload, current);
+    logger.info("AdminProductService.updateProduct normalized payload.", { productId: id, ratingAverage: normalized.ratingAverage, ratingCount: normalized.ratingCount });
     await this.ensureUnique(normalized, id);
     await this.ensureCategoryExists(normalized.categoryId);
     return (await this.repository.update(id, normalized)).toJSON();
@@ -125,7 +126,7 @@ export class AdminProductService {
       salePrice,
       stock,
       sold: Number(value("sold") ?? 0),
-      ratingAverage: Number(ratingAverage.toFixed(1)),
+      ratingAverage: ratingAverage !== null ? Number(ratingAverage.toFixed(1)) : null,
       ratingCount,
       status,
       thumbnailUrl: nullableString(value("thumbnailUrl", "thumbnail_url")),
