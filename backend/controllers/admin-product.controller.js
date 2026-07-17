@@ -41,7 +41,8 @@ export class AdminProductController extends BaseController {
         code: error?.code,
         statusCode: error?.statusCode,
         message: error?.message,
-        sqlMessage: error?.sqlMessage
+        sqlMessage: error?.sqlMessage,
+        sql: error?.sql
       });
       throw error;
     }

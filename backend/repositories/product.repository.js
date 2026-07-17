@@ -95,12 +95,22 @@ export class ProductRepository extends BaseRepository {
       const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
       return rows;
     } catch (error) {
+      // Log SQL error details for troubleshooting
+      logger.error("Product select failed.", {
+        repository: "ProductRepository",
+        code: error?.code,
+        message: error?.message,
+        sqlMessage: error?.sqlMessage,
+        sql: error?.sql
+      });
+
       if (!isMissingColumnError(error, "rating_count")) {
         if (error?.code !== "ER_BAD_FIELD_ERROR") {
           throw error;
         }
 
         logger.warn("Products schema is missing optional product columns; using legacy-compatible select.", {
+          repository: "ProductRepository",
           code: error.code,
           sqlMessage: error.sqlMessage
         });
@@ -117,6 +127,13 @@ export class ProductRepository extends BaseRepository {
         const [rows] = await this.execute(`${PRODUCT_SELECT_WITHOUT_RATING_COUNT}\n${suffixSql}`, params);
         return rows;
       } catch (fallbackError) {
+        logger.error("Product select fallback failed.", {
+          repository: "ProductRepository",
+          code: fallbackError?.code,
+          message: fallbackError?.message,
+          sqlMessage: fallbackError?.sqlMessage,
+          sql: fallbackError?.sql
+        });
         if (fallbackError?.code !== "ER_BAD_FIELD_ERROR") {
           throw fallbackError;
         }
@@ -308,6 +325,16 @@ export class ProductRepository extends BaseRepository {
     try {
       return await this.execute(sql, params);
     } catch (error) {
+      // Log SQL error details for troubleshooting
+      logger.error("Product write failed.", {
+        repository: "ProductRepository",
+        operation,
+        code: error?.code,
+        message: error?.message,
+        sqlMessage: error?.sqlMessage,
+        sql: error?.sql
+      });
+
       if (!isMissingRatingColumnError(error)) {
         throw error;
       }
@@ -322,6 +349,14 @@ export class ProductRepository extends BaseRepository {
         try {
           return await this.execute(sqlWithoutRatingCount, paramsWithoutRatingCount);
         } catch (fallbackError) {
+          logger.error("Product write fallback failed.", {
+            repository: "ProductRepository",
+            operation,
+            code: fallbackError?.code,
+            message: fallbackError?.message,
+            sqlMessage: fallbackError?.sqlMessage,
+            sql: fallbackError?.sql
+          });
           if (!isMissingColumnError(fallbackError, "rating_average")) {
             throw fallbackError;
           }
