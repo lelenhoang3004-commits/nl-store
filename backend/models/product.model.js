@@ -20,6 +20,8 @@ export class Product extends BaseModel {
     this.salePrice = attributes.salePrice ?? attributes.sale_price ?? null;
     this.stock = Number(attributes.stock || 0);
     this.sold = Number(attributes.sold || 0);
+    this.ratingAverage = attributes.ratingAverage ?? attributes.rating_average ?? attributes.rating ?? 4.8;
+    this.ratingCount = Number(attributes.ratingCount ?? attributes.rating_count ?? 0);
     this.status = attributes.status;
     this.thumbnailUrl = attributes.thumbnailUrl || attributes.thumbnail_url || null;
     this.galleryUrls = normalizeJsonArray(attributes.galleryUrls || attributes.gallery_urls);
@@ -44,6 +46,11 @@ export class Product extends BaseModel {
       salePrice: this.salePrice === null ? null : Number(this.salePrice),
       stock: this.stock,
       sold: this.sold,
+      ratingAverage: this.ratingAverage === null ? 4.8 : Number(this.ratingAverage),
+      rating_average: this.ratingAverage === null ? 4.8 : Number(this.ratingAverage),
+      rating: this.ratingAverage === null ? 4.8 : Number(this.ratingAverage),
+      ratingCount: this.ratingCount,
+      rating_count: this.ratingCount,
       status: this.status,
       thumbnailUrl: this.thumbnailUrl,
       galleryUrls: this.galleryUrls,

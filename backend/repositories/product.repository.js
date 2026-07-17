@@ -34,6 +34,8 @@ const PRODUCT_SELECT = `
     p.sale_price,
     p.stock,
     p.sold,
+    p.rating_average,
+    p.rating_count,
     p.status,
     p.thumbnail_url,
     p.gallery_urls,
@@ -45,10 +47,10 @@ const PRODUCT_SELECT = `
   LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
 `;
 
-const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT.replace(
-  "    p.product_attributes,",
-  "    NULL AS product_attributes,"
-);
+const LEGACY_PRODUCT_SELECT = PRODUCT_SELECT
+  .replace("    p.rating_average,", "    4.8 AS rating_average,")
+  .replace("    p.rating_count,", "    0 AS rating_count,")
+  .replace("    p.product_attributes,", "    NULL AS product_attributes,");
 
 const normalizePagination = (pagination = {}) => {
   const parsedLimit = Number.parseInt(pagination?.limit, 10);
@@ -91,11 +93,11 @@ export class ProductRepository extends BaseRepository {
       const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
       return rows;
     } catch (error) {
-      if (error?.code !== "ER_BAD_FIELD_ERROR" || !String(error.sqlMessage || error.message).includes("product_attributes")) {
+      if (error?.code !== "ER_BAD_FIELD_ERROR") {
         throw error;
       }
 
-      logger.warn("Products schema is missing product_attributes; using legacy-compatible select.", {
+      logger.warn("Products schema is missing optional product columns; using legacy-compatible select.", {
         code: error.code,
         sqlMessage: error.sqlMessage
       });
@@ -185,8 +187,8 @@ export class ProductRepository extends BaseRepository {
     const startedAt = Date.now();
     const [result] = await this.execute(
       `INSERT INTO products
-        (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, status, thumbnail_url, gallery_urls, tags, product_attributes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, rating_average, rating_count, status, thumbnail_url, gallery_urls, tags, product_attributes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       this.toSqlParams(payload)
     );
 
@@ -214,6 +216,8 @@ export class ProductRepository extends BaseRepository {
         sale_price = ?,
         stock = ?,
         sold = ?,
+        rating_average = ?,
+        rating_count = ?,
         status = ?,
         thumbnail_url = ?,
         gallery_urls = ?,
@@ -365,6 +369,8 @@ export class ProductRepository extends BaseRepository {
       payload.salePrice,
       payload.stock,
       payload.sold,
+      payload.ratingAverage,
+      payload.ratingCount,
       payload.status,
       payload.thumbnailUrl,
       JSON.stringify(payload.galleryUrls || []),

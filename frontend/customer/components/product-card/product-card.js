@@ -25,7 +25,7 @@ export function normalizeProductCardData(product = {}) {
     price: product.price ?? defaultProduct.price,
     comparePrice: product.comparePrice ?? defaultProduct.comparePrice,
     discount: product.discount ?? defaultProduct.discount,
-    rating: product.rating ?? defaultProduct.rating,
+    rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? defaultProduct.rating),
     sold: product.sold ?? defaultProduct.sold,
     badge: product.badge ?? defaultProduct.badge,
     inStock: product.inStock ?? defaultProduct.inStock,

@@ -123,9 +123,15 @@ export class ProductService extends BaseService {
     const salePrice = payload.salePrice === undefined || payload.salePrice === null || payload.salePrice === ""
       ? null
       : Number(payload.salePrice);
+    const rawRatingAverage = payload.ratingAverage ?? payload.rating_average;
+    const ratingAverage = rawRatingAverage === undefined || rawRatingAverage === null || rawRatingAverage === "" ? 4.8 : Number(rawRatingAverage);
+    const ratingCount = Number(payload.ratingCount ?? payload.rating_count ?? 0);
 
     if (salePrice !== null && salePrice > price) {
       throw new AppError("Sale price must be less than or equal to price.", 422, "SALE_PRICE_GREATER_THAN_PRICE");
+    }
+    if (!Number.isFinite(ratingAverage) || ratingAverage < 0 || ratingAverage > 5 || Math.round(ratingAverage * 10) !== ratingAverage * 10) {
+      throw new AppError("Product rating must be between 0 and 5 with one decimal place.", 422, "INVALID_PRODUCT_RATING");
     }
 
     return {
@@ -140,6 +146,8 @@ export class ProductService extends BaseService {
       salePrice,
       stock: Number(payload.stock || 0),
       sold: Number(payload.sold || 0),
+      ratingAverage: Number(ratingAverage.toFixed(1)),
+      ratingCount: Number.isInteger(ratingCount) && ratingCount >= 0 ? ratingCount : 0,
       status: payload.status || PRODUCT_STATUS.DRAFT,
       thumbnailUrl: payload.thumbnailUrl ? String(payload.thumbnailUrl).trim() : null,
       galleryUrls: normalizeArray(payload.galleryUrls),

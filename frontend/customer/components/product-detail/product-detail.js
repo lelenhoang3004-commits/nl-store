@@ -54,7 +54,7 @@ function createProductDetailMarkup(product, relatedProducts = []) {
   const displayPrice = getInitialProductPrice(product, variants);
   const activePrice = displayPrice.activePrice;
   const comparePrice = displayPrice.comparePrice;
-  const rating = Number(product.rating || 0);
+  const rating = Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8);
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
   const colors = Array.isArray(product.colors) ? product.colors : [];
 
@@ -487,7 +487,7 @@ function mapRelatedProduct(product = {}) {
     price: salePrice || price,
     comparePrice: salePrice ? price : null,
     discount: salePrice && price > salePrice ? Math.round(((price - salePrice) / price) * 100) : 0,
-    rating: Number(product.rating || 0),
+    rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
     sold: Number(product.sold || 0),
     badge: salePrice ? "GIẢM GIÁ" : "MỚI",
     inStock: Number(product.stock || 0) > 0

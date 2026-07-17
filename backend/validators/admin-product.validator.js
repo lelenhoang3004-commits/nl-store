@@ -58,6 +58,7 @@ function validatePayload(body = {}, required) {
   if (!isEmpty(get("salePrice", "sale_price"))) errors.push(...validatePrice(get("salePrice", "sale_price"), { field: "sale_price", location: "body" }).errors);
   if (!isEmpty(get("price")) && !isEmpty(get("salePrice", "sale_price")) && Number(get("salePrice", "sale_price")) > Number(get("price"))) errors.push(error("sale_price", "sale_price must be less than or equal to price."));
   if (!isEmpty(get("stock"))) validateInteger(errors, get("stock"), "stock", 0);
+  if (!isEmpty(get("ratingAverage", "rating_average"))) validateRatingAverage(errors, get("ratingAverage", "rating_average"));
   if (!isEmpty(get("categoryId", "category_id"))) errors.push(...validateId(get("categoryId", "category_id"), { field: "category_id", location: "body" }).errors);
   if (!isEmpty(get("status")) && !STATUSES.includes(get("status"))) errors.push(error("status", "status must be active, inactive, or out_of_stock."));
   if (!isEmpty(get("thumbnailUrl", "thumbnail_url")) && String(get("thumbnailUrl", "thumbnail_url")).length > 255) errors.push(error("thumbnail_url", "thumbnail_url must not exceed 255 characters."));
@@ -84,6 +85,12 @@ function validateProductAttributes(errors, value) {
 function validateInteger(errors, value, field, min) {
   const number = Number(value);
   if (!Number.isInteger(number) || number < min) errors.push(error(field, `${field} must be an integer greater than or equal to ${min}.`));
+}
+function validateRatingAverage(errors, value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0 || number > 5 || Math.round(number * 10) !== number * 10) {
+    errors.push(error("rating_average", "rating_average must be a number from 0 to 5 with step 0.1."));
+  }
 }
 function validateArrayLike(errors, value, field) {
   if (isEmpty(value)) return;

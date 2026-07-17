@@ -90,7 +90,7 @@ function mapApiProduct(product = {}) {
     discount: salePrice && price > salePrice
       ? Math.round(((price - salePrice) / price) * 100)
       : 0,
-    rating: Number(product.rating || 4.8),
+    rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
     sold: Number(product.sold || 0),
     badge: salePrice ? "GIẢM GIÁ" : "MỚI",
     inStock: Number(product.stock || 0) > 0,
