@@ -380,9 +380,8 @@ function navigateToRoute(route, replace = false) {
 }
 
 function renderRoute() {
-  const queryParams = new URLSearchParams(window.location.search);
-  const hasOAuthQuery = queryParams.has("token") || queryParams.has("access_token") || queryParams.has("error");
-  const nextRoute = hasOAuthQuery ? "auth-callback" : (normalizeRoute(window.location.hash) || 'home');
+  const hasOAuthCallback = readOAuthCallback().hasCallbackData;
+  const nextRoute = hasOAuthCallback ? "auth-callback" : (normalizeRoute(window.location.hash) || 'home');
   if (nextRoute === currentRoute && nextRoute !== "products") return;
 
   const hashPath = (window.location.hash || '').replace(/^#\/?/, '').split('?')[0];
@@ -700,36 +699,29 @@ function openOAuthLoginPopup(provider, button) {
   layoutState.oauthPopupProvider = provider;
   popup.focus?.();
 
-  const closedCheck = window.setInterval(() => {
-    if (!popup.closed) return;
-    window.clearInterval(closedCheck);
-    if (layoutState.oauthPopup === popup) {
-      layoutState.oauthPopup = null;
-      layoutState.oauthPopupProvider = "";
-      button.disabled = false;
-    }
-  }, 500);
 }
 
 async function handleOAuthMessage(event) {
   const allowedOrigins = [
+    "https://voluble-naiad-217946.netlify.app",
     "http://localhost:5500",
     "http://127.0.0.1:5500"
   ];
   if (!allowedOrigins.includes(event.origin)) return;
-  if (!event.data || !["OAUTH_AUTH_SUCCESS", "OAUTH_AUTH_ERROR"].includes(event.data.type)) return;
-  if (layoutState.oauthPopup && event.source !== layoutState.oauthPopup) return;
+  const successTypes = ["GOOGLE_AUTH_SUCCESS", "FACEBOOK_AUTH_SUCCESS", "OAUTH_AUTH_SUCCESS"];
+  const errorTypes = ["GOOGLE_AUTH_ERROR", "FACEBOOK_AUTH_ERROR", "OAUTH_AUTH_ERROR"];
+  if (!event.data || ![...successTypes, ...errorTypes].includes(event.data.type)) return;
 
   const provider = ["google", "facebook"].includes(event.data.provider)
     ? event.data.provider
-    : (layoutState.oauthPopupProvider || "oauth");
+    : (event.data.type.startsWith("GOOGLE_") ? "google" : event.data.type.startsWith("FACEBOOK_") ? "facebook" : (layoutState.oauthPopupProvider || "oauth"));
   const providerLabel = provider === "facebook" ? "Facebook" : provider === "google" ? "Google" : "OAuth";
 
   layoutState.oauthPopup = null;
   layoutState.oauthPopupProvider = "";
   document.querySelectorAll("[data-oauth]").forEach(button => { button.disabled = false; });
 
-  if (event.data.type === "OAUTH_AUTH_ERROR") {
+  if (errorTypes.includes(event.data.type)) {
     showCustomerToast(event.data.message || "Đăng nhập thất bại", "error");
     return;
   }
@@ -853,36 +845,50 @@ async function renderAuthCallbackPage() {
 function forwardOAuthCallbackToOpener() {
   const callback = readOAuthCallback();
   if (!callback.hasCallbackData) return false;
-  if (!window.opener || window.opener.closed) return false;
+  if (!window.opener) return false;
+
+  const provider = callback.provider === "google" ? "google" : callback.provider === "facebook" ? "facebook" : "oauth";
+  const successType = provider === "google" ? "GOOGLE_AUTH_SUCCESS" : provider === "facebook" ? "FACEBOOK_AUTH_SUCCESS" : "OAUTH_AUTH_SUCCESS";
+  const errorType = provider === "google" ? "GOOGLE_AUTH_ERROR" : provider === "facebook" ? "FACEBOOK_AUTH_ERROR" : "OAUTH_AUTH_ERROR";
 
   const message = callback.error || !callback.token
     ? {
-        type: "OAUTH_AUTH_ERROR",
-        provider: callback.provider,
+        type: errorType,
+        provider,
         message: callback.error || "Đăng nhập thất bại"
       }
     : {
-        type: "OAUTH_AUTH_SUCCESS",
-        provider: callback.provider || "oauth",
+        type: successType,
+        provider,
         token: callback.token,
         user: callback.user
       };
 
   const targetOrigins = [...new Set([
     window.location.origin,
+    "https://voluble-naiad-217946.netlify.app",
     "http://localhost:5500",
     "http://127.0.0.1:5500"
   ])];
-  targetOrigins.forEach(origin => window.opener.postMessage(message, origin));
-  window.close();
+  targetOrigins.forEach(origin => {
+    try {
+      window.opener.postMessage(message, origin);
+    } catch {
+      // Continue until the callback matching origin receives the result.
+    }
+  });
+  try { window.close(); } catch { /* The opener already received the OAuth result. */ }
   return true;
 }
 
 function readOAuthCallback() {
   const params = getOAuthCallbackParams();
   const token = params.get("token") || params.get("access_token") || "";
-  const error = params.get("error") || "";
-  const providerValue = String(params.get("provider") || "").toLowerCase();
+  const error = params.get("error_description") || params.get("error") || params.get("message") || "";
+  const popupProvider = window.name === "google-login"
+    ? "google"
+    : window.name === "facebook-login" ? "facebook" : "";
+  const providerValue = String(params.get("provider") || popupProvider).toLowerCase();
 
   return {
     token,
@@ -896,9 +902,13 @@ function getOAuthCallbackParams() {
   const params = new URLSearchParams(window.location.search);
   const hash = String(window.location.hash || "").replace(/^#/, "");
   const hashQueryIndex = hash.indexOf("?");
+  const hashAmpersandIndex = hash.indexOf("&");
 
   if (hashQueryIndex >= 0) {
     const hashParams = new URLSearchParams(hash.slice(hashQueryIndex + 1));
+    hashParams.forEach((value, key) => params.set(key, value));
+  } else if (hashAmpersandIndex >= 0) {
+    const hashParams = new URLSearchParams(hash.slice(hashAmpersandIndex + 1));
     hashParams.forEach((value, key) => params.set(key, value));
   } else if (hash && !hash.startsWith("auth-callback")) {
     const hashParams = new URLSearchParams(hash);
