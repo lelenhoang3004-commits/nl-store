@@ -97,7 +97,7 @@ export class AdminProductService {
     const salePrice = rawSalePrice === undefined || rawSalePrice === null || rawSalePrice === "" ? null : Number(rawSalePrice);
     const stock = Number(value("stock") ?? 0);
     const rawRatingAverage = value("ratingAverage", "rating_average");
-    const ratingAverage = rawRatingAverage === undefined || rawRatingAverage === null || rawRatingAverage === "" ? 4.8 : Number(rawRatingAverage);
+    const ratingAverage = rawRatingAverage === undefined || rawRatingAverage === null || rawRatingAverage === "" ? null : Number(rawRatingAverage);
     const ratingCount = Number(value("ratingCount", "rating_count") ?? 0);
     const status = String(value("status") || "active").trim().toLowerCase();
 
@@ -107,7 +107,7 @@ export class AdminProductService {
       throw new AppError("Sale price must be between zero and price.", 422, "INVALID_PRODUCT_SALE_PRICE");
     }
     if (!Number.isInteger(stock) || stock < 0) throw new AppError("Product stock is invalid.", 422, "INVALID_PRODUCT_STOCK");
-    if (!Number.isFinite(ratingAverage) || ratingAverage < 0 || ratingAverage > 5 || Math.round(ratingAverage * 10) !== ratingAverage * 10) {
+    if (ratingAverage !== null && (!Number.isFinite(ratingAverage) || ratingAverage < 0 || ratingAverage > 5 || Math.round(ratingAverage * 10) !== ratingAverage * 10)) {
       throw new AppError("Product rating must be between 0 and 5 with one decimal place.", 422, "INVALID_PRODUCT_RATING");
     }
     if (!Number.isInteger(ratingCount) || ratingCount < 0) throw new AppError("Product rating count is invalid.", 422, "INVALID_PRODUCT_RATING_COUNT");
