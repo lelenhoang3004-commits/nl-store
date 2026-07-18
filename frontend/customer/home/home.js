@@ -194,6 +194,7 @@ function renderHomeContent(target, products, categories) {
   target.dataset.loaded = "true";
 
   setupRevealAnimation(target);
+  initHeroComponent(target);
   initProductGrid(target);
   initFlashSaleSection(target);
   initFeaturedProductsSection(target);
