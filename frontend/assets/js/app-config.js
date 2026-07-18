@@ -15,12 +15,13 @@ window.normalizeImageUrl = function normalizeImageUrl(value) {
   return url;
 };
 window.initializeProductImages = function initializeProductImages(root = document) {
-  const images = root.querySelectorAll?.("img[data-product-image-src]") || [];
+  const images = root.querySelectorAll?.("img[data-product-image-src], img[data-gallery-image-src]") || [];
   const loadImage = (image) => {
-    const source = image.dataset.productImageSrc;
+    const source = image.dataset.productImageSrc || image.dataset.galleryImageSrc;
     if (!source) return;
     image.src = window.normalizeImageUrl(source);
     image.removeAttribute("data-product-image-src");
+    image.removeAttribute("data-gallery-image-src");
   };
 
   images.forEach((image) => {
@@ -61,8 +62,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
       if (node.nodeType !== Node.ELEMENT_NODE) return;
-      if (node.matches?.("img[data-product-image-src]")) window.initializeProductImages(node.parentElement || node);
-      else if (node.querySelector?.("img[data-product-image-src]")) window.initializeProductImages(node);
+      if (node.matches?.("img[data-product-image-src], img[data-gallery-image-src]")) window.initializeProductImages(node.parentElement || node);
+      else if (node.querySelector?.("img[data-product-image-src], img[data-gallery-image-src]")) window.initializeProductImages(node);
     }));
   });
   observer.observe(document.body, { childList: true, subtree: true });

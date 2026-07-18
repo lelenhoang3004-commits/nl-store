@@ -67,7 +67,7 @@ function createProductDetailMarkup(product, relatedProducts = []) {
         <div class="product-detail-thumbs" aria-label="Thư viện ảnh sản phẩm">
           ${images.map((image, index) => `
             <button class="product-detail-thumb ${index === 0 ? "is-active" : ""}" type="button" data-product-thumb="${escapeAttr(image)}" aria-label="Ảnh ${index + 1}">
-              <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-gallery-image-src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}" loading="lazy" decoding="async" data-product-image>
+              <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}" loading="lazy" decoding="async" data-product-image>
             </button>
           `).join("")}
         </div>
@@ -237,10 +237,10 @@ function initProductDetailInteractions(root, product, options = {}) {
       button.setAttribute("aria-pressed", "true");
       // dataset holds the raw attribute (may be escaped); use it as the selected image URL
       selectedImageUrl = button.dataset.productThumb || selectedImageUrl;
-      const thumbnail = button.querySelector("img[data-gallery-image-src]");
+      const thumbnail = button.querySelector("img[data-product-image-src]");
       if (thumbnail) {
-        thumbnail.src = thumbnail.dataset.galleryImageSrc;
-        thumbnail.removeAttribute("data-gallery-image-src");
+        thumbnail.src = globalThis.normalizeImageUrl?.(thumbnail.dataset.productImageSrc) ?? thumbnail.dataset.productImageSrc;
+        thumbnail.removeAttribute("data-product-image-src");
       }
       mainImage.src = selectedImageUrl;
     });
@@ -482,7 +482,7 @@ function mapRelatedProduct(product = {}) {
     id: product.id,
     name: product.name,
     category: product.categoryName || "Sản phẩm",
-    image: resolveAssetUrl(product.thumbnailUrl || getProductImages(product)[0]),
+    image: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url || getProductImages(product)[0]),
     hoverImage: "",
     price: salePrice || price,
     comparePrice: salePrice ? price : null,
@@ -496,7 +496,7 @@ function mapRelatedProduct(product = {}) {
 
 function getProductImages(product = {}) {
   const images = [
-    product.thumbnailUrl,
+    product.thumbnailUrl || product.thumbnail_url,
     ...(Array.isArray(product.galleryUrls) ? product.galleryUrls : [])
   ].filter(Boolean).map(resolveAssetUrl);
 
