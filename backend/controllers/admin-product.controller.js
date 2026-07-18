@@ -38,6 +38,7 @@ export class AdminProductController extends BaseController {
       logger.error("Admin product update failed.", {
         productId: request.params.id,
         bodyKeys: Object.keys(request.body || {}),
+        params: request.params,
         code: error?.code,
         statusCode: error?.statusCode,
         message: error?.message,

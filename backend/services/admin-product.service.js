@@ -2,6 +2,7 @@ import { CategoryRepository } from "../repositories/category.repository.js";
 import { ProductRepository } from "../repositories/product.repository.js";
 import { ProductVariantRepository } from "../repositories/product-variant.repository.js";
 import { AppError } from "../utils/app-error.util.js";
+import { logger } from "../utils/logger.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { createSlug } from "../utils/slug.util.js";
 
@@ -85,6 +86,7 @@ export class AdminProductService {
   }
 
   normalizePayload(payload, current = {}) {
+    const ratingCountProvided = has(payload, "ratingCount") || has(payload, "rating_count");
     const value = (camel, snake = camel) => has(payload, camel)
       ? payload[camel]
       : has(payload, snake)
@@ -128,6 +130,7 @@ export class AdminProductService {
       sold: Number(value("sold") ?? 0),
       ratingAverage: ratingAverage !== null ? Number(ratingAverage.toFixed(1)) : null,
       ratingCount,
+      ratingCountProvided,
       status,
       thumbnailUrl: nullableString(value("thumbnailUrl", "thumbnail_url")),
       galleryUrls: normalizeArray(value("galleryUrls", "gallery_urls")),

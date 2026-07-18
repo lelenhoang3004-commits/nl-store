@@ -101,7 +101,8 @@ export class ProductRepository extends BaseRepository {
         code: error?.code,
         message: error?.message,
         sqlMessage: error?.sqlMessage,
-        sql: error?.sql
+        sql: error?.sql,
+        params: normalizeSqlParams(params)
       });
 
       if (!isMissingColumnError(error, "rating_count")) {
@@ -250,67 +251,51 @@ export class ProductRepository extends BaseRepository {
 
   async update(id, payload) {
     const startedAt = Date.now();
+    const fields = [
+      ["name", payload.name],
+      ["slug", payload.slug],
+      ["sku", payload.sku],
+      ["category_id", payload.categoryId],
+      ["brand", payload.brand],
+      ["short_description", payload.shortDescription],
+      ["description", payload.description],
+      ["price", payload.price],
+      ["sale_price", payload.salePrice],
+      ["stock", payload.stock],
+      ["sold", payload.sold],
+      ["rating_average", payload.ratingAverage],
+      ["status", payload.status],
+      ["thumbnail_url", payload.thumbnailUrl],
+      ["gallery_urls", JSON.stringify(payload.galleryUrls || [])],
+      ["tags", JSON.stringify(payload.tags || [])],
+      ["product_attributes", JSON.stringify(payload.productAttributes || {})]
+    ];
+
+    if (payload.ratingCountProvided) {
+      fields.splice(12, 0, ["rating_count", payload.ratingCount]);
+    }
+
+    const setSql = fields.map(([column]) => `${column} = ?`).join(",\n        ");
+    const params = [...fields.map(([, value]) => value), id];
     const sql = `UPDATE products
-      SET name = ?,
-        slug = ?,
-        sku = ?,
-        category_id = ?,
-        brand = ?,
-        short_description = ?,
-        description = ?,
-        price = ?,
-        sale_price = ?,
-        stock = ?,
-        sold = ?,
-        rating_average = ?,
-        rating_count = ?,
-        status = ?,
-        thumbnail_url = ?,
-        gallery_urls = ?,
-        tags = ?,
-        product_attributes = ?,
+      SET ${setSql},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`;
-    const sqlWithoutRatingCount = `UPDATE products
-      SET name = ?,
-        slug = ?,
-        sku = ?,
-        category_id = ?,
-        brand = ?,
-        short_description = ?,
-        description = ?,
-        price = ?,
-        sale_price = ?,
-        stock = ?,
-        sold = ?,
-        rating_average = ?,
-        status = ?,
-        thumbnail_url = ?,
-        gallery_urls = ?,
-        tags = ?,
-        product_attributes = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND deleted_at IS NULL`;
-    const legacySql = `UPDATE products
-      SET name = ?,
-        slug = ?,
-        sku = ?,
-        category_id = ?,
-        brand = ?,
-        short_description = ?,
-        description = ?,
-        price = ?,
-        sale_price = ?,
-        stock = ?,
-        sold = ?,
-        status = ?,
-        thumbnail_url = ?,
-        gallery_urls = ?,
-        tags = ?,
-        product_attributes = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND deleted_at IS NULL`;
-    await this.executeProductWrite(sql, [...this.toSqlParams(payload), id], sqlWithoutRatingCount, [...this.toSqlParamsWithoutRatingCount(payload), id], legacySql, [...this.toLegacySqlParams(payload), id], "update");
+
+    try {
+      await this.execute(sql, params);
+    } catch (error) {
+      logger.error("Product update failed.", {
+        repository: "ProductRepository",
+        operation: "update",
+        code: error?.code,
+        message: error?.message,
+        sqlMessage: error?.sqlMessage,
+        sql: error?.sql || sql,
+        params: normalizeSqlParams(params)
+      });
+      throw error;
+    }
 
     logger.sql("Product update query executed.", {
       repository: "ProductRepository",
@@ -320,7 +305,6 @@ export class ProductRepository extends BaseRepository {
 
     return this.findById(id);
   }
-
   async executeProductWrite(sql, params, sqlWithoutRatingCount, paramsWithoutRatingCount, legacySql, legacyParams, operation) {
     try {
       return await this.execute(sql, params);
@@ -332,7 +316,8 @@ export class ProductRepository extends BaseRepository {
         code: error?.code,
         message: error?.message,
         sqlMessage: error?.sqlMessage,
-        sql: error?.sql
+        sql: error?.sql,
+        params: normalizeSqlParams(params)
       });
 
       if (!isMissingRatingColumnError(error)) {
@@ -355,7 +340,8 @@ export class ProductRepository extends BaseRepository {
             code: fallbackError?.code,
             message: fallbackError?.message,
             sqlMessage: fallbackError?.sqlMessage,
-            sql: fallbackError?.sql
+            sql: fallbackError?.sql,
+            params: normalizeSqlParams(paramsWithoutRatingCount)
           });
           if (!isMissingColumnError(fallbackError, "rating_average")) {
             throw fallbackError;
