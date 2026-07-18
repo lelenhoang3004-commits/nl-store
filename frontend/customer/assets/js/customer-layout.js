@@ -343,7 +343,7 @@ function createNewsletterOfferPopup() {
       <button class="newsletter-popup-close" type="button" data-newsletter-popup-close aria-label="Dong popup uu dai">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
       </button>
-      <div class="newsletter-popup-badge">N&amp;L Store</div>
+      <div class="newsletter-popup-badge">N&amp;L STORE</div>
       <h2 id="newsletter-popup-title">Nh&#7853;n &#432;u &#273;&#227;i &#273;&#7863;c bi&#7879;t</h2>
       <p>&#272;&#259;ng k&#253; email &#273;&#7875; nh&#7853;n m&#227; gi&#7843;m gi&#225; cho &#273;&#417;n h&#224;ng &#273;&#7847;u ti&#234;n.</p>
       <form class="newsletter-popup-form" data-newsletter-popup-form novalidate>
@@ -366,15 +366,21 @@ function bindNewsletterOfferPopup(popup) {
   const codeBox = popup.querySelector("[data-newsletter-popup-code]");
   const closeButton = popup.querySelector("[data-newsletter-popup-close]");
   const copyButton = popup.querySelector("[data-newsletter-copy-code]");
+  const originalCopyText = copyButton?.textContent || "Sao chép mã";
 
   closeButton?.addEventListener("click", () => closeNewsletterPopup(popup, { remember: true }));
 
   copyButton?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText("SALE10");
-      setNewsletterPopupFeedback(feedback, "Da sao chep ma SALE10.", "success");
+      copyButton.textContent = "\u0110\u00e3 sao ch\u00e9p";
+      copyButton.classList.add("is-copied");
+      setNewsletterPopupFeedback(feedback, "\u0110\u00e3 sao ch\u00e9p m\u00e3 \u01b0u \u0111\u00e3i", "success");
+      scheduleNewsletterPopupHide(popup, 1000);
     } catch {
-      setNewsletterPopupFeedback(feedback, "Khong the sao chep tu dong. Ma cua ban la SALE10.", "error");
+      copyButton.textContent = originalCopyText;
+      copyButton.classList.remove("is-copied");
+      setNewsletterPopupFeedback(feedback, "Kh\u00f4ng th\u1ec3 sao ch\u00e9p t\u1ef1 \u0111\u1ed9ng. M\u00e3 c\u1ee7a b\u1ea1n l\u00e0 SALE10.", "error");
     }
   });
 
@@ -387,7 +393,7 @@ function bindNewsletterOfferPopup(popup) {
     const email = input?.value?.trim() || "";
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setNewsletterPopupFeedback(feedback, "Vui long nhap email hop le.", "error");
+      setNewsletterPopupFeedback(feedback, "Vui l\u00f2ng nh\u1eadp email h\u1ee3p l\u1ec7.", "error");
       input?.focus();
       return;
     }
@@ -437,10 +443,11 @@ function setNewsletterPopupFeedback(target, message, type) {
 }
 
 function getNewsletterPopupErrorMessage(error) {
-  if (error?.status === 422) return "Email khong hop le.";
-  if (error?.status === 404) return "Chua tim thay dich vu dang ky email.";
-  if (error?.status >= 500) return "He thong dang ban. Vui long thu lai sau.";
-  return error?.message || "Khong the dang ky luc nay.";
+  if (error?.status === 422) return "Email kh\u00f4ng h\u1ee3p l\u1ec7.";
+  if (error?.status === 404) return "Ch\u01b0a t\u00ecm th\u1ea5y d\u1ecbch v\u1ee5 \u0111\u0103ng k\u00fd email.";
+  if (error?.status >= 500) return "H\u1ec7 th\u1ed1ng \u0111ang b\u1eadn. Vui l\u00f2ng th\u1eed l\u1ea1i sau.";
+  if (error?.message === "Newsletter subscription successful." || error?.message === "Newsletter subscribe failed.") return "Kh\u00f4ng th\u1ec3 \u0111\u0103ng k\u00fd l\u00fac n\u00e0y.";
+  return error?.message || "Kh\u00f4ng th\u1ec3 \u0111\u0103ng k\u00fd l\u00fac n\u00e0y.";
 }
 function bindGlobalEvents() {
   if (layoutState._eventsBound) return;
