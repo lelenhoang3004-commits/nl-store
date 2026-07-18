@@ -495,12 +495,21 @@ function mapRelatedProduct(product = {}) {
 }
 
 function getProductImages(product = {}) {
-  const images = [
-    product.thumbnailUrl || product.thumbnail_url,
-    ...(Array.isArray(product.galleryUrls) ? product.galleryUrls : [])
-  ].filter(Boolean).map(resolveAssetUrl);
+  const galleryUrls = Array.isArray(product.galleryUrls)
+    ? product.galleryUrls
+    : Array.isArray(product.gallery_urls)
+      ? product.gallery_urls
+      : [];
+  const images = [product.thumbnailUrl || product.thumbnail_url, ...galleryUrls]
+    .filter(Boolean)
+    .map(resolveAssetUrl);
+  const uniqueImages = [...new Set(images)].sort((left, right) => Number(isAbsoluteHttpUrl(right)) - Number(isAbsoluteHttpUrl(left)));
 
-  return [...new Set(images)].length ? [...new Set(images)] : [FALLBACK_PRODUCT_IMAGE];
+  return uniqueImages.length ? uniqueImages : [FALLBACK_PRODUCT_IMAGE];
+}
+
+function isAbsoluteHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || ""));
 }
 
 function resolveAssetUrl(url) {

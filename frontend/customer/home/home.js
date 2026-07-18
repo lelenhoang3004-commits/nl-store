@@ -68,6 +68,23 @@ function resolveAssetUrl(value) {
   return globalThis.normalizeImageUrl?.(value) ?? value;
 }
 
+function getPreferredProductImage(product = {}) {
+  const galleryUrls = Array.isArray(product.galleryUrls)
+    ? product.galleryUrls
+    : Array.isArray(product.gallery_urls)
+      ? product.gallery_urls
+      : [];
+  const candidates = [product.thumbnailUrl, product.thumbnail_url, product.imageUrl, product.image_url, ...galleryUrls]
+    .filter(Boolean)
+    .map(resolveAssetUrl);
+  const uniqueCandidates = [...new Set(candidates)].sort((left, right) => Number(isAbsoluteHttpUrl(right)) - Number(isAbsoluteHttpUrl(left)));
+  return uniqueCandidates[0] || FALLBACK_PRODUCT_IMAGE;
+}
+
+function isAbsoluteHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || ""));
+}
+
 function mapApiProduct(product = {}) {
   const price = Number(product.price || 0);
   const salePrice = product.salePrice ? Number(product.salePrice) : null;
@@ -77,11 +94,11 @@ function mapApiProduct(product = {}) {
     id: product.id,
     name: product.name,
     category: product.categoryName || "Sản phẩm",
-    image: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
+    image: getPreferredProductImage(product),
     hoverImage: "",
-    thumbnailUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url),
-    imageUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url),
-    selectedImageUrl: resolveAssetUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url),
+    thumbnailUrl: getPreferredProductImage(product),
+    imageUrl: getPreferredProductImage(product),
+    selectedImageUrl: getPreferredProductImage(product),
     price: finalPrice,
     salePrice,
     finalPrice,

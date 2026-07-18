@@ -7,6 +7,7 @@ import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.
 import { createSlug } from "../utils/slug.util.js";
 
 const PRODUCT_STATUSES = ["active", "inactive", "out_of_stock"];
+const UPLOAD_ORIGIN = "https://nl-store.onrender.com";
 const QUERY_OPTIONS = Object.freeze({
   allowedSortFields: ["createdAt", "updatedAt", "name", "sku", "price", "salePrice", "stock", "sold", "status"],
   allowedFilterFields: ["categoryId", "status", "brand", "lowStock", "stockStatus"]
@@ -46,6 +47,7 @@ export class AdminProductService {
     const normalized = this.normalizePayload(payload);
     await this.ensureUnique(normalized);
     await this.ensureCategoryExists(normalized.categoryId);
+    await this.ensureProductImageUrls(normalized);
     return (await this.repository.create(normalized)).toJSON();
   }
 
@@ -55,6 +57,7 @@ export class AdminProductService {
     logger.info("AdminProductService.updateProduct normalized payload.", { productId: id, ratingAverage: normalized.ratingAverage, ratingCount: normalized.ratingCount });
     await this.ensureUnique(normalized, id);
     await this.ensureCategoryExists(normalized.categoryId);
+    await this.ensureProductImageUrls(normalized);
     return (await this.repository.update(id, normalized)).toJSON();
   }
 
@@ -139,6 +142,22 @@ export class AdminProductService {
     };
   }
 
+
+  async ensureProductImageUrls(payload) {
+    payload.thumbnailUrl = normalizeProductImageUrl(payload.thumbnailUrl);
+    payload.galleryUrls = (payload.galleryUrls || []).map(normalizeProductImageUrl).filter(Boolean);
+
+    const uploadUrls = [
+      payload.thumbnailUrl,
+      ...payload.galleryUrls
+    ].filter(isRenderUploadUrl);
+
+    for (const url of uploadUrls) {
+      if (!await imageUrlExists(url)) {
+        throw new AppError("Product image URL is not reachable. Use a stable Cloudinary/R2/static image URL instead of a missing Render upload.", 422, "PRODUCT_IMAGE_URL_UNREACHABLE", { url });
+      }
+    }
+  }
   async ensureUnique(payload, excludedId = null) {
     const [slug, sku] = await Promise.all([
       this.repository.findBySlug(payload.slug, excludedId),
@@ -156,6 +175,27 @@ export class AdminProductService {
   }
 }
 
+function normalizeProductImageUrl(value) {
+  const url = nullableString(value);
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
+  if (url.startsWith("/uploads")) return `${UPLOAD_ORIGIN}${url}`;
+  if (url.startsWith("uploads")) return `${UPLOAD_ORIGIN}/${url}`;
+  return url;
+}
+
+function isRenderUploadUrl(value) {
+  return String(value || "").startsWith(`${UPLOAD_ORIGIN}/uploads/`);
+}
+
+async function imageUrlExists(url) {
+  try {
+    const response = await fetch(url, { method: "GET" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 function has(object, key) { return Object.prototype.hasOwnProperty.call(object || {}, key); }
 const PRODUCT_ATTRIBUTE_KEYS = ["material", "chain_length", "pendant_type", "stone_color", "pendant_size", "warranty"];
 function normalizeProductAttributes(value) {

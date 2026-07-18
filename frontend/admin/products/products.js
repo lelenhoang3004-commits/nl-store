@@ -211,6 +211,7 @@ function openProductForm(root, product = null) {
     if (validation) { showFieldError(form, validation.field, validation.message); return; }
     setFormBusy(form, true);
     try {
+      await validateAndNormalizeProductImages(payload);
       if (editing) await productService.updateProduct(product.id, payload, silent());
       else await productService.createProduct(payload, silent());
       closeModal(); toast.success(editing ? "Đã cập nhật sản phẩm." : "Đã thêm sản phẩm."); await reload(root);
@@ -665,6 +666,53 @@ function formPayload(form) {
   };
 }
 function validateFormPayload(p) { if (!p.name) return { field: "name", message: "Tên sản phẩm là bắt buộc." }; if (!p.sku) return { field: "sku", message: "SKU là bắt buộc." }; if (!Number.isFinite(p.price) || p.price < 0) return { field: "price", message: "Giá phải là số không âm." }; if (p.sale_price !== null && (p.sale_price < 0 || p.sale_price > p.price)) return { field: "sale_price", message: "Giá sale phải nhỏ hơn hoặc bằng giá gốc." }; if (!Number.isInteger(p.stock) || p.stock < 0) return { field: "stock", message: "Tồn kho phải là số nguyên không âm." }; if (!Number.isFinite(p.rating_average) || p.rating_average < 0 || p.rating_average > 5 || Math.round(p.rating_average * 10) !== p.rating_average * 10) return { field: "rating_average", message: "Đánh giá sao phải từ 0 đến 5 và có 1 chữ số thập phân." }; return null; }
+
+async function validateAndNormalizeProductImages(payload) {
+  const urls = [];
+  const normalizeForSave = (value) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    return resolveImageUrl(raw);
+  };
+
+  payload.thumbnail_url = normalizeForSave(payload.thumbnail_url) || null;
+  payload.gallery_urls = (payload.gallery_urls || []).map(normalizeForSave).filter(Boolean);
+
+  if (payload.thumbnail_url) urls.push({ label: "thumbnail_url", url: payload.thumbnail_url });
+  payload.gallery_urls.forEach((url, index) => urls.push({ label: `gallery_urls dong ${index + 1}`, url }));
+
+  for (const item of urls) {
+    if (item.url === PLACEHOLDER || item.url === globalThis.FASHION_IMAGE_PLACEHOLDER) continue;
+    await assertImageUrlLoads(item.url, item.label);
+  }
+}
+
+function assertImageUrlLoads(url, label) {
+  return new Promise((resolve, reject) => {
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("data:") && !url.startsWith("blob:")) {
+      reject(new Error(`${label}: URL anh phai la URL tuyet doi hoac /uploads hop le.`));
+      return;
+    }
+
+    const image = new Image();
+    const timer = window.setTimeout(() => {
+      cleanup();
+      reject(new Error(`${label}: Khong tai duoc anh. Vui long dung anh mo truc tiep duoc, uu tien Cloudinary/R2 hoac anh static.`));
+    }, 8000);
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      image.onload = null;
+      image.onerror = null;
+    };
+
+    image.onload = () => { cleanup(); resolve(); };
+    image.onerror = () => {
+      cleanup();
+      reject(new Error(`${label}: Anh khong ton tai hoac Render da mat file upload. Khong luu URL nay vao DB.`));
+    };
+    image.src = url;
+  });
+}
 function clearFormErrors(form) { form.querySelectorAll(".is-invalid").forEach((field) => field.classList.remove("is-invalid")); form.querySelectorAll("[data-field-error]").forEach((target) => { target.textContent = ""; }); const summary = form.querySelector("[data-product-form-error]"); if (summary) summary.textContent = ""; }
 function showFieldError(form, fieldName, errorMessage) { const input = form.elements[fieldName]; const wrapper = input?.closest("[data-product-field]"); wrapper?.classList.add("is-invalid"); const target = form.querySelector(`[data-field-error="${fieldName}"]`); if (target) target.textContent = errorMessage; (wrapper || input)?.scrollIntoView({ behavior: "smooth", block: "center" }); input?.focus({ preventScroll: true }); }
 function bindProductImageUpload(modal) {
