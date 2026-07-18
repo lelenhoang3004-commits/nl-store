@@ -17,22 +17,6 @@ const paymentMethods = ["Visa", "Mastercard", "PayPal", "Momo"];
 
 export function createCustomerFooter() {
   return `
-    <div class="customer-container footer-newsletter">
-      <div>
-        <span class="hero-kicker">Bản tin</span>
-        <h2>Cập nhật những bộ sưu tập theo mùa mới nhất.</h2>
-        <p>Nhận thông tin ra mắt, cập nhật phong cách và quyền truy cập độc quyền.</p>
-      </div>
-      <form data-newsletter-form novalidate>
-        <label>
-          <span class="sr-only">Email</span>
-          <input name="email" type="email" placeholder="Email của bạn" required>
-        </label>
-        <input type="hidden" name="fullName" value="">
-        <button class="customer-button" type="submit">Đăng ký</button>
-        <p class="newsletter-feedback" data-newsletter-feedback aria-live="polite"></p>
-      </form>
-    </div>
     <div class="customer-container footer-grid">
       <section class="footer-brand">
         <a class="store-logo" href="#home" aria-label="Trang chủ N&amp;L Store">

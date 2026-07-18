@@ -1,5 +1,4 @@
 import { createCustomerFooter } from "../../components/footer/footer.js";
-import { initNewsletterSection } from "../../components/newsletter-section/newsletter-section.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
@@ -100,6 +99,11 @@ const layoutState = {
     wardCode: "",
     detailAddress: "",
     mapUpdateTimer: null
+  },
+  newsletterPopup: {
+    shown: false,
+    showTimer: null,
+    hideTimer: null
   }
 };
 
@@ -304,9 +308,140 @@ function renderLayout() {
   layoutState.header.innerHTML = createCustomerHeader(customerAuth.getUser(), layoutState.cart, layoutState.wishlistTotal);
   initCustomerHeader(layoutState.header, { onLogout: async () => { await customerAuth.logout(); } });
   layoutState.footer.innerHTML = createCustomerFooter();
-  initNewsletterSection(layoutState.footer);
+  initNewsletterOfferPopup();
 }
 
+
+function initNewsletterOfferPopup() {
+  if (layoutState.newsletterPopup.shown || sessionStorage.getItem("newsletterPopupClosed") === "true") {
+    return;
+  }
+
+  clearTimeout(layoutState.newsletterPopup.showTimer);
+  layoutState.newsletterPopup.showTimer = window.setTimeout(() => {
+    if (layoutState.newsletterPopup.shown || sessionStorage.getItem("newsletterPopupClosed") === "true") {
+      return;
+    }
+
+    const existing = document.querySelector("[data-newsletter-popup]");
+    if (existing) existing.remove();
+
+    document.body.insertAdjacentHTML("beforeend", createNewsletterOfferPopup());
+    const popup = document.querySelector("[data-newsletter-popup]");
+    if (!popup) return;
+
+    layoutState.newsletterPopup.shown = true;
+    bindNewsletterOfferPopup(popup);
+    window.requestAnimationFrame(() => popup.classList.add("is-open"));
+    scheduleNewsletterPopupHide(popup, 15000);
+  }, 1000);
+}
+
+function createNewsletterOfferPopup() {
+  return `
+    <aside class="newsletter-popup" data-newsletter-popup role="dialog" aria-modal="false" aria-labelledby="newsletter-popup-title">
+      <button class="newsletter-popup-close" type="button" data-newsletter-popup-close aria-label="Dong popup uu dai">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+      <div class="newsletter-popup-badge">N&amp;L Store</div>
+      <h2 id="newsletter-popup-title">Nh&#7853;n &#432;u &#273;&#227;i &#273;&#7863;c bi&#7879;t</h2>
+      <p>&#272;&#259;ng k&#253; email &#273;&#7875; nh&#7853;n m&#227; gi&#7843;m gi&#225; cho &#273;&#417;n h&#224;ng &#273;&#7847;u ti&#234;n.</p>
+      <form class="newsletter-popup-form" data-newsletter-popup-form novalidate>
+        <label class="sr-only" for="newsletter-popup-email">Email</label>
+        <input id="newsletter-popup-email" name="email" type="email" autocomplete="email" placeholder="Email c&#7911;a b&#7841;n" required>
+        <button class="customer-button" type="submit">Nh&#7853;n m&#227; &#432;u &#273;&#227;i</button>
+      </form>
+      <p class="newsletter-popup-feedback" data-newsletter-popup-feedback aria-live="polite"></p>
+      <div class="newsletter-popup-code" data-newsletter-popup-code hidden>
+        <span>M&#227; c&#7911;a b&#7841;n</span>
+        <strong>SALE10</strong>
+        <button type="button" data-newsletter-copy-code>Sao ch&#233;p m&#227;</button>
+      </div>
+    </aside>
+  `;
+}
+function bindNewsletterOfferPopup(popup) {
+  const form = popup.querySelector("[data-newsletter-popup-form]");
+  const feedback = popup.querySelector("[data-newsletter-popup-feedback]");
+  const codeBox = popup.querySelector("[data-newsletter-popup-code]");
+  const closeButton = popup.querySelector("[data-newsletter-popup-close]");
+  const copyButton = popup.querySelector("[data-newsletter-copy-code]");
+
+  closeButton?.addEventListener("click", () => closeNewsletterPopup(popup, { remember: true }));
+
+  copyButton?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("SALE10");
+      setNewsletterPopupFeedback(feedback, "Da sao chep ma SALE10.", "success");
+    } catch {
+      setNewsletterPopupFeedback(feedback, "Khong the sao chep tu dong. Ma cua ban la SALE10.", "error");
+    }
+  });
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearTimeout(layoutState.newsletterPopup.hideTimer);
+
+    const input = form.querySelector("input[type='email']");
+    const button = form.querySelector("button[type='submit']");
+    const email = input?.value?.trim() || "";
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setNewsletterPopupFeedback(feedback, "Vui long nhap email hop le.", "error");
+      input?.focus();
+      return;
+    }
+
+    if (button) button.disabled = true;
+
+    try {
+      const response = await customerApi("/newsletter/subscribe", {
+        method: "POST",
+        auth: false,
+        refreshOnUnauthorized: false,
+        body: { email, fullName: "", source: "newsletter_popup" }
+      });
+      if (response?.success !== true) throw new Error(response?.message || "Newsletter subscribe failed.");
+      setNewsletterPopupFeedback(feedback, response.message || "Dang ky thanh cong. Ma uu dai cua ban da san sang.", "success");
+      form.hidden = true;
+      if (codeBox) codeBox.hidden = false;
+      sessionStorage.setItem("newsletterPopupClosed", "true");
+      scheduleNewsletterPopupHide(popup, 15000);
+    } catch (error) {
+      setNewsletterPopupFeedback(feedback, getNewsletterPopupErrorMessage(error), "error");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+}
+
+function scheduleNewsletterPopupHide(popup, delay) {
+  clearTimeout(layoutState.newsletterPopup.hideTimer);
+  layoutState.newsletterPopup.hideTimer = window.setTimeout(() => closeNewsletterPopup(popup), delay);
+}
+
+function closeNewsletterPopup(popup, options = {}) {
+  clearTimeout(layoutState.newsletterPopup.hideTimer);
+  if (options.remember) {
+    sessionStorage.setItem("newsletterPopupClosed", "true");
+  }
+  popup?.classList.remove("is-open");
+  window.setTimeout(() => popup?.remove(), 220);
+}
+
+function setNewsletterPopupFeedback(target, message, type) {
+  if (!target) return;
+  target.textContent = message;
+  target.classList.toggle("is-success", type === "success");
+  target.classList.toggle("is-error", type === "error");
+}
+
+function getNewsletterPopupErrorMessage(error) {
+  if (error?.status === 422) return "Email khong hop le.";
+  if (error?.status === 404) return "Chua tim thay dich vu dang ky email.";
+  if (error?.status >= 500) return "He thong dang ban. Vui long thu lai sau.";
+  return error?.message || "Khong the dang ky luc nay.";
+}
 function bindGlobalEvents() {
   if (layoutState._eventsBound) return;
   layoutState._eventsBound = true;

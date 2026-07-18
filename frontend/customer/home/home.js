@@ -7,7 +7,6 @@ import { createBestSellerSection, initBestSellerSection } from "../components/be
 import { createCategoryShowcaseSection } from "../components/category-showcase/category-showcase.js";
 import { createBrandShowcaseSection, initBrandShowcaseSection } from "../components/brand-showcase/brand-showcase.js";
 import { createCustomerReviewsSection, initCustomerReviewsSection } from "../components/customer-reviews/customer-reviews.js";
-import { createNewsletterSection, initNewsletterSection } from "../components/newsletter-section/newsletter-section.js";
 
 const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
@@ -202,7 +201,6 @@ function renderHomeContent(target, products, categories) {
   initBestSellerSection(target);
   initBrandShowcaseSection(target);
   initCustomerReviewsSection(target);
-  initNewsletterSection(target);
 }
 
 function createHomeErrorState() {
@@ -334,9 +332,6 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
   })}
     </section>
 
-    <section id="newsletter" class="premium-section" data-reveal>
-      ${createNewsletterSection()}
-    </section>
   `;
 }
 
