@@ -1,74 +1,143 @@
 /* Flash sale section. */
 .flash-sale-section {
+  position: relative;
   display: grid;
-  gap: 20px;
-  padding: 26px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  background: var(--color-card);
-  box-shadow: var(--shadow-soft);
+  gap: 22px;
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(249, 115, 22, 0.08)),
+    var(--color-card);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
+}
+
+.flash-sale-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 30%);
+}
+
+.flash-sale-section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .flash-sale-heading {
+  align-items: center;
   margin-bottom: 0;
 }
 
+.flash-sale-view-all {
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.1);
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.flash-sale-view-all:hover {
+  transform: translateY(-2px);
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.22);
+}
+
 .flash-sale-banner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
   padding: 24px;
-  border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(248, 250, 252, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.88)),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(249, 115, 22, 0.1));
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.07);
+}
+
+.flash-sale-kicker {
+  color: #c2410c;
+  background: rgba(255, 237, 213, 0.96);
+  border: 1px solid rgba(249, 115, 22, 0.22);
 }
 
 .flash-sale-banner h3 {
-  margin: 10px 0 0;
+  max-width: 720px;
+  margin: 12px 0 0;
   color: var(--color-text);
-  font-size: 1.2rem;
+  font-size: clamp(1.08rem, 2.2vw, 1.45rem);
+  line-height: 1.45;
 }
 
 .flash-sale-timer {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(70px, 1fr));
   gap: 10px;
+  min-width: min(390px, 100%);
 }
 
 .flash-sale-timer div {
   display: grid;
-  gap: 4px;
-  min-width: 72px;
-  padding: 10px 12px;
-  border-radius: var(--radius-lg);
-  background: #FFFFFF;
+  gap: 5px;
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
   text-align: center;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
 
 .flash-sale-timer strong {
   color: var(--color-primary);
-  font-size: 1.1rem;
+  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
+  line-height: 1;
+  font-weight: 900;
 }
 
 .flash-sale-timer span {
   color: var(--color-muted);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 900px) {
+  .flash-sale-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .flash-sale-timer {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 720px) {
   .flash-sale-section {
     padding: 20px;
+    border-radius: 22px;
+  }
+
+  .flash-sale-heading {
+    align-items: stretch;
+  }
+
+  .flash-sale-view-all {
+    width: 100%;
   }
 
   .flash-sale-banner {
-    align-items: stretch;
-    flex-direction: column;
+    padding: 18px;
+    border-radius: 20px;
   }
 
   .flash-sale-timer {
-    justify-content: space-between;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

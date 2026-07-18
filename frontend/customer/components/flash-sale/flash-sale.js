@@ -2,8 +2,8 @@ import { createProductGrid, initProductGrid } from "../product-grid/product-grid
 
 export function createFlashSaleSection(options = {}) {
   const {
-    title = "Ưu đãi chớp nhoáng",
-    subtitle = "Phiên bản giới hạn với giá trị cao cho tủ đồ tinh tế hơn.",
+    title = "Khuyến mãi giới hạn",
+    subtitle = "Những lựa chọn nổi bật với mức giá tốt trong thời gian có hạn.",
     items = [],
     loading = false,
     empty = false,
@@ -19,14 +19,14 @@ export function createFlashSaleSection(options = {}) {
           <h2>${title}</h2>
           <p>${subtitle}</p>
         </div>
-        <a class="customer-button secondary" href="#products">Xem tất cả</a>
+        <a class="customer-button secondary flash-sale-view-all" href="#products">Xem tất cả</a>
       </div>
       <div class="flash-sale-banner">
         <div>
-          <span class="hero-kicker">Phiên bản giới hạn</span>
-          <h3>Tiết kiệm cho các món thiết yếu được chọn lọc trước đợt hàng tiếp theo.</h3>
+          <span class="hero-kicker flash-sale-kicker">ƯU ĐÃI CÓ HẠN</span>
+          <h3>Nhanh tay chọn sản phẩm yêu thích trước khi ưu đãi kết thúc.</h3>
         </div>
-        <div class="flash-sale-timer" data-flash-sale-timer aria-label="Đồng hồ đếm ngược ưu đãi chớp nhoáng">
+        <div class="flash-sale-timer" data-flash-sale-timer aria-label="Đồng hồ đếm ngược khuyến mãi giới hạn">
           <div><strong data-countdown-day>00</strong><span>Ngày</span></div>
           <div><strong data-countdown-hour>00</strong><span>Giờ</span></div>
           <div><strong data-countdown-minute>00</strong><span>Phút</span></div>

@@ -24,9 +24,9 @@ const contentShape = {
     secondaryCta: "Khám phá thêm"
   },
   flashSale: {
-    eyebrow: "Ưu đãi chớp nhoáng",
-    title: "Các sản phẩm phiên bản giới hạn với mức giá tiết kiệm cao.",
-    subtitle: "Được tuyển chọn để bạn có thể mua sớm và diện trong những dịp thường nhật."
+    eyebrow: "Khuyến mãi giới hạn",
+    title: "Khuyến mãi giới hạn",
+    subtitle: "Những lựa chọn nổi bật với mức giá tốt trong thời gian có hạn."
   },
   categories: [
     { title: "Nam", subtitle: "Những món đồ may đo cơ bản", icon: "fa-shirt" },
