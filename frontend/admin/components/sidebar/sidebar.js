@@ -38,12 +38,6 @@ export function createSidebar(activePage = "dashboard") {
       ${visibleMenuItems.map((item) => createMenuItem(item, activePage)).join("")}
     </nav>
 
-    <div class="sidebar-footer-action">
-      <button class="logout-button" type="button" title="Đăng xuất" data-logout-trigger>
-        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-        <span class="nav-label">Đăng xuất</span>
-      </button>
-    </div>
   `;
 }
 

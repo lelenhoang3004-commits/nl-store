@@ -86,8 +86,7 @@
   padding: 8px 0;
 }
 
-.nav-item,
-.logout-button {
+.nav-item {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
@@ -108,8 +107,7 @@
   transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
-.nav-item i,
-.logout-button i {
+.nav-item i {
   width: 22px;
   color: #94a3b8;
   text-align: center;
@@ -137,14 +135,12 @@
 }
 
 .nav-item:hover,
-.logout-button:hover,
 .nav-item.is-active {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
-.nav-item:hover,
-.logout-button:hover {
+.nav-item:hover {
   transform: translateX(3px);
 }
 
@@ -153,23 +149,10 @@
 }
 
 .nav-item.is-active i,
-.nav-item:hover i,
-.logout-button:hover i {
+.nav-item:hover i {
   color: #ffffff;
 }
 
-.sidebar-footer-action {
-  margin-top: auto;
-  padding-top: 18px;
-}
-
-.logout-button {
-  color: #fecaca;
-}
-
-.logout-button i {
-  color: #fca5a5;
-}
 
 body.sidebar-collapsed .admin-sidebar {
   width: var(--sidebar-collapsed-width);
@@ -202,15 +185,13 @@ body.sidebar-collapsed .sidebar-collapse-button:hover {
   transform: rotate(180deg) scale(1.06);
 }
 
-body.sidebar-collapsed .nav-item,
-body.sidebar-collapsed .logout-button {
+body.sidebar-collapsed .nav-item {
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 0;
 }
 
-body.sidebar-collapsed .nav-item:hover,
-body.sidebar-collapsed .logout-button:hover {
+body.sidebar-collapsed .nav-item:hover {
   transform: translateY(-1px);
 }
 
@@ -249,8 +230,7 @@ body.sidebar-collapsed .logout-button:hover {
     display: block;
   }
 
-  body.sidebar-collapsed .nav-item,
-  body.sidebar-collapsed .logout-button {
+  body.sidebar-collapsed .nav-item {
     grid-template-columns: 22px minmax(0, 1fr) auto;
     justify-items: stretch;
     padding: 0 13px;
