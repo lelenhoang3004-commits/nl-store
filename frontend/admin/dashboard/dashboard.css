@@ -4,7 +4,11 @@
 .dashboard-heading h1 { margin: 0; color: var(--color-text); font-size: 1.9rem; }
 .dashboard-heading p { margin: 8px 0 0; color: var(--color-muted); }
 .dashboard-period { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-card); color: var(--color-text); }
-.dashboard-period select { border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; }
+.dashboard-period select { border: 0; outline: 0; border-radius: 8px; background: var(--color-card); color: var(--color-text); font: inherit; font-weight: 700; cursor: pointer; }
+.dashboard-period select:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 28%, transparent); }
+.dashboard-period select:disabled { color: var(--color-muted); cursor: wait; opacity: .75; }
+.dashboard-period select option { background: #111827; color: #e5e7eb; font-weight: 600; }
+.dashboard-period select option:checked, .dashboard-period select option:hover, .dashboard-period select option:focus { background: #1d4ed8; color: #ffffff; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .stat-card, .dashboard-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-card); box-shadow: var(--shadow-soft); }
