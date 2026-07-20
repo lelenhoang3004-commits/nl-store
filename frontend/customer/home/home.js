@@ -145,16 +145,37 @@ async function loadHomepageData() {
 
 async function loadCategoriesFromApi() {
   try {
-    const response = await fetch(`${API_BASE_URL}/categories?_=${Date.now()}`, { cache: "no-store" });
-    const payload = await response.json();
+    const firstPayload = await fetchCategoryPage(1);
+    const categories = getListFromApiPayload(firstPayload, "categories");
+    const pagination = firstPayload?.data?.pagination || firstPayload?.meta?.pagination || firstPayload?.pagination || {};
+    const totalPages = Math.max(1, Number(pagination.totalPages || pagination.total_pages || 1));
 
-    const categories = getListFromApiPayload(payload, "categories").map(normalizeHomeCategory);
+    if (totalPages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, index) => fetchCategoryPage(index + 2))
+      );
 
-    return categories;
+      rest.forEach((payload) => {
+        categories.push(...getListFromApiPayload(payload, "categories"));
+      });
+    }
+
+    return categories.map(normalizeHomeCategory);
   } catch (error) {
-    console.error("Không tải được danh mục từ API:", error);
+    console.error("Kh??ng t???i ???????c danh m???c t??? API:", error);
     return [];
   }
+}
+
+async function fetchCategoryPage(page = 1) {
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
+  const response = await fetch(`${API_BASE_URL}/categories?${query.toString()}`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Category API failed with status ${response.status}`);
+  }
+
+  return response.json();
 }
 
 function normalizeHomeCategory(category = {}) {
@@ -174,23 +195,20 @@ function normalizeHomeCategory(category = {}) {
   };
 }
 
-function getFeaturedHomeCategories(categories = []) {
-  const source = categories.length ? categories : getFallbackHomeCategories();
-  const withProducts = source.filter((category) => Number(category.productCount || 0) > 0);
-  return (withProducts.length ? withProducts : source).slice(0, 8);
-}
+function getHomeCategories(categories = []) {
+  const source = Array.isArray(categories) ? categories : [];
+  const seen = new Set();
 
-function getFallbackHomeCategories() {
-  return [
-    normalizeHomeCategory({ name: "Áo khoác", slug: "ao-khoac", productCount: 24 }),
-    normalizeHomeCategory({ name: "Chân váy", slug: "chan-vay", productCount: 18 }),
-    normalizeHomeCategory({ name: "Giày", slug: "giay", productCount: 15 }),
-    normalizeHomeCategory({ name: "Mũ nón", slug: "mu-non", productCount: 12 }),
-    normalizeHomeCategory({ name: "Dây chuyền", slug: "trang-suc", productCount: 10 }),
-    normalizeHomeCategory({ name: "Mắt kính", slug: "kinh-mat", productCount: 8 }),
-    normalizeHomeCategory({ name: "Đồng hồ", slug: "dong-ho", productCount: 7 }),
-    normalizeHomeCategory({ name: "Túi xách", slug: "tui-xach", productCount: 9 })
-  ];
+  return source.filter((category) => {
+    const key = String(category.slug || category.id || category.name || "").trim().toLowerCase();
+
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function slugifyCategoryName(value = "") {
@@ -283,6 +301,40 @@ function renderHomeContent(target, products, categories) {
   initBestSellerSection(target);
   initBrandShowcaseSection(target);
   initCustomerReviewsSection(target);
+  initCategoryShowcaseToggle(target);
+}
+
+function initCategoryShowcaseToggle(root = document) {
+  root.querySelectorAll("[data-category-showcase-section]").forEach((section) => {
+    if (section.dataset.categoryToggleBound === "true") {
+      return;
+    }
+
+    const button = section.querySelector("[data-category-toggle]");
+    const extraItems = Array.from(section.querySelectorAll("[data-category-extra]"));
+
+    if (!button || !extraItems.length) {
+      return;
+    }
+
+    section.dataset.categoryToggleBound = "true";
+    const expandLabel = button.dataset.expandLabel || "Xem t\u1ea5t c\u1ea3";
+    const collapseLabel = button.dataset.collapseLabel || "Thu g\u1ecdn";
+
+    const syncExpandedState = (expanded) => {
+      section.dataset.categoryExpanded = String(expanded);
+      extraItems.forEach((item) => {
+        item.hidden = !expanded;
+      });
+      button.textContent = expanded ? collapseLabel : expandLabel;
+    };
+
+    syncExpandedState(false);
+
+    button.addEventListener("click", () => {
+      syncExpandedState(section.dataset.categoryExpanded !== "true");
+    });
+  });
 }
 
 function createHomeErrorState() {
@@ -358,11 +410,12 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="categories" class="premium-section" data-reveal>
       ${createCategoryShowcaseSection({
-    title: "Danh mục",
-    description: "Duyệt theo phong cách, chức năng và mùa một cách thuận tiện.",
-    actionText: "Xem tất cả",
-    actionHref: "#products",
-    categories: getFeaturedHomeCategories(categories)
+    title: "Danh m\u1ee5c",
+    description: "Duy\u1ec7t theo phong c\u00e1ch, ch\u1ee9c n\u0103ng v\u00e0 m\u00f9a m\u1ed9t c\u00e1ch thu\u1eadn ti\u1ec7n.",
+    actionText: "Xem t\u1ea5t c\u1ea3",
+    collapseText: "Thu g\u1ecdn",
+    categories: getHomeCategories(categories),
+    initialVisible: 8
   })}
     </section>
 

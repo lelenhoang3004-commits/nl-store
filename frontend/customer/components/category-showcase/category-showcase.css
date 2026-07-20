@@ -26,6 +26,10 @@
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
+.category-showcase-card[hidden] {
+  display: none;
+}
+
 .category-showcase-card:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
@@ -88,6 +92,16 @@
   margin: 0;
   color: var(--color-muted);
   font-size: .78rem;
+}
+
+.category-showcase-empty {
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed color-mix(in srgb, var(--color-border) 80%, var(--color-primary) 20%);
+  border-radius: 16px;
+  color: var(--color-muted);
+  text-align: center;
+  background: color-mix(in srgb, var(--color-card) 94%, var(--bg));
 }
 
 @media (max-width: 1180px) {

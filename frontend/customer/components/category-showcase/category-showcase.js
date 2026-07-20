@@ -1,48 +1,56 @@
 export function createCategoryShowcaseSection(options = {}) {
   const {
-    title = "Khám phá theo danh mục",
-    description = "Bộ sưu tập được tuyển chọn dành cho mọi cảm hứng, khoảnh khắc và trang phục.",
-    actionText = "Xem tất cả",
-    actionHref = "#products",
-    categories = []
+    title = "Kh\u00e1m ph\u00e1 theo danh m\u1ee5c",
+    description = "B\u1ed9 s\u01b0u t\u1eadp \u0111\u01b0\u1ee3c tuy\u1ec3n ch\u1ecdn d\u00e0nh cho m\u1ecdi c\u1ea3m h\u1ee9ng, kho\u1ea3nh kh\u1eafc v\u00e0 trang ph\u1ee5c.",
+    actionText = "Xem t\u1ea5t c\u1ea3",
+    collapseText = "Thu g\u1ecdn",
+    categories = [],
+    initialVisible = 8
   } = options;
 
-  const items = categories.length ? categories : getDefaultCategories();
+  const items = Array.isArray(categories) ? categories : [];
+  const visibleLimit = Math.max(1, Number(initialVisible) || 8);
+  const hasExtraItems = items.length > visibleLimit;
 
   return `
-    <section class="category-showcase-section" data-category-showcase-section data-reveal>
+    <section class="category-showcase-section" data-category-showcase-section data-category-expanded="false" data-reveal>
       <div class="section-heading category-showcase-heading">
         <div>
-          <h2>${title}</h2>
-          <p>${description}</p>
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(description)}</p>
         </div>
-        <a class="customer-button secondary" href="${actionHref}">${actionText}</a>
+        ${hasExtraItems ? `<button class="customer-button secondary" type="button" data-category-toggle data-expand-label="${escapeAttr(actionText)}" data-collapse-label="${escapeAttr(collapseText)}">${escapeHtml(actionText)}</button>` : ""}
       </div>
       <div class="category-showcase-grid">
-        ${items.map(createCategoryCard).join("")}
+        ${items.length ? items.map((category, index) => createCategoryCard(category, { hidden: index >= visibleLimit })).join("") : createEmptyState()}
       </div>
     </section>
   `;
 }
 
-function createCategoryCard(category) {
+function createCategoryCard(category, options = {}) {
   const image = category.image || "";
   const icon = category.icon || "fa-layer-group";
-  const name = category.name || "Danh mục";
+  const name = category.name || "Danh m\u1ee5c";
   const count = Number(category.productCount || category.count || 0);
   const href = category.href || "#products";
+  const hiddenAttrs = options.hidden ? " data-category-extra hidden" : "";
 
   return `
-    <a class="category-showcase-card" href="${escapeAttr(href)}" data-reveal>
+    <a class="category-showcase-card" href="${escapeAttr(href)}" data-reveal${hiddenAttrs}>
       <div class="category-showcase-media ${image ? "has-image" : "has-icon"}">
         ${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(name)}" loading="lazy" decoding="async">` : `<span class="category-showcase-icon"><i class="fa-solid ${escapeAttr(icon)}" aria-hidden="true"></i></span>`}
       </div>
       <div class="category-showcase-body">
         <h3>${escapeHtml(name)}</h3>
-        <p>${count} sản phẩm</p>
+        <p>${count} s\u1ea3n ph\u1ea9m</p>
       </div>
     </a>
   `;
+}
+
+function createEmptyState() {
+  return `<div class="category-showcase-empty">Ch\u01b0a c\u00f3 danh m\u1ee5c active.</div>`;
 }
 
 function escapeHtml(value) {
@@ -50,19 +58,10 @@ function escapeHtml(value) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#039;");
 }
 
 function escapeAttr(value) {
   return escapeHtml(value);
-}
-
-function getDefaultCategories() {
-  return [
-    { name: "Áo khoác", productCount: 24, image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" },
-    { name: "Cơ bản", productCount: 18, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" },
-    { name: "Phụ kiện", productCount: 12, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80" },
-    { name: "Bộ sưu tập", productCount: 9, image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" }
-  ];
 }
