@@ -154,10 +154,14 @@ async function fetchCategoryPage(page = 1) {
   return response.json();
 }
 
-function getListFromApiPayload(payload, key) {
+function getListFromApiPayload(payload, key = "items") {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   if (Array.isArray(payload?.data?.[key])) return payload.data[key];
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data?.products)) return payload.data.products;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.products)) return payload.products;
   return [];
 }
 
@@ -264,3 +268,4 @@ function escapeHtml(value) {
 function escapeAttr(value) {
   return escapeHtml(value);
 }
+

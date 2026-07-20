@@ -498,7 +498,7 @@ function bindGlobalEvents() {
     const route = normalizeRoute(href);
     if (route && isAppRoute(route)) {
       event.preventDefault();
-      navigateToRoute(route);
+      navigateToRoute(String(href).replace(/^#/, ""));
     }
   });
 
@@ -506,9 +506,11 @@ function bindGlobalEvents() {
     const now = Date.now();
     if (now - layoutState.lastAuthChangedTime < 400) return;
     layoutState.lastAuthChangedTime = now;
-    refreshWishlist().finally(() => {
+    Promise.all([refreshCart(), refreshWishlist()]).finally(() => {
       renderHeader();
-      renderRoute();
+      if (protectedRoutes.has(normalizeRoute(window.location.hash))) {
+        renderRoute();
+      }
     });
   });
 }
@@ -705,6 +707,16 @@ function syncCustomerNavigationActive(route = normalizeRoute(window.location.has
   });
 }
 
+function getListFromApiPayload(payload, key = "items") {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.[key])) return payload.data[key];
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data?.products)) return payload.data.products;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.products)) return payload.products;
+  return [];
+}
 async function renderProductListPage() {
   const hashQuery = (window.location.hash.split("?")[1] || "");
   const params = new URLSearchParams(hashQuery);
@@ -735,7 +747,7 @@ async function renderProductListPage() {
     }
 
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
-    const apiProducts = Array.isArray(response?.data?.products) ? response.data.products : [];
+    const apiProducts = getListFromApiPayload(response, "products");
     const products = categorySlug
       ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
       : legacyFilter
@@ -772,7 +784,7 @@ async function renderProductListPage() {
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell(title, `
       <div class="customer-empty-state">
-        <div class="customer-empty-icon">!</div>
+        <div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải sản phẩm</h2>
         <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải danh sách sản phẩm.")}</p>
         <button class="customer-button" type="button" data-products-retry>Thử lại</button>
@@ -2379,7 +2391,7 @@ async function renderWishlistPage() {
     const message = error?.message || "KhÃ´ng thá»ƒ táº£i danh sÃ¡ch yÃªu thÃ­ch.";
     layoutState.main.innerHTML = renderPageShell(
       "YÃªu thÃ­ch",
-      '<div class="customer-empty-state"><div class="customer-empty-icon">!</div><h2>KhÃ´ng thá»ƒ táº£i danh sÃ¡ch yÃªu thÃ­ch</h2><p>'
+      '<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div><h2>KhÃ´ng thá»ƒ táº£i danh sÃ¡ch yÃªu thÃ­ch</h2><p>'
         + escapeHtml(message)
         + '</p><button class="customer-button" type="button" onclick="window.location.reload()">Thá»­ láº¡i</button></div>'
     );
@@ -2488,6 +2500,9 @@ async function refreshWishlist({ throwOnError = false } = {}) {
     layoutState.wishlistItems = [];
     layoutState.wishlistProductIds = new Set();
     layoutState.wishlistTotal = 0;
+    if (error?.status === 401) {
+      customerAuth.clearExternalLogin?.("wishlist-unauthorized");
+    }
     syncWishlistToggleButtons();
     renderHeader();
     if (throwOnError) throw error;
@@ -2674,8 +2689,11 @@ async function refreshCart() {
 
   try {
     layoutState.cart = await customerCart.load();
-  } catch (e) {
+  } catch (error) {
     layoutState.cart = createEmptyCart();
+    if (error?.status === 401) {
+      customerAuth.clearExternalLogin?.("cart-unauthorized");
+    }
   }
 
   return layoutState.cart;
@@ -2791,6 +2809,11 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
+
+
+
+
 
 
 
