@@ -527,6 +527,7 @@ function navigateToRoute(route, replace = false) {
   if (!route) return;
   const normalized = '#' + String(route).replace(/^#/, '');
   if (window.location.hash === normalized) {
+    renderRoute();
     return;
   }
 
@@ -650,7 +651,9 @@ function renderRoute() {
     }
 
     if (route.startsWith('product-detail')) {
+      currentRoute = hashPath || route;
       const id = getRouteParam(window.location.hash);
+      layoutState.main.replaceChildren();
       layoutState.main.innerHTML = createProductDetailPage(id);
       const detailInit = initProductDetailPage(layoutState.main, id, {
         onAddToCart: async (payload) => {
@@ -673,7 +676,9 @@ function renderRoute() {
 function renderHomeRoute(sectionId = "") {
   const route = sectionId || 'home';
   currentRoute = route;
+  syncCustomerNavigationActive(route);
 
+  layoutState.main.replaceChildren();
   layoutState.main.innerHTML = createHomePage();
 
   const initResult = initHomePage(layoutState.main);
@@ -689,6 +694,13 @@ function renderHomeRoute(sectionId = "") {
 
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
+  });
+}
+
+function syncCustomerNavigationActive(route = normalizeRoute(window.location.hash)) {
+  const activeHref = route && route !== 'home' ? `#${route}` : '#home';
+  layoutState.header?.querySelectorAll?.('[data-customer-nav] a').forEach((link) => {
+    link.classList.toggle('is-active', link.getAttribute('href')?.toLowerCase() === activeHref.toLowerCase());
   });
 }
 
