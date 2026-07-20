@@ -56,7 +56,8 @@ function createProductDetailMarkup(product, relatedProducts = []) {
   const comparePrice = displayPrice.comparePrice;
   const rating = Number(product.rating_average ?? product.ratingAverage ?? product.rating ?? 4.8);
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
-  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const colors = getVariantColors(product, variants);
+  const variantLabels = getVariantLabels(product);
 
   return `
     <section class="premium-section product-detail" data-product-detail>
@@ -98,10 +99,10 @@ function createProductDetailMarkup(product, relatedProducts = []) {
 
         <div class="product-detail-options">
           ${variants.length ? `
-            <div class="product-detail-option-group"><span>Màu sắc</span><div class="product-detail-option-list" data-variant-colors>
+            ${colors.length ? `<div class="product-detail-option-group"><span>Màu sắc</span><div class="product-detail-option-list" data-variant-colors>
               ${colors.map((color) => `<button class="product-detail-option is-color" type="button" data-variant-color="${escapeAttr(color.name)}"><i style="background:${escapeAttr(color.code || "#94a3b8")}"></i><span>${escapeHtml(color.name)}</span></button>`).join("")}
-            </div></div>
-            <div class="product-detail-option-group"><span>Kích thước</span><div class="product-detail-option-list" data-variant-sizes><small>Chọn màu để xem kích thước còn hàng.</small></div></div>
+            </div></div>` : ""}
+            <div class="product-detail-option-group"><span>${escapeHtml(variantLabels.sizeLabel)}</span><div class="product-detail-option-list" data-variant-sizes>${colors.length ? `<small>${escapeHtml(variantLabels.waitingLabel)}</small>` : createVariantSizeButtons(variants)}</div></div>
           ` : `<div class="product-detail-option-group product-detail-no-variants"><p>Sản phẩm hiện chưa có biến thể.</p></div>`}
           <label class="product-detail-quantity">
             <span>Số lượng</span>
@@ -217,6 +218,7 @@ function initProductDetailInteractions(root, product, options = {}) {
   const zoomTarget = root.querySelector("[data-product-zoom]");
   const variants = Array.isArray(product.variants) ? product.variants : [];
   const galleryIsSelectable = isSelectableGalleryProduct(product, variants);
+  const variantLabels = getVariantLabels(product);
   const thumbs = root.querySelector(".product-detail-thumbs");
   if (galleryIsSelectable && thumbs) {
     thumbs.classList.add("is-selectable");
@@ -284,7 +286,7 @@ function initProductDetailInteractions(root, product, options = {}) {
   function handleQuantityChange(value) {
     let nextQty = Number(value);
     if (!selectedVariant && variants.length) {
-      showCustomerToast("Vui lòng chọn màu sắc và kích thước", "warning");
+      showCustomerToast(variantLabels.requiredMessage, "warning");
       quantity = 1;
       renderQuantity();
       return;
@@ -313,16 +315,9 @@ function initProductDetailInteractions(root, product, options = {}) {
 
   function decreaseQuantity() { if (quantity <= 1) return; quantity -= 1; renderQuantity(); }
 
-  root.querySelectorAll("[data-variant-color]").forEach((button) => button.addEventListener("click", () => {
-    selectedColor = button.dataset.variantColor;
-    selectedVariant = null;
-    root.querySelectorAll("[data-variant-color]").forEach((item) => item.classList.toggle("is-selected", item === button));
-    const available = variants.filter((variant) => variant.color === selectedColor && variant.status === "active");
+  const bindSizeButtons = (available) => {
     const sizeTarget = root.querySelector("[data-variant-sizes]");
-    sizeTarget.innerHTML = [...new Map(available.map((variant) => [variant.size, variant])).values()].map((variant) => `<button class="product-detail-option" type="button" data-variant-size="${escapeAttr(variant.size)}" ${Number(variant.stock) <= 0 ? "disabled" : ""}>${escapeHtml(variant.size)}${Number(variant.stock) <= 0 ? " · Hết hàng" : ""}</button>`).join("") || "<small>Không còn kích thước khả dụng.</small>";
-    addButton.disabled = true;
-    if (buyNowButton) buyNowButton.disabled = true;
-    stockLabel.textContent = "Chọn kích thước";
+    if (!sizeTarget) return;
     sizeTarget.querySelectorAll("[data-variant-size]").forEach((sizeButton) => sizeButton.addEventListener("click", () => {
       selectedVariant = available.find((variant) => variant.size === sizeButton.dataset.variantSize) || null;
       sizeTarget.querySelectorAll("[data-variant-size]").forEach((item) => item.classList.toggle("is-selected", item === sizeButton));
@@ -343,7 +338,24 @@ function initProductDetailInteractions(root, product, options = {}) {
       addButton.disabled = !selectedVariant || stock <= 0;
       if (buyNowButton) buyNowButton.disabled = addButton.disabled;
     }));
+  };
+
+  root.querySelectorAll("[data-variant-color]").forEach((button) => button.addEventListener("click", () => {
+    selectedColor = button.dataset.variantColor;
+    selectedVariant = null;
+    root.querySelectorAll("[data-variant-color]").forEach((item) => item.classList.toggle("is-selected", item === button));
+    const available = variants.filter((variant) => variant.color === selectedColor && variant.status === "active");
+    const sizeTarget = root.querySelector("[data-variant-sizes]");
+    sizeTarget.innerHTML = createVariantSizeButtons(available);
+    addButton.disabled = true;
+    if (buyNowButton) buyNowButton.disabled = true;
+    stockLabel.textContent = variantLabels.waitingLabel;
+    bindSizeButtons(available);
   }));
+
+  if (variants.length && !root.querySelector("[data-variant-color]")) {
+    bindSizeButtons(variants.filter((variant) => variant.status === "active"));
+  }
 
   // quantity input handlers
   quantityInput?.addEventListener("input", (e) => handleQuantityChange(e.target.value));
@@ -352,7 +364,7 @@ function initProductDetailInteractions(root, product, options = {}) {
 
   addButton?.addEventListener("click", async () => {
     const maxStock = Number(selectedVariant?.stock || product.stock || 0);
-    if (variants.length && !selectedVariant) { showCustomerToast("Vui lòng chọn màu và kích thước", "warning"); return; }
+    if (variants.length && !selectedVariant) { showCustomerToast(variantLabels.requiredMessage, "warning"); return; }
     if (maxStock <= 0) { showCustomerToast("Sản phẩm này đã hết hàng", "warning"); return; }
     if (quantity < 1) { showCustomerToast("Số lượng không hợp lệ", "warning"); quantity = 1; renderQuantity(); return; }
     if (quantity > maxStock) { showCustomerToast(`Chỉ còn ${maxStock} sản phẩm trong kho`, "warning"); quantity = maxStock; renderQuantity(); return; }
@@ -378,7 +390,7 @@ function initProductDetailInteractions(root, product, options = {}) {
 
   buyNowButton?.addEventListener("click", () => {
     const maxStock = Number(selectedVariant?.stock || product.stock || 0);
-    if (variants.length && !selectedVariant) { showCustomerToast("Vui lòng chọn màu và kích thước", "warning"); return; }
+    if (variants.length && !selectedVariant) { showCustomerToast(variantLabels.requiredMessage, "warning"); return; }
     if (maxStock <= 0) { showCustomerToast("Sản phẩm này đã hết hàng", "warning"); return; }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxStock) {
       showCustomerToast(`Số lượng hợp lệ từ 1 đến ${maxStock}`, "warning");
@@ -401,6 +413,29 @@ function initProductDetailInteractions(root, product, options = {}) {
       selected_image_url: !selectedVariant && galleryIsSelectable ? selectedImageUrl : null
     });
   });
+}
+
+function getVariantLabels(product = {}) {
+  const searchable = normalizeProductText(`${product?.categoryName || product?.category?.name || product?.category || ""} ${product?.name || ""}`);
+  if (searchable.includes("day chuyen")) return { sizeLabel: "Chọn chiều dài", waitingLabel: "Chọn màu để xem chiều dài còn hàng.", requiredMessage: "Vui lòng chọn chiều dài" };
+  if (searchable.includes("dong ho")) return { sizeLabel: "Chọn kích thước mặt", waitingLabel: "Chọn màu để xem kích thước mặt còn hàng.", requiredMessage: "Vui lòng chọn kích thước mặt" };
+  if (searchable.includes("mat kinh") || searchable.includes("kinh")) return { sizeLabel: "Chọn kiểu gọng", waitingLabel: "Chọn màu để xem kiểu gọng còn hàng.", requiredMessage: "Vui lòng chọn kiểu gọng" };
+  return { sizeLabel: "Chọn kích thước", waitingLabel: "Chọn màu để xem kích thước còn hàng.", requiredMessage: "Vui lòng chọn kích thước" };
+}
+
+function getVariantColors(product = {}, variants = []) {
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  if (colors.length) return colors;
+  return [...new Map(variants.filter((variant) => String(variant.color || "").trim()).map((variant) => [variant.color, { name: variant.color, code: variant.colorCode || variant.color_code || "#94a3b8" }])).values()];
+}
+
+function createVariantSizeButtons(variants = []) {
+  const activeVariants = variants.filter((variant) => variant.status === "active");
+  return [...new Map(activeVariants.map((variant) => [variant.size, variant])).values()].map((variant) => `<button class="product-detail-option" type="button" data-variant-size="${escapeAttr(variant.size)}" ${Number(variant.stock) <= 0 ? "disabled" : ""}>${escapeHtml(variant.size)}${Number(variant.stock) <= 0 ? " · Hết hàng" : ""}</button>`).join("") || "<small>Không còn lựa chọn khả dụng.</small>";
+}
+
+function normalizeProductText(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function isSelectableGalleryProduct(product, variants = []) {

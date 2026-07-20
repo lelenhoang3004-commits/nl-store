@@ -21,6 +21,17 @@ let variantsLoadingProductId = null;
 let variantsLoadedProductId = null;
 let currentVariantsCache = [];
 
+const SIZE_PRESETS = Object.freeze({
+  quanao: { label: "Quần áo", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["quan ao", "ao", "quan", "thoi trang"] },
+  chanvay: { label: "Chân váy", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["chan vay", "vay"] },
+  giay: { label: "Giày", sizes: ["35", "36", "37", "38", "39", "40", "41", "42", "43"], keywords: ["giay", "sneaker", "dep"] },
+  mu: { label: "Mũ", sizes: ["Freesize", "M", "L"], keywords: ["mu", "non"] },
+  daychuyen: { label: "Dây chuyền", sizes: ["40cm", "45cm", "50cm", "55cm"], keywords: ["day chuyen", "vong co"] },
+  matkinh: { label: "Mắt kính", sizes: ["Freesize", "Gọng nhỏ", "Gọng vừa", "Gọng lớn"], keywords: ["mat kinh", "kinh"] },
+  dongho: { label: "Đồng hồ", sizes: ["36mm", "38mm", "40mm", "42mm", "44mm"], keywords: ["dong ho"] }
+});
+
+
 export async function createProductsPage({ route }) {
   const id = route.params?.id;
   try {
@@ -880,7 +891,8 @@ function bindProductVariantSection(modal, product, root = null) {
     { name: "Hồng", value: "Pink", colorCode: "#EC4899" },
     { name: "Đỏ", value: "Red", colorCode: "#EF4444" }
   ];
-  let sizeOptions = ["S", "M", "L", "XL"];
+  let activeSizePresetKey = getProductSizePreset(product)?.key || "quanao";
+  let sizeOptions = [...(SIZE_PRESETS[activeSizePresetKey]?.sizes || SIZE_PRESETS.quanao.sizes)];
 
   if (!product?.id) {
     section.innerHTML = `<div class="admin-product-variant-empty">Sản phẩm này chưa có biến thể. Tạo sản phẩm trước rồi quay lại phần này để tạo biến thể theo màu và size.</div>`;
@@ -911,9 +923,7 @@ function bindProductVariantSection(modal, product, root = null) {
         <div class="admin-product-variant-step">
           <div class="admin-product-variant-step-title">2. Chọn kích thước</div>
           <div class="admin-product-variant-preset-row">
-            <button type="button" class="admin-product-variant-preset" data-size-preset="quanao">Quần áo</button>
-            <button type="button" class="admin-product-variant-preset" data-size-preset="mu">Mũ</button>
-            <button type="button" class="admin-product-variant-preset" data-size-preset="giay">Giày</button>
+            ${Object.entries(SIZE_PRESETS).map(([key, preset]) => `<button type="button" class="admin-product-variant-preset${key === activeSizePresetKey ? " is-active" : ""}" data-size-preset="${escapeHtml(key)}">${escapeHtml(preset.label)}</button>`).join("")}
           </div>
           <div class="admin-product-variant-chip-list" data-size-options></div>
           <form class="admin-product-variant-inline-form" data-custom-size-form>
@@ -982,6 +992,7 @@ function bindProductVariantSection(modal, product, root = null) {
     const bulkStockValue = section.querySelector("[name='bulkStockValue']");
     const bulkCreateErrorTarget = section.querySelector("[data-bulk-create-error]");
     const bulkErrorTarget = section.querySelector("[data-bulk-error]");
+    const categorySelect = modal.querySelector('[name="category_id"]');
 
     const stockKey = (color, size) => `${String(color).trim()}::${String(size).trim()}`;
     const getStockValue = (color, size) => {
@@ -1049,6 +1060,16 @@ function bindProductVariantSection(modal, product, root = null) {
       });
     };
 
+    const applySizePreset = (presetKey, { selectAll = false } = {}) => {
+      if (!SIZE_PRESETS[presetKey]) return;
+      activeSizePresetKey = presetKey;
+      sizeOptions = applySizePresetToOptions(presetKey);
+      if (selectAll) selectedSizes = [...sizeOptions];
+      renderSelectionLists?.();
+      renderCreateStockMatrix?.();
+      renderBulkStockMatrix?.();
+    };
+
     renderSelectionLists = () => {
       colorContainer.innerHTML = colorOptions.map((color) => {
         const active = selectedColors.includes(color.value) || selectedColors.includes(color.name);
@@ -1066,6 +1087,8 @@ function bindProductVariantSection(modal, product, root = null) {
           <span>${escapeHtml(size)}</span>
         </label>`;
       }).join("");
+
+      section.querySelectorAll("[data-size-preset]").forEach((button) => button.classList.toggle("is-active", button.dataset.sizePreset === activeSizePresetKey));
 
       colorContainer.querySelectorAll("input[data-color-option]").forEach((input) => input.addEventListener("change", (event) => {
         const value = event.currentTarget.dataset.colorOption;
@@ -1112,12 +1135,15 @@ function bindProductVariantSection(modal, product, root = null) {
     });
 
     section.querySelectorAll("[data-size-preset]").forEach((button) => button.addEventListener("click", () => {
-      const preset = button.dataset.sizePreset;
-      const nextSizes = preset === "quanao" ? ["S", "M", "L", "XL"] : preset === "mu" ? ["Free Size", "S", "M", "L"] : ["38", "39", "40", "41", "42", "43"];
-      sizeOptions = nextSizes;
-      selectedSizes = [...nextSizes];
-      renderSelectionLists();
+      applySizePreset(button.dataset.sizePreset, { selectAll: true });
     }));
+
+    categorySelect?.addEventListener("change", () => {
+      const preset = getProductSizePreset({ ...product, categoryId: categorySelect.value, categoryName: state.categories.find((category) => String(category.id) === String(categorySelect.value))?.name || "" });
+      if (preset && (!selectedSizes.length || arraysEqual(selectedSizes, SIZE_PRESETS[activeSizePresetKey]?.sizes || []))) {
+        applySizePreset(preset.key, { selectAll: true });
+      }
+    });
 
     bulkScopeSelect?.addEventListener("change", () => {
       updateBulkFields();
@@ -1504,6 +1530,25 @@ function bindProductVariantSection(modal, product, root = null) {
       }
     });
   }
+}
+
+function applySizePresetToOptions(presetKey) {
+  return [...(SIZE_PRESETS[presetKey]?.sizes || SIZE_PRESETS.quanao.sizes)];
+}
+
+function getProductSizePreset(product = {}) {
+  const categoryName = state.categories.find((category) => String(category.id) === String(product?.categoryId || ""))?.name || product?.categoryName || product?.category?.name || product?.category || "";
+  const searchable = normalizeSearchText(String(categoryName) + " " + String(product?.name || ""));
+  const match = Object.entries(SIZE_PRESETS).find(([, preset]) => preset.keywords.some((keyword) => searchable.includes(keyword)));
+  return match ? { key: match[0], ...match[1] } : null;
+}
+
+function normalizeSearchText(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function arraysEqual(left = [], right = []) {
+  return left.length === right.length && left.every((item, index) => item === right[index]);
 }
 
 function createVariantSku(productSku, color, size) {
