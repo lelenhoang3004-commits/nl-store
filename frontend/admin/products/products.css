@@ -161,7 +161,6 @@
 .admin-product-variant-bulk-stock { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 16px; background: color-mix(in srgb, var(--color-background) 88%, var(--color-card)); }
 .admin-product-variant-bulk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .admin-product-variant-bulk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.admin-product-variant-stock-table-wrapper { overflow-x: auto; }
 .admin-product-variant-stock-table { display: grid; gap: 6px; border: 1px solid var(--color-border); border-radius: 12px; padding: 10px; background: var(--color-card); }
 .stock-row { display: grid; grid-template-columns: minmax(160px, 1fr) repeat(4, minmax(100px, 1fr)); gap: 8px; align-items: center; }
 .stock-row.stock-header { font-weight: 700; background: color-mix(in srgb, var(--color-card) 90%, var(--color-background)); border-radius: 10px; padding: 8px 10px; }
@@ -356,9 +355,6 @@
   cursor: pointer;
 }
 .variant-actions button.is-danger { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 14%, var(--color-card)); }
-.admin-product-variant-matrix-wrap { overflow-x: auto; }
-.admin-product-variant-matrix-wrap .admin-product-variant-stock-table { min-width: 560px; }
-.stock-missing { display: inline-flex; width: 100%; justify-content: center; color: var(--color-muted); }
 .admin-product-variant-empty-state {
   padding: 18px;
   border: 1px dashed var(--color-border);
@@ -462,7 +458,6 @@
 .variant-panel-toolbar strong { display: block; color: var(--color-text); }
 .variant-panel-toolbar span { display: block; margin-top: 3px; color: var(--color-muted); font-size: .86rem; }
 .variant-panel-toolbar button,
-.variant-matrix-toggle button,
 .variant-modal-footer-actions button {
   border: 0;
   border-radius: 12px;
@@ -524,13 +519,7 @@
 .variant-quick-price-toggle input { width: 18px; height: 18px; accent-color: var(--color-primary); }
 .variant-quick-price-summary { display: flex; align-items: center; gap: 9px; color: var(--color-muted); font-size: .86rem; }
 .variant-quick-price-summary i { color: var(--color-primary); }
-.variant-matrix-toggle {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.variant-matrix-toggle span { color: var(--color-muted); }
+
 .variant-modal-footer-actions {
   position: sticky;
   bottom: -18px;

@@ -335,16 +335,13 @@ function openVariantModal(root, product) {
         </section>
         <section class="variant-tab-panel" data-variant-panel="stock">
           <div class="variant-panel-toolbar">
-            <div><strong>Cập nhật tồn kho nhanh</strong><span>Chọn một cách cập nhật, ma trận chỉ mở khi cần.</span></div>
+            <div><strong>Cập nhật tồn kho nhanh</strong><span>Chọn phạm vi rồi áp dụng tồn kho cho các biến thể phù hợp.</span></div>
           </div>
           <div class="variant-stock-cards">
             <article><h3>Áp dụng cho tất cả</h3><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-all-stock placeholder="VD: 10"></label><button type="button" data-bulk-apply="all">Áp dụng</button></article>
             <article><h3>Áp dụng theo màu</h3><label><span>Màu</span><select data-bulk-color><option value="">Chọn màu</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-color-stock placeholder="VD: 5"></label><button type="button" data-bulk-apply="color">Áp dụng</button></article>
             <article><h3>Áp dụng theo size</h3><label><span>Size</span><select data-bulk-size><option value="">Chọn size</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-size-stock placeholder="VD: 2"></label><button type="button" data-bulk-apply="size">Áp dụng</button></article>
-          </div>
-          <div class="variant-matrix-toggle"><button type="button" data-matrix-toggle>Mở ma trận tồn kho</button><span data-bulk-status></span></div>
-          <div class="admin-product-variant-matrix-wrap" data-variant-stock-matrix hidden></div>
-          <div class="variant-modal-footer-actions" data-matrix-actions hidden><button type="button" data-bulk-apply="matrix">Lưu tồn kho hàng loạt</button></div>
+          </div>
         </section>
         <section class="variant-tab-panel" data-variant-panel="price">
           <div class="variant-panel-toolbar">
@@ -384,9 +381,7 @@ function openVariantModal(root, product) {
   const listTarget = modal.querySelector("[data-variant-list]");
   const form = modal.querySelector("[data-variant-form]");
   const errorTarget = modal.querySelector("[data-variant-error]");
-  const bulkStatus = modal.querySelector("[data-bulk-status]");
-  const matrixTarget = modal.querySelector("[data-variant-stock-matrix]");
-  const matrixActions = modal.querySelector("[data-matrix-actions]");
+  const bulkStatus = modal.querySelector("[data-bulk-status]");
   const bulkPriceForm = modal.querySelector("[data-bulk-price-form]");
   const bulkPriceSummary = modal.querySelector("[data-bulk-price-summary]");
   const bulkPriceError = modal.querySelector("[data-bulk-price-error]");
@@ -482,23 +477,7 @@ function openVariantModal(root, product) {
     const colors = uniqueValues(variants.map((variant) => variant.color));
     const sizes = uniqueValues(variants.map((variant) => variant.size));
     fillSelect(modal.querySelector("[data-bulk-color]"), colors, "Chọn màu");
-    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
-    renderStockMatrix(colors, sizes, variants);
-  }
-
-  function renderStockMatrix(colors, sizes, variants) {
-    if (!matrixTarget) return;
-    if (!colors.length || !sizes.length) {
-      matrixTarget.innerHTML = '<div class="admin-product-variant-empty-state">Chưa đủ màu/size để tạo ma trận tồn kho.</div>';
-      return;
-    }
-    const byKey = new Map(variants.map((variant) => [`${String(variant.color || "").trim()}::${String(variant.size || "").trim()}`, variant]));
-    const header = `<div class="stock-row stock-header"><div>Màu / Size</div>${sizes.map((size) => `<div>${escapeHtml(size)}</div>`).join("")}</div>`;
-    const rows = colors.map((color) => `<div class="stock-row"><div class="stock-color">${escapeHtml(color)}</div>${sizes.map((size) => {
-      const variant = byKey.get(`${color}::${size}`);
-      return `<div>${variant ? `<input type="number" min="0" step="1" class="stock-input" data-matrix-variant="${id(variant.id)}" value="${Number(variant.stock || 0)}">` : '<span class="stock-missing">—</span>'}</div>`;
-    }).join("")}</div>`).join("");
-    matrixTarget.innerHTML = `<div class="admin-product-variant-stock-table">${header}${rows}</div>`;
+    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
   }
 
   async function applyBulkStock(mode) {
@@ -538,7 +517,7 @@ function openVariantModal(root, product) {
       if (!size) throw new Error("Vui lòng chọn size cần cập nhật.");
       return variantsCache.filter((variant) => String(variant.size || "") === size).map((variant) => ({ id: variant.id, stock }));
     }
-    return Array.from(modal.querySelectorAll("[data-matrix-variant]")).map((input) => ({ id: input.dataset.matrixVariant, stock: parseStockInput(input.value) }));
+    return [];
   }
 
   function parseStockInput(value) {
@@ -649,13 +628,7 @@ function openVariantModal(root, product) {
   modal.querySelectorAll("[data-variant-tab]").forEach((button) => button.addEventListener("click", () => setActiveTab(button.dataset.variantTab)));
   modal.querySelector("[data-variant-add]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("form"); });
   modal.querySelector("[data-variant-cancel]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("list"); });
-  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply)));
-  modal.querySelector("[data-matrix-toggle]")?.addEventListener("click", (event) => {
-    const nextHidden = !matrixTarget.hidden;
-    matrixTarget.hidden = nextHidden;
-    matrixActions.hidden = nextHidden;
-    event.currentTarget.textContent = nextHidden ? "Mở ma trận tồn kho" : "Ẩn ma trận tồn kho";
-  });
+  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply)));
 
   renderVariants();
 }
@@ -908,11 +881,7 @@ function bindProductVariantSection(modal, product, root = null) {
   let editingVariantId = null;
   let selectedColors = [];
   let selectedSizes = [];
-  let stockMatrix = {};
-  let bulkStockMatrix = {};
   let renderSelectionLists = null;
-  let renderCreateStockMatrix = null;
-  let renderBulkStockMatrix = null;
   let colorOptions = [
     { name: "Đen", value: "Black", colorCode: "#000000" },
     { name: "Trắng", value: "White", colorCode: "#FFFFFF" },
@@ -964,36 +933,23 @@ function bindProductVariantSection(modal, product, root = null) {
           </form>
         </div>
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">3. Nhập số lượng theo màu & size</div>
-          <div class="admin-product-variant-stock-grid" data-create-stock-matrix></div>
-          <p class="admin-product-form-note">Nhập số lượng từng màu/size. Nếu để trống, sẽ sử dụng Tồn kho mặc định.</p>
-        </div>
-        <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">4. Tạo biến thể đã chọn</div>
-          <div class="admin-product-variant-config-grid">
-            <label><span>Giá mặc định</span><input type="number" name="bulkPrice" min="0" step="1000" value="${product?.price ?? 0}" /></label>
-            <label><span>Giá sale mặc định</span><input type="number" name="bulkSalePrice" min="0" step="1000" value="${product?.salePrice ?? product?.sale_price ?? 0}" /></label>
-            <label><span>Tồn kho mặc định</span><input type="number" name="bulkStock" min="0" step="1" value="0" /></label>
-            <label><span>Trạng thái mặc định</span><input type="text" name="bulkStatus" value="active" /></label>
-          </div>
+          <div class="admin-product-variant-step-title">3. Tạo biến thể</div>
           <p class="admin-product-form-error" data-bulk-create-error></p>
           <button type="button" class="admin-product-variant-create" data-product-variant-create>Tạo biến thể đã chọn</button>
         </div>
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">5. Cập nhật tồn kho hàng loạt</div>
+          <div class="admin-product-variant-step-title">4. Cập nhật tồn kho hàng loạt</div>
           <div class="admin-product-variant-bulk-stock">
             <div class="admin-product-variant-bulk-grid">
-              <label><span>Phạm vi</span><select data-bulk-stock-scope><option value="all">Tất cả biến thể</option><option value="color">Theo màu</option><option value="size">Theo kích thước</option><option value="matrix">Theo ma trận màu/size</option></select></label>
+              <label><span>Phạm vi</span><select data-bulk-stock-scope><option value="all">Tất cả biến thể</option><option value="color">Theo màu</option><option value="size">Theo kích thước</option></select></label>
               <label class="bulk-stock-color" hidden><span>Màu</span><select data-bulk-stock-color><option value="">Chọn màu</option></select></label>
               <label class="bulk-stock-size" hidden><span>Size</span><select data-bulk-stock-size><option value="">Chọn size</option></select></label>
               <label class="bulk-stock-value"><span>Tồn kho mới</span><input type="number" name="bulkStockValue" min="0" step="1" value="0" /></label>
             </div>
             <div class="admin-product-variant-bulk-actions">
               <button type="button" class="admin-product-variant-create" data-bulk-stock-apply>Cập nhật tồn kho</button>
-              <span class="admin-product-variant-hint">Chọn phạm vi rồi bấm cập nhật. Với ma trận, các ô màu/size sẽ dùng giá trị riêng từng ô.</span>
+              <span class="admin-product-variant-hint">Chọn phạm vi rồi bấm cập nhật tồn kho cho các biến thể phù hợp.</span>
             </div>
-            <div class="admin-product-variant-stock-table-wrapper" data-bulk-stock-matrix hidden></div>
-            <p class="admin-product-form-note">Có thể dùng ma trận để cập nhật tồn kho theo từng kết hợp màu và size.</p>
             <p class="admin-product-form-error" data-bulk-error></p>
           </div>
         </div>
@@ -1010,8 +966,6 @@ function bindProductVariantSection(modal, product, root = null) {
     const sizeContainer = section.querySelector("[data-size-options]");
     const customColorForm = section.querySelector("[data-custom-color-form]");
     const customSizeForm = section.querySelector("[data-custom-size-form]");
-    const stockMatrixContainer = section.querySelector("[data-create-stock-matrix]");
-    const bulkStockMatrixContainer = section.querySelector("[data-bulk-stock-matrix]");
     const createButton = section.querySelector("[data-product-variant-create]");
     const bulkStockApply = section.querySelector("[data-bulk-stock-apply]");
     const bulkScopeSelect = section.querySelector("[data-bulk-stock-scope]");
@@ -1024,80 +978,12 @@ function bindProductVariantSection(modal, product, root = null) {
     const bulkErrorTarget = section.querySelector("[data-bulk-error]");
     const categorySelect = modal.querySelector('[name="category_id"]');
 
-    const stockKey = (color, size) => `${String(color).trim()}::${String(size).trim()}`;
-    const getStockValue = (color, size) => {
-      const key = stockKey(color, size);
-      return stockMatrix[key] ?? "";
-    };
-    const setStockValue = (color, size, value) => {
-      const key = stockKey(color, size);
-      const normalized = value === "" ? "" : String(Math.max(0, Math.floor(Number(value) || 0)));
-      if (normalized === "") {
-        delete stockMatrix[key];
-      } else {
-        stockMatrix[key] = normalized;
-      }
-    };
-
-    renderCreateStockMatrix = () => {
-      if (!stockMatrixContainer) return;
-      if (!selectedColors.length || !selectedSizes.length) {
-        stockMatrixContainer.innerHTML = '<div class="admin-product-variant-stock-empty">Chọn ít nhất một màu và một size để nhập số lượng.</div>';
-        return;
-      }
-
-      const header = `<div class="stock-row stock-header"><div>Màu / Size</div>${selectedSizes.map((size) => `<div>${escapeHtml(size)}</div>`).join("")}</div>`;
-      const rows = selectedColors.map((color) => {
-        return `<div class="stock-row"><div class="stock-color">${escapeHtml(color)}</div>${selectedSizes.map((size) => {
-          return `<div><input type="number" min="0" step="1" class="stock-input" data-stock-cell="${escapeHtml(color)}::${escapeHtml(size)}" value="${escapeHtml(getStockValue(color, size))}" placeholder=""></div>`;
-        }).join("")}</div>`;
-      }).join("");
-
-      stockMatrixContainer.innerHTML = `<div class="admin-product-variant-stock-table">${header}${rows}</div>`;
-      stockMatrixContainer.querySelectorAll(".stock-input").forEach((input) => {
-        input.addEventListener("input", (event) => {
-          const target = event.currentTarget;
-          const key = target.dataset.stockCell;
-          if (!key) return;
-          const [color, size] = key.split("::");
-          setStockValue(color, size, target.value);
-        });
-      });
-    };
-
-    renderBulkStockMatrix = () => {
-      if (!bulkStockMatrixContainer) return;
-      if (!selectedColors.length || !selectedSizes.length) {
-        bulkStockMatrixContainer.innerHTML = '<div class="admin-product-variant-stock-empty">Chọn ít nhất một màu và một size để nhập số lượng.</div>';
-        return;
-      }
-      const header = `<div class="stock-row stock-header"><div>Màu / Size</div>${selectedSizes.map((size) => `<div>${escapeHtml(size)}</div>`).join("")}</div>`;
-      const rows = selectedColors.map((color) => {
-        return `<div class="stock-row"><div class="stock-color">${escapeHtml(color)}</div>${selectedSizes.map((size) => {
-          const key = `${String(color).trim()}::${String(size).trim()}`;
-          return `<div><input type="number" min="0" step="1" class="stock-input" data-bulk-stock-cell="${escapeHtml(key)}" value="${escapeHtml(bulkStockMatrix[key] ?? "")}" placeholder=""></div>`;
-        }).join("")}</div>`;
-      }).join("");
-      bulkStockMatrixContainer.innerHTML = `<div class="admin-product-variant-stock-table">${header}${rows}</div>`;
-      bulkStockMatrixContainer.querySelectorAll(".stock-input").forEach((input) => {
-        input.addEventListener("input", (event) => {
-          const target = event.currentTarget;
-          const key = target.dataset.bulkStockCell;
-          if (!key) return;
-          bulkStockMatrix[key] = target.value === "" ? "" : String(Math.max(0, Math.floor(Number(target.value) || 0)));
-          if (bulkStockMatrix[key] === "") delete bulkStockMatrix[key];
-        });
-      });
-    };
-
     const applySizePreset = (presetKey, { selectAll = false } = {}) => {
       if (!SIZE_PRESETS[presetKey]) return;
       activeSizePresetKey = presetKey;
       sizeOptions = applySizePresetToOptions(presetKey);
       if (selectAll) selectedSizes = [...sizeOptions];
       renderSelectionLists?.();
-      renderCreateStockMatrix?.();
-      renderBulkStockMatrix?.();
     };
 
     renderSelectionLists = () => {
@@ -1177,7 +1063,6 @@ function bindProductVariantSection(modal, product, root = null) {
 
     bulkScopeSelect?.addEventListener("change", () => {
       updateBulkFields();
-      renderBulkStockMatrix?.();
     });
 
     createButton?.addEventListener("click", async () => {
@@ -1190,33 +1075,14 @@ function bindProductVariantSection(modal, product, root = null) {
         bulkCreateErrorTarget.textContent = "Vui lòng chọn ít nhất một kích thước.";
         return;
       }
-      const bulkPrice = section.querySelector('[name="bulkPrice"]').value;
-      const bulkSalePrice = section.querySelector('[name="bulkSalePrice"]').value;
-      const bulkStock = section.querySelector('[name="bulkStock"]').value;
-      const bulkStatus = String(section.querySelector('[name="bulkStatus"]').value || "active").trim().toLowerCase();
-      const price = bulkPrice === "" ? null : Number(bulkPrice);
-      const salePrice = bulkSalePrice === "" ? null : Number(bulkSalePrice);
-      const stock = bulkStock === "" ? 0 : Number(bulkStock);
-      if (!Number.isInteger(stock) || stock < 0) {
-        bulkCreateErrorTarget.textContent = "Tồn kho mặc định không được âm.";
-        return;
-      }
-      if ((price !== null && price < 0) || (salePrice !== null && salePrice < 0) || (price !== null && salePrice !== null && salePrice > price)) {
-        bulkCreateErrorTarget.textContent = "Giá sale không được lớn hơn giá.";
-        return;
-      }
+      const price = Number(product?.price ?? 0);
+      const salePrice = product?.salePrice ?? product?.sale_price ?? null;
+      const stock = 0;
+      const status = "active";
       const createdVariants = [];
       const skippedVariants = [];
       const existingKeys = new Set((product?.existingVariants || []).map((variant) => `${normalizeVariantKey(variant.color)}::${normalizeVariantKey(variant.size)}`));
       const existingSkus = new Set((product?.existingVariants || []).map((variant) => String(variant.sku || "").trim().toUpperCase()));
-
-      const getVariantStock = (color, size) => {
-        const key = `${String(color).trim()}::${String(size).trim()}`;
-        if (Object.prototype.hasOwnProperty.call(stockMatrix, key)) {
-          return Number(stockMatrix[key] || 0);
-        }
-        return stock;
-      };
 
       for (const color of selectedColors) {
         const colorOption = colorOptions.find((item) => item.value === color || item.name === color) || { name: color, value: color, colorCode: "#cccccc" };
@@ -1237,10 +1103,10 @@ function bindProductVariantSection(modal, product, root = null) {
               size,
               color: colorOption.name || color,
               colorCode: colorOption.colorCode || "",
-              price: price ?? product?.price ?? 0,
-              salePrice: salePrice ?? product?.salePrice ?? product?.sale_price ?? null,
-              stock: getVariantStock(colorOption.name || color, size),
-              status: bulkStatus
+              price,
+              salePrice,
+              stock,
+              status
             };
             await productService.createVariant(product.id, payload, silent());
             createdVariants.push(payload);
@@ -1253,9 +1119,9 @@ function bindProductVariantSection(modal, product, root = null) {
       }
 
       if (!createdVariants.length && skippedVariants.length) {
-        bulkCreateErrorTarget.textContent = "Không tạo mới biến thể nào. Một số biến thể đã tồn tại.";
+        bulkCreateErrorTarget.textContent = `Không tạo mới biến thể nào. Thất bại/bỏ qua ${skippedVariants.length} biến thể vì đã tồn tại hoặc API không thành công.`;
       } else {
-        toast.success(createdVariants.length ? (skippedVariants.length ? `Đã tạo ${createdVariants.length} biến thể, bỏ qua ${skippedVariants.length} biến thể đã tồn tại.` : `Đã tạo ${createdVariants.length} biến thể.`) : "Không có biến thể nào được tạo.");
+        toast.success(skippedVariants.length ? `Đã tạo ${createdVariants.length} biến thể, thất bại/bỏ qua ${skippedVariants.length} biến thể.` : `Đã tạo ${createdVariants.length} biến thể thành công.`);
       }
       await renderVariants({ force: true });
       if (root) renderRows(root);
@@ -1270,11 +1136,9 @@ function bindProductVariantSection(modal, product, root = null) {
       const allVariants = product?.existingVariants || [];
       const updates = [];
 
-      if (scope !== "matrix") {
-        if (stockValue === null || !Number.isInteger(stockValue) || stockValue < 0) {
-          bulkErrorTarget.textContent = "Tồn kho phải là số nguyên không âm.";
-          return;
-        }
+      if (stockValue === null || !Number.isInteger(stockValue) || stockValue < 0) {
+        bulkErrorTarget.textContent = "Tồn kho phải là số nguyên không âm.";
+        return;
       }
 
       if (!allVariants.length) {
@@ -1291,8 +1155,6 @@ function bindProductVariantSection(modal, product, root = null) {
       } else if (scope === "size") {
         if (!selectedSize) { bulkErrorTarget.textContent = "Vui lòng chọn size."; return; }
         targetVariants = allVariants.filter((variant) => normalizeVariantKey(variant.size) === normalizeVariantKey(selectedSize));
-      } else if (scope === "matrix") {
-        targetVariants = allVariants.filter((variant) => Object.prototype.hasOwnProperty.call(bulkStockMatrix, `${String(variant.color).trim()}::${String(variant.size).trim()}`));
       }
 
       if (!targetVariants.length) {
@@ -1300,21 +1162,7 @@ function bindProductVariantSection(modal, product, root = null) {
         return;
       }
 
-      if (scope === "matrix") {
-        targetVariants.forEach((variant) => {
-          const key = `${String(variant.color).trim()}::${String(variant.size).trim()}`;
-          const value = bulkStockMatrix[key];
-          if (value !== undefined && value !== "") {
-            updates.push({ variantId: variant.id, stock: Number(value) });
-          }
-        });
-        if (!updates.length) {
-          bulkErrorTarget.textContent = "Vui lòng nhập ít nhất một giá trị tồn kho trong ma trận.";
-          return;
-        }
-      } else {
-        updates.push(...targetVariants.map((variant) => ({ variantId: variant.id, stock: stockValue })));
-      }
+      updates.push(...targetVariants.map((variant) => ({ variantId: variant.id, stock: stockValue })));
 
       const results = await Promise.allSettled(updates.map((item) => productService.updateVariantStock(product.id, item.variantId, { stock: item.stock }, silent())));
       const successCount = results.filter((result) => result.status === "fulfilled").length;
@@ -1375,8 +1223,6 @@ function bindProductVariantSection(modal, product, root = null) {
       selectedSizes = Array.from(new Set(variants.map((variant) => variant.size).filter(Boolean)));
     }
     renderSelectionLists?.();
-    renderCreateStockMatrix?.();
-    renderBulkStockMatrix?.();
     if (!variants.length) {
       table.innerHTML = '<div class="admin-product-variant-empty">Chưa có biến thể nào. Hãy chọn màu và size, sau đó tạo biến thể hàng loạt.</div>';
     } else {
