@@ -661,7 +661,7 @@ function formPayload(form) {
     brand: String(d.get("brand") || "").trim(), short_description: String(d.get("short_description") || "").trim(), description: String(d.get("description") || "").trim(),
     price: Number(d.get("price")), sale_price: d.get("sale_price") === "" ? null : Number(d.get("sale_price")), stock: Number(d.get("stock") || 0),
     rating_average: (function(v){ const s = String(v ?? "").trim(); if (s === "") return undefined; const n = Number(s.replace(/,/g, '.')); return Number.isFinite(n) ? n : undefined; })(d.get("rating_average")), status: d.get("status"),
-    thumbnail_url: String(d.get("thumbnail_url") || "").trim() || null, gallery_urls: String(d.get("gallery_urls") || "").split("\n").map(x => x.trim()).filter(Boolean), tags: String(d.get("tags") || "").split(",").map(x => x.trim()).filter(Boolean),
+    thumbnail_url: selectedThumbnailUrl, gallery_urls: galleryUrls, tags: String(d.get("tags") || "").split(",").map(x => x.trim()).filter(Boolean),
     product_attributes: { material: attribute("material"), chain_length: attribute("chain_length"), pendant_type: attribute("pendant_type"), stone_color: attribute("stone_color"), pendant_size: attribute("pendant_size"), warranty: attribute("warranty") }
   };
 }
@@ -677,6 +677,7 @@ async function validateAndNormalizeProductImages(payload) {
 
   payload.thumbnail_url = normalizeForSave(payload.thumbnail_url) || null;
   payload.gallery_urls = (payload.gallery_urls || []).map(normalizeForSave).filter(Boolean);
+  if (!payload.thumbnail_url && payload.gallery_urls.length) payload.thumbnail_url = payload.gallery_urls[0];
 
   if (payload.thumbnail_url) urls.push({ label: "thumbnail_url", url: payload.thumbnail_url });
   payload.gallery_urls.forEach((url, index) => urls.push({ label: `gallery_urls dong ${index + 1}`, url }));
@@ -732,14 +733,41 @@ function bindProductImageUpload(modal) {
   const maxGalleryImages = 8;
   let objectUrls = [];
 
+  const setMainImage = (url, { message = "Đã chọn ảnh chính" } = {}) => {
+    const nextUrl = String(url || "").trim();
+    hiddenInput.value = nextUrl;
+    thumbnail.src = resolveImageUrl(nextUrl);
+    removeButton.hidden = !nextUrl;
+    if (nextUrl) {
+      fileName.textContent = "Ảnh chính đã chọn";
+      uploadMessage.textContent = message;
+      uploadMessage.className = "is-success";
+    }
+    updateGallery();
+  };
+
   const updateGallery = () => {
     const urls = readGalleryUrls().slice(0, maxGalleryImages);
-    gallery.innerHTML = urls.length ? urls.map((url, index) => `<img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(url))}" alt="Ảnh gallery ${index + 1}" loading="lazy" decoding="async" data-product-image>`).join("") : '<span>Chưa có ảnh gallery</span>';
+    const selectedUrl = String(hiddenInput.value || urls[0] || "").trim();
+    if (!hiddenInput.value && urls[0]) {
+      hiddenInput.value = urls[0];
+      thumbnail.src = resolveImageUrl(urls[0]);
+      removeButton.hidden = false;
+    }
+    gallery.innerHTML = urls.length ? urls.map((url, index) => {
+      const isMain = String(url).trim() === selectedUrl;
+      return `<div class="admin-product-gallery-item${isMain ? " is-main" : ""}" style="position:relative;border:2px solid ${isMain ? "#16a34a" : "#e2e8f0"};border-radius:8px;padding:6px;display:grid;gap:6px;background:#fff;">
+        ${isMain ? '<span class="admin-product-main-badge" style="position:absolute;left:8px;top:8px;background:#16a34a;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700;">Ảnh chính</span>' : ""}
+        <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(url))}" alt="Ảnh gallery ${index + 1}" loading="lazy" decoding="async" data-product-image>
+        <button type="button" data-product-main-image="${escapeHtml(url)}" ${isMain ? "disabled" : ""} style="border:1px solid ${isMain ? "#16a34a" : "#cbd5e1"};background:${isMain ? "#dcfce7" : "#fff"};color:${isMain ? "#166534" : "#334155"};border-radius:6px;padding:6px 8px;font-weight:700;cursor:${isMain ? "default" : "pointer"};"><i class="fa-${isMain ? "solid" : "regular"} fa-star" aria-hidden="true"></i> ${isMain ? "Ảnh chính" : "Đặt làm ảnh chính"}</button>
+      </div>`;
+    }).join("") : '<span>Chưa có ảnh gallery</span>';
     bindImageFallbacks(gallery);
   };
 
   thumbnail.addEventListener("error", () => { thumbnail.src = PLACEHOLDER; });
   galleryInput.addEventListener("input", updateGallery);
+  gallery.addEventListener("click", (event) => { const button = event.target.closest("[data-product-main-image]"); if (button && !button.disabled) setMainImage(button.dataset.productMainImage); });
   chooseButton.addEventListener("click", (event) => { event.stopPropagation(); fileInput.click(); });
   dropzone.addEventListener("click", () => fileInput.click());
   dropzone.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); fileInput.click(); } });
@@ -748,7 +776,7 @@ function bindProductImageUpload(modal) {
   ["dragleave", "drop"].forEach((type) => dropzone.addEventListener(type, (event) => { event.preventDefault(); dropzone.classList.remove("is-dragging"); }));
   dropzone.addEventListener("drop", (event) => { const files = event.dataTransfer?.files; if (files?.length) uploadImages(files); });
   removeButton.addEventListener("click", () => {
-    hiddenInput.value = ""; fileInput.value = ""; thumbnail.src = PLACEHOLDER;
+    hiddenInput.value = ""; fileInput.value = ""; thumbnail.src = PLACEHOLDER; updateGallery();
     fileName.textContent = "Chưa chọn ảnh"; uploadMessage.textContent = "Ảnh sẽ được xóa khi lưu sản phẩm";
     uploadMessage.className = "is-warning"; removeButton.hidden = true;
   });

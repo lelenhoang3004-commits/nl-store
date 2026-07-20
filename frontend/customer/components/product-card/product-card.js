@@ -20,7 +20,7 @@ export function normalizeProductCardData(product = {}) {
   return {
     ...defaultProduct,
     ...product,
-    image: globalThis.normalizeImageUrl?.(product.image || product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url) ?? (product.image || product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url || defaultProduct.image),
+    image: globalThis.normalizeImageUrl?.(product.thumbnailUrl || product.thumbnail_url || product.image || product.imageUrl || product.image_url) ?? (product.thumbnailUrl || product.thumbnail_url || product.image || product.imageUrl || product.image_url || defaultProduct.image),
     hoverImage: product.hoverImage ? (globalThis.normalizeImageUrl?.(product.hoverImage) ?? product.hoverImage) : "",
     price: product.price ?? defaultProduct.price,
     comparePrice: product.comparePrice ?? defaultProduct.comparePrice,
