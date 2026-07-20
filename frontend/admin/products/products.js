@@ -337,6 +337,7 @@ function openVariantModal(root, product) {
           <div class="variant-panel-toolbar">
             <div><strong>Cập nhật tồn kho nhanh</strong><span>Chọn phạm vi rồi áp dụng tồn kho cho các biến thể phù hợp.</span></div>
           </div>
+          <p class="admin-product-form-error" data-bulk-status></p>
           <div class="variant-stock-cards">
             <article><h3>Áp dụng cho tất cả</h3><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-all-stock placeholder="VD: 10"></label><button type="button" data-bulk-apply="all">Áp dụng</button></article>
             <article><h3>Áp dụng theo màu</h3><label><span>Màu</span><select data-bulk-color><option value="">Chọn màu</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-color-stock placeholder="VD: 5"></label><button type="button" data-bulk-apply="color">Áp dụng</button></article>
@@ -480,40 +481,61 @@ function openVariantModal(root, product) {
     fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
   }
 
-  async function applyBulkStock(mode) {
+  async function applyBulkStock(mode, trigger = null) {
+    const setBulkStatus = (textValue) => { if (bulkStatus) bulkStatus.textContent = textValue; };
+    const originalLabel = trigger?.textContent || "Áp dụng";
+    if (trigger) {
+      trigger.disabled = true;
+      trigger.textContent = "Đang cập nhật...";
+    }
     try {
-      bulkStatus.textContent = "";
+      setBulkStatus("");
       const updates = buildBulkStockUpdates(mode);
       if (!updates.length) throw new Error("Không có biến thể nào cần cập nhật.");
       const invalid = updates.find((item) => !Number.isInteger(item.stock) || item.stock < 0);
-      if (invalid) throw new Error("Tồn kho không được âm.");
-      bulkStatus.textContent = "Đang cập nhật...";
+      if (invalid) throw new Error("Tồn kho phải là số nguyên không âm.");
+      setBulkStatus("Đang cập nhật...");
       const results = await Promise.allSettled(updates.map((item) => productService.updateVariantStock(product.id, item.id, { stock: item.stock }, silent())));
       const failed = results.filter((result) => result.status === "rejected");
       if (failed.length) throw new Error(`${failed.length}/${results.length} biến thể cập nhật thất bại.`);
-      toast.success("Đã cập nhật tồn kho biến thể.");
-      bulkStatus.textContent = "Đã cập nhật xong.";
+      toast.success("Cập nhật tồn kho thành công");
+      setBulkStatus("Cập nhật tồn kho thành công");
       await renderVariants();
+      if (root) renderRows(root);
     } catch (error) {
-      bulkStatus.textContent = message(error);
-      toast.error(message(error));
+      const errorMessage = message(error);
+      setBulkStatus(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      if (trigger) {
+        trigger.disabled = false;
+        trigger.textContent = originalLabel;
+      }
     }
   }
 
   function buildBulkStockUpdates(mode) {
     if (mode === "all") {
-      const stock = parseStockInput(modal.querySelector("[data-bulk-all-stock]").value);
+      const stockInput = modal.querySelector("[data-bulk-all-stock]");
+      if (!stockInput) throw new Error("Không tìm thấy ô nhập tồn kho cho tất cả biến thể.");
+      const stock = parseStockInput(stockInput.value);
       return variantsCache.map((variant) => ({ id: variant.id, stock }));
     }
     if (mode === "color") {
-      const color = modal.querySelector("[data-bulk-color]").value;
-      const stock = parseStockInput(modal.querySelector("[data-bulk-color-stock]").value);
+      const colorSelect = modal.querySelector("[data-bulk-color]");
+      const stockInput = modal.querySelector("[data-bulk-color-stock]");
+      if (!colorSelect || !stockInput) throw new Error("Không tìm thấy ô cập nhật tồn kho theo màu.");
+      const color = colorSelect.value;
+      const stock = parseStockInput(stockInput.value);
       if (!color) throw new Error("Vui lòng chọn màu cần cập nhật.");
       return variantsCache.filter((variant) => String(variant.color || "") === color).map((variant) => ({ id: variant.id, stock }));
     }
     if (mode === "size") {
-      const size = modal.querySelector("[data-bulk-size]").value;
-      const stock = parseStockInput(modal.querySelector("[data-bulk-size-stock]").value);
+      const sizeSelect = modal.querySelector("[data-bulk-size]");
+      const stockInput = modal.querySelector("[data-bulk-size-stock]");
+      if (!sizeSelect || !stockInput) throw new Error("Không tìm thấy ô cập nhật tồn kho theo size.");
+      const size = sizeSelect.value;
+      const stock = parseStockInput(stockInput.value);
       if (!size) throw new Error("Vui lòng chọn size cần cập nhật.");
       return variantsCache.filter((variant) => String(variant.size || "") === size).map((variant) => ({ id: variant.id, stock }));
     }
@@ -523,7 +545,7 @@ function openVariantModal(root, product) {
   function parseStockInput(value) {
     if (value === "") throw new Error("Vui lòng nhập tồn kho mới.");
     const stock = Number(value);
-    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tồn kho không được âm.");
+    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tồn kho phải là số nguyên không âm.");
     return stock;
   }
 
@@ -628,7 +650,7 @@ function openVariantModal(root, product) {
   modal.querySelectorAll("[data-variant-tab]").forEach((button) => button.addEventListener("click", () => setActiveTab(button.dataset.variantTab)));
   modal.querySelector("[data-variant-add]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("form"); });
   modal.querySelector("[data-variant-cancel]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("list"); });
-  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply)));
+  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply, button)));
 
   renderVariants();
 }
