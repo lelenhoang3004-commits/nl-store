@@ -83,6 +83,27 @@
   background: transparent;
 }
 
+.mega-menu-group a span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mega-menu-group a small {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--color-muted) 82%, var(--color-primary));
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mega-menu-status p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 .mega-menu-group a:hover {
   color: var(--color-primary);
   background: var(--color-hover);

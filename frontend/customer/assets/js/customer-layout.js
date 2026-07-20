@@ -1,4 +1,4 @@
-import { createCustomerFooter } from "../../components/footer/footer.js";
+﻿import { createCustomerFooter } from "../../components/footer/footer.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
@@ -111,20 +111,20 @@ const protectedRoutes = new Set(["checkout", "orders", "profile", "cart", "wishl
 const homeSectionRoutes = new Set(["flash-sale", "featured-product", "new-arrival", "best-seller", "categories", "jewelry", "brands", "reviews", "newsletter", "promotion", "collections", "story", "products"]);
 const FALLBACK_PRODUCT_IMAGE = "https://placehold.co/160x200/f1f5f9/334155?text=Fashion";
 const PRODUCT_MENU_FILTERS = Object.freeze({
-  "ao-khoac": { label: "Áo khoác", keywords: ["áo khoác", "ao khoac", "jacket", "hoodie"] },
-  "ao-len": { label: "Áo len", keywords: ["áo len", "ao len", "sweater"] },
-  "ao-blazer": { label: "Áo blazer", keywords: ["blazer", "áo blazer", "ao blazer"] },
-  "dam-midi": { label: "Đầm midi", keywords: ["đầm midi", "dam midi", "váy midi"] },
-  "quan-toi-gian": { label: "Quần tối giản", keywords: ["quần tối giản", "quan toi gian", "quần", "quan"] },
-  "chan-vay": { label: "Chân váy", keywords: ["chân váy", "chan vay", "skirt"] },
-  "giay": { label: "Giày", keywords: ["giày", "giay", "shoe", "sneaker"] },
-  "quan-jeans": { label: "Quần jeans", keywords: ["jeans", "quần jean", "quan jean"] },
-  "tui-xach": { label: "Túi xách", keywords: ["túi xách", "tui xach", "bag"] },
-  "dong-ho": { label: "Đồng hồ", keywords: ["đồng hồ", "dong ho", "watch"] },
-  "trang-suc": { label: "Trang sức", keywords: ["trang sức", "trang suc", "dây chuyền", "day chuyen", "nhẫn", "bông tai"] },
-  "kinh-mat": { label: "Kính mắt", keywords: ["kính mắt", "kinh mat", "mắt kính", "mat kinh", "glasses"] },
-  "mu-non": { label: "Mũ nón", keywords: ["mũ", "nón", "mu-non"] },
-  "phu-kien": { label: "Phụ kiện cá nhân", keywords: ["phụ kiện", "phu kien", "accessory"] }
+  "ao-khoac": { label: "Ão khoÃ¡c", keywords: ["Ã¡o khoÃ¡c", "ao khoac", "jacket", "hoodie"] },
+  "ao-len": { label: "Ão len", keywords: ["Ã¡o len", "ao len", "sweater"] },
+  "ao-blazer": { label: "Ão blazer", keywords: ["blazer", "Ã¡o blazer", "ao blazer"] },
+  "dam-midi": { label: "Äáº§m midi", keywords: ["Ä‘áº§m midi", "dam midi", "vÃ¡y midi"] },
+  "quan-toi-gian": { label: "Quáº§n tá»‘i giáº£n", keywords: ["quáº§n tá»‘i giáº£n", "quan toi gian", "quáº§n", "quan"] },
+  "chan-vay": { label: "ChÃ¢n vÃ¡y", keywords: ["chÃ¢n vÃ¡y", "chan vay", "skirt"] },
+  "giay": { label: "GiÃ y", keywords: ["giÃ y", "giay", "shoe", "sneaker"] },
+  "quan-jeans": { label: "Quáº§n jeans", keywords: ["jeans", "quáº§n jean", "quan jean"] },
+  "tui-xach": { label: "TÃºi xÃ¡ch", keywords: ["tÃºi xÃ¡ch", "tui xach", "bag"] },
+  "dong-ho": { label: "Äá»“ng há»“", keywords: ["Ä‘á»“ng há»“", "dong ho", "watch"] },
+  "trang-suc": { label: "Trang sá»©c", keywords: ["trang sá»©c", "trang suc", "dÃ¢y chuyá»n", "day chuyen", "nháº«n", "bÃ´ng tai"] },
+  "kinh-mat": { label: "KÃ­nh máº¯t", keywords: ["kÃ­nh máº¯t", "kinh mat", "máº¯t kÃ­nh", "mat kinh", "glasses"] },
+  "mu-non": { label: "MÅ© nÃ³n", keywords: ["mÅ©", "nÃ³n", "mu-non"] },
+  "phu-kien": { label: "Phá»¥ kiá»‡n cÃ¡ nhÃ¢n", keywords: ["phá»¥ kiá»‡n", "phu kien", "accessory"] }
 });
 
 let currentRoute = null;
@@ -133,54 +133,54 @@ let appInitialized = false;
 function normalizeOrderStatus(status = "") {
   const value = String(status || "").toLowerCase();
   const map = {
-    pending: { label: "Đang chờ xác nhận", variant: "warning" },
-    confirmed: { label: "Đã xác nhận", variant: "info" },
-    processing: { label: "Đang chuẩn bị", variant: "primary" },
-    shipped: { label: "Đang giao hàng", variant: "accent" },
-    delivered: { label: "Đã giao hàng", variant: "success" },
-    cancelled: { label: "Đã hủy", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
+    pending: { label: "Äang chá» xÃ¡c nháº­n", variant: "warning" },
+    confirmed: { label: "ÄÃ£ xÃ¡c nháº­n", variant: "info" },
+    processing: { label: "Äang chuáº©n bá»‹", variant: "primary" },
+    shipped: { label: "Äang giao hÃ ng", variant: "accent" },
+    delivered: { label: "ÄÃ£ giao hÃ ng", variant: "success" },
+    cancelled: { label: "ÄÃ£ há»§y", variant: "danger" },
+    refunded: { label: "ÄÃ£ hoÃ n tiá»n", variant: "neutral" }
   };
 
-  return map[value] || { label: status || "Đang xử lý", variant: "neutral" };
+  return map[value] || { label: status || "Äang xá»­ lÃ½", variant: "neutral" };
 }
 
 function normalizePaymentStatus(status = "") {
   const value = String(status || "").toLowerCase();
   const map = {
-    unpaid: { label: "Chưa thanh toán", variant: "warning" },
-    partial: { label: "Thanh toán một phần", variant: "info" },
-    paid: { label: "Đã thanh toán", variant: "success" },
-    failed: { label: "Thanh toán lỗi", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
+    unpaid: { label: "ChÆ°a thanh toÃ¡n", variant: "warning" },
+    partial: { label: "Thanh toÃ¡n má»™t pháº§n", variant: "info" },
+    paid: { label: "ÄÃ£ thanh toÃ¡n", variant: "success" },
+    failed: { label: "Thanh toÃ¡n lá»—i", variant: "danger" },
+    refunded: { label: "ÄÃ£ hoÃ n tiá»n", variant: "neutral" }
   };
 
-  return map[value] || { label: status || "Chưa cập nhật", variant: "neutral" };
+  return map[value] || { label: status || "ChÆ°a cáº­p nháº­t", variant: "neutral" };
 }
 
 function normalizePaymentTransactionStatus(status = "") {
   const value = String(status || "").toLowerCase();
   const map = {
-    pending: { label: "Chờ thanh toán", variant: "warning" },
-    paid: { label: "Đã thanh toán", variant: "success" },
-    success: { label: "Đã thanh toán", variant: "success" },
-    failed: { label: "Thanh toán thất bại", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
+    pending: { label: "Chá» thanh toÃ¡n", variant: "warning" },
+    paid: { label: "ÄÃ£ thanh toÃ¡n", variant: "success" },
+    success: { label: "ÄÃ£ thanh toÃ¡n", variant: "success" },
+    failed: { label: "Thanh toÃ¡n tháº¥t báº¡i", variant: "danger" },
+    refunded: { label: "ÄÃ£ hoÃ n tiá»n", variant: "neutral" }
   };
 
-  return map[value] || { label: status || "Chưa cập nhật", variant: "neutral" };
+  return map[value] || { label: status || "ChÆ°a cáº­p nháº­t", variant: "neutral" };
 }
 
 function getPaymentMethodLabel(method = "") {
   const value = String(method || "").toLowerCase();
   const labels = {
-    cod: "Thanh toán khi nhận hàng",
-    bank_transfer: "Chuyển khoản ngân hàng",
+    cod: "Thanh toÃ¡n khi nháº­n hÃ ng",
+    bank_transfer: "Chuyá»ƒn khoáº£n ngÃ¢n hÃ ng",
     vnpay: "VNPay",
     momo: "MoMo"
   };
 
-  return labels[value] || method || "Chưa cập nhật";
+  return labels[value] || method || "ChÆ°a cáº­p nháº­t";
 }
 
 function createStatusBadge(label, variant) {
@@ -188,10 +188,10 @@ function createStatusBadge(label, variant) {
 }
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) return "â€”";
 
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "—";
+  if (Number.isNaN(parsed.getTime())) return "â€”";
 
   return parsed.toLocaleString("vi-VN", {
     day: "2-digit",
@@ -211,15 +211,15 @@ function formatAddress(address = {}) {
   const detail = [address.detail_address, address.line1, address.line2].filter(Boolean).map((item) => String(item).trim()).join(", ");
   const ward = address.ward_name || address.ward || "";
   const province = address.province_name || address.province || address.city || "";
-  const country = address.country ? String(address.country).trim() : "Việt Nam";
+  const country = address.country ? String(address.country).trim() : "Viá»‡t Nam";
   const parts = [detail, ward, province, country].filter(Boolean);
 
-  return parts.length ? parts.join(", ") : "Chưa cập nhật";
+  return parts.length ? parts.join(", ") : "ChÆ°a cáº­p nháº­t";
 }
 
 function loadProvinces(selectElement) {
   if (!selectElement) return;
-  selectElement.innerHTML = `<option value="">Chọn tỉnh/thành</option>${VIETNAM_ADMINISTRATIVE_2025.map((province) => `<option value="${escapeHtml(province.code)}">${escapeHtml(province.name)}</option>`).join("")}`;
+  selectElement.innerHTML = `<option value="">Chá»n tá»‰nh/thÃ nh</option>${VIETNAM_ADMINISTRATIVE_2025.map((province) => `<option value="${escapeHtml(province.code)}">${escapeHtml(province.name)}</option>`).join("")}`;
 }
 
 function loadWardsByProvince(selectElement, provinceCode) {
@@ -227,13 +227,13 @@ function loadWardsByProvince(selectElement, provinceCode) {
 
   if (!provinceCode) {
     selectElement.disabled = true;
-    selectElement.innerHTML = `<option value="">Chọn phường/xã/thị trấn</option>`;
+    selectElement.innerHTML = `<option value="">Chá»n phÆ°á»ng/xÃ£/thá»‹ tráº¥n</option>`;
     return;
   }
 
   const wards = getWardsByProvince(provinceCode);
   selectElement.disabled = false;
-  selectElement.innerHTML = `<option value="">Chọn phường/xã/thị trấn</option>${wards.map((ward) => `<option value="${escapeHtml(ward.code)}">${escapeHtml(ward.name)}</option>`).join("")}`;
+  selectElement.innerHTML = `<option value="">Chá»n phÆ°á»ng/xÃ£/thá»‹ tráº¥n</option>${wards.map((ward) => `<option value="${escapeHtml(ward.code)}">${escapeHtml(ward.name)}</option>`).join("")}`;
 }
 
 function updateMapByAddress(mapIframe, detailAddress, provinceCode, wardCode) {
@@ -241,8 +241,8 @@ function updateMapByAddress(mapIframe, detailAddress, provinceCode, wardCode) {
 
   const province = VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === provinceCode);
   const ward = province?.wards.find((item) => item.code === wardCode);
-  const fullAddress = [detailAddress, ward?.name || "", province?.name || "", "Việt Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
-  const mapQuery = fullAddress || "Việt Nam";
+  const fullAddress = [detailAddress, ward?.name || "", province?.name || "", "Viá»‡t Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
+  const mapQuery = fullAddress || "Viá»‡t Nam";
   mapIframe.src = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`;
 }
 
@@ -367,7 +367,7 @@ function bindNewsletterOfferPopup(popup) {
   const codeBox = popup.querySelector("[data-newsletter-popup-code]");
   const closeButton = popup.querySelector("[data-newsletter-popup-close]");
   const copyButton = popup.querySelector("[data-newsletter-copy-code]");
-  const originalCopyText = copyButton?.textContent || "Sao chép mã";
+  const originalCopyText = copyButton?.textContent || "Sao chÃ©p mÃ£";
 
   closeButton?.addEventListener("click", () => closeNewsletterPopup(popup, { remember: true }));
 
@@ -707,9 +707,12 @@ function syncCustomerNavigationActive(route = normalizeRoute(window.location.has
 
 async function renderProductListPage() {
   const hashQuery = (window.location.hash.split("?")[1] || "");
-  const keywordKey = decodeURIComponent(new URLSearchParams(hashQuery).get("keyword") || "").toLowerCase();
-  const filter = PRODUCT_MENU_FILTERS[keywordKey];
-  const title = filter?.label || "Tất cả sản phẩm";
+  const params = new URLSearchParams(hashQuery);
+  const categorySlug = decodeURIComponent(params.get("category") || "").toLowerCase();
+  const keywordKey = decodeURIComponent(params.get("keyword") || "").toLowerCase();
+  const legacyFilter = PRODUCT_MENU_FILTERS[keywordKey];
+  let category = null;
+  let title = legacyFilter?.label || "Tất cả sản phẩm";
 
   layoutState.main.innerHTML = renderPageShell(title, `
     <div class="customer-empty-state">
@@ -719,13 +722,25 @@ async function renderProductListPage() {
   `);
 
   try {
+    if (categorySlug) {
+      category = await getCustomerCategoryBySlug(categorySlug);
+      title = category?.name || categorySlug;
+    }
+
     const query = new URLSearchParams({ status: "active", limit: "100" });
-    if (filter) query.set("search", [...filter.keywords, keywordKey].join("|"));
+    if (category?.id) {
+      query.set("categoryId", String(category.id));
+    } else if (legacyFilter) {
+      query.set("search", [...legacyFilter.keywords, keywordKey].join("|"));
+    }
+
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
     const apiProducts = Array.isArray(response?.data?.products) ? response.data.products : [];
-    const products = filter
-      ? apiProducts.filter((product) => matchesProductMenuFilter(product, filter))
-      : apiProducts;
+    const products = categorySlug
+      ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
+      : legacyFilter
+        ? apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
+        : apiProducts;
 
     if (!products.length) {
       layoutState.main.innerHTML = renderPageShell(title, `
@@ -767,6 +782,90 @@ async function renderProductListPage() {
   }
 }
 
+let customerCategoryCache = { items: [], loadedAt: 0, promise: null };
+const CUSTOMER_CATEGORY_CACHE_TTL = 5 * 60 * 1000;
+
+async function getCustomerCategoryBySlug(slug = "") {
+  const categories = await getCustomerCategories();
+  const normalizedSlug = normalizeSlug(slug);
+  return categories.find((category) => normalizeSlug(category.slug || category.code || category.name) === normalizedSlug) || null;
+}
+
+async function getCustomerCategories() {
+  const now = Date.now();
+  if (customerCategoryCache.items.length && now - customerCategoryCache.loadedAt < CUSTOMER_CATEGORY_CACHE_TTL) {
+    return customerCategoryCache.items;
+  }
+
+  if (!customerCategoryCache.promise) {
+    customerCategoryCache.promise = fetchCustomerCategoryPages()
+      .then((items) => {
+        customerCategoryCache.items = uniqueCustomerCategories(items.map(normalizeCustomerCategory));
+        customerCategoryCache.loadedAt = Date.now();
+        return customerCategoryCache.items;
+      })
+      .finally(() => {
+        customerCategoryCache.promise = null;
+      });
+  }
+
+  return customerCategoryCache.promise;
+}
+
+async function fetchCustomerCategoryPages() {
+  const firstPayload = await fetchCustomerCategoryPage(1);
+  const categories = getListFromApiPayload(firstPayload, "categories");
+  const pagination = firstPayload?.data?.pagination || firstPayload?.meta?.pagination || firstPayload?.pagination || {};
+  const totalPages = Math.max(1, Number(pagination.totalPages || pagination.total_pages || 1));
+
+  if (totalPages > 1) {
+    const rest = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => fetchCustomerCategoryPage(index + 2)));
+    rest.forEach((payload) => categories.push(...getListFromApiPayload(payload, "categories")));
+  }
+
+  return categories;
+}
+
+async function fetchCustomerCategoryPage(page = 1) {
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
+  return customerApi(`/categories?${query.toString()}`, { auth: false });
+}
+
+function normalizeCustomerCategory(category = {}) {
+  const name = category.name || "Danh mục";
+  const slug = category.slug || category.code || normalizeSlug(name);
+  return { id: category.id, name, slug };
+}
+
+function uniqueCustomerCategories(categories = []) {
+  const seen = new Set();
+  return categories.filter((category) => {
+    const key = String(category.slug || category.id || category.name || "").toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function isProductInCategory(product = {}, slug = "", category = null) {
+  if (category?.id && String(product.categoryId ?? product.category_id ?? "") === String(category.id)) return true;
+  const normalizedSlug = normalizeSlug(slug);
+  const productCategorySlug = normalizeSlug(product.categorySlug || product.category_slug || product.category?.slug || "");
+  if (productCategorySlug && productCategorySlug === normalizedSlug) return true;
+  const categoryName = normalizeSlug(product.categoryName || product.category_name || product.category || "");
+  return Boolean(categoryName && categoryName === normalizedSlug);
+}
+
+function normalizeSlug(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function mapApiProductForCard(product = {}) {
   const originalPrice = Number(product.price || 0);
   const hasSalePrice = product.salePrice !== null && product.salePrice !== undefined && Number(product.salePrice) < originalPrice;
@@ -774,7 +873,7 @@ function mapApiProductForCard(product = {}) {
   return {
     id: product.id,
     name: product.name || "",
-    category: product.categoryName || product.category_name || "Sản phẩm",
+    category: product.categoryName || product.category_name || "Sáº£n pháº©m",
     image: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || ""),
     hoverImage: "",
     price,
@@ -782,7 +881,7 @@ function mapApiProductForCard(product = {}) {
     discount: hasSalePrice && originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0,
     rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
     sold: Number(product.sold || 0),
-    badge: hasSalePrice ? "GIẢM GIÁ" : "SẢN PHẨM",
+    badge: hasSalePrice ? "GIáº¢M GIÃ" : "Sáº¢N PHáº¨M",
     inStock: Number(product.stock || 0) > 0,
     stock: Number(product.stock || 0),
     salePrice: product.salePrice ?? product.sale_price ?? null,
@@ -801,7 +900,7 @@ function matchesProductMenuFilter(product = {}, filter = {}) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/đ/g, "d");
+    .replace(/Ä‘/g, "d");
   const tags = Array.isArray(product.tags) ? product.tags.join(" ") : product.tags;
   const searchable = normalize([
     product.name,
@@ -840,11 +939,11 @@ function renderPageShell(title, content) {
   `;
 }
 
-function renderSocialButtons(label = "đăng nhập") {
-  return `<div class="auth-divider"><span>Hoặc ${label} với</span></div>
+function renderSocialButtons(label = "Ä‘Äƒng nháº­p") {
+  return `<div class="auth-divider"><span>Hoáº·c ${label} vá»›i</span></div>
     <div class="auth-social-grid">
-      <button class="auth-social-button" type="button" data-oauth="google"><span class="auth-social-icon google">G</span>Đăng nhập bằng Google</button>
-      <button class="auth-social-button" type="button" data-oauth="facebook"><span class="auth-social-icon facebook">f</span>Đăng nhập bằng Facebook</button>
+      <button class="auth-social-button" type="button" data-oauth="google"><span class="auth-social-icon google">G</span>ÄÄƒng nháº­p báº±ng Google</button>
+      <button class="auth-social-button" type="button" data-oauth="facebook"><span class="auth-social-icon facebook">f</span>ÄÄƒng nháº­p báº±ng Facebook</button>
     </div>`;
 }
 
@@ -873,7 +972,7 @@ function openOAuthLoginPopup(provider, button) {
 
   if (!popup) {
     button.disabled = false;
-    showCustomerToast(`Vui lòng cho phép popup để đăng nhập ${providerLabel}.`, "error");
+    showCustomerToast(`Vui lÃ²ng cho phÃ©p popup Ä‘á»ƒ Ä‘Äƒng nháº­p ${providerLabel}.`, "error");
     return;
   }
 
@@ -904,7 +1003,7 @@ async function handleOAuthMessage(event) {
   document.querySelectorAll("[data-oauth]").forEach(button => { button.disabled = false; });
 
   if (errorTypes.includes(event.data.type)) {
-    showCustomerToast(event.data.message || "Đăng nhập thất bại", "error");
+    showCustomerToast(event.data.message || "ÄÄƒng nháº­p tháº¥t báº¡i", "error");
     return;
   }
 
@@ -923,7 +1022,7 @@ async function handleOAuthMessage(event) {
     renderRoute();
     await Promise.all([refreshCart(), refreshWishlist()]);
     renderHeader();
-    showCustomerToast("Đăng nhập thành công", "success");
+    showCustomerToast("ÄÄƒng nháº­p thÃ nh cÃ´ng", "success");
   } catch (error) {
     console.debug(`[auth] ${providerLabel} popup login failed`, error?.message || error);
     customerAuth.clearExternalLogin(`${provider}-popup-token-invalid`);
@@ -931,67 +1030,67 @@ async function handleOAuthMessage(event) {
     currentRoute = "";
     renderHeader();
     renderRoute();
-    showCustomerToast(error?.message || "Đăng nhập thất bại", "error");
+    showCustomerToast(error?.message || "ÄÄƒng nháº­p tháº¥t báº¡i", "error");
   } finally {
     layoutState.isCompletingOAuth = false;
   }
 }
 function renderLoginPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card">
-    <a class="auth-back" href="#home">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>Đăng nhập</h1><p>Chào mừng bạn quay lại với trải nghiệm mua sắm riêng của mình.</p></div>
+    <a class="auth-back" href="#home">â† Quay láº¡i trang trÆ°á»›c</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>ÄÄƒng nháº­p</h1><p>ChÃ o má»«ng báº¡n quay láº¡i vá»›i tráº£i nghiá»‡m mua sáº¯m riÃªng cá»§a mÃ¬nh.</p></div>
     <form data-login-form class="auth-form"><div data-auth-message hidden></div>
-      <label><span>Email hoặc số điện thoại</span><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></label>
-      <label><span>Mật khẩu</span><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></label>
-      <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
-      <button class="customer-button auth-primary" type="submit">Đăng nhập</button>
-      ${renderSocialButtons("đăng nhập")}
-      <a class="auth-phone-button" href="#phone-login">Đăng nhập bằng số điện thoại</a>
-      <p class="auth-switch">Chưa có tài khoản? <a href="#register">Đăng ký</a></p>
+      <label><span>Email hoáº·c sá»‘ Ä‘iá»‡n thoáº¡i</span><input name="email" required autocomplete="username" placeholder="email@example.com hoáº·c 0901234567"></label>
+      <label><span>Máº­t kháº©u</span><input type="password" name="password" required autocomplete="current-password" placeholder="Nháº­p máº­t kháº©u"></label>
+      <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhá»› Ä‘Äƒng nháº­p</span></label><a href="#forgot-password">QuÃªn máº­t kháº©u?</a></div>
+      <button class="customer-button auth-primary" type="submit">ÄÄƒng nháº­p</button>
+      ${renderSocialButtons("Ä‘Äƒng nháº­p")}
+      <a class="auth-phone-button" href="#phone-login">ÄÄƒng nháº­p báº±ng sá»‘ Ä‘iá»‡n thoáº¡i</a>
+      <p class="auth-switch">ChÆ°a cÃ³ tÃ i khoáº£n? <a href="#register">ÄÄƒng kÃ½</a></p>
     </form></article></div></section>`;
   const root = layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]");
-    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.textContent="Đang đăng nhập...";
-    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
-    catch(error){ showCustomerMessage(form,error?.message||"Đăng nhập thất bại."); }
-    finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.textContent="Đăng nhập"; }
+    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.textContent="Äang Ä‘Äƒng nháº­p...";
+    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); showCustomerToast("ÄÄƒng nháº­p thÃ nh cÃ´ng.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
+    catch(error){ showCustomerMessage(form,error?.message||"ÄÄƒng nháº­p tháº¥t báº¡i."); }
+    finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.textContent="ÄÄƒng nháº­p"; }
   });
 }
 
 function renderRegisterPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card auth-card-wide">
-    <a class="auth-back" href="#home">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>Đăng ký</h1><p>Đăng ký để mua sắm cùng N&L Shop</p></div>
+    <a class="auth-back" href="#home">â† Quay láº¡i trang trÆ°á»›c</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>ÄÄƒng kÃ½</h1><p>ÄÄƒng kÃ½ Ä‘á»ƒ mua sáº¯m cÃ¹ng N&L Shop</p></div>
     <form data-register-form class="auth-form"><div data-auth-message hidden></div><div class="auth-grid">
-      <label><span>Họ và tên</span><input name="fullName" required autocomplete="name" placeholder="Nguyễn Văn A"></label>
-      <label><span>Số điện thoại</span><input type="tel" name="phone" required autocomplete="tel" placeholder="0901234567"></label>
-      <label class="auth-full"><span>Địa chỉ</span><input name="address" required autocomplete="street-address" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></label>
+      <label><span>Há» vÃ  tÃªn</span><input name="fullName" required autocomplete="name" placeholder="Nguyá»…n VÄƒn A"></label>
+      <label><span>Sá»‘ Ä‘iá»‡n thoáº¡i</span><input type="tel" name="phone" required autocomplete="tel" placeholder="0901234567"></label>
+      <label class="auth-full"><span>Äá»‹a chá»‰</span><input name="address" required autocomplete="street-address" placeholder="Sá»‘ nhÃ , Ä‘Æ°á»ng, phÆ°á»ng/xÃ£, tá»‰nh/thÃ nh"></label>
       <label class="auth-full"><span>Email</span><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></label>
-      <label><span>Mật khẩu</span><input type="password" name="password" required autocomplete="new-password" placeholder="Ít nhất 8 ký tự"></label>
-      <label><span>Xác nhận mật khẩu</span><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nhập lại mật khẩu"></label>
-    </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư</span></label>
-      <button class="customer-button auth-primary" type="submit">Đăng ký</button>${renderSocialButtons("tiếp tục")}
-      <p class="auth-switch">Đã có tài khoản? <a href="#login">Đăng nhập</a></p>
+      <label><span>Máº­t kháº©u</span><input type="password" name="password" required autocomplete="new-password" placeholder="Ãt nháº¥t 8 kÃ½ tá»±"></label>
+      <label><span>XÃ¡c nháº­n máº­t kháº©u</span><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nháº­p láº¡i máº­t kháº©u"></label>
+    </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>TÃ´i Ä‘á»“ng Ã½ vá»›i Äiá»u khoáº£n sá»­ dá»¥ng vÃ  ChÃ­nh sÃ¡ch quyá»n riÃªng tÆ°</span></label>
+      <button class="customer-button auth-primary" type="submit">ÄÄƒng kÃ½</button>${renderSocialButtons("tiáº¿p tá»¥c")}
+      <p class="auth-switch">ÄÃ£ cÃ³ tÃ i khoáº£n? <a href="#login">ÄÄƒng nháº­p</a></p>
     </form></article></div></section>`;
   const root=layoutState.main; bindOAuthButtons(root);
-  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.textContent="Đang đăng ký...";
+  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.textContent="Äang Ä‘Äƒng kÃ½...";
     const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
-    try{await customerAuth.register(payload);showCustomerToast("Đăng ký thành công. Vui lòng đăng nhập.","success");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.textContent="Đăng ký";}
+    try{await customerAuth.register(payload);showCustomerToast("ÄÄƒng kÃ½ thÃ nh cÃ´ng. Vui lÃ²ng Ä‘Äƒng nháº­p.","success");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"ÄÄƒng kÃ½ tháº¥t báº¡i.");}finally{button.disabled=false;button.textContent="ÄÄƒng kÃ½";}
   });
 }
 
 function renderPhoneLoginPage() {
   layoutState.main.innerHTML=`<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card">
-    <a class="auth-back" href="#login">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">BẢO MẬT OTP</span><h1>Đăng nhập bằng số điện thoại</h1><p>Mã xác thực có hiệu lực trong 5 phút.</p></div>
-    <form data-phone-form class="auth-form"><div data-auth-message hidden></div><label><span>Số điện thoại</span><input type="tel" name="phone" required placeholder="0901234567"></label>
-      <button class="auth-phone-button" type="button" data-send-otp>Gửi mã OTP</button>
-      <div data-otp-fields hidden><div class="otp-status">Mã đã gửi. Có thể gửi lại sau <strong data-countdown>60</strong> giây.</div><label><span>Mã OTP</span><input name="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></label>
-        <label data-new-password><span>Mật khẩu mới <small>(nếu tài khoản chưa có mật khẩu)</small></span><input type="password" name="password" autocomplete="new-password"></label>
-        <label data-confirm-password><span>Xác nhận mật khẩu</span><input type="password" name="confirmPassword" autocomplete="new-password"></label>
-        <button class="customer-button auth-primary" type="submit">Xác thực và đăng nhập</button></div>
+    <a class="auth-back" href="#login">â† Quay láº¡i trang trÆ°á»›c</a><div class="auth-heading"><span class="auth-kicker">Báº¢O Máº¬T OTP</span><h1>ÄÄƒng nháº­p báº±ng sá»‘ Ä‘iá»‡n thoáº¡i</h1><p>MÃ£ xÃ¡c thá»±c cÃ³ hiá»‡u lá»±c trong 5 phÃºt.</p></div>
+    <form data-phone-form class="auth-form"><div data-auth-message hidden></div><label><span>Sá»‘ Ä‘iá»‡n thoáº¡i</span><input type="tel" name="phone" required placeholder="0901234567"></label>
+      <button class="auth-phone-button" type="button" data-send-otp>Gá»­i mÃ£ OTP</button>
+      <div data-otp-fields hidden><div class="otp-status">MÃ£ Ä‘Ã£ gá»­i. CÃ³ thá»ƒ gá»­i láº¡i sau <strong data-countdown>60</strong> giÃ¢y.</div><label><span>MÃ£ OTP</span><input name="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></label>
+        <label data-new-password><span>Máº­t kháº©u má»›i <small>(náº¿u tÃ i khoáº£n chÆ°a cÃ³ máº­t kháº©u)</small></span><input type="password" name="password" autocomplete="new-password"></label>
+        <label data-confirm-password><span>XÃ¡c nháº­n máº­t kháº©u</span><input type="password" name="confirmPassword" autocomplete="new-password"></label>
+        <button class="customer-button auth-primary" type="submit">XÃ¡c thá»±c vÃ  Ä‘Äƒng nháº­p</button></div>
     </form></article></div></section>`;
   const form=layoutState.main.querySelector("[data-phone-form]"),send=form.querySelector("[data-send-otp]"),fields=form.querySelector("[data-otp-fields]"); let timer;
-  send.addEventListener("click",async()=>{send.disabled=true;try{const result=await customerAuth.sendPhoneOtp(form.phone.value);fields.hidden=false;fields.querySelector("[name=otp]").required=true;const passwordField=fields.querySelector("[data-new-password]"),confirmField=fields.querySelector("[data-confirm-password]");passwordField.hidden=!result.requiresPassword;confirmField.hidden=!result.requiresPassword;passwordField.querySelector("input").required=Boolean(result.requiresPassword);confirmField.querySelector("input").required=Boolean(result.requiresPassword);let left=result.resendAfter||60;const counter=fields.querySelector("[data-countdown]");counter.textContent=left;clearInterval(timer);timer=setInterval(()=>{left-=1;counter.textContent=Math.max(left,0);if(left<=0){clearInterval(timer);send.disabled=false;send.textContent="Gửi lại mã OTP";}},1000);showCustomerMessage(form,"Mã OTP đã được gửi.","success");}catch(error){showCustomerMessage(form,error?.message||"Không thể gửi OTP.");send.disabled=false;}});
-  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});showCustomerToast("Đăng nhập thành công.","success");navigateToRoute(layoutState.pendingRoute||"home");}catch(error){showCustomerMessage(form,error?.message||"Xác thực OTP thất bại.");}finally{button.disabled=false;}});
+  send.addEventListener("click",async()=>{send.disabled=true;try{const result=await customerAuth.sendPhoneOtp(form.phone.value);fields.hidden=false;fields.querySelector("[name=otp]").required=true;const passwordField=fields.querySelector("[data-new-password]"),confirmField=fields.querySelector("[data-confirm-password]");passwordField.hidden=!result.requiresPassword;confirmField.hidden=!result.requiresPassword;passwordField.querySelector("input").required=Boolean(result.requiresPassword);confirmField.querySelector("input").required=Boolean(result.requiresPassword);let left=result.resendAfter||60;const counter=fields.querySelector("[data-countdown]");counter.textContent=left;clearInterval(timer);timer=setInterval(()=>{left-=1;counter.textContent=Math.max(left,0);if(left<=0){clearInterval(timer);send.disabled=false;send.textContent="Gá»­i láº¡i mÃ£ OTP";}},1000);showCustomerMessage(form,"MÃ£ OTP Ä‘Ã£ Ä‘Æ°á»£c gá»­i.","success");}catch(error){showCustomerMessage(form,error?.message||"KhÃ´ng thá»ƒ gá»­i OTP.");send.disabled=false;}});
+  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});showCustomerToast("ÄÄƒng nháº­p thÃ nh cÃ´ng.","success");navigateToRoute(layoutState.pendingRoute||"home");}catch(error){showCustomerMessage(form,error?.message||"XÃ¡c thá»±c OTP tháº¥t báº¡i.");}finally{button.disabled=false;}});
 }
 
 async function renderAuthCallbackPage() {
@@ -1003,13 +1102,13 @@ async function renderAuthCallbackPage() {
   }
 
   layoutState.main.innerHTML = renderPageShell(
-    "Đang hoàn tất đăng nhập",
-    `<p>${escapeHtml(callback.error || "Vui lòng chờ trong giây lát...")}</p>`
+    "Äang hoÃ n táº¥t Ä‘Äƒng nháº­p",
+    `<p>${escapeHtml(callback.error || "Vui lÃ²ng chá» trong giÃ¢y lÃ¡t...")}</p>`
   );
 
   if (callback.error || !callback.token) {
     customerAuth.clearExternalLogin("oauth-callback-error");
-    finishOAuthFailure(callback.error || (callback.provider === "google" ? "Không nhận được token Google" : "Đăng nhập thất bại"));
+    finishOAuthFailure(callback.error || (callback.provider === "google" ? "KhÃ´ng nháº­n Ä‘Æ°á»£c token Google" : "ÄÄƒng nháº­p tháº¥t báº¡i"));
     return;
   }
 
@@ -1021,11 +1120,11 @@ async function renderAuthCallbackPage() {
     renderRoute();
     await Promise.all([refreshCart(), refreshWishlist()]);
     renderHeader();
-    showCustomerToast("Đăng nhập thành công", "success");
+    showCustomerToast("ÄÄƒng nháº­p thÃ nh cÃ´ng", "success");
   } catch (callbackError) {
     console.debug("[auth] OAuth callback failed", callbackError?.message || callbackError);
     customerAuth.clearExternalLogin("oauth-token-invalid");
-    finishOAuthFailure(callbackError?.message || "Đăng nhập thất bại");
+    finishOAuthFailure(callbackError?.message || "ÄÄƒng nháº­p tháº¥t báº¡i");
   }
 }
 
@@ -1046,7 +1145,7 @@ function forwardOAuthCallbackToOpener() {
     ? {
         type: errorType,
         provider,
-        message: callback.error || (provider === "google" ? "Không nhận được token Google" : "Đăng nhập thất bại")
+        message: callback.error || (provider === "google" ? "KhÃ´ng nháº­n Ä‘Æ°á»£c token Google" : "ÄÄƒng nháº­p tháº¥t báº¡i")
       }
     : {
         type: successType,
@@ -1128,7 +1227,7 @@ function decodeOAuthUser(encodedUser) {
 }
 
 function finishOAuthFailure(message) {
-  showCustomerToast(message || "Đăng nhập thất bại", "error");
+  showCustomerToast(message || "ÄÄƒng nháº­p tháº¥t báº¡i", "error");
   window.history.replaceState(null, "", "index.html#login");
   currentRoute = "";
   renderHeader();
@@ -1136,11 +1235,11 @@ function finishOAuthFailure(message) {
 }
 async function renderCartPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">👜</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem và quản lý giỏ hàng của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Giá» hÃ ng", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">ðŸ‘œ</div><h2>Vui lÃ²ng Ä‘Äƒng nháº­p</h2><p>ÄÄƒng nháº­p Ä‘á»ƒ xem vÃ  quáº£n lÃ½ giá» hÃ ng cá»§a báº¡n.</p><a class="customer-button" href="#login">ÄÄƒng nháº­p</a></div>`);
     return;
   }
 
-  layoutState.main.innerHTML = renderPageShell("Giỏ hàng", renderCartSkeleton());
+  layoutState.main.innerHTML = renderPageShell("Giá» hÃ ng", renderCartSkeleton());
 
   try {
     const cart = await customerCart.load();
@@ -1150,7 +1249,7 @@ async function renderCartPage() {
     const items = Array.isArray(cart?.items) ? cart.items : [];
 
     if (!items.length) {
-      layoutState.main.innerHTML = renderPageShell("Giỏ hàng", renderCartEmptyState());
+      layoutState.main.innerHTML = renderPageShell("Giá» hÃ ng", renderCartEmptyState());
       return;
     }
 
@@ -1162,16 +1261,16 @@ async function renderCartPage() {
     const grandTotal = Math.max(selectedSubtotal - voucherSummary.discountAmount + shippingFee + vatAmount, 0);
     const selectedCount = selectedItems.length;
 
-    layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `
+    layoutState.main.innerHTML = renderPageShell("Giá» hÃ ng", `
       <div class="customer-cart-shell">
         <div class="customer-cart-layout">
           <div class="customer-cart-list-column">
             <div class="customer-cart-toolbar">
               <label class="customer-cart-select-all">
                 <input type="checkbox" data-cart-select-all ${selectedCount === items.length ? "checked" : ""}>
-                <span>Chọn tất cả (${items.length} sản phẩm)</span>
+                <span>Chá»n táº¥t cáº£ (${items.length} sáº£n pháº©m)</span>
               </label>
-              <div class="customer-cart-toolbar-meta">${selectedCount}/${items.length} đang chọn</div>
+              <div class="customer-cart-toolbar-meta">${selectedCount}/${items.length} Ä‘ang chá»n</div>
             </div>
             <div class="customer-cart-list">
               ${items.map((item) => `
@@ -1180,15 +1279,15 @@ async function renderCartPage() {
                     <input type="checkbox" data-cart-select-item="${item.id}" ${item.isSelected ? "checked" : ""}>
                   </label>
                   <div class="customer-cart-item-media">
-                    <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
+                    <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sáº£n pháº©m")}" loading="lazy" decoding="async" data-product-image>
                   </div>
                   <div class="customer-cart-item-body">
                     <div class="customer-cart-item-header">
                       <div>
-                        <h3>${escapeHtml(item.productName || "Sản phẩm")}</h3>
+                        <h3>${escapeHtml(item.productName || "Sáº£n pháº©m")}</h3>
                         ${item.productSku ? `<p class="customer-cart-item-sku">SKU: ${escapeHtml(item.productSku)}</p>` : ""}
                       </div>
-                      <button class="customer-cart-action-link" type="button" data-cart-remove="${item.id}">Xóa</button>
+                      <button class="customer-cart-action-link" type="button" data-cart-remove="${item.id}">XÃ³a</button>
                     </div>
                     <div class="customer-cart-item-details">
                       ${item.size ? `<span class="customer-cart-pill">Size ${escapeHtml(item.size)}</span>` : ""}
@@ -1200,7 +1299,7 @@ async function renderCartPage() {
                         <span class="customer-cart-price-muted">${formatCurrency(Number(item.totalPrice || 0))}</span>
                       </div>
                       <div class="customer-cart-quantity" data-max-stock="${Number(item.variantStock || item.productStock || 0)}">
-                        <button class="customer-cart-quantity-btn" type="button" data-cart-qty-dec="${item.id}">−</button>
+                        <button class="customer-cart-quantity-btn" type="button" data-cart-qty-dec="${item.id}">âˆ’</button>
                         <span>${Number(item.quantity || 0)}</span>
                         <button class="customer-cart-quantity-btn" type="button" data-cart-qty-inc="${item.id}">+</button>
                       </div>
@@ -1213,33 +1312,33 @@ async function renderCartPage() {
 
           <aside class="customer-cart-summary-card">
             <div class="customer-cart-summary-header">
-              <h2>Tóm tắt đơn hàng</h2>
-              <span class="customer-cart-summary-badge">${selectedCount} sản phẩm</span>
+              <h2>TÃ³m táº¯t Ä‘Æ¡n hÃ ng</h2>
+              <span class="customer-cart-summary-badge">${selectedCount} sáº£n pháº©m</span>
             </div>
 
             <div class="customer-cart-voucher">
-              <div class="customer-cart-voucher-title">Mã giảm giá</div>
+              <div class="customer-cart-voucher-title">MÃ£ giáº£m giÃ¡</div>
               <div class="customer-cart-voucher-input-row">
-                <input type="text" name="voucher" value="${escapeHtml(layoutState.cartVoucher.code)}" placeholder="Nhập mã giảm giá" data-cart-voucher-input>
-                <button class="customer-button secondary customer-cart-voucher-button" type="button" data-cart-voucher-apply>Áp dụng</button>
+                <input type="text" name="voucher" value="${escapeHtml(layoutState.cartVoucher.code)}" placeholder="Nháº­p mÃ£ giáº£m giÃ¡" data-cart-voucher-input>
+                <button class="customer-button secondary customer-cart-voucher-button" type="button" data-cart-voucher-apply>Ãp dá»¥ng</button>
               </div>
-              <div class="customer-cart-voucher-message ${voucherSummary.status === "success" ? "is-success" : voucherSummary.status === "error" ? "is-error" : ""}" data-cart-voucher-message>${escapeHtml(voucherSummary.message || "Nhập mã để nhận ưu đãi")}</div>
+              <div class="customer-cart-voucher-message ${voucherSummary.status === "success" ? "is-success" : voucherSummary.status === "error" ? "is-error" : ""}" data-cart-voucher-message>${escapeHtml(voucherSummary.message || "Nháº­p mÃ£ Ä‘á»ƒ nháº­n Æ°u Ä‘Ã£i")}</div>
             </div>
 
             <div class="customer-cart-summary-lines">
-              <div><span>Tạm tính</span><strong>${formatCurrency(selectedSubtotal)}</strong></div>
-              <div><span>Giảm giá</span><strong>${formatCurrency(voucherSummary.discountAmount)}</strong></div>
-              <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(vatAmount)}</strong></div>
-              <div><span>Phí vận chuyển</span><strong>${formatCurrency(shippingFee)}</strong></div>
+              <div><span>Táº¡m tÃ­nh</span><strong>${formatCurrency(selectedSubtotal)}</strong></div>
+              <div><span>Giáº£m giÃ¡</span><strong>${formatCurrency(voucherSummary.discountAmount)}</strong></div>
+              <div><span>Thuáº¿ VAT (10%)</span><strong>${formatCurrency(vatAmount)}</strong></div>
+              <div><span>PhÃ­ váº­n chuyá»ƒn</span><strong>${formatCurrency(shippingFee)}</strong></div>
             </div>
 
             <div class="customer-cart-summary-total">
-              <span>Tổng thanh toán</span>
+              <span>Tá»•ng thanh toÃ¡n</span>
               <strong>${formatCurrency(grandTotal)}</strong>
             </div>
 
-            <button class="customer-button customer-cart-checkout-btn" type="button" data-cart-checkout>Tiến hành thanh toán</button>
-            <a class="customer-cart-secondary-link" href="#home">Tiếp tục mua sắm</a>
+            <button class="customer-button customer-cart-checkout-btn" type="button" data-cart-checkout>Tiáº¿n hÃ nh thanh toÃ¡n</button>
+            <a class="customer-cart-secondary-link" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
           </aside>
         </div>
       </div>
@@ -1247,12 +1346,12 @@ async function renderCartPage() {
 
     bindCartPageEvents();
   } catch (error) {
-    layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `
+    layoutState.main.innerHTML = renderPageShell("Giá» hÃ ng", `
       <div class="customer-cart-empty-state">
-        <div class="customer-cart-empty-icon">⚠️</div>
-        <h2>Không thể tải giỏ hàng</h2>
-        <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải giỏ hàng.")}</p>
-        <button class="customer-button" type="button" data-cart-retry>Thử lại</button>
+        <div class="customer-cart-empty-icon">âš ï¸</div>
+        <h2>KhÃ´ng thá»ƒ táº£i giá» hÃ ng</h2>
+        <p>${escapeHtml(error?.message || "ÄÃ£ xáº£y ra lá»—i khi táº£i giá» hÃ ng.")}</p>
+        <button class="customer-button" type="button" data-cart-retry>Thá»­ láº¡i</button>
       </div>
     `);
 
@@ -1298,10 +1397,10 @@ function renderCartSkeleton() {
 function renderCartEmptyState() {
   return `
     <div class="customer-cart-empty-state">
-      <div class="customer-cart-empty-icon">🛍️</div>
-      <h2>Giỏ hàng của bạn đang trống</h2>
-      <p>Hãy thêm những sản phẩm bạn yêu thích để bắt đầu trải nghiệm mua sắm.</p>
-      <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+      <div class="customer-cart-empty-icon">ðŸ›ï¸</div>
+      <h2>Giá» hÃ ng cá»§a báº¡n Ä‘ang trá»‘ng</h2>
+      <p>HÃ£y thÃªm nhá»¯ng sáº£n pháº©m báº¡n yÃªu thÃ­ch Ä‘á»ƒ báº¯t Ä‘áº§u tráº£i nghiá»‡m mua sáº¯m.</p>
+      <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
     </div>
   `;
 }
@@ -1313,8 +1412,8 @@ function bindCartPageEvents() {
       const container = button.parentElement;
       const maxStock = Number(container?.dataset?.maxStock || 0);
       const current = Number(container.querySelector("span")?.textContent || 0);
-      if (maxStock <= 0) { showCustomerToast("Sản phẩm này đã hết hàng", "error"); return; }
-      if (current >= maxStock) { showCustomerToast(`Chỉ còn ${maxStock} sản phẩm trong kho`, "warning"); return; }
+      if (maxStock <= 0) { showCustomerToast("Sáº£n pháº©m nÃ y Ä‘Ã£ háº¿t hÃ ng", "error"); return; }
+      if (current >= maxStock) { showCustomerToast(`Chá»‰ cÃ²n ${maxStock} sáº£n pháº©m trong kho`, "warning"); return; }
       await customerCart.updateQuantity(itemId, current + 1);
       await renderCartPage();
     });
@@ -1360,7 +1459,7 @@ function bindCartPageEvents() {
     const subtotal = getSelectedCartSubtotal();
 
     if (!code) {
-      layoutState.cartVoucher = { code: "", discountAmount: 0, status: "idle", message: "Nhập mã giảm giá để nhận ưu đãi" };
+      layoutState.cartVoucher = { code: "", discountAmount: 0, status: "idle", message: "Nháº­p mÃ£ giáº£m giÃ¡ Ä‘á»ƒ nháº­n Æ°u Ä‘Ã£i" };
       await renderCartPage();
       return;
     }
@@ -1376,7 +1475,7 @@ function bindCartPageEvents() {
         code: result.code || code,
         discountAmount: Number(result.discountAmount || 0),
         status: "success",
-        message: `Áp dụng thành công! Giá̉m ${formatCurrency(result.discountAmount || 0)}.`
+        message: `Ãp dá»¥ng thÃ nh cÃ´ng! GiÃ¡Ì‰m ${formatCurrency(result.discountAmount || 0)}.`
       };
       showCustomerToast(layoutState.cartVoucher.message, "success");
     } catch (error) {
@@ -1397,7 +1496,7 @@ function bindCartPageEvents() {
   layoutState.main.querySelector("[data-cart-checkout]")?.addEventListener("click", async () => {
     const selectedCount = Array.isArray(layoutState.cart?.items) ? layoutState.cart.items.filter((item) => item.isSelected).length : 0;
     if (!selectedCount) {
-      showCustomerToast("Vui lòng chọn ít nhất một sản phẩm để thanh toán.", "error");
+      showCustomerToast("Vui lÃ²ng chá»n Ã­t nháº¥t má»™t sáº£n pháº©m Ä‘á»ƒ thanh toÃ¡n.", "error");
       return;
     }
     clearBuyNowCheckout();
@@ -1417,7 +1516,7 @@ function getCartVoucherSummary(subtotal) {
   const code = String(layoutState.cartVoucher.code || "").trim().toUpperCase();
 
   if (!code) {
-    return { code, discountAmount: 0, status: "idle", message: "Nhập mã giảm giá để nhận ưu đãi" };
+    return { code, discountAmount: 0, status: "idle", message: "Nháº­p mÃ£ giáº£m giÃ¡ Ä‘á»ƒ nháº­n Æ°u Ä‘Ã£i" };
   }
 
   if (layoutState.cartVoucher.status === "success") {
@@ -1425,7 +1524,7 @@ function getCartVoucherSummary(subtotal) {
       code,
       discountAmount: Math.min(Number(layoutState.cartVoucher.discountAmount || 0), Number(subtotal || 0)),
       status: "success",
-      message: layoutState.cartVoucher.message || "Áp dụng mã giảm giá thành công."
+      message: layoutState.cartVoucher.message || "Ãp dá»¥ng mÃ£ giáº£m giÃ¡ thÃ nh cÃ´ng."
     };
   }
 
@@ -1433,31 +1532,31 @@ function getCartVoucherSummary(subtotal) {
     code,
     discountAmount: 0,
     status: layoutState.cartVoucher.status || "idle",
-    message: layoutState.cartVoucher.message || "Bấm áp dụng để kiểm tra mã giảm giá."
+    message: layoutState.cartVoucher.message || "Báº¥m Ã¡p dá»¥ng Ä‘á»ƒ kiá»ƒm tra mÃ£ giáº£m giÃ¡."
   };
 }
 
 function getVoucherErrorMessage(error) {
   const code = error?.code || "";
-  if (code === "VOUCHER_NOT_FOUND") return "Mã giảm giá không tồn tại.";
-  if (code === "VOUCHER_NOT_ACTIVE") return "Mã giảm giá đang tạm tắt.";
-  if (code === "VOUCHER_EXPIRED") return "Mã giảm giá đã hết hạn.";
-  if (code === "VOUCHER_USAGE_LIMIT_EXCEEDED") return "Mã giảm giá đã hết lượt dùng.";
-  if (code === "VOUCHER_MIN_ORDER_NOT_MET") return "Đơn hàng chưa đạt giá trị tối thiểu.";
-  return error?.message || "Mã không hợp lệ hoặc chưa đủ điều kiện.";
+  if (code === "VOUCHER_NOT_FOUND") return "MÃ£ giáº£m giÃ¡ khÃ´ng tá»“n táº¡i.";
+  if (code === "VOUCHER_NOT_ACTIVE") return "MÃ£ giáº£m giÃ¡ Ä‘ang táº¡m táº¯t.";
+  if (code === "VOUCHER_EXPIRED") return "MÃ£ giáº£m giÃ¡ Ä‘Ã£ háº¿t háº¡n.";
+  if (code === "VOUCHER_USAGE_LIMIT_EXCEEDED") return "MÃ£ giáº£m giÃ¡ Ä‘Ã£ háº¿t lÆ°á»£t dÃ¹ng.";
+  if (code === "VOUCHER_MIN_ORDER_NOT_MET") return "ÄÆ¡n hÃ ng chÆ°a Ä‘áº¡t giÃ¡ trá»‹ tá»‘i thiá»ƒu.";
+  return error?.message || "MÃ£ khÃ´ng há»£p lá»‡ hoáº·c chÆ°a Ä‘á»§ Ä‘iá»u kiá»‡n.";
 }
 
 async function removeCartItemWithConfirm(itemId) {
   const item = Array.isArray(layoutState.cart?.items) ? layoutState.cart.items.find((entry) => String(entry.id) === String(itemId)) : null;
-  const itemName = item?.productName || "sản phẩm này";
+  const itemName = item?.productName || "sáº£n pháº©m nÃ y";
 
   showCartConfirmModal({
-    title: "Xóa sản phẩm",
-    message: `Bạn có chắc muốn xóa ${itemName} khỏi giỏ hàng?`,
+    title: "XÃ³a sáº£n pháº©m",
+    message: `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a ${itemName} khá»i giá» hÃ ng?`,
     onConfirm: async () => {
       await customerCart.removeItem(itemId);
       await renderCartPage();
-      showCustomerToast("Đã xóa sản phẩm khỏi giỏ hàng.", "success");
+      showCustomerToast("ÄÃ£ xÃ³a sáº£n pháº©m khá»i giá» hÃ ng.", "success");
     }
   });
 }
@@ -1470,8 +1569,8 @@ function showCartConfirmModal({ title, message, onConfirm }) {
       <h3>${escapeHtml(title)}</h3>
       <p>${escapeHtml(message)}</p>
       <div class="customer-cart-modal-actions">
-        <button class="customer-button secondary" type="button" data-cart-modal-cancel>Hủy</button>
-        <button class="customer-button" type="button" data-cart-modal-confirm>Xóa</button>
+        <button class="customer-button secondary" type="button" data-cart-modal-cancel>Há»§y</button>
+        <button class="customer-button" type="button" data-cart-modal-confirm>XÃ³a</button>
       </div>
     </div>
   `;
@@ -1498,7 +1597,7 @@ function renderCheckoutSkeleton() {
         ${[1, 2, 3, 4].map((step) => `
           <div class="customer-checkout-step ${step === 2 ? "is-active" : ""}">
             <span>${step}</span>
-            <div><strong>${step === 1 ? "Giỏ hàng" : step === 2 ? "Thông tin" : step === 3 ? "Thanh toán" : "Hoàn tất"}</strong></div>
+            <div><strong>${step === 1 ? "Giá» hÃ ng" : step === 2 ? "ThÃ´ng tin" : step === 3 ? "Thanh toÃ¡n" : "HoÃ n táº¥t"}</strong></div>
           </div>
         `).join("")}
       </div>
@@ -1524,10 +1623,10 @@ function renderCheckoutSkeleton() {
 function renderCheckoutEmptyState() {
   return `
     <div class="customer-cart-empty-state">
-      <div class="customer-cart-empty-icon">🛍️</div>
-      <h2>Giỏ hàng của bạn đang trống</h2>
-      <p>Vui lòng quay lại sau khi thêm sản phẩm để đặt hàng.</p>
-      <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+      <div class="customer-cart-empty-icon">ðŸ›ï¸</div>
+      <h2>Giá» hÃ ng cá»§a báº¡n Ä‘ang trá»‘ng</h2>
+      <p>Vui lÃ²ng quay láº¡i sau khi thÃªm sáº£n pháº©m Ä‘á»ƒ Ä‘áº·t hÃ ng.</p>
+      <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
     </div>
   `;
 }
@@ -1556,13 +1655,13 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod") {
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = `
     <div class="customer-checkout-modal">
-      <div class="customer-checkout-modal-icon">✓</div>
-      <h3>Đặt hàng thành công</h3>
-      <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
-      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · Chờ thanh toán</p>
+      <div class="customer-checkout-modal-icon">âœ“</div>
+      <h3>Äáº·t hÃ ng thÃ nh cÃ´ng</h3>
+      <p>MÃ£ Ä‘Æ¡n hÃ ng cá»§a báº¡n lÃ  <strong>${escapeHtml(orderCode || "")}</strong>.</p>
+      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} Â· Chá» thanh toÃ¡n</p>
       <div class="customer-checkout-modal-actions">
-        <a class="customer-button secondary" href="#orders">Xem đơn hàng</a>
-        <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+        <a class="customer-button secondary" href="#orders">Xem Ä‘Æ¡n hÃ ng</a>
+        <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
       </div>
     </div>
   `;
@@ -1586,35 +1685,35 @@ function validateCheckoutForm(form) {
   const paymentMethod = String(formData.get("paymentMethod") || "cod");
 
   if (!customerName) {
-    errors.customerName = "Vui lòng nhập họ tên người nhận.";
+    errors.customerName = "Vui lÃ²ng nháº­p há» tÃªn ngÆ°á»i nháº­n.";
   }
 
   if (!customerPhone) {
-    errors.customerPhone = "Vui lòng nhập số điện thoại.";
+    errors.customerPhone = "Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i.";
   } else if (!/^[0-9]{9,11}$/.test(customerPhone.replace(/\D/g, ''))) {
-    errors.customerPhone = "Số điện thoại không hợp lệ.";
+    errors.customerPhone = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡.";
   }
 
   if (!customerEmail) {
-    errors.customerEmail = "Vui lòng nhập email.";
+    errors.customerEmail = "Vui lÃ²ng nháº­p email.";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-    errors.customerEmail = "Email không đúng định dạng.";
+    errors.customerEmail = "Email khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng.";
   }
 
   if (!line1) {
-    errors.line1 = "Vui lòng nhập địa chỉ chi tiết.";
+    errors.line1 = "Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ chi tiáº¿t.";
   }
 
   if (!provinceCode) {
-    errors.provinceCode = "Vui lòng chọn tỉnh/thành phố.";
+    errors.provinceCode = "Vui lÃ²ng chá»n tá»‰nh/thÃ nh phá»‘.";
   }
 
   if (!wardCode) {
-    errors.wardCode = "Vui lòng chọn phường/xã/thị trấn.";
+    errors.wardCode = "Vui lÃ²ng chá»n phÆ°á»ng/xÃ£/thá»‹ tráº¥n.";
   }
 
   if (!paymentMethod) {
-    errors.paymentMethod = "Vui lòng chọn phương thức thanh toán.";
+    errors.paymentMethod = "Vui lÃ²ng chá»n phÆ°Æ¡ng thá»©c thanh toÃ¡n.";
   }
 
   return { errors, isValid: Object.keys(errors).length === 0 };
@@ -1636,11 +1735,11 @@ function renderCheckoutFieldErrors(form) {
 
 async function renderCheckoutPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Thanh toán", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">🔐</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để tiếp tục thanh toán.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Thanh toÃ¡n", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">ðŸ”</div><h2>Vui lÃ²ng Ä‘Äƒng nháº­p</h2><p>ÄÄƒng nháº­p Ä‘á»ƒ tiáº¿p tá»¥c thanh toÃ¡n.</p><a class="customer-button" href="#login">ÄÄƒng nháº­p</a></div>`);
     return;
   }
 
-  layoutState.main.innerHTML = renderPageShell("Thanh toán", renderCheckoutSkeleton());
+  layoutState.main.innerHTML = renderPageShell("Thanh toÃ¡n", renderCheckoutSkeleton());
 
   try {
     const buyNowCheckout = readBuyNowCheckout();
@@ -1658,43 +1757,43 @@ async function renderCheckoutPage() {
     checkoutSummary.buyNowItems = isBuyNow ? buyNowCheckout.items : [];
 
     if (!checkoutSummary.items.length) {
-      layoutState.main.innerHTML = renderPageShell("Thanh toán", renderCheckoutEmptyState());
+      layoutState.main.innerHTML = renderPageShell("Thanh toÃ¡n", renderCheckoutEmptyState());
       return;
     }
 
     const user = customerAuth.getUser();
 
-    layoutState.main.innerHTML = renderPageShell("Thanh toán", `
+    layoutState.main.innerHTML = renderPageShell("Thanh toÃ¡n", `
       <div class="customer-checkout-shell">
         <header class="customer-checkout-hero">
           <div class="customer-checkout-hero-top">
             <div>
-              <span class="customer-checkout-eyebrow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Thanh toán an toàn</span>
-              <h1>Thanh toán</h1>
-              <p>Kiểm tra thông tin giao hàng và chọn phương thức thanh toán phù hợp.</p>
+              <span class="customer-checkout-eyebrow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Thanh toÃ¡n an toÃ n</span>
+              <h1>Thanh toÃ¡n</h1>
+              <p>Kiá»ƒm tra thÃ´ng tin giao hÃ ng vÃ  chá»n phÆ°Æ¡ng thá»©c thanh toÃ¡n phÃ¹ há»£p.</p>
             </div>
-            <div class="customer-checkout-secure-badge"><i class="fa-solid fa-lock" aria-hidden="true"></i><span><strong>Bảo mật thông tin</strong><small>Dữ liệu được bảo vệ</small></span></div>
+            <div class="customer-checkout-secure-badge"><i class="fa-solid fa-lock" aria-hidden="true"></i><span><strong>Báº£o máº­t thÃ´ng tin</strong><small>Dá»¯ liá»‡u Ä‘Æ°á»£c báº£o vá»‡</small></span></div>
           </div>
-          <div class="customer-checkout-steps" aria-label="Tiến trình thanh toán">
-            <div class="customer-checkout-step is-complete"><span><i class="fa-solid fa-check" aria-hidden="true"></i></span><div><strong>Giỏ hàng</strong><small>Đã kiểm tra</small></div></div>
-            <div class="customer-checkout-step is-active" aria-current="step"><span>2</span><div><strong>Thông tin giao hàng</strong><small>Điền thông tin nhận hàng</small></div></div>
-            <div class="customer-checkout-step"><span>3</span><div><strong>Thanh toán</strong><small>Chọn phương thức</small></div></div>
-            <div class="customer-checkout-step"><span>4</span><div><strong>Hoàn tất</strong><small>Xác nhận đơn hàng</small></div></div>
+          <div class="customer-checkout-steps" aria-label="Tiáº¿n trÃ¬nh thanh toÃ¡n">
+            <div class="customer-checkout-step is-complete"><span><i class="fa-solid fa-check" aria-hidden="true"></i></span><div><strong>Giá» hÃ ng</strong><small>ÄÃ£ kiá»ƒm tra</small></div></div>
+            <div class="customer-checkout-step is-active" aria-current="step"><span>2</span><div><strong>ThÃ´ng tin giao hÃ ng</strong><small>Äiá»n thÃ´ng tin nháº­n hÃ ng</small></div></div>
+            <div class="customer-checkout-step"><span>3</span><div><strong>Thanh toÃ¡n</strong><small>Chá»n phÆ°Æ¡ng thá»©c</small></div></div>
+            <div class="customer-checkout-step"><span>4</span><div><strong>HoÃ n táº¥t</strong><small>XÃ¡c nháº­n Ä‘Æ¡n hÃ ng</small></div></div>
           </div>
         </header>
 
         <div class="customer-checkout-layout">
           <div class="customer-checkout-form-card">
-            <div class="customer-checkout-section-title">Thông tin giao hàng</div>
+            <div class="customer-checkout-section-title">ThÃ´ng tin giao hÃ ng</div>
             <form data-checkout-form class="customer-checkout-form" novalidate>
               <div class="customer-checkout-grid">
                 <label class="customer-checkout-field">
-                  <span>Họ tên người nhận</span>
-                  <input type="text" name="customerName" placeholder="Nguyễn Văn A" value="${escapeHtml(user?.fullName || "")}">
+                  <span>Há» tÃªn ngÆ°á»i nháº­n</span>
+                  <input type="text" name="customerName" placeholder="Nguyá»…n VÄƒn A" value="${escapeHtml(user?.fullName || "")}">
                   <small data-field-error="customerName"></small>
                 </label>
                 <label class="customer-checkout-field">
-                  <span>Số điện thoại</span>
+                  <span>Sá»‘ Ä‘iá»‡n thoáº¡i</span>
                   <input type="tel" name="customerPhone" placeholder="0901234567">
                   <small data-field-error="customerPhone"></small>
                 </label>
@@ -1702,74 +1801,74 @@ async function renderCheckoutPage() {
               <div class="customer-checkout-grid">
                 <label class="customer-checkout-field">
                   <span>Email</span>
-                  <input type="email" name="customerEmail" placeholder="ví dụ: ban@duongdan.com" value="${escapeHtml(user?.email || "")}">
+                  <input type="email" name="customerEmail" placeholder="vÃ­ dá»¥: ban@duongdan.com" value="${escapeHtml(user?.email || "")}">
                   <small data-field-error="customerEmail"></small>
                 </label>
                 <label class="customer-checkout-field">
-                  <span>Địa chỉ chi tiết</span>
-                  <input type="text" name="line1" placeholder="123 Nguyễn Huệ, hẻm 1" data-map-trigger>
+                  <span>Äá»‹a chá»‰ chi tiáº¿t</span>
+                  <input type="text" name="line1" placeholder="123 Nguyá»…n Huá»‡, háº»m 1" data-map-trigger>
                   <small data-field-error="line1"></small>
                 </label>
               </div>
               <div class="customer-checkout-grid">
                 <label class="customer-checkout-field">
-                  <span>Tỉnh / Thành phố</span>
+                  <span>Tá»‰nh / ThÃ nh phá»‘</span>
                   <select name="provinceCode" data-province-select required>
-                    <option value="">Chọn tỉnh/thành</option>
+                    <option value="">Chá»n tá»‰nh/thÃ nh</option>
                   </select>
                   <small data-field-error="provinceCode"></small>
                 </label>
                 <label class="customer-checkout-field">
-                  <span>Phường / Xã</span>
-                  <input type="search" name="wardSearch" data-ward-search placeholder="Tìm phường/xã..." autocomplete="off">
+                  <span>PhÆ°á»ng / XÃ£</span>
+                  <input type="search" name="wardSearch" data-ward-search placeholder="TÃ¬m phÆ°á»ng/xÃ£..." autocomplete="off">
                   <select name="wardCode" data-ward-select required disabled>
-                    <option value="">Chọn phường/xã/thị trấn</option>
+                    <option value="">Chá»n phÆ°á»ng/xÃ£/thá»‹ tráº¥n</option>
                   </select>
                   <small data-field-error="wardCode"></small>
                 </label>
               </div>
               <label class="customer-checkout-field">
-                <span>Ghi chú đơn hàng</span>
-                <textarea name="note" rows="3" placeholder="Giao hàng vào buổi chiều, gọi trước khi đến"></textarea>
+                <span>Ghi chÃº Ä‘Æ¡n hÃ ng</span>
+                <textarea name="note" rows="3" placeholder="Giao hÃ ng vÃ o buá»•i chiá»u, gá»i trÆ°á»›c khi Ä‘áº¿n"></textarea>
               </label>
 
               <div class="customer-checkout-map-section">
-                <div class="customer-checkout-section-title">Vị trí trên bản đồ</div>
+                <div class="customer-checkout-section-title">Vá»‹ trÃ­ trÃªn báº£n Ä‘á»“</div>
                 <iframe class="customer-checkout-map" data-checkout-map width="100%" height="280" style="border:0;border-radius:12px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Vi%E1%BB%87t%20Nam&output=embed"></iframe>
               </div>
 
-              <div class="customer-checkout-section-title">Phương thức thanh toán</div>
+              <div class="customer-checkout-section-title">PhÆ°Æ¡ng thá»©c thanh toÃ¡n</div>
               <div class="customer-payment-options">
                 <label class="customer-payment-card is-active">
                   <input type="radio" name="paymentMethod" value="cod" checked>
-                  <div class="customer-payment-icon">🚚</div>
+                  <div class="customer-payment-icon">ðŸšš</div>
                   <div>
-                    <strong>Thanh toán khi nhận hàng (COD)</strong>
-                    <p>Thanh toán trực tiếp khi nhận hàng.</p>
+                    <strong>Thanh toÃ¡n khi nháº­n hÃ ng (COD)</strong>
+                    <p>Thanh toÃ¡n trá»±c tiáº¿p khi nháº­n hÃ ng.</p>
                   </div>
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="bank_transfer">
-                  <div class="customer-payment-icon">🏦</div>
+                  <div class="customer-payment-icon">ðŸ¦</div>
                   <div>
-                    <strong>Chuyển khoản ngân hàng</strong>
-                    <p>Chuyển khoản trước khi giao hàng.</p>
+                    <strong>Chuyá»ƒn khoáº£n ngÃ¢n hÃ ng</strong>
+                    <p>Chuyá»ƒn khoáº£n trÆ°á»›c khi giao hÃ ng.</p>
                   </div>
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="vnpay">
-                  <div class="customer-payment-icon">💳</div>
+                  <div class="customer-payment-icon">ðŸ’³</div>
                   <div>
                     <strong>VNPay</strong>
-                    <p>Thanh toán nhanh bằng cổng VNPay.</p>
+                    <p>Thanh toÃ¡n nhanh báº±ng cá»•ng VNPay.</p>
                   </div>
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="momo">
-                  <div class="customer-payment-icon">📱</div>
+                  <div class="customer-payment-icon">ðŸ“±</div>
                   <div>
                     <strong>MoMo</strong>
-                    <p>Thanh toán bằng ví điện tử MoMo.</p>
+                    <p>Thanh toÃ¡n báº±ng vÃ­ Ä‘iá»‡n tá»­ MoMo.</p>
                   </div>
                 </label>
               </div>
@@ -1778,15 +1877,15 @@ async function renderCheckoutPage() {
 
           <aside class="customer-checkout-summary-card">
             <div class="customer-checkout-summary-header">
-              <h2>Tóm tắt đơn hàng</h2>
-              <span class="customer-checkout-summary-badge">${checkoutSummary.items.length} sản phẩm</span>
+              <h2>TÃ³m táº¯t Ä‘Æ¡n hÃ ng</h2>
+              <span class="customer-checkout-summary-badge">${checkoutSummary.items.length} sáº£n pháº©m</span>
             </div>
             <div class="customer-checkout-items">
               ${checkoutSummary.items.map((item) => `
                 <div class="customer-checkout-item">
-                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
+                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sáº£n pháº©m")}" loading="lazy" decoding="async" data-product-image>
                   <div class="customer-checkout-item-details">
-                    <strong>${escapeHtml(item.productName || "Sản phẩm")}</strong>
+                    <strong>${escapeHtml(item.productName || "Sáº£n pháº©m")}</strong>
                     <div class="customer-checkout-item-meta">
                       ${item.size ? `<span>Size ${escapeHtml(item.size)}</span>` : ""}
                       ${item.color ? `<span>${escapeHtml(item.color)}</span>` : ""}
@@ -1798,16 +1897,16 @@ async function renderCheckoutPage() {
               `).join("")}
             </div>
             <div class="customer-checkout-summary-lines">
-              <div><span>Tạm tính</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
-              <div><span>Giảm giá</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
-              <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
-              <div><span>Phí vận chuyển</span><strong>${formatCurrency(checkoutSummary.shippingFee)}</strong></div>
+              <div><span>Táº¡m tÃ­nh</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
+              <div><span>Giáº£m giÃ¡</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
+              <div><span>Thuáº¿ VAT (10%)</span><strong>${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
+              <div><span>PhÃ­ váº­n chuyá»ƒn</span><strong>${formatCurrency(checkoutSummary.shippingFee)}</strong></div>
             </div>
             <div class="customer-checkout-total">
-              <span>Tổng thanh toán</span>
+              <span>Tá»•ng thanh toÃ¡n</span>
               <strong>${formatCurrency(checkoutSummary.grandTotal)}</strong>
             </div>
-            <button class="customer-button customer-checkout-submit" type="submit" data-checkout-submit form="checkout-form" disabled>Đặt hàng</button>
+            <button class="customer-button customer-checkout-submit" type="submit" data-checkout-submit form="checkout-form" disabled>Äáº·t hÃ ng</button>
           </aside>
         </div>
       </div>
@@ -1815,12 +1914,12 @@ async function renderCheckoutPage() {
 
     initCheckoutForm(layoutState.main, checkoutSummary);
   } catch (error) {
-    layoutState.main.innerHTML = renderPageShell("Thanh toán", `
+    layoutState.main.innerHTML = renderPageShell("Thanh toÃ¡n", `
       <div class="customer-cart-empty-state">
-        <div class="customer-cart-empty-icon">⚠️</div>
-        <h2>Không thể tải checkout</h2>
-        <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải dữ liệu checkout.")}</p>
-        <button class="customer-button" type="button" data-checkout-retry>Thử lại</button>
+        <div class="customer-cart-empty-icon">âš ï¸</div>
+        <h2>KhÃ´ng thá»ƒ táº£i checkout</h2>
+        <p>${escapeHtml(error?.message || "ÄÃ£ xáº£y ra lá»—i khi táº£i dá»¯ liá»‡u checkout.")}</p>
+        <button class="customer-button" type="button" data-checkout-retry>Thá»­ láº¡i</button>
       </div>
     `);
     layoutState.main.querySelector("[data-checkout-retry]")?.addEventListener("click", () => {
@@ -1851,7 +1950,7 @@ function initCheckoutForm(container, checkoutSummary) {
       .map((ward) => `<option value="${escapeHtml(ward.code)}">${escapeHtml(ward.name)}</option>`)
       .join("");
 
-    wardSelect.innerHTML = `<option value="">Chọn phường/xã/thị trấn</option>${options}`;
+    wardSelect.innerHTML = `<option value="">Chá»n phÆ°á»ng/xÃ£/thá»‹ tráº¥n</option>${options}`;
     wardSelect.disabled = visibleWards.length === 0;
     wardSearchInput.disabled = currentWardList.length === 0;
 
@@ -1862,7 +1961,7 @@ function initCheckoutForm(container, checkoutSummary) {
     }
 
     if (visibleWards.length === 0) {
-      wardSelect.innerHTML = `<option value="">Không tìm thấy phường/xã</option>`;
+      wardSelect.innerHTML = `<option value="">KhÃ´ng tÃ¬m tháº¥y phÆ°á»ng/xÃ£</option>`;
       wardSelect.value = "";
     }
   }
@@ -1927,7 +2026,7 @@ function initCheckoutForm(container, checkoutSummary) {
     if (!validation.isValid) {
       form.dataset.checkoutErrors = JSON.stringify(validation.errors);
       renderCheckoutFieldErrors(form);
-      showCustomerToast("Vui lòng kiểm tra lại thông tin trước khi đặt hàng.", "error");
+      showCustomerToast("Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin trÆ°á»›c khi Ä‘áº·t hÃ ng.", "error");
       return;
     }
 
@@ -1942,17 +2041,17 @@ function initCheckoutForm(container, checkoutSummary) {
     const paymentMethod = String(formData.get("paymentMethod") || "cod");
 
     if (!checkoutSummary.items.length) {
-      showCustomerToast("Giỏ hàng đang trống.", "error");
+      showCustomerToast("Giá» hÃ ng Ä‘ang trá»‘ng.", "error");
       return;
     }
 
     const province = VIETNAM_ADMINISTRATIVE_2025.find((p) => p.code === provinceCode);
     const ward = province?.wards.find((w) => w.code === wardCode);
-    const fullAddress = [line1, ward?.name || "", province?.name || "", "Việt Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
+    const fullAddress = [line1, ward?.name || "", province?.name || "", "Viá»‡t Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
 
     submitButton.disabled = true;
     submitButton.classList.add("is-loading");
-    submitButton.innerHTML = `<span class="customer-button-spinner"></span>Đang xử lý...`; 
+    submitButton.innerHTML = `<span class="customer-button-spinner"></span>Äang xá»­ lÃ½...`; 
 
     try {
       const response = await customerCart.checkout({
@@ -1984,13 +2083,13 @@ function initCheckoutForm(container, checkoutSummary) {
         layoutState.cart = createEmptyCart();
         renderHeader();
       }
-      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod);
-      showCustomerToast("Đặt hàng thành công.", "success");
+      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ÄÆ N HÃ€NG", paymentMethod);
+      showCustomerToast("Äáº·t hÃ ng thÃ nh cÃ´ng.", "success");
     } catch (error) {
-      showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
+      showCustomerToast(error?.message || "Äáº·t hÃ ng tháº¥t báº¡i.", "error");
       submitButton.disabled = false;
       submitButton.classList.remove("is-loading");
-      submitButton.textContent = "Đặt hàng";
+      submitButton.textContent = "Äáº·t hÃ ng";
     }
   });
 
@@ -2008,11 +2107,11 @@ function initCheckoutForm(container, checkoutSummary) {
 
 async function renderOrdersPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">🔐</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem lịch sử đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("ÄÆ¡n hÃ ng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lÃ²ng Ä‘Äƒng nháº­p</h2><p>ÄÄƒng nháº­p Ä‘á»ƒ xem lá»‹ch sá»­ Ä‘Æ¡n hÃ ng.</p><a class="customer-button" href="#login">ÄÄƒng nháº­p</a></div>`);
     return;
   }
 
-  layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
+  layoutState.main.innerHTML = renderPageShell("ÄÆ¡n hÃ ng", `
     <div class="customer-order-detail-loading" aria-live="polite">
       <div class="customer-order-detail-skeleton"></div>
       <div class="customer-order-detail-skeleton"></div>
@@ -2025,13 +2124,13 @@ async function renderOrdersPage() {
     const orders = Array.isArray(response?.data?.orders) ? response.data.orders : [];
 
     if (!orders.length) {
-      layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
+      layoutState.main.innerHTML = renderPageShell("ÄÆ¡n hÃ ng", `
         <div class="customer-empty-state">
-          <div class="customer-empty-icon">🧾</div>
-          <h2>Chưa có đơn hàng nào</h2>
-          <p>Bạn vẫn chưa đặt đơn nào. Hãy khám phá bộ sưu tập mới hôm nay.</p>
+          <div class="customer-empty-icon">ðŸ§¾</div>
+          <h2>ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng nÃ o</h2>
+          <p>Báº¡n váº«n chÆ°a Ä‘áº·t Ä‘Æ¡n nÃ o. HÃ£y khÃ¡m phÃ¡ bá»™ sÆ°u táº­p má»›i hÃ´m nay.</p>
           <div class="customer-order-actions">
-            <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+            <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
           </div>
         </div>
       `);
@@ -2060,42 +2159,42 @@ async function renderOrdersPage() {
           </div>
           <div class="customer-order-history-summary">
             <div>
-              <span class="customer-order-history-label">Tổng tiền</span>
+              <span class="customer-order-history-label">Tá»•ng tiá»n</span>
               <strong>${formatCurrency(order.grandTotal || order.total || 0)}</strong>
             </div>
             <div>
-              <span class="customer-order-history-label">Phương thức</span>
-              <strong>${escapeHtml(order.paymentMethod || "—")}</strong>
+              <span class="customer-order-history-label">PhÆ°Æ¡ng thá»©c</span>
+              <strong>${escapeHtml(order.paymentMethod || "â€”")}</strong>
             </div>
           </div>
           <div class="customer-order-history-actions">
-            <a class="customer-button secondary" href="${detailHref}">Xem chi tiết</a>
-            <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+            <a class="customer-button secondary" href="${detailHref}">Xem chi tiáº¿t</a>
+            <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
           </div>
         </article>
       `;
     }).join("");
 
-    layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
+    layoutState.main.innerHTML = renderPageShell("ÄÆ¡n hÃ ng", `
       <div class="customer-order-history-list">
         <div class="customer-order-history-header">
           <div>
-            <h2>Lịch sử đơn hàng</h2>
-            <p>Theo dõi và quản lý tất cả đơn hàng của bạn.</p>
+            <h2>Lá»‹ch sá»­ Ä‘Æ¡n hÃ ng</h2>
+            <p>Theo dÃµi vÃ  quáº£n lÃ½ táº¥t cáº£ Ä‘Æ¡n hÃ ng cá»§a báº¡n.</p>
           </div>
-          <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+          <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
         </div>
         ${orderCards}
       </div>
     `);
   } catch (error) {
-    layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
+    layoutState.main.innerHTML = renderPageShell("ÄÆ¡n hÃ ng", `
       <div class="customer-empty-state">
-        <div class="customer-empty-icon">⚠️</div>
-        <h2>Không thể tải đơn hàng</h2>
-        <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải lịch sử đơn hàng.")}</p>
+        <div class="customer-empty-icon">âš ï¸</div>
+        <h2>KhÃ´ng thá»ƒ táº£i Ä‘Æ¡n hÃ ng</h2>
+        <p>${escapeHtml(error?.message || "ÄÃ£ xáº£y ra lá»—i khi táº£i lá»‹ch sá»­ Ä‘Æ¡n hÃ ng.")}</p>
         <div class="customer-order-actions">
-          <button class="customer-button" type="button" data-order-retry>Thử lại</button>
+          <button class="customer-button" type="button" data-order-retry>Thá»­ láº¡i</button>
         </div>
       </div>
     `);
@@ -2107,16 +2206,16 @@ async function renderOrdersPage() {
 
 async function renderOrderDetailPage(orderId) {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">🔐</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem chi tiết đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Chi tiáº¿t Ä‘Æ¡n hÃ ng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lÃ²ng Ä‘Äƒng nháº­p</h2><p>ÄÄƒng nháº­p Ä‘á»ƒ xem chi tiáº¿t Ä‘Æ¡n hÃ ng.</p><a class="customer-button" href="#login">ÄÄƒng nháº­p</a></div>`);
     return;
   }
 
   if (!orderId) {
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">🧾</div><h2>Không tìm thấy đơn hàng</h2><p>Vui lòng quay lại danh sách đơn hàng để chọn mã đơn.</p><a class="customer-button secondary" href="#orders">Quay lại đơn hàng</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Chi tiáº¿t Ä‘Æ¡n hÃ ng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ§¾</div><h2>KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng</h2><p>Vui lÃ²ng quay láº¡i danh sÃ¡ch Ä‘Æ¡n hÃ ng Ä‘á»ƒ chá»n mÃ£ Ä‘Æ¡n.</p><a class="customer-button secondary" href="#orders">Quay láº¡i Ä‘Æ¡n hÃ ng</a></div>`);
     return;
   }
 
-  layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
+  layoutState.main.innerHTML = renderPageShell("Chi tiáº¿t Ä‘Æ¡n hÃ ng", `
     <div class="customer-order-detail-loading" aria-live="polite">
       <div class="customer-order-detail-skeleton"></div>
       <div class="customer-order-detail-skeleton"></div>
@@ -2129,7 +2228,7 @@ async function renderOrderDetailPage(orderId) {
     const order = response?.data?.order || null;
 
     if (!order) {
-      throw new Error("Không tìm thấy đơn hàng.");
+      throw new Error("KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng.");
     }
 
     const status = normalizeOrderStatus(order.status);
@@ -2141,16 +2240,16 @@ async function renderOrderDetailPage(orderId) {
     const transactions = Array.isArray(order.transactions) ? order.transactions : [];
     const transaction = transactions[0] || null;
     const transactionStatus = transaction ? normalizePaymentTransactionStatus(transaction.status) : null;
-    const timelineItems = history.length ? history : [{ status: order.status, note: "Đơn hàng đã được tạo", createdAt: order.createdAt }];
+    const timelineItems = history.length ? history : [{ status: order.status, note: "ÄÆ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c táº¡o", createdAt: order.createdAt }];
     const canCancel = ["pending", "confirmed", "processing"].includes(String(order.status || "").toLowerCase());
 
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
+    layoutState.main.innerHTML = renderPageShell("Chi tiáº¿t Ä‘Æ¡n hÃ ng", `
       <div class="customer-order-detail-shell">
         <section class="customer-order-detail-hero">
           <div>
-            <p class="customer-order-history-label">Mã đơn hàng</p>
+            <p class="customer-order-history-label">MÃ£ Ä‘Æ¡n hÃ ng</p>
             <h2>${escapeHtml(order.orderCode || order.id || "")}</h2>
-            <p class="customer-order-detail-subtitle">Đặt lúc ${escapeHtml(formatDate(order.createdAt))}</p>
+            <p class="customer-order-detail-subtitle">Äáº·t lÃºc ${escapeHtml(formatDate(order.createdAt))}</p>
           </div>
           <div class="customer-order-history-badges">
             ${createStatusBadge(status.label, status.variant)}
@@ -2162,18 +2261,18 @@ async function renderOrderDetailPage(orderId) {
           <div class="customer-order-detail-main">
             <section class="customer-order-panel">
               <div class="customer-order-actions">
-                <a class="customer-button secondary" href="#orders">Quay lại</a>
-                <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
-                ${canCancel ? '<button class="customer-button secondary" type="button" disabled>Hủy đơn</button>' : ""}
+                <a class="customer-button secondary" href="#orders">Quay láº¡i</a>
+                <a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
+                ${canCancel ? '<button class="customer-button secondary" type="button" disabled>Há»§y Ä‘Æ¡n</button>' : ""}
               </div>
-              <div class="customer-order-panel-title">Tiến trình đơn hàng</div>
+              <div class="customer-order-panel-title">Tiáº¿n trÃ¬nh Ä‘Æ¡n hÃ ng</div>
               <ul class="customer-order-timeline">
                 ${timelineItems.map((entry, index) => {
                   const entryStatus = normalizeOrderStatus(entry.status);
                   return `
                     <li class="customer-order-timeline-item ${index === 0 ? "is-active" : ""}">
                       <strong>${escapeHtml(entryStatus.label)}</strong>
-                      <div>${escapeHtml(entry.note || "Cập nhật trạng thái đơn hàng")}</div>
+                      <div>${escapeHtml(entry.note || "Cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng")}</div>
                       <small>${escapeHtml(formatDate(entry.createdAt))}</small>
                     </li>
                   `;
@@ -2182,74 +2281,74 @@ async function renderOrderDetailPage(orderId) {
             </section>
 
             <section class="customer-order-panel">
-              <div class="customer-order-panel-title">Sản phẩm đã đặt</div>
+              <div class="customer-order-panel-title">Sáº£n pháº©m Ä‘Ã£ Ä‘áº·t</div>
               ${items.length ? items.map((item) => `
                 <article class="customer-order-item">
-                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sản phẩm")}" loading="lazy" decoding="async" data-product-image>
+                  <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveProductImageUrl(item.productImageUrl))}" alt="${escapeHtml(item.productName || "Sáº£n pháº©m")}" loading="lazy" decoding="async" data-product-image>
                   <div>
-                    <strong>${escapeHtml(item.productName || "Sản phẩm")}</strong>
+                    <strong>${escapeHtml(item.productName || "Sáº£n pháº©m")}</strong>
                     <div class="customer-order-item-meta">
-                      <span>SKU ${escapeHtml(item.productSku || "—")}</span>
-                      <span>${item.quantity || 0} × ${formatCurrency(item.unitPrice || 0)}</span>
+                      <span>SKU ${escapeHtml(item.productSku || "â€”")}</span>
+                      <span>${item.quantity || 0} Ã— ${formatCurrency(item.unitPrice || 0)}</span>
                     </div>
                     <div class="customer-order-item-meta">
                       <span>${formatCurrency(item.totalPrice || 0)}</span>
                     </div>
                   </div>
                 </article>
-              `).join("") : `<div class="customer-empty-state"><p>Không có sản phẩm nào trong đơn hàng này.</p></div>`}
+              `).join("") : `<div class="customer-empty-state"><p>KhÃ´ng cÃ³ sáº£n pháº©m nÃ o trong Ä‘Æ¡n hÃ ng nÃ y.</p></div>`}
             </section>
           </div>
 
           <aside class="customer-order-detail-side">
             <section class="customer-order-panel">
-              <div class="customer-order-panel-title">Thông tin giao nhận</div>
+              <div class="customer-order-panel-title">ThÃ´ng tin giao nháº­n</div>
               <div class="customer-order-summary-list">
-                <div class="customer-order-summary-row"><span>Người nhận</span><strong>${escapeHtml(order.customerName || shippingAddress.fullName || "—")}</strong></div>
-                <div class="customer-order-summary-row"><span>Điện thoại</span><strong>${escapeHtml(order.customerPhone || shippingAddress.phone || "—")}</strong></div>
-                <div class="customer-order-summary-row"><span>Địa chỉ</span><strong>${escapeHtml(addressText)}</strong></div>
-                <div class="customer-order-summary-row"><span>Email</span><strong>${escapeHtml(order.customerEmail || "—")}</strong></div>
+                <div class="customer-order-summary-row"><span>NgÆ°á»i nháº­n</span><strong>${escapeHtml(order.customerName || shippingAddress.fullName || "â€”")}</strong></div>
+                <div class="customer-order-summary-row"><span>Äiá»‡n thoáº¡i</span><strong>${escapeHtml(order.customerPhone || shippingAddress.phone || "â€”")}</strong></div>
+                <div class="customer-order-summary-row"><span>Äá»‹a chá»‰</span><strong>${escapeHtml(addressText)}</strong></div>
+                <div class="customer-order-summary-row"><span>Email</span><strong>${escapeHtml(order.customerEmail || "â€”")}</strong></div>
               </div>
             </section>
 
             <section class="customer-order-panel">
-              <div class="customer-order-panel-title">Tóm tắt thanh toán</div>
+              <div class="customer-order-panel-title">TÃ³m táº¯t thanh toÃ¡n</div>
               <div class="customer-order-summary-list">
-                <div class="customer-order-summary-row"><span>Tạm tính</span><strong>${formatCurrency(order.subtotal || 0)}</strong></div>
-                <div class="customer-order-summary-row"><span>Giảm giá</span><strong>${formatCurrency(order.discountTotal || 0)}</strong></div>
-                <div class="customer-order-summary-row"><span>Phí vận chuyển</span><strong>${formatCurrency(order.shippingFee || 0)}</strong></div>
-                <div class="customer-order-summary-row"><span>Thuế</span><strong>${formatCurrency(order.taxTotal || 0)}</strong></div>
-                <div class="customer-order-summary-row"><span>Phương thức thanh toán</span><strong>${escapeHtml(getPaymentMethodLabel(order.paymentMethod || transaction?.method))}</strong></div>
-                <div class="customer-order-summary-row"><span>Trạng thái thanh toán</span><strong>${createStatusBadge(paymentStatus.label, paymentStatus.variant)}</strong></div>
-                <div class="customer-order-summary-row customer-order-summary-total"><span>Tổng thanh toán</span><strong>${formatCurrency(order.grandTotal || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>Táº¡m tÃ­nh</span><strong>${formatCurrency(order.subtotal || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>Giáº£m giÃ¡</span><strong>${formatCurrency(order.discountTotal || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>PhÃ­ váº­n chuyá»ƒn</span><strong>${formatCurrency(order.shippingFee || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>Thuáº¿</span><strong>${formatCurrency(order.taxTotal || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>PhÆ°Æ¡ng thá»©c thanh toÃ¡n</span><strong>${escapeHtml(getPaymentMethodLabel(order.paymentMethod || transaction?.method))}</strong></div>
+                <div class="customer-order-summary-row"><span>Tráº¡ng thÃ¡i thanh toÃ¡n</span><strong>${createStatusBadge(paymentStatus.label, paymentStatus.variant)}</strong></div>
+                <div class="customer-order-summary-row customer-order-summary-total"><span>Tá»•ng thanh toÃ¡n</span><strong>${formatCurrency(order.grandTotal || 0)}</strong></div>
               </div>
             </section>
 
             <section class="customer-order-panel">
-              <div class="customer-order-panel-title">Giao dịch thanh toán</div>
+              <div class="customer-order-panel-title">Giao dá»‹ch thanh toÃ¡n</div>
               ${transaction ? `
                 <div class="customer-order-summary-list">
-                  <div class="customer-order-summary-row"><span>Trạng thái giao dịch</span><strong>${createStatusBadge(transactionStatus.label, transactionStatus.variant)}</strong></div>
-                  <div class="customer-order-summary-row"><span>Mã giao dịch</span><strong>${escapeHtml(transaction.transactionCode || "—")}</strong></div>
-                  <div class="customer-order-summary-row"><span>Số tiền thanh toán</span><strong>${formatCurrency(transaction.amount || 0)}</strong></div>
+                  <div class="customer-order-summary-row"><span>Tráº¡ng thÃ¡i giao dá»‹ch</span><strong>${createStatusBadge(transactionStatus.label, transactionStatus.variant)}</strong></div>
+                  <div class="customer-order-summary-row"><span>MÃ£ giao dá»‹ch</span><strong>${escapeHtml(transaction.transactionCode || "â€”")}</strong></div>
+                  <div class="customer-order-summary-row"><span>Sá»‘ tiá»n thanh toÃ¡n</span><strong>${formatCurrency(transaction.amount || 0)}</strong></div>
                   ${["paid", "success"].includes(String(transaction.status || "").toLowerCase())
-                    ? `<div class="customer-order-summary-row"><span>Ngày thanh toán</span><strong>${escapeHtml(formatDate(transaction.paidAt))}</strong></div>`
+                    ? `<div class="customer-order-summary-row"><span>NgÃ y thanh toÃ¡n</span><strong>${escapeHtml(formatDate(transaction.paidAt))}</strong></div>`
                     : ""}
                 </div>
-              ` : '<div class="customer-empty-state"><p>Chưa có giao dịch thanh toán</p></div>'}
+              ` : '<div class="customer-empty-state"><p>ChÆ°a cÃ³ giao dá»‹ch thanh toÃ¡n</p></div>'}
             </section>
           </aside>
         </div>
       </div>
     `);
   } catch (error) {
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
+    layoutState.main.innerHTML = renderPageShell("Chi tiáº¿t Ä‘Æ¡n hÃ ng", `
       <div class="customer-empty-state">
-        <div class="customer-empty-icon">⚠️</div>
-        <h2>Không thể tải đơn hàng</h2>
-        <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải chi tiết đơn hàng.")}</p>
+        <div class="customer-empty-icon">âš ï¸</div>
+        <h2>KhÃ´ng thá»ƒ táº£i Ä‘Æ¡n hÃ ng</h2>
+        <p>${escapeHtml(error?.message || "ÄÃ£ xáº£y ra lá»—i khi táº£i chi tiáº¿t Ä‘Æ¡n hÃ ng.")}</p>
         <div class="customer-order-actions">
-          <a class="customer-button secondary" href="#orders">Quay lại đơn hàng</a>
+          <a class="customer-button secondary" href="#orders">Quay láº¡i Ä‘Æ¡n hÃ ng</a>
         </div>
       </div>
     `);
@@ -2258,31 +2357,31 @@ async function renderOrderDetailPage(orderId) {
 
 function renderProfilePage() {
   const user = customerAuth.getUser();
-  layoutState.main.innerHTML = renderPageShell("Hồ sơ", `
+  layoutState.main.innerHTML = renderPageShell("Há»“ sÆ¡", `
     <div style="display:grid;gap:8px;max-width:420px;">
-      <p><strong>Họ tên:</strong> ${escapeHtml(user?.fullName || user?.name || "")}</p>
+      <p><strong>Há» tÃªn:</strong> ${escapeHtml(user?.fullName || user?.name || "")}</p>
       <p><strong>Email:</strong> ${escapeHtml(user?.email || "")}</p>
-      <p><strong>Số điện thoại:</strong> ${escapeHtml(user?.phone || "")}</p>
-      <a class="customer-button secondary" href="#orders">Xem đơn hàng</a>
+      <p><strong>Sá»‘ Ä‘iá»‡n thoáº¡i:</strong> ${escapeHtml(user?.phone || "")}</p>
+      <a class="customer-button secondary" href="#orders">Xem Ä‘Æ¡n hÃ ng</a>
     </div>
   `);
 }
 
 async function renderWishlistPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon">🔐</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem danh sách yêu thích của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("YÃªu thÃ­ch", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lÃ²ng Ä‘Äƒng nháº­p</h2><p>ÄÄƒng nháº­p Ä‘á»ƒ xem danh sÃ¡ch yÃªu thÃ­ch cá»§a báº¡n.</p><a class="customer-button" href="#login">ÄÄƒng nháº­p</a></div>`);
     return;
   }
 
   try {
     await refreshWishlist({ throwOnError: true });
   } catch (error) {
-    const message = error?.message || "Không thể tải danh sách yêu thích.";
+    const message = error?.message || "KhÃ´ng thá»ƒ táº£i danh sÃ¡ch yÃªu thÃ­ch.";
     layoutState.main.innerHTML = renderPageShell(
-      "Yêu thích",
-      '<div class="customer-empty-state"><div class="customer-empty-icon">!</div><h2>Không thể tải danh sách yêu thích</h2><p>'
+      "YÃªu thÃ­ch",
+      '<div class="customer-empty-state"><div class="customer-empty-icon">!</div><h2>KhÃ´ng thá»ƒ táº£i danh sÃ¡ch yÃªu thÃ­ch</h2><p>'
         + escapeHtml(message)
-        + '</p><button class="customer-button" type="button" onclick="window.location.reload()">Thử lại</button></div>'
+        + '</p><button class="customer-button" type="button" onclick="window.location.reload()">Thá»­ láº¡i</button></div>'
     );
     showCustomerToast(message, "error");
     return;
@@ -2291,19 +2390,19 @@ async function renderWishlistPage() {
 
   const wishlistItems = Array.isArray(layoutState.wishlistItems) ? layoutState.wishlistItems : [];
   if (!wishlistItems.length) {
-    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon">💖</div><h2>Danh sách yêu thích trống</h2><p>Chọn sản phẩm bạn yêu thích để lưu lại và xem sau.</p><a class="customer-button" href="#home">Tiếp tục mua sắm</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("YÃªu thÃ­ch", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ’–</div><h2>Danh sÃ¡ch yÃªu thÃ­ch trá»‘ng</h2><p>Chá»n sáº£n pháº©m báº¡n yÃªu thÃ­ch Ä‘á»ƒ lÆ°u láº¡i vÃ  xem sau.</p><a class="customer-button" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a></div>`);
     return;
   }
 
   const cardsHtml = wishlistItems.map((item) => createProductCard(mapWishlistProductForCard(item))).join("");
-  layoutState.main.innerHTML = renderPageShell("Yêu thích", `
+  layoutState.main.innerHTML = renderPageShell("YÃªu thÃ­ch", `
     <div class="customer-wishlist-shell">
       <div class="customer-wishlist-header" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
         <div>
-          <h2>Yêu thích của bạn</h2>
-          <p>${wishlistItems.length} sản phẩm trong danh sách yêu thích</p>
+          <h2>YÃªu thÃ­ch cá»§a báº¡n</h2>
+          <p>${wishlistItems.length} sáº£n pháº©m trong danh sÃ¡ch yÃªu thÃ­ch</p>
         </div>
-        <a class="customer-button secondary" href="#home">Tiếp tục mua sắm</a>
+        <a class="customer-button secondary" href="#home">Tiáº¿p tá»¥c mua sáº¯m</a>
       </div>
       <div class="product-grid">
         ${cardsHtml}
@@ -2323,7 +2422,7 @@ function mapWishlistProductForCard(product = {}) {
   return {
     id: product.id || product.product_id || product.productId || "",
     name: product.name || product.productName || product.product_name || "",
-    category: product.categoryName || product.category || product.category_name || "Sản phẩm",
+    category: product.categoryName || product.category || product.category_name || "Sáº£n pháº©m",
     image: resolveProductImageUrl(product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.productImageUrl || ""),
     hoverImage: "",
     price,
@@ -2331,7 +2430,7 @@ function mapWishlistProductForCard(product = {}) {
     discount,
     rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
     sold: Number(product.sold || 0),
-    badge: discount > 0 ? "GIẢM GIÁ" : "YÊU THÍCH",
+    badge: discount > 0 ? "GIáº¢M GIÃ" : "YÃŠU THÃCH",
     inStock: Number(product.stock || product.stock_qty || product.quantity || 0) > 0,
     isWishlist: true
   };
@@ -2341,7 +2440,7 @@ async function handleWishlistToggle(productId, button) {
   if (!productId) return;
 
   if (!customerAuth.isAuthenticated()) {
-    showCustomerToast("Vui lòng đăng nhập để lưu sản phẩm yêu thích.", "error");
+    showCustomerToast("Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ lÆ°u sáº£n pháº©m yÃªu thÃ­ch.", "error");
     return;
   }
 
@@ -2350,10 +2449,10 @@ async function handleWishlistToggle(productId, button) {
     const url = `/wishlist/${encodeURIComponent(productId)}`;
     if (isActive) {
       await customerApi(url, { method: "DELETE" });
-      showCustomerToast("Đã bỏ khỏi yêu thích", "success");
+      showCustomerToast("ÄÃ£ bá» khá»i yÃªu thÃ­ch", "success");
     } else {
       await customerApi(url, { method: "POST" });
-      showCustomerToast("Đã thêm vào yêu thích", "success");
+      showCustomerToast("ÄÃ£ thÃªm vÃ o yÃªu thÃ­ch", "success");
     }
     await refreshWishlist();
     renderHeader();
@@ -2362,7 +2461,7 @@ async function handleWishlistToggle(productId, button) {
       await renderWishlistPage();
     }
   } catch (error) {
-    showCustomerToast(error?.message || "Đã xảy ra lỗi khi cập nhật yêu thích.", "error");
+    showCustomerToast(error?.message || "ÄÃ£ xáº£y ra lá»—i khi cáº­p nháº­t yÃªu thÃ­ch.", "error");
   }
 }
 
@@ -2427,20 +2526,20 @@ async function handleProductCardBuyNow(button) {
     const variantCount = Number(detail.variantCount ?? detail.variant_count ?? (Array.isArray(detail.variants) ? detail.variants.length : 0));
 
     if (variantCount > 0) {
-      showCustomerToast("Vui lòng chọn size/màu trước khi mua ngay.", "warning");
+      showCustomerToast("Vui lÃ²ng chá»n size/mÃ u trÆ°á»›c khi mua ngay.", "warning");
       navigateToRoute(`product-detail/${encodeURIComponent(productId)}`);
       return;
     }
 
     const stock = Number(detail.stock ?? button.dataset.productStock ?? 0);
     if (stock <= 0) {
-      showCustomerToast("Sản phẩm này đã hết hàng.", "warning");
+      showCustomerToast("Sáº£n pháº©m nÃ y Ä‘Ã£ háº¿t hÃ ng.", "warning");
       return;
     }
 
     startBuyNowCheckout(createProductCardBuyNowItem(detail, button));
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể mua ngay sản phẩm này. Vui lòng thử lại.", "error");
+    showCustomerToast(error?.message || "KhÃ´ng thá»ƒ mua ngay sáº£n pháº©m nÃ y. Vui lÃ²ng thá»­ láº¡i.", "error");
   } finally {
     button.disabled = false;
   }
@@ -2488,7 +2587,7 @@ function createProductCardBuyNowItem(product, button) {
 
   return {
     product_id: Number(productId),
-    product_name: product.name || button.dataset.productName || "Sản phẩm",
+    product_name: product.name || button.dataset.productName || "Sáº£n pháº©m",
     product_sku: product.sku || null,
     price,
     sale_price: salePrice !== null && salePrice !== undefined && salePrice !== "" ? Number(salePrice) : null,
@@ -2512,7 +2611,7 @@ function startBuyNowCheckout(item) {
     sessionStorage.setItem("buy_now_checkout", JSON.stringify(payload));
     navigateToRoute("checkout?mode=buy-now");
   } catch {
-    showCustomerToast("Không thể khởi tạo thanh toán ngay. Vui lòng thử lại.", "error");
+    showCustomerToast("KhÃ´ng thá»ƒ khá»Ÿi táº¡o thanh toÃ¡n ngay. Vui lÃ²ng thá»­ láº¡i.", "error");
   }
 }
 
@@ -2552,7 +2651,7 @@ function mapBuyNowItemForCheckout(item = {}) {
 
 async function handleAddToCartPayload(payload) {
   if (!customerAuth.isAuthenticated()) {
-    showCustomerToast("Vui lòng đăng nhập trước khi thêm vào giỏ hàng.", "error");
+    showCustomerToast("Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c khi thÃªm vÃ o giá» hÃ ng.", "error");
     navigateToRoute('login');
     return;
   }
@@ -2561,7 +2660,7 @@ async function handleAddToCartPayload(payload) {
     await customerCart.addItem(payload);
     await refreshCart();
     renderHeader();
-    showCustomerToast("Đã thêm vào giỏ hàng.", "success");
+    showCustomerToast("ÄÃ£ thÃªm vÃ o giá» hÃ ng.", "success");
   } catch (error) {
     showCustomerToast(getCartErrorMessage(error), "error");
   }
@@ -2647,22 +2746,22 @@ function initPasswordToggles(root = document) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'password-toggle-button';
-    btn.title = 'Hiện mật khẩu';
-    btn.setAttribute('aria-label', 'Hiện mật khẩu');
-    btn.textContent = 'Hiện';
+    btn.title = 'Hiá»‡n máº­t kháº©u';
+    btn.setAttribute('aria-label', 'Hiá»‡n máº­t kháº©u');
+    btn.textContent = 'Hiá»‡n';
     wrapper.appendChild(btn);
 
     btn.addEventListener('click', () => {
       if (input.type === 'password') {
         input.type = 'text';
-        btn.textContent = 'Ẩn';
-        btn.title = 'Ẩn mật khẩu';
-        btn.setAttribute('aria-label', 'Ẩn mật khẩu');
+        btn.textContent = 'áº¨n';
+        btn.title = 'áº¨n máº­t kháº©u';
+        btn.setAttribute('aria-label', 'áº¨n máº­t kháº©u');
       } else {
         input.type = 'password';
-        btn.textContent = 'Hiện';
-        btn.title = 'Hiện mật khẩu';
-        btn.setAttribute('aria-label', 'Hiện mật khẩu');
+        btn.textContent = 'Hiá»‡n';
+        btn.title = 'Hiá»‡n máº­t kháº©u';
+        btn.setAttribute('aria-label', 'Hiá»‡n máº­t kháº©u');
       }
       input.focus();
     });
@@ -2692,6 +2791,7 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
 
 
 

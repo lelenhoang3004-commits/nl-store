@@ -191,7 +191,7 @@ function normalizeHomeCategory(category = {}) {
     productCount,
     image,
     icon: category.icon || getCategoryIconByName(name),
-    href: `#products?keyword=${encodeURIComponent(slug)}`
+    href: `#products?category=${encodeURIComponent(slug)}`
   };
 }
 

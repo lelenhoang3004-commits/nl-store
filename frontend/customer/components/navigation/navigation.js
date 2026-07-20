@@ -1,39 +1,15 @@
+﻿const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+  ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
+    ? "http://localhost:5000/api/v1"
+    : "https://nl-store.onrender.com/api/v1"
+);
+const CATEGORY_CACHE_TTL = 5 * 60 * 1000;
+
 const navigationItems = [
   { label: "Trang chủ", href: "#home" },
   { label: "Hàng mới", href: "#new-arrival" },
   { label: "Bán chạy", href: "#best-seller" },
   { label: "Thương hiệu", href: "#brands" }
-];
-
-const megaMenuColumns = [
-  {
-    title: "Nam",
-    links: [
-      { label: "Áo khoác", keyword: "ao-khoac" },
-      { label: "Áo len", keyword: "ao-len" },
-      { label: "Quần tối giản", keyword: "quan-toi-gian" },
-      { label: "Phụ kiện cá nhân", keyword: "phu-kien" }
-    ]
-  },
-  {
-    title: "Nữ",
-    links: [
-      { label: "Áo blazer", keyword: "ao-blazer" },
-      { label: "Đầm midi", keyword: "dam-midi" },
-      { label: "Chân váy", keyword: "chan-vay" },
-      { label: "Quần jeans", keyword: "quan-jeans" }
-    ]
-  },
-  {
-    title: "Phụ kiện",
-    links: [
-      { label: "Túi xách", keyword: "tui-xach" },
-      { label: "Đồng hồ", keyword: "dong-ho" },
-      { label: "Trang sức", keyword: "trang-suc" },
-      { label: "Kính mắt", keyword: "kinh-mat" },
-      { label: "Mũ nón", keyword: "mu-non" }
-    ]
-  }
 ];
 
 const promoHighlights = [
@@ -42,17 +18,23 @@ const promoHighlights = [
   { label: "Thương hiệu", text: "Cùng các đối tác thời trang hàng đầu.", href: "#brands" }
 ];
 
+let categoryCache = {
+  items: [],
+  loadedAt: 0,
+  promise: null
+};
+
 export function createCustomerNavigation() {
   return `
     <nav class="customer-nav" aria-label="Điều hướng chính" data-customer-nav>
-      ${navigationItems.map((item) => `<a href="${item.href}">${item.label}</a>`).join("")}
+      ${navigationItems.map((item) => `<a href="${item.href}">${escapeHtml(item.label)}</a>`).join("")}
       <div class="nav-mega-wrapper">
         <button type="button" aria-expanded="false" data-mega-toggle>
           Danh mục <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
         </button>
         <div class="mega-menu" data-mega-menu>
-          <div class="mega-menu-columns">
-            ${megaMenuColumns.map(createMegaMenuColumn).join("")}
+          <div class="mega-menu-columns" data-mega-category-columns>
+            ${createMegaMenuLoading()}
           </div>
           <aside class="mega-menu-sidebar">
             <div class="mega-menu-highlight">
@@ -61,7 +43,7 @@ export function createCustomerNavigation() {
               <a href="#promotion">Khám phá ngay</a>
             </div>
             <div class="mega-menu-stack">
-              ${promoHighlights.map((item) => `<a href="${item.href}"><strong>${item.label}</strong><span>${item.text}</span></a>`).join("")}
+              ${promoHighlights.map((item) => `<a href="${item.href}"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.text)}</span></a>`).join("")}
             </div>
           </aside>
         </div>
@@ -79,9 +61,19 @@ export function initCustomerNavigation(root = document) {
     link.classList.toggle("is-active", link.getAttribute("href")?.toLowerCase() === currentHref);
   });
 
+  loadMegaMenuCategories(root, { staleOk: true });
+
   megaToggle?.addEventListener("click", () => {
     const isOpen = megaMenu?.classList.toggle("is-open") ?? false;
     megaToggle.setAttribute("aria-expanded", String(isOpen));
+
+    if (isOpen) {
+      loadMegaMenuCategories(root);
+    }
+  });
+
+  megaToggle?.addEventListener("mouseenter", () => {
+    loadMegaMenuCategories(root, { staleOk: true });
   });
 
   nav?.addEventListener("click", (event) => {
@@ -101,15 +93,173 @@ export function initCustomerNavigation(root = document) {
   });
 }
 
+async function loadMegaMenuCategories(root = document, options = {}) {
+  const container = root.querySelector("[data-mega-category-columns]");
+  if (!container) return;
+
+  try {
+    const categories = await getActiveCategories(options);
+    container.innerHTML = createMegaMenuColumns(groupCategories(categories));
+  } catch (error) {
+    console.error("Không tải được danh mục mega menu:", error);
+    container.innerHTML = createMegaMenuError();
+  }
+}
+
+async function getActiveCategories(options = {}) {
+  const now = Date.now();
+  const cacheFresh = categoryCache.items.length && now - categoryCache.loadedAt < CATEGORY_CACHE_TTL;
+
+  if (cacheFresh || (options.staleOk && categoryCache.items.length)) {
+    return categoryCache.items;
+  }
+
+  if (!categoryCache.promise) {
+    categoryCache.promise = fetchAllCategoryPages()
+      .then((items) => {
+        categoryCache.items = uniqueCategories(items.map(normalizeCategory));
+        categoryCache.loadedAt = Date.now();
+        return categoryCache.items;
+      })
+      .finally(() => {
+        categoryCache.promise = null;
+      });
+  }
+
+  return categoryCache.promise;
+}
+
+async function fetchAllCategoryPages() {
+  const firstPayload = await fetchCategoryPage(1);
+  const categories = getListFromApiPayload(firstPayload, "categories");
+  const pagination = firstPayload?.data?.pagination || firstPayload?.meta?.pagination || firstPayload?.pagination || {};
+  const totalPages = Math.max(1, Number(pagination.totalPages || pagination.total_pages || 1));
+
+  if (totalPages > 1) {
+    const rest = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => fetchCategoryPage(index + 2)));
+    rest.forEach((payload) => categories.push(...getListFromApiPayload(payload, "categories")));
+  }
+
+  return categories;
+}
+
+async function fetchCategoryPage(page = 1) {
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
+  const response = await fetch(`${API_BASE_URL}/categories?${query.toString()}`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Category API failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function getListFromApiPayload(payload, key) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.[key])) return payload.data[key];
+  return [];
+}
+
+function normalizeCategory(category = {}) {
+  const name = category.name || "Danh mục";
+  const slug = category.slug || category.code || slugify(name);
+
+  return {
+    id: category.id,
+    name,
+    slug,
+    productCount: Number(category.productCount ?? category.product_count ?? category.productsCount ?? category.totalProducts ?? category.total_products ?? 0)
+  };
+}
+
+function uniqueCategories(categories = []) {
+  const seen = new Set();
+  return categories.filter((category) => {
+    const key = String(category.slug || category.id || category.name || "").toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function groupCategories(categories = []) {
+  const groups = {
+    nam: { title: "Nam", links: [] },
+    nu: { title: "Nữ", links: [] },
+    phuKien: { title: "Phụ kiện", links: [] },
+    khac: { title: "Khác", links: [] }
+  };
+
+  categories.forEach((category) => {
+    groups[getCategoryGroupKey(category)].links.push(category);
+  });
+
+  return Object.values(groups).filter((group) => group.links.length);
+}
+
+function getCategoryGroupKey(category = {}) {
+  const searchable = `${slugify(category.slug)} ${slugify(category.name)}`;
+
+  if (/kinh|dong-ho|trang-suc|day-chuyen|mu|non|tui|phu-kien/.test(searchable)) return "phuKien";
+  if (/nu|chan-vay|dam|vay|cao-got/.test(searchable)) return "nu";
+  if (/nam|quan-nam|ao-nam|giay-nam/.test(searchable)) return "nam";
+  if (/ao-khoac|ao-len|ao-blazer|quan-jeans/.test(searchable)) return "nam";
+  if (/giay/.test(searchable)) return "nam";
+  return "khac";
+}
+
+function createMegaMenuColumns(groups = []) {
+  if (!groups.length) {
+    return createMegaMenuEmpty();
+  }
+
+  return groups.map(createMegaMenuColumn).join("");
+}
+
 function createMegaMenuColumn(column) {
   return `
     <section class="mega-menu-group">
-      <h2>${column.title}</h2>
-      ${column.links.map((link) => {
-        const item = typeof link === "string" ? { label: link, keyword: "" } : link;
-        const href = item.href || `#products?keyword=${encodeURIComponent(item.keyword)}`;
-        return `<a href="${href}" data-mega-category="${item.keyword || ""}">${item.label}</a>`;
+      <h2>${escapeHtml(column.title)}</h2>
+      ${column.links.map((item) => {
+        const href = `#products?category=${encodeURIComponent(item.slug)}`;
+        return `<a href="${href}" data-mega-category="${escapeAttr(item.slug)}"><span>${escapeHtml(item.name)}</span><small>${Number(item.productCount || 0)} sản phẩm</small></a>`;
       }).join("")}
     </section>
   `;
+}
+
+function createMegaMenuLoading() {
+  return `<section class="mega-menu-group mega-menu-status"><h2>Danh mục</h2><p>Đang tải danh mục...</p></section>`;
+}
+
+function createMegaMenuEmpty() {
+  return `<section class="mega-menu-group mega-menu-status"><h2>Danh mục</h2><p>Chưa có danh mục active.</p></section>`;
+}
+
+function createMegaMenuError() {
+  return `<section class="mega-menu-group mega-menu-status"><h2>Danh mục</h2><p>Không thể tải danh mục.</p></section>`;
+}
+
+function slugify(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
 }
