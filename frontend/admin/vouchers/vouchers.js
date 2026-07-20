@@ -128,8 +128,25 @@ function formHtml(voucher = {}) {
 }
 
 function readForm(form) { const data = new FormData(form); return Object.fromEntries(["code","name","description","discountType","discountValue","minOrderAmount","maxDiscountAmount","quantity","startsAt","expiresAt","status"].map((key) => [key, String(data.get(key) || "").trim()])); }
-async function toggleVoucher(root, voucher) { await voucherService.updateStatus(voucher.id, voucher.status === "active" ? "inactive" : "active", silent()); toast.success("Đã cập nhật trạng thái mã."); await reload(root); }
-async function deleteVoucher(root, voucher) { if (!confirm(`Xóa mã ${voucher.code}?`)) return; await voucherService.remove(voucher.id, silent()); toast.success("Đã xóa mã giảm giá."); await reload(root); }
+async function toggleVoucher(root, voucher) {
+  try {
+    await voucherService.updateStatus(voucher.id, voucher.status === "active" ? "inactive" : "active", silent());
+    toast.success("Đã cập nhật trạng thái mã.");
+    await reload(root);
+  } catch (error) {
+    toast.error(message(error));
+  }
+}
+async function deleteVoucher(root, voucher) {
+  if (!confirm(`Xóa mã ${voucher.code}?`)) return;
+  try {
+    await voucherService.remove(voucher.id, silent());
+    toast.success("Đã xóa mã giảm giá.");
+    await reload(root);
+  } catch (error) {
+    toast.error(message(error));
+  }
+}
 function closeModal(overlay) { overlay.classList.remove("is-open"); setTimeout(() => { overlay.remove(); if (!document.querySelector(".admin-voucher-modal")) document.body.classList.remove("modal-open"); }, 150); }
 function message(error) { if (error?.status === 401) return "Phiên đăng nhập hết hạn."; if (error?.status === 403) return "Không có quyền quản lý mã giảm giá."; if (error?.status === 404) return "Không tìm thấy mã giảm giá."; if (error?.status === 422) return "Dữ liệu mã giảm giá không hợp lệ."; return error?.message || "Không thể xử lý yêu cầu."; }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }

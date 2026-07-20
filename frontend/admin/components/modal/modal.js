@@ -60,9 +60,11 @@ function bindModalEvents(modal, options) {
     button.addEventListener("click", closeModal);
   });
 
-  modal.querySelector("[data-modal-save]")?.addEventListener("click", (event) => {
+  modal.querySelector("[data-modal-save]")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
     const form = modal.querySelector("[data-validate-form]");
+
+    if (button.disabled) return;
 
     if (form) {
       const validation = validateForm(form);
@@ -75,12 +77,24 @@ function bindModalEvents(modal, options) {
 
     setButtonLoading(button, true);
 
-    window.setTimeout(() => {
-      options.onSave?.();
-      toast.success(options.successMessage ?? "Thao tác giao diện đã được xác nhận.");
-      setButtonLoading(button, false);
+    try {
+      await wait(options.loadingDelay ?? 220);
+      await options.onSave?.(modal);
+      if (options.successMessage) {
+        toast.success(options.successMessage);
+      }
       closeModal();
-    }, options.loadingDelay ?? 520);
+    } catch (error) {
+      const target = modal.querySelector("[data-modal-error], [data-category-form-error], [data-form-error]");
+      if (target) target.textContent = error?.message || "Không thể xử lý yêu cầu.";
+      if (options.showErrorToast !== false) {
+        toast.error(error?.message || "Không thể xử lý yêu cầu.");
+      }
+    } finally {
+      if (document.body.contains(button)) {
+        setButtonLoading(button, false);
+      }
+    }
   });
 
   modal.addEventListener("click", (event) => {
@@ -97,6 +111,10 @@ function handleEscapeKey(event) {
     closeModal();
     document.removeEventListener("keydown", handleEscapeKey);
   }
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function createModalTemplate(options) {

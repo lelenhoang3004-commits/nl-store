@@ -112,16 +112,24 @@ function showDetails(subscriber) {
 
 async function toggleStatus(root, subscriber) {
   const nextStatus = subscriber.status === "subscribed" ? "unsubscribed" : "subscribed";
-  await newsletterService.updateStatus(subscriber.id, nextStatus, silent());
-  toast.success("Đã cập nhật trạng thái đăng ký email.");
-  await reload(root);
+  try {
+    await newsletterService.updateStatus(subscriber.id, nextStatus, silent());
+    toast.success("Đã cập nhật trạng thái đăng ký email.");
+    await reload(root);
+  } catch (error) {
+    toast.error(message(error));
+  }
 }
 
 async function deleteSubscriber(root, subscriber) {
   if (!confirm(`Xóa email ${subscriber.email}?`)) return;
-  await newsletterService.remove(subscriber.id, silent());
-  toast.success("Đã xóa email đăng ký.");
-  await reload(root);
+  try {
+    await newsletterService.remove(subscriber.id, silent());
+    toast.success("Đã xóa email đăng ký.");
+    await reload(root);
+  } catch (error) {
+    toast.error(message(error));
+  }
 }
 
 function message(error) {

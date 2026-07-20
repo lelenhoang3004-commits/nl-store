@@ -283,8 +283,9 @@ function openCategoryModal(root, category = null) {
         await reload(root);
       } catch (error) {
         const errorTarget = document.querySelector("[data-category-form-error]");
-        if (errorTarget) errorTarget.textContent = message(error);
-        toast.error(message(error));
+        const errorMessage = message(error);
+        if (errorTarget) errorTarget.textContent = errorMessage;
+        throw new Error(errorMessage);
       }
     }
   });
