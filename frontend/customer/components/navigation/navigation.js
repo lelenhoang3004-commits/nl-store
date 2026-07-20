@@ -168,8 +168,7 @@ function normalizeCategory(category = {}) {
   return {
     id: category.id,
     name,
-    slug,
-    productCount: Number(category.productCount ?? category.product_count ?? category.productsCount ?? category.totalProducts ?? category.total_products ?? 0)
+    slug
   };
 }
 
@@ -219,13 +218,15 @@ function createMegaMenuColumns(groups = []) {
 
 function createMegaMenuColumn(column) {
   return `
-    <section class="mega-menu-group">
-      <h2>${escapeHtml(column.title)}</h2>
-      ${column.links.map((item) => {
-        const href = `#products?category=${encodeURIComponent(item.slug)}`;
-        return `<a href="${href}" data-mega-category="${escapeAttr(item.slug)}"><span>${escapeHtml(item.name)}</span><small>${Number(item.productCount || 0)} sản phẩm</small></a>`;
-      }).join("")}
-    </section>
+    <details class="mega-menu-group" open>
+      <summary>${escapeHtml(column.title)}</summary>
+      <div class="mega-menu-links">
+        ${column.links.map((item) => {
+          const href = `#products?category=${encodeURIComponent(item.slug)}`;
+          return `<a href="${href}" data-mega-category="${escapeAttr(item.slug)}">${escapeHtml(item.name)}</a>`;
+        }).join("")}
+      </div>
+    </details>
   `;
 }
 
