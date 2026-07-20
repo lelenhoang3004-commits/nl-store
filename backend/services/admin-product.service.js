@@ -57,7 +57,7 @@ export class AdminProductService {
     logger.info("AdminProductService.updateProduct normalized payload.", { productId: id, ratingAverage: normalized.ratingAverage, ratingCount: normalized.ratingCount });
     await this.ensureUnique(normalized, id);
     await this.ensureCategoryExists(normalized.categoryId);
-    await this.ensureProductImageUrls(normalized);
+    await this.ensureProductImageUrls(normalized, current);
     return (await this.repository.update(id, normalized)).toJSON();
   }
 
@@ -143,19 +143,43 @@ export class AdminProductService {
   }
 
 
-  async ensureProductImageUrls(payload) {
+  async ensureProductImageUrls(payload, current = null) {
     payload.thumbnailUrl = normalizeProductImageUrl(payload.thumbnailUrl);
     payload.galleryUrls = (payload.galleryUrls || []).map(normalizeProductImageUrl).filter(Boolean);
 
-    const uploadUrls = [
-      payload.thumbnailUrl,
-      ...payload.galleryUrls
-    ].filter(isRenderUploadUrl);
+    const originalThumbnailUrl = normalizeProductImageUrl(current?.thumbnailUrl || current?.thumbnail_url);
+    const originalGalleryUrls = normalizeArray(current?.galleryUrls || current?.gallery_urls).map(normalizeProductImageUrl).filter(Boolean);
+    const selectedNewMainImage = Boolean(payload.thumbnailUrl && payload.thumbnailUrl !== originalThumbnailUrl);
 
-    for (const url of uploadUrls) {
-      if (!await imageUrlExists(url)) {
-        throw new AppError("Product image URL is not reachable. Use a stable Cloudinary/R2/static image URL instead of a missing Render upload.", 422, "PRODUCT_IMAGE_URL_UNREACHABLE", { url });
+    logger.info("Admin product image URLs normalized.", {
+      thumbnail_url: payload.thumbnailUrl,
+      gallery_urls: payload.galleryUrls,
+      original_thumbnail_url: originalThumbnailUrl,
+      selected_new_main_image: selectedNewMainImage
+    });
+
+    const urlsToCheck = [
+      payload.thumbnailUrl ? { field: "thumbnail_url", url: payload.thumbnailUrl, isNewMainImage: selectedNewMainImage } : null,
+      ...payload.galleryUrls.map((url, index) => ({ field: `gallery_urls[${index}]`, url, isNewMainImage: false }))
+    ].filter((item) => item && shouldCheckImageUrl(item.url));
+
+    const unreachableUrls = [];
+    for (const item of urlsToCheck) {
+      if (!await imageUrlExists(item.url)) {
+        logger.warn("Admin product image URL is not reachable.", { field: item.field, url: item.url, productId: current?.id || null });
+        unreachableUrls.push(item);
       }
+    }
+
+    const selectedMainImageError = unreachableUrls.find((item) => item.field === "thumbnail_url" && item.isNewMainImage);
+    if (selectedMainImageError) {
+      throw new AppError("Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.", 422, "PRODUCT_IMAGE_URL_UNREACHABLE", { field: selectedMainImageError.field, url: selectedMainImageError.url });
+    }
+
+    if (selectedNewMainImage && unreachableUrls.length) {
+      const unreachableGalleryUrls = new Set(unreachableUrls.filter((item) => item.field.startsWith("gallery_urls")).map((item) => item.url));
+      const originalGallerySet = new Set(originalGalleryUrls);
+      payload.galleryUrls = payload.galleryUrls.filter((url) => !(unreachableGalleryUrls.has(url) && originalGallerySet.has(url)));
     }
   }
   async ensureUnique(payload, excludedId = null) {
@@ -184,11 +208,19 @@ function normalizeProductImageUrl(value) {
   return url;
 }
 
-function isRenderUploadUrl(value) {
-  return String(value || "").startsWith(`${UPLOAD_ORIGIN}/uploads/`);
+function shouldCheckImageUrl(value) {
+  const url = String(value || "");
+  if (!url || url.startsWith("data:")) return false;
+  return /^https?:\/\//i.test(url);
 }
 
 async function imageUrlExists(url) {
+  try {
+    const headResponse = await fetch(url, { method: "HEAD" });
+    if (headResponse.ok) return true;
+    if (![403, 405].includes(headResponse.status)) return false;
+  } catch {}
+
   try {
     const response = await fetch(url, { method: "GET" });
     return response.ok;

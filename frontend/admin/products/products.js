@@ -10,6 +10,7 @@ import { uploadService } from "../services/upload.service.js";
 import { syncProductVariantState } from "./variant-state.js";
 
 const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
+const PRODUCT_UPLOAD_ORIGIN = "https://nl-store.onrender.com";
 const PLACEHOLDER = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='52%25' text-anchor='middle' fill='%2364748b' font-size='12'%3EKhong co anh%3C/text%3E%3C/svg%3E";
 const DEFAULT_QUERY = Object.freeze({ page: 1, limit: 10, sortBy: "updatedAt", sortOrder: "desc" });
 let state = { items: [], categories: [], pagination: null, query: { ...DEFAULT_QUERY }, error: null, busy: false, detail: null };
@@ -222,7 +223,7 @@ function openProductForm(root, product = null) {
     if (validation) { showFieldError(form, validation.field, validation.message); return; }
     setFormBusy(form, true);
     try {
-      await validateAndNormalizeProductImages(payload);
+      await validateAndNormalizeProductImages(payload, form);
       if (editing) await productService.updateProduct(product.id, payload, silent());
       else await productService.createProduct(payload, silent());
       closeModal(); toast.success(editing ? "Đã cập nhật sản phẩm." : "Đã thêm sản phẩm."); await reload(root);
@@ -683,38 +684,44 @@ function formPayload(form) {
 }
 function validateFormPayload(p) { if (!p.name) return { field: "name", message: "Tên sản phẩm là bắt buộc." }; if (!p.sku) return { field: "sku", message: "SKU là bắt buộc." }; if (!Number.isFinite(p.price) || p.price < 0) return { field: "price", message: "Giá phải là số không âm." }; if (p.sale_price !== null && (p.sale_price < 0 || p.sale_price > p.price)) return { field: "sale_price", message: "Giá sale phải nhỏ hơn hoặc bằng giá gốc." }; if (!Number.isInteger(p.stock) || p.stock < 0) return { field: "stock", message: "Tồn kho phải là số nguyên không âm." }; if (!Number.isFinite(p.rating_average) || p.rating_average < 0 || p.rating_average > 5 || Math.round(p.rating_average * 10) !== p.rating_average * 10) return { field: "rating_average", message: "Đánh giá sao phải từ 0 đến 5 và có 1 chữ số thập phân." }; return null; }
 
-async function validateAndNormalizeProductImages(payload) {
-  const urls = [];
-  const normalizeForSave = (value) => {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    return resolveImageUrl(raw);
-  };
+async function validateAndNormalizeProductImages(payload, form = null) {
+  const normalizeForSave = (value) => normalizeProductImageUrl(value);
+  const originalThumbnailUrl = normalizeForSave(form?.querySelector('[name="thumbnail_url"]')?.dataset.originalThumbnailUrl || "");
 
   payload.thumbnail_url = normalizeForSave(payload.thumbnail_url) || null;
   payload.gallery_urls = (payload.gallery_urls || []).map(normalizeForSave).filter(Boolean);
   if (!payload.thumbnail_url && payload.gallery_urls.length) payload.thumbnail_url = payload.gallery_urls[0];
 
-  if (payload.thumbnail_url) urls.push({ label: "thumbnail_url", url: payload.thumbnail_url });
-  payload.gallery_urls.forEach((url, index) => urls.push({ label: `gallery_urls dong ${index + 1}`, url }));
+  const selectedThumbnailUrl = payload.thumbnail_url || "";
+  const selectedNewMainImage = selectedThumbnailUrl && selectedThumbnailUrl !== originalThumbnailUrl;
+  console.debug("[admin product images] normalized", {
+    thumbnail_url: payload.thumbnail_url,
+    gallery_urls: payload.gallery_urls,
+    original_thumbnail_url: originalThumbnailUrl || null,
+    selected_new_main_image: Boolean(selectedNewMainImage)
+  });
 
-  for (const item of urls) {
-    if (item.url === PLACEHOLDER || item.url === globalThis.FASHION_IMAGE_PLACEHOLDER) continue;
-    await assertImageUrlLoads(item.url, item.label);
+  if (!selectedNewMainImage || isPlaceholderImageUrl(selectedThumbnailUrl)) return;
+
+  const reachable = await imageUrlLoads(selectedThumbnailUrl, "thumbnail_url");
+  if (!reachable) {
+    console.warn("[admin product images] unreachable selected main image", { field: "thumbnail_url", url: selectedThumbnailUrl });
+    throw new Error("Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.");
   }
 }
-
-function assertImageUrlLoads(url, label) {
-  return new Promise((resolve, reject) => {
-    if (!/^https?:\/\//i.test(url) && !url.startsWith("data:") && !url.startsWith("blob:")) {
-      reject(new Error(`${label}: URL anh phai la URL tuyet doi hoac /uploads hop le.`));
+function imageUrlLoads(url, label) {
+  return new Promise((resolve) => {
+    if (!isValidProductImageUrl(url)) {
+      console.warn("[admin product images] invalid image URL", { field: label, url });
+      resolve(false);
       return;
     }
 
     const image = new Image();
     const timer = window.setTimeout(() => {
       cleanup();
-      reject(new Error(`${label}: Khong tai duoc anh. Vui long dung anh mo truc tiep duoc, uu tien Cloudinary/R2 hoac anh static.`));
+      console.warn("[admin product images] image load timeout", { field: label, url });
+      resolve(false);
     }, 8000);
     const cleanup = () => {
       window.clearTimeout(timer);
@@ -722,13 +729,31 @@ function assertImageUrlLoads(url, label) {
       image.onerror = null;
     };
 
-    image.onload = () => { cleanup(); resolve(); };
+    image.onload = () => { cleanup(); resolve(true); };
     image.onerror = () => {
       cleanup();
-      reject(new Error(`${label}: Anh khong ton tai hoac Render da mat file upload. Khong luu URL nay vao DB.`));
+      console.warn("[admin product images] image load failed", { field: label, url });
+      resolve(false);
     };
     image.src = url;
   });
+}
+
+function isValidProductImageUrl(url) {
+  return /^https?:\/\//i.test(String(url || "")) || String(url || "").startsWith("data:");
+}
+
+function isPlaceholderImageUrl(url) {
+  return !url || url === PLACEHOLDER || url === globalThis.FASHION_IMAGE_PLACEHOLDER;
+}
+
+function normalizeProductImageUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("/uploads")) return PRODUCT_UPLOAD_ORIGIN + raw;
+  if (raw.startsWith("uploads")) return PRODUCT_UPLOAD_ORIGIN + "/" + raw;
+  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
+  return raw;
 }
 function clearFormErrors(form) { form.querySelectorAll(".is-invalid").forEach((field) => field.classList.remove("is-invalid")); form.querySelectorAll("[data-field-error]").forEach((target) => { target.textContent = ""; }); const summary = form.querySelector("[data-product-form-error]"); if (summary) summary.textContent = ""; }
 function showFieldError(form, fieldName, errorMessage) { const input = form.elements[fieldName]; const wrapper = input?.closest("[data-product-field]"); wrapper?.classList.add("is-invalid"); const target = form.querySelector(`[data-field-error="${fieldName}"]`); if (target) target.textContent = errorMessage; (wrapper || input)?.scrollIntoView({ behavior: "smooth", block: "center" }); input?.focus({ preventScroll: true }); }
@@ -1583,13 +1608,14 @@ function renderPageError(error) { return `<section class="admin-product-page-err
 function stockBadge(stock) { const n = Number(stock || 0); return n === 0 ? '<span class="admin-stock-badge is-empty">Hết hàng · 0</span>' : n <= 5 ? `<span class="admin-stock-badge is-low">Sắp hết · ${n}</span>` : `<span class="admin-stock-badge">${n}</span>`; }
 function statusBadge(status) { return `<span class="admin-product-status is-${escapeHtml(status || "unknown")}">${escapeHtml(statusLabel(status))}</span>`; }
 function statusLabel(status) { return ({ active: "Đang bán", inactive: "Tạm ẩn", out_of_stock: "Hết hàng" })[status] || status || "-"; }
-function resolveImageUrl(url) { if (!url) return PLACEHOLDER; return globalThis.normalizeImageUrl?.(url) ?? url; }
+function resolveImageUrl(url) { if (!url) return PLACEHOLDER; const normalized = normalizeProductImageUrl(url); return globalThis.normalizeImageUrl?.(normalized) ?? normalized; }
 function bindImageFallbacks(root) { root.querySelectorAll("[data-product-image]").forEach(img => img.addEventListener("error", () => { img.src = PLACEHOLDER; }, { once: true })); }
 function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("button,input,select").forEach(el => { el.disabled = busy; }); }
 function setFormBusy(form, busy) { form.querySelectorAll("button,input,select,textarea").forEach(el => { el.disabled = busy; }); const submit = form.querySelector("[data-product-submit]"); if (submit) submit.innerHTML = busy ? '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...' : submit.dataset.idleLabel; }
 function silent() { return { showErrorToast: false }; }
 function hasProductPermission(permission) { return hasPermission(permission) || hasPermission(PERMISSIONS.PRODUCT_MANAGE); }
 function message(error) {
+  if (error?.code === "PRODUCT_IMAGE_URL_UNREACHABLE") return "Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.";
   if (error?.status === 401) return "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.";
   if (error?.status === 403) return "Bạn không có quyền quản lý sản phẩm.";
   if (error?.status === 404) return "Không tìm thấy sản phẩm.";
