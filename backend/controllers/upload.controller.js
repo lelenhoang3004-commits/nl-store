@@ -15,7 +15,7 @@ export class UploadController extends BaseController {
   uploadImages = asyncHandler(async (request, response) => {
     const uploadedFiles = normalizeUploadedFiles(request.files);
     if (!uploadedFiles.length) this.service.createUploadedFilePayload(null, "images");
-    const files = this.service.createUploadedFilesPayload(uploadedFiles, "images");
+    const files = await this.service.createUploadedImagesPayload(uploadedFiles);
 
     if (request.files?.image?.length) {
       return this.sendSuccess(response, files[0], "Image uploaded successfully.", 201);

@@ -7,7 +7,7 @@ import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.
 import { createSlug } from "../utils/slug.util.js";
 
 const PRODUCT_STATUSES = ["active", "inactive", "out_of_stock"];
-const UPLOAD_ORIGIN = "https://nl-store.onrender.com";
+const LEGACY_UPLOAD_LOST_MESSAGE = "Ảnh cũ đã mất, vui lòng tải lại ảnh.";
 const QUERY_OPTIONS = Object.freeze({
   allowedSortFields: ["createdAt", "updatedAt", "name", "sku", "price", "salePrice", "stock", "sold", "status"],
   allowedFilterFields: ["categoryId", "status", "brand", "lowStock", "stockStatus"]
@@ -171,6 +171,11 @@ export class AdminProductService {
       }
     }
 
+    const lostLegacyImage = unreachableUrls.find((item) => isLegacyUploadUrl(item.url));
+    if (lostLegacyImage) {
+      throw new AppError(LEGACY_UPLOAD_LOST_MESSAGE, 422, "OLD_PRODUCT_IMAGE_LOST", { field: lostLegacyImage.field, url: lostLegacyImage.url });
+    }
+
     const selectedMainImageError = unreachableUrls.find((item) => item.field === "thumbnail_url" && item.isNewMainImage);
     if (selectedMainImageError) {
       throw new AppError("Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.", 422, "PRODUCT_IMAGE_URL_UNREACHABLE", { field: selectedMainImageError.field, url: selectedMainImageError.url });
@@ -203,18 +208,19 @@ function normalizeProductImageUrl(value) {
   const url = nullableString(value);
   if (!url) return null;
   if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
-  if (url.startsWith("/uploads")) return `${UPLOAD_ORIGIN}${url}`;
-  if (url.startsWith("uploads")) return `${UPLOAD_ORIGIN}/${url}`;
+  if (url.startsWith("/uploads") || url.startsWith("uploads")) return url;
   return url;
 }
 
 function shouldCheckImageUrl(value) {
   const url = String(value || "");
   if (!url || url.startsWith("data:")) return false;
-  return /^https?:\/\//i.test(url);
+  return /^https?:\/\//i.test(url) || isLegacyUploadUrl(url);
 }
 
 async function imageUrlExists(url) {
+  if (isLegacyUploadUrl(url) && !/^https?:\/\//i.test(url)) return false;
+
   try {
     const headResponse = await fetch(url, { method: "HEAD" });
     if (headResponse.ok) return true;
@@ -226,6 +232,15 @@ async function imageUrlExists(url) {
     return response.ok;
   } catch {
     return false;
+  }
+}
+function isLegacyUploadUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.pathname.startsWith("/uploads/");
+  } catch {
+    const url = String(value || "").trim();
+    return url.startsWith("/uploads/") || url.startsWith("uploads/");
   }
 }
 function has(object, key) { return Object.prototype.hasOwnProperty.call(object || {}, key); }

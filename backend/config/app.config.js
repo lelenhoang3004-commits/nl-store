@@ -49,6 +49,10 @@ export const appConfig = Object.freeze({
     .split(",")
     .map((type) => type.trim())
     .filter(Boolean),
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
+  cloudinaryFolder: process.env.CLOUDINARY_FOLDER || "nl-store/products",
   logLevel: process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "info" : "debug"),
   logToFile: process.env.LOG_TO_FILE !== "false",
   logToConsole: process.env.LOG_TO_CONSOLE !== "false",

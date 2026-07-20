@@ -3,14 +3,12 @@ import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
 import { loadTemplate } from "../router/template-cache.js";
-import { API_CONFIG } from "../services/api/api.config.js";
 import { categoryService } from "../services/category.service.js";
 import { productService } from "../services/product.service.js";
 import { uploadService } from "../services/upload.service.js";
 import { syncProductVariantState } from "./variant-state.js";
 
-const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
-const PRODUCT_UPLOAD_ORIGIN = "https://nl-store.onrender.com";
+const OLD_UPLOAD_LOST_MESSAGE = "Ảnh cũ đã mất, vui lòng tải lại ảnh.";
 const PLACEHOLDER = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='52%25' text-anchor='middle' fill='%2364748b' font-size='12'%3EKhong co anh%3C/text%3E%3C/svg%3E";
 const DEFAULT_QUERY = Object.freeze({ page: 1, limit: 10, sortBy: "updatedAt", sortOrder: "desc" });
 let state = { items: [], categories: [], pagination: null, query: { ...DEFAULT_QUERY }, error: null, busy: false, detail: null };
@@ -701,7 +699,7 @@ async function validateAndNormalizeProductImages(payload, form = null) {
   const reachable = await imageUrlLoads(selectedThumbnailUrl, "thumbnail_url");
   if (!reachable) {
     console.warn("[admin product images] unreachable selected main image", { field: "thumbnail_url", url: selectedThumbnailUrl });
-    throw new Error("Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.");
+    throw new Error(isLegacyUploadUrl(selectedThumbnailUrl) ? OLD_UPLOAD_LOST_MESSAGE : "Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.");
   }
 }
 function imageUrlLoads(url, label) {
@@ -745,10 +743,17 @@ function isPlaceholderImageUrl(url) {
 function normalizeProductImageUrl(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  if (raw.startsWith("/uploads")) return PRODUCT_UPLOAD_ORIGIN + raw;
-  if (raw.startsWith("uploads")) return PRODUCT_UPLOAD_ORIGIN + "/" + raw;
+  if (raw.startsWith("/uploads") || raw.startsWith("uploads")) return raw;
   if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
   return raw;
+}
+function isLegacyUploadUrl(value) {
+  try {
+    return new URL(value).pathname.startsWith("/uploads/");
+  } catch {
+    const url = String(value || "").trim();
+    return url.startsWith("/uploads/") || url.startsWith("uploads/");
+  }
 }
 function clearFormErrors(form) { form.querySelectorAll(".is-invalid").forEach((field) => field.classList.remove("is-invalid")); form.querySelectorAll("[data-field-error]").forEach((target) => { target.textContent = ""; }); const summary = form.querySelector("[data-product-form-error]"); if (summary) summary.textContent = ""; }
 function showFieldError(form, fieldName, errorMessage) { const input = form.elements[fieldName]; const wrapper = input?.closest("[data-product-field]"); wrapper?.classList.add("is-invalid"); const target = form.querySelector(`[data-field-error="${fieldName}"]`); if (target) target.textContent = errorMessage; (wrapper || input)?.scrollIntoView({ behavior: "smooth", block: "center" }); input?.focus({ preventScroll: true }); }
@@ -882,7 +887,9 @@ function bindProductImageUpload(modal) {
   function extractUploadedUrls(response) {
     const data = response?.data || {};
     const items = data.items || data.files || data.images || (data.url ? [data] : []);
-    return (Array.isArray(items) ? items : [items]).map((item) => item?.url).filter(Boolean);
+    return (Array.isArray(items) ? items : [items])
+      .map((item) => String(item?.url || "").trim())
+      .filter((url) => /^https:\/\//i.test(url));
   }
 
   function clearObjectUrls() {
@@ -1484,6 +1491,7 @@ function setFormBusy(form, busy) { form.querySelectorAll("button,input,select,te
 function silent() { return { showErrorToast: false }; }
 function hasProductPermission(permission) { return hasPermission(permission) || hasPermission(PERMISSIONS.PRODUCT_MANAGE); }
 function message(error) {
+  if (error?.code === "OLD_PRODUCT_IMAGE_LOST" || error?.code === "OLD_UPLOAD_IMAGE_LOST") return OLD_UPLOAD_LOST_MESSAGE;
   if (error?.code === "PRODUCT_IMAGE_URL_UNREACHABLE") return "Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.";
   if (error?.status === 401) return "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.";
   if (error?.status === 403) return "Bạn không có quyền quản lý sản phẩm.";

@@ -7,10 +7,7 @@ window.normalizeImageUrl = function normalizeImageUrl(value) {
   const url = String(value || "").trim();
   if (!url) return window.FASHION_IMAGE_PLACEHOLDER;
   if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) return url;
-
-  const apiOrigin = String(window.FASHION_API_ORIGIN || "https://nl-store.onrender.com").replace(/\/$/, "");
-  if (url.startsWith("/uploads")) return `${apiOrigin}${url}`;
-  if (url.startsWith("uploads")) return `${apiOrigin}/${url}`;
+  if (url.startsWith("/uploads") || url.startsWith("uploads")) return window.FASHION_IMAGE_PLACEHOLDER;
 
   return url;
 };

@@ -23,14 +23,7 @@ const fileStorage = multer.diskStorage({
   }
 });
 
-const imageStorage = multer.diskStorage({
-  destination(request, file, callback) {
-    callback(null, appConfig.uploadImagePath);
-  },
-  filename(request, file, callback) {
-    callback(null, createSafeFileName(file));
-  }
-});
+const imageMemoryStorage = multer.memoryStorage();
 
 export const upload = multer({
   storage: fileStorage,
@@ -53,7 +46,7 @@ export const upload = multer({
 });
 
 export const uploadImage = multer({
-  storage: imageStorage,
+  storage: imageMemoryStorage,
   limits: {
     fileSize: appConfig.uploadImageMaxFileSize
   },
@@ -156,7 +149,7 @@ function normalizeUploadedFiles(files) {
 }
 
 async function hasValidImageSignature(file) {
-  const signature = await readFileSignature(file.path, 12);
+  const signature = file.buffer ? file.buffer.subarray(0, 12) : await readFileSignature(file.path, 12);
   const hex = signature.toString("hex");
   const ascii = signature.toString("ascii");
 
