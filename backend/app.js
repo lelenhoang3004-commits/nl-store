@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Express application factory.
  * This file wires global middleware, route registry, static assets, and error handlers.
  * Business feature modules stay mounted through the route registry.
@@ -55,8 +55,13 @@ app.get("/health", async (request, response) => {
     }
   });
 });
-app.use(appConfig.apiPrefix, routes);
+app.use(appConfig.apiPrefix, (request, response, next) => {
+  response.type("application/json; charset=utf-8");
+  next();
+}, routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
+
+

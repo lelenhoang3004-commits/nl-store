@@ -420,7 +420,7 @@ function clearSession(reason) {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(REMEMBER_KEY);
-  lastRefreshFailureReason = null;  // âœ“ FIX: Clear on logout so retry is possible on next login
+  lastRefreshFailureReason = null;  // ✓ FIX: Clear on logout so retry is possible on next login
   try {
     localStorage.removeItem("fashion_auth_session");
   } catch {}

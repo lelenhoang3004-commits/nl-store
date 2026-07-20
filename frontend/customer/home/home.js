@@ -17,39 +17,39 @@ const API_ORIGIN = globalThis.FASHION_API_ORIGIN ?? API_BASE_URL.replace(/\/api\
 
 const contentShape = {
   hero: {
-    eyebrow: "Bá»™ sÆ°u táº­p 2026",
-    title: "Thá»i trang hiá»‡n Ä‘áº¡i cho phong cÃ¡ch má»—i ngÃ y.",
-    description: "Tráº£i nghiá»‡m mua sáº¯m thá»i trang cao cáº¥p, tinh táº¿ vÃ  dá»… sá»­ dá»¥ng.",
-    primaryCta: "Mua sáº¯m ngay",
-    secondaryCta: "KhÃ¡m phÃ¡ thÃªm"
+    eyebrow: "Bộ sưu tập 2026",
+    title: "Thời trang hiện đại cho phong cách mỗi ngày.",
+    description: "Trải nghiệm mua sắm thời trang cao cấp, tinh tế và dễ sử dụng.",
+    primaryCta: "Mua sắm ngay",
+    secondaryCta: "Khám phá thêm"
   },
   flashSale: {
-    eyebrow: "Khuyáº¿n mÃ£i giá»›i háº¡n",
-    title: "Khuyáº¿n mÃ£i giá»›i háº¡n",
-    subtitle: "Nhá»¯ng lá»±a chá»n ná»•i báº­t vá»›i má»©c giÃ¡ tá»‘t trong thá»i gian cÃ³ háº¡n."
+    eyebrow: "Khuyến mãi giới hạn",
+    title: "Khuyến mãi giới hạn",
+    subtitle: "Những lựa chọn nổi bật với mức giá tốt trong thời gian có hạn."
   },
   categories: [
-    { title: "Nam", subtitle: "Nhá»¯ng mÃ³n Ä‘á»“ may Ä‘o cÆ¡ báº£n", icon: "fa-shirt" },
-    { title: "Ná»¯", subtitle: "Phom dÃ¡ng má»m máº¡i", icon: "fa-person-dress" },
-    { title: "Phá»¥ kiá»‡n", subtitle: "Phong cÃ¡ch sang trá»ng nháº¹ nhÃ ng", icon: "fa-glasses" },
-    { title: "Bá»™ sÆ°u táº­p", subtitle: "Lá»›p phá»‘i tá»‘i giáº£n", icon: "fa-layer-group" }
+    { title: "Nam", subtitle: "Những món đồ may đo cơ bản", icon: "fa-shirt" },
+    { title: "Nữ", subtitle: "Phom dáng mềm mại", icon: "fa-person-dress" },
+    { title: "Phụ kiện", subtitle: "Phong cách sang trọng nhẹ nhàng", icon: "fa-glasses" },
+    { title: "Bộ sưu tập", subtitle: "Lớp phối tối giản", icon: "fa-layer-group" }
   ],
   reviews: [
-    { quote: "Tráº£i nghiá»‡m mÆ°á»£t mÃ , tinh táº¿ vÃ  phÃ¹ há»£p vá»›i phong cÃ¡ch sá»‘ng hiá»‡n Ä‘áº¡i.", author: "Mina, London" },
-    { quote: "Nhanh chÃ³ng, tinh táº¿ vÃ  bá»‘ cá»¥c Ä‘áº¹p máº¯t tá»« Ä‘áº§u Ä‘áº¿n cuá»‘i.", author: "Noah, Sydney" },
-    { quote: "Má»—i pháº§n Ä‘á»u Ä‘Æ°á»£c chÄƒm chÃºt ká»¹ lÆ°á»¡ng vÃ  ráº¥t Ä‘Ã¡ng tin cáº­y.", author: "Alicia, Toronto" }
+    { quote: "Trải nghiệm mượt mà, tinh tế và phù hợp với phong cách sống hiện đại.", author: "Mina, London" },
+    { quote: "Nhanh chóng, tinh tế và bố cục đẹp mắt từ đầu đến cuối.", author: "Noah, Sydney" },
+    { quote: "Mỗi phần đều được chăm chút kỹ lưỡng và rất đáng tin cậy.", author: "Alicia, Toronto" }
   ]
 };
 
 const productCatalog = [
-  { id: "s1", name: "Ão khoÃ¡c linen nháº¹", category: "Ão khoÃ¡c", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80", price: 1290000, comparePrice: 1590000, discount: 19, rating: 4.8, sold: 184, badge: "Má»šI", inStock: true },
-  { id: "s2", name: "Ão len dÃ¡ng Ã´m", category: "Lá»›p phá»‘i", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", price: 890000, comparePrice: 1190000, discount: 25, rating: 4.7, sold: 142, badge: "HOT", inStock: true },
-  { id: "s3", name: "Ão khoÃ¡c trench má»m", category: "CÆ¡ báº£n", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", price: 1090000, comparePrice: 1390000, discount: 21, rating: 4.9, sold: 267, badge: "GIáº¢M GIÃ", inStock: true },
-  { id: "s4", name: "TÃºi tote tá»‘i giáº£n", category: "Phá»¥ kiá»‡n", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80", price: 760000, comparePrice: 920000, discount: 17, rating: 4.6, sold: 92, badge: "Má»šI", inStock: true },
-  { id: "s5", name: "Ão khoÃ¡c tiá»‡n dá»¥ng Ä‘Ã´ thá»‹", category: "Ão khoÃ¡c", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80", price: 1490000, comparePrice: 1790000, discount: 16, rating: 4.8, sold: 221, badge: "HOT", inStock: true },
-  { id: "s6", name: "TÃºi xÃ¡ch sang trá»ng", category: "Phá»¥ kiá»‡n", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80", price: 1160000, comparePrice: 1380000, discount: 15, rating: 4.7, sold: 111, badge: "GIáº¢M GIÃ", inStock: true },
-  { id: "s7", name: "Ão sÆ¡ mi hiá»‡n Ä‘áº¡i", category: "Nam", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", price: 940000, comparePrice: 1120000, discount: 16, rating: 4.5, sold: 88, badge: "Má»šI", inStock: false },
-  { id: "s8", name: "Bá»™ knit studio", category: "Bá»™ sÆ°u táº­p", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", price: 1360000, comparePrice: 1640000, discount: 17, rating: 4.9, sold: 154, badge: "Má»šI", inStock: true }
+  { id: "s1", name: "Áo khoác linen nhẹ", category: "Áo khoác", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80", price: 1290000, comparePrice: 1590000, discount: 19, rating: 4.8, sold: 184, badge: "MỚI", inStock: true },
+  { id: "s2", name: "Áo len dáng ôm", category: "Lớp phối", image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80", price: 890000, comparePrice: 1190000, discount: 25, rating: 4.7, sold: 142, badge: "HOT", inStock: true },
+  { id: "s3", name: "Áo khoác trench mềm", category: "Cơ bản", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", price: 1090000, comparePrice: 1390000, discount: 21, rating: 4.9, sold: 267, badge: "GIẢM GIÁ", inStock: true },
+  { id: "s4", name: "Túi tote tối giản", category: "Phụ kiện", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80", price: 760000, comparePrice: 920000, discount: 17, rating: 4.6, sold: 92, badge: "MỚI", inStock: true },
+  { id: "s5", name: "Áo khoác tiện dụng đô thị", category: "Áo khoác", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80", price: 1490000, comparePrice: 1790000, discount: 16, rating: 4.8, sold: 221, badge: "HOT", inStock: true },
+  { id: "s6", name: "Túi xách sang trọng", category: "Phụ kiện", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80", price: 1160000, comparePrice: 1380000, discount: 15, rating: 4.7, sold: 111, badge: "GIẢM GIÁ", inStock: true },
+  { id: "s7", name: "Áo sơ mi hiện đại", category: "Nam", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80", price: 940000, comparePrice: 1120000, discount: 16, rating: 4.5, sold: 88, badge: "MỚI", inStock: false },
+  { id: "s8", name: "Bộ knit studio", category: "Bộ sưu tập", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", hoverImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80", price: 1360000, comparePrice: 1640000, discount: 17, rating: 4.9, sold: 154, badge: "MỚI", inStock: true }
 ];
 
 
@@ -97,7 +97,7 @@ function mapApiProduct(product = {}) {
   return {
     id: product.id,
     name: product.name,
-    category: product.categoryName || "Sáº£n pháº©m",
+    category: product.categoryName || "Sản phẩm",
     image: getPreferredProductImage(product),
     hoverImage: "",
     thumbnailUrl: getPreferredProductImage(product),
@@ -112,7 +112,7 @@ function mapApiProduct(product = {}) {
       : 0,
     rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
     sold: Number(product.sold || 0),
-    badge: salePrice ? "GIáº¢M GIÃ" : "Má»šI",
+    badge: salePrice ? "GIẢM GIÁ" : "MỚI",
     inStock: Number(product.stock || 0) > 0,
     stock: Number(product.stock || 0),
     variantCount: Number(product.variantCount ?? product.variant_count ?? (Array.isArray(product.variants) ? product.variants.length : 0)),
@@ -130,7 +130,7 @@ async function loadProductsFromApi() {
 
     return products.length ? products : productCatalog;
   } catch (error) {
-    console.error("KhÃ´ng táº£i Ä‘Æ°á»£c sáº£n pháº©m tá»« API:", error);
+    console.error("Không tải được sản phẩm từ API:", error);
     return productCatalog;
   }
 }
@@ -183,7 +183,7 @@ async function fetchCategoryPage(page = 1) {
 }
 
 function normalizeHomeCategory(category = {}) {
-  const name = category.name || "Danh má»¥c";
+  const name = category.name || "Danh mục";
   const slug = category.slug || category.code || slugifyCategoryName(name);
   const productCount = Number(category.productCount ?? category.product_count ?? category.productsCount ?? category.totalProducts ?? category.total_products ?? 0);
   const image = category.imageUrl || category.image_url || category.thumbnailUrl || category.thumbnail_url || category.coverImage || category.cover_image || getCategoryImageByName(name);
@@ -220,7 +220,7 @@ function slugifyCategoryName(value = "") {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/Ä‘/g, "d")
+    .replace(/đ/g, "d")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "products";
 }
@@ -275,7 +275,7 @@ async function loadHomePage(target) {
     const data = await getHomePageData();
     renderHomeContent(target, data.products, data.categories);
   } catch (error) {
-    console.error("Lá»—i táº£i trang chá»§:", error);
+    console.error("Lỗi tải trang chủ:", error);
     target.dataset.loaded = "error";
     target.innerHTML = createHomeErrorState();
   }
@@ -344,9 +344,9 @@ function initCategoryShowcaseToggle(root = document) {
 function createHomeErrorState() {
   return `
     <section class="customer-empty-state" data-reveal>
-      <h2>KhÃ´ng thá»ƒ táº£i trang chá»§</h2>
-      <p>ÄÃ£ xáº£y ra lá»—i khi táº£i sáº£n pháº©m. Vui lÃ²ng thá»­ láº¡i sau.</p>
-      <a class="customer-button" href="#home">Thá»­ láº¡i</a>
+      <h2>Không thể tải trang chủ</h2>
+      <p>Đã xảy ra lỗi khi tải sản phẩm. Vui lòng thử lại sau.</p>
+      <a class="customer-button" href="#home">Thử lại</a>
     </section>
   `;
 }
@@ -377,9 +377,9 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="featured-product" class="premium-section" data-reveal>
       ${createFeaturedProductsSection({
-    title: "Sáº£n pháº©m ná»•i báº­t",
-    description: "Lá»±a chá»n Ä‘áº·c sáº¯c Ä‘á»ƒ nÃ¢ng táº§m tá»§ Ä‘á»“ vá»›i phong thÃ¡i tá»± tin vÃ  tinh táº¿.",
-    actionText: "Xem chi tiáº¿t",
+    title: "Sản phẩm nổi bật",
+    description: "Lựa chọn đặc sắc để nâng tầm tủ đồ với phong thái tự tin và tinh tế.",
+    actionText: "Xem chi tiết",
     actionHref: "#story",
     items: products.slice(0, 8),
     page: 1,
@@ -389,9 +389,9 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="new-arrival" class="premium-section" data-reveal>
       ${createNewArrivalSection({
-    title: "HÃ ng má»›i",
-    description: "Nhá»¯ng thiáº¿t káº¿ má»›i tÆ°Æ¡i táº¯n cho phong cÃ¡ch chuyá»ƒn Ä‘á»™ng hiá»‡n Ä‘áº¡i vÃ  trang phá»¥c hÃ ng ngÃ y nÃ¢ng táº§m.",
-    actionText: "KhÃ¡m phÃ¡",
+    title: "Hàng mới",
+    description: "Những thiết kế mới tươi tắn cho phong cách chuyển động hiện đại và trang phục hàng ngày nâng tầm.",
+    actionText: "Khám phá",
     actionHref: "#products",
     items: products.slice(0, 4),
     page: 1,
@@ -401,9 +401,9 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="best-seller" class="premium-section" data-reveal>
       ${createBestSellerSection({
-    title: "BÃ¡n cháº¡y",
-    description: "CÃ¡c bá»™ sÆ°u táº­p cÃ¢n báº±ng giá»¯a sá»± thoáº£i mÃ¡i, phom dÃ¡ng vÃ  tÃ­nh linh hoáº¡t.",
-    actionText: "Mua hÃ ng bÃ¡n cháº¡y",
+    title: "Bán chạy",
+    description: "Các bộ sưu tập cân bằng giữa sự thoải mái, phom dáng và tính linh hoạt.",
+    actionText: "Mua hàng bán chạy",
     actionHref: "#products",
     items: products.slice(0, 4),
     page: 1,
@@ -426,8 +426,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     <section id="jewelry" class="premium-section" data-reveal>
       <div class="section-heading">
         <div>
-          <h2>Trang sá»©c</h2>
-          <p>KhÃ¡m phÃ¡ cÃ¡c máº«u dÃ¢y chuyá»n Ä‘Æ°á»£c láº¥y trá»±c tiáº¿p tá»« danh má»¥c sáº£n pháº©m.</p>
+          <h2>Trang sức</h2>
+          <p>Khám phá các mẫu dây chuyền được lấy trực tiếp từ danh mục sản phẩm.</p>
         </div>
       </div>
       ${createProductGrid({
@@ -440,8 +440,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="brands" class="premium-section" data-reveal>
       ${createBrandShowcaseSection({
-    title: "ThÆ°Æ¡ng hiá»‡u",
-    description: "Nhá»¯ng nhÃ£n hÃ ng uy tÃ­n vÃ  dáº¥u áº¥n riÃªng táº¡o nÃªn phong cÃ¡ch.",
+    title: "Thương hiệu",
+    description: "Những nhãn hàng uy tín và dấu ấn riêng tạo nên phong cách.",
     brands: [
       { name: "AURELIA" },
       { name: "ATLAS" },
@@ -455,13 +455,13 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
     <section id="reviews" class="premium-section" data-reveal>
       ${createCustomerReviewsSection({
-    title: "ÄÃ¡nh giÃ¡",
-    description: "Tráº£i nghiá»‡m Ä‘Æ°á»£c thiáº¿t káº¿ Ä‘á»ƒ cáº£m giÃ¡c trá»±c quan, tinh táº¿ vÃ  Ä‘Ã¡ng tin cáº­y.",
+    title: "Đánh giá",
+    description: "Trải nghiệm được thiết kế để cảm giác trực quan, tinh tế và đáng tin cậy.",
     reviews: [
-      { name: "Mina Lee", role: "BiÃªn táº­p phong cÃ¡ch", content: "Tráº£i nghiá»‡m tháº­t sá»± Ä‘Æ°á»£c chÄƒm chÃºt nhÆ° chÃ­nh nhá»¯ng sáº£n pháº©m mÃ¬nh Ä‘ang mua.", rating: 5 },
-      { name: "Noah Kim", role: "KhÃ¡ch hÃ ng thÆ°á»ng xuyÃªn", content: "Má»i thá»© dá»… duyá»‡t vÃ  cáº£m giÃ¡c sang trá»ng váº«n Ä‘Æ°á»£c giá»¯ nguyÃªn tá»« Ä‘áº§u Ä‘áº¿n cuá»‘i.", rating: 5 },
-      { name: "Alicia Tran", role: "GiÃ¡m Ä‘á»‘c sÃ¡ng táº¡o", content: "Má»™t cá»­a hÃ ng Ä‘Æ°á»£c thiáº¿t káº¿ vá»«a thÆ° thÃ¡i vá»«a giÃºp chá»n lá»±a sáº£n pháº©m trá»Ÿ nÃªn dá»… dÃ ng.", rating: 5 },
-      { name: "Jules Carter", role: "NgÆ°á»i mua cao cáº¥p", content: "CÃ¡ch ká»ƒ chuyá»‡n vá» sáº£n pháº©m vÃ  bá»‘ cá»¥c Ä‘á»u Ä‘áº¹p, trá»±c quan vÃ  dá»… hiá»ƒu.", rating: 5 }
+      { name: "Mina Lee", role: "Biên tập phong cách", content: "Trải nghiệm thật sự được chăm chút như chính những sản phẩm mình đang mua.", rating: 5 },
+      { name: "Noah Kim", role: "Khách hàng thường xuyên", content: "Mọi thứ dễ duyệt và cảm giác sang trọng vẫn được giữ nguyên từ đầu đến cuối.", rating: 5 },
+      { name: "Alicia Tran", role: "Giám đốc sáng tạo", content: "Một cửa hàng được thiết kế vừa thư thái vừa giúp chọn lựa sản phẩm trở nên dễ dàng.", rating: 5 },
+      { name: "Jules Carter", role: "Người mua cao cấp", content: "Cách kể chuyện về sản phẩm và bố cục đều đẹp, trực quan và dễ hiểu.", rating: 5 }
     ]
   })}
     </section>
