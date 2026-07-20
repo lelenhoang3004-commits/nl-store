@@ -117,6 +117,7 @@ const PRODUCT_MENU_FILTERS = Object.freeze({
   "dam-midi": { label: "Đầm midi", keywords: ["đầm midi", "dam midi", "váy midi"] },
   "quan-toi-gian": { label: "Quần tối giản", keywords: ["quần tối giản", "quan toi gian", "quần", "quan"] },
   "chan-vay": { label: "Chân váy", keywords: ["chân váy", "chan vay", "skirt"] },
+  "giay": { label: "Giày", keywords: ["giày", "giay", "shoe", "sneaker"] },
   "quan-jeans": { label: "Quần jeans", keywords: ["jeans", "quần jean", "quan jean"] },
   "tui-xach": { label: "Túi xách", keywords: ["túi xách", "tui xach", "bag"] },
   "dong-ho": { label: "Đồng hồ", keywords: ["đồng hồ", "dong ho", "watch"] },

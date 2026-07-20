@@ -145,7 +145,7 @@ async function loadHomepageData() {
 
 async function loadCategoriesFromApi() {
   try {
-    const response = await fetch(`${API_BASE_URL}/categories`);
+    const response = await fetch(`${API_BASE_URL}/categories?_=${Date.now()}`, { cache: "no-store" });
     const payload = await response.json();
 
     const categories = getListFromApiPayload(payload, "categories").map(normalizeHomeCategory);
@@ -250,8 +250,7 @@ async function loadHomePage(target) {
   target.dataset.loaded = "loading";
 
   try {
-    const data = homePageDataCache || await getHomePageData();
-    homePageDataCache = data;
+    const data = await getHomePageData();
     renderHomeContent(target, data.products, data.categories);
   } catch (error) {
     console.error("Lỗi tải trang chủ:", error);

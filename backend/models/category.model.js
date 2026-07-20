@@ -31,6 +31,7 @@ export class Category extends BaseModel {
       status: this.status,
       sortOrder: this.sortOrder,
       productCount: this.productCount,
+      product_count: this.productCount,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
