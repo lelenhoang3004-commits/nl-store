@@ -49,10 +49,14 @@ export const appConfig = Object.freeze({
     .split(",")
     .map((type) => type.trim())
     .filter(Boolean),
-  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
-  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
-  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
-  cloudinaryFolder: process.env.CLOUDINARY_FOLDER || "nl-store/products",
+  r2AccountId: process.env.R2_ACCOUNT_ID || "",
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  r2BucketName: process.env.R2_BUCKET_NAME || "",
+  r2Endpoint: process.env.R2_ENDPOINT || "",
+  r2PublicUrl: process.env.R2_PUBLIC_URL || "",
+  r2Region: process.env.R2_REGION || "auto",
+  r2Folder: process.env.R2_FOLDER || "products",
   logLevel: process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "info" : "debug"),
   logToFile: process.env.LOG_TO_FILE !== "false",
   logToConsole: process.env.LOG_TO_CONSOLE !== "false",

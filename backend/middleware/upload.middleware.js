@@ -124,7 +124,6 @@ function createSafeFileName(file) {
 function ensureUploadFolders() {
   [
     appConfig.uploadPath,
-    appConfig.uploadImagePath,
     appConfig.uploadFilePath,
     appConfig.uploadTempPath
   ].forEach((folderPath) => {

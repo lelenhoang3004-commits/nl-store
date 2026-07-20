@@ -3,8 +3,9 @@
  * It manages uploaded file metadata, safe preview URLs, and file deletion without product-specific logic.
  */
 import fs from "node:fs/promises";
+import crypto from "node:crypto";
 import path from "node:path";
-import { v2 as cloudinary } from "cloudinary";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { appConfig } from "../config/app.config.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
@@ -21,14 +22,7 @@ const LEGACY_UPLOAD_LOST_MESSAGE = "Ảnh cũ đã mất, vui lòng tải lại 
 export class UploadService extends BaseService {
   constructor() {
     super();
-    if (isCloudinaryConfigured()) {
-      cloudinary.config({
-        cloud_name: appConfig.cloudinaryCloudName,
-        api_key: appConfig.cloudinaryApiKey,
-        api_secret: appConfig.cloudinaryApiSecret,
-        secure: true
-      });
-    }
+    this.s3Client = isR2Configured() ? createR2Client() : null;
   }
 
   async createUploadedImagePayload(file) {
@@ -36,12 +30,21 @@ export class UploadService extends BaseService {
       throw new AppError("Uploaded file is required.", 422, "UPLOAD_FILE_REQUIRED");
     }
 
-    if (!isCloudinaryConfigured()) {
-      throw new AppError("Cloudinary upload storage is not configured.", 500, "UPLOAD_STORAGE_NOT_CONFIGURED");
+    if (!this.s3Client || !isR2Configured()) {
+      throw new AppError("Cloudflare R2 upload storage is not configured.", 500, "UPLOAD_STORAGE_NOT_CONFIGURED");
     }
 
-    const result = await uploadBufferToCloudinary(file);
-    const url = String(result.secure_url || "").trim();
+    const extension = normalizeImageExtension(file);
+    const objectKey = createR2ObjectKey(extension);
+    await this.s3Client.send(new PutObjectCommand({
+      Bucket: appConfig.r2BucketName,
+      Key: objectKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      CacheControl: "public, max-age=31536000, immutable"
+    }));
+
+    const url = createR2PublicUrl(objectKey);
 
     if (!isHttpsUrl(url)) {
       throw new AppError("Upload failed because storage did not return a valid HTTPS URL.", 502, "UPLOAD_STORAGE_URL_INVALID");
@@ -49,12 +52,12 @@ export class UploadService extends BaseService {
 
     return {
       originalName: file.originalname,
-      fileName: result.public_id,
-      publicId: result.public_id,
+      fileName: path.basename(objectKey),
+      objectKey,
       mimeType: file.mimetype,
       size: file.size,
       folder: "images",
-      extension: path.extname(file.originalname || "").toLowerCase(),
+      extension,
       url
     };
   }
@@ -156,25 +159,45 @@ export class UploadService extends BaseService {
   }
 }
 
-function isCloudinaryConfigured() {
-  return Boolean(appConfig.cloudinaryCloudName && appConfig.cloudinaryApiKey && appConfig.cloudinaryApiSecret);
+function isR2Configured() {
+  return Boolean(
+    appConfig.r2AccessKeyId
+    && appConfig.r2SecretAccessKey
+    && appConfig.r2BucketName
+    && appConfig.r2Endpoint
+    && appConfig.r2PublicUrl
+  );
 }
 
-function uploadBufferToCloudinary(file) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream({
-      folder: appConfig.cloudinaryFolder,
-      resource_type: "image",
-      overwrite: false,
-      use_filename: true,
-      unique_filename: true
-    }, (error, result) => {
-      if (error) return reject(error);
-      return resolve(result || {});
-    });
-
-    stream.end(file.buffer);
+function createR2Client() {
+  return new S3Client({
+    region: appConfig.r2Region || "auto",
+    endpoint: appConfig.r2Endpoint,
+    credentials: {
+      accessKeyId: appConfig.r2AccessKeyId,
+      secretAccessKey: appConfig.r2SecretAccessKey
+    }
   });
+}
+
+function createR2ObjectKey(extension) {
+  const folder = String(appConfig.r2Folder || "products").replace(/^\/+|\/+$/g, "") || "products";
+  return `${folder}/${Date.now()}-${crypto.randomUUID()}${extension}`;
+}
+
+function createR2PublicUrl(objectKey) {
+  return `${String(appConfig.r2PublicUrl || "").replace(/\/+$/, "")}/${objectKey}`;
+}
+
+function normalizeImageExtension(file) {
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  if ([".jpg", ".jpeg", ".png", ".webp"].includes(extension)) return extension;
+  const mimeExtensions = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp"
+  };
+  return mimeExtensions[file.mimetype] || extension || ".jpg";
 }
 
 function isHttpsUrl(value) {
