@@ -1120,8 +1120,9 @@ function bindProductVariantSection(modal, product, root = null) {
 
       if (!createdVariants.length && skippedVariants.length) {
         bulkCreateErrorTarget.textContent = `Không tạo mới biến thể nào. Thất bại/bỏ qua ${skippedVariants.length} biến thể vì đã tồn tại hoặc API không thành công.`;
+        toast.error(bulkCreateErrorTarget.textContent);
       } else {
-        toast.success(skippedVariants.length ? `Đã tạo ${createdVariants.length} biến thể, thất bại/bỏ qua ${skippedVariants.length} biến thể.` : `Đã tạo ${createdVariants.length} biến thể thành công.`);
+        toast.success(skippedVariants.length ? `Tạo biến thể thành công: ${createdVariants.length} tạo mới, ${skippedVariants.length} thất bại/bỏ qua.` : "Tạo biến thể thành công");
       }
       await renderVariants({ force: true });
       if (root) renderRows(root);

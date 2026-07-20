@@ -89,14 +89,22 @@ function createToastTemplate({ type, title, message, duration }) {
 }
 
 function getToastContainer() {
-  let container = document.querySelector("[data-toast-container]");
+  const containers = Array.from(document.querySelectorAll("[data-toast-container]"));
+  let container = containers.find((item) => item.parentElement === document.body) || containers[0];
 
   if (!container) {
     container = document.createElement("div");
     container.className = "toast-container";
     container.dataset.toastContainer = "";
+  }
+
+  if (container.parentElement !== document.body) {
     document.body.appendChild(container);
   }
+
+  containers.forEach((item) => {
+    if (item !== container && !item.children.length) item.remove();
+  });
 
   return container;
 }
