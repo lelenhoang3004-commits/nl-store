@@ -554,3 +554,194 @@
   .admin-product-variant-form-grid { grid-template-columns: 1fr; }
   .variant-quick-price-grid { grid-template-columns: 1fr; }
 }
+
+/* Modern variant builder */
+.admin-product-variant-builder {
+  gap: 16px;
+}
+
+.admin-product-variant-step {
+  gap: 14px;
+  padding: 18px;
+  border-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-border));
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-card) 94%, var(--color-primary) 6%), color-mix(in srgb, var(--color-background) 88%, var(--color-card)));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 16px 34px rgba(2,6,23,.14);
+}
+
+.admin-product-variant-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-size: .96rem;
+  font-weight: 900;
+}
+
+.admin-product-variant-step-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 55%, #22c55e));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.admin-product-variant-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-primary) 14%);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-background) 72%, var(--color-card));
+}
+
+.admin-product-variant-preset {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 800;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.admin-product-variant-preset:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 36%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+  color: var(--color-text);
+}
+
+.admin-product-variant-preset.is-active {
+  border-color: color-mix(in srgb, var(--color-primary) 70%, #fff);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 82%, #fff), color-mix(in srgb, var(--color-primary) 70%, #22c55e));
+  color: #fff;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 26%, transparent);
+}
+
+.admin-product-variant-chip-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+}
+
+.admin-product-variant-chip {
+  min-height: 46px;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-muted) 14%);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--color-card) 92%, var(--color-background));
+  color: var(--color-text);
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.admin-product-variant-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-card));
+}
+
+.admin-product-variant-chip input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.admin-product-variant-chip.is-active {
+  border-color: color-mix(in srgb, var(--color-primary) 78%, #fff);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 22%, var(--color-card)), color-mix(in srgb, #22c55e 10%, var(--color-card)));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 18%, transparent), inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
+}
+
+.admin-product-variant-chip.is-active input {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 60%, transparent));
+}
+
+.admin-product-variant-chip-color {
+  justify-content: flex-start;
+}
+
+.admin-product-variant-swatch {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, #fff 70%, var(--color-border));
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-background) 80%, transparent), 0 6px 14px rgba(0,0,0,.18);
+}
+
+.admin-product-variant-inline-form {
+  padding-top: 2px;
+}
+
+.admin-product-variant-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(170px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-product-variant-inline-fields label {
+  gap: 7px;
+  min-width: 0;
+}
+
+.admin-product-variant-inline-fields label span {
+  color: var(--color-muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.admin-product-variant-inline-fields input {
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-primary) 18%);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--color-card) 90%, var(--color-background));
+  color: var(--color-text);
+  padding: 0 13px;
+  outline: 0;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.admin-product-variant-inline-fields input:focus {
+  border-color: color-mix(in srgb, var(--color-primary) 76%, #fff);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 16%, transparent);
+  background: var(--color-card);
+}
+
+.admin-product-variant-inline-fields button,
+.admin-product-variant-create {
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 60%, #fff);
+  border-radius: 13px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 72%, #22c55e));
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+.admin-product-variant-inline-fields button:hover,
+.admin-product-variant-create:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+@media (max-width: 760px) {
+  .admin-product-variant-step { padding: 15px; }
+  .admin-product-variant-preset-row { overflow-x: auto; flex-wrap: nowrap; }
+  .admin-product-variant-preset { flex: 0 0 auto; }
+  .admin-product-variant-chip-list { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+  .admin-product-variant-inline-fields { grid-template-columns: 1fr; }
+  .admin-product-variant-inline-fields button,
+  .admin-product-variant-create { width: 100%; }
+}
