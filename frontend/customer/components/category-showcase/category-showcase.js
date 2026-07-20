@@ -26,22 +26,36 @@ export function createCategoryShowcaseSection(options = {}) {
 }
 
 function createCategoryCard(category) {
-  const image = category.image || "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80";
+  const image = category.image || "";
+  const icon = category.icon || "fa-layer-group";
   const name = category.name || "Danh mục";
-  const count = category.productCount || category.count || 0;
+  const count = Number(category.productCount || category.count || 0);
   const href = category.href || "#products";
 
   return `
-    <a class="category-showcase-card" href="${href}" data-reveal>
-      <div class="category-showcase-media">
-        <img src="${image}" alt="${name}" loading="lazy" decoding="async">
+    <a class="category-showcase-card" href="${escapeAttr(href)}" data-reveal>
+      <div class="category-showcase-media ${image ? "has-image" : "has-icon"}">
+        ${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(name)}" loading="lazy" decoding="async">` : `<span class="category-showcase-icon"><i class="fa-solid ${escapeAttr(icon)}" aria-hidden="true"></i></span>`}
       </div>
       <div class="category-showcase-body">
-        <h3>${name}</h3>
+        <h3>${escapeHtml(name)}</h3>
         <p>${count} sản phẩm</p>
       </div>
     </a>
   `;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
 }
 
 function getDefaultCategories() {

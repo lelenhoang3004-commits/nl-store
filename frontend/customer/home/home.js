@@ -148,21 +148,87 @@ async function loadCategoriesFromApi() {
     const response = await fetch(`${API_BASE_URL}/categories`);
     const payload = await response.json();
 
-    const categories = getListFromApiPayload(payload, "categories").map((category) => ({
-      id: category.id,
-      name: category.name,
-      productCount: category.productCount || 0,
-      image:
-        category.imageUrl ||
-        category.image_url ||
-        FALLBACK_PRODUCT_IMAGE
-    }));
+    const categories = getListFromApiPayload(payload, "categories").map(normalizeHomeCategory);
 
     return categories;
   } catch (error) {
     console.error("Không tải được danh mục từ API:", error);
     return [];
   }
+}
+
+function normalizeHomeCategory(category = {}) {
+  const name = category.name || "Danh mục";
+  const slug = category.slug || category.code || slugifyCategoryName(name);
+  const productCount = Number(category.productCount ?? category.product_count ?? category.productsCount ?? category.totalProducts ?? category.total_products ?? 0);
+  const image = category.imageUrl || category.image_url || category.thumbnailUrl || category.thumbnail_url || category.coverImage || category.cover_image || getCategoryImageByName(name);
+
+  return {
+    id: category.id,
+    name,
+    slug,
+    productCount,
+    image,
+    icon: category.icon || getCategoryIconByName(name),
+    href: `#products?keyword=${encodeURIComponent(slug)}`
+  };
+}
+
+function getFeaturedHomeCategories(categories = []) {
+  const source = categories.length ? categories : getFallbackHomeCategories();
+  const withProducts = source.filter((category) => Number(category.productCount || 0) > 0);
+  return (withProducts.length ? withProducts : source).slice(0, 8);
+}
+
+function getFallbackHomeCategories() {
+  return [
+    normalizeHomeCategory({ name: "Áo khoác", slug: "ao-khoac", productCount: 24 }),
+    normalizeHomeCategory({ name: "Chân váy", slug: "chan-vay", productCount: 18 }),
+    normalizeHomeCategory({ name: "Giày", slug: "giay", productCount: 15 }),
+    normalizeHomeCategory({ name: "Mũ nón", slug: "mu-non", productCount: 12 }),
+    normalizeHomeCategory({ name: "Dây chuyền", slug: "trang-suc", productCount: 10 }),
+    normalizeHomeCategory({ name: "Mắt kính", slug: "kinh-mat", productCount: 8 }),
+    normalizeHomeCategory({ name: "Đồng hồ", slug: "dong-ho", productCount: 7 }),
+    normalizeHomeCategory({ name: "Túi xách", slug: "tui-xach", productCount: 9 })
+  ];
+}
+
+function slugifyCategoryName(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "products";
+}
+
+function getCategoryImageByName(name = "") {
+  const key = slugifyCategoryName(name);
+  const images = {
+    "ao-khoac": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=600&q=80",
+    "ao-len": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80",
+    "chan-vay": "https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&fit=crop&w=600&q=80",
+    "giay": "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80",
+    "mu-non": "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=600&q=80",
+    "tui-xach": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80",
+    "dong-ho": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&q=80",
+    "trang-suc": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80",
+    "kinh-mat": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
+  };
+  return images[key] || "";
+}
+
+function getCategoryIconByName(name = "") {
+  const key = slugifyCategoryName(name);
+  if (key.includes("giay")) return "fa-shoe-prints";
+  if (key.includes("mu")) return "fa-hat-cowboy";
+  if (key.includes("day") || key.includes("trang-suc")) return "fa-gem";
+  if (key.includes("kinh")) return "fa-glasses";
+  if (key.includes("dong-ho")) return "fa-clock";
+  if (key.includes("tui")) return "fa-bag-shopping";
+  if (key.includes("vay") || key.includes("dam")) return "fa-person-dress";
+  return "fa-shirt";
 }
 
 export function createHomePage() {
@@ -297,12 +363,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     description: "Duyệt theo phong cách, chức năng và mùa một cách thuận tiện.",
     actionText: "Xem tất cả",
     actionHref: "#products",
-    categories: categories.length ? categories : [
-      { name: "Áo khoác", productCount: 24, image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" },
-      { name: "Cơ bản", productCount: 18, image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" },
-      { name: "Phụ kiện", productCount: 12, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80" },
-      { name: "Bộ sưu tập", productCount: 9, image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80" }
-    ]
+    categories: getFeaturedHomeCategories(categories)
   })}
     </section>
 
