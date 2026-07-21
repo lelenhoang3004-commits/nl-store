@@ -586,14 +586,23 @@
 }
 
 .customer-payment-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 44px;
   width: 44px;
   height: 44px;
   border-radius: 14px;
   background: var(--color-card);
+  color: var(--color-primary);
   font-size: 1.1rem;
+  line-height: 1;
+}
+
+.customer-payment-icon i,
+.customer-cart-empty-icon i,
+.customer-empty-icon i {
+  display: block;
+  line-height: 1;
 }
 
 .customer-payment-card strong {
@@ -805,14 +814,15 @@
 }
 
 .customer-cart-empty-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
   width: 80px;
   height: 80px;
   border-radius: 999px;
   background: var(--color-hover);
+  color: var(--color-primary);
   font-size: 2rem;
+  line-height: 1;
 }
 
 .customer-cart-skeleton-item {
@@ -1650,3 +1660,4 @@
   display: block;
   width: 100%;
 }
+

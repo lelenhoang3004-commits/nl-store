@@ -1250,7 +1250,7 @@ function finishOAuthFailure(message) {
 }
 async function renderCartPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">ðŸ‘œ</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem và quản lý giỏ hàng của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem và quản lý giỏ hàng của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
     return;
   }
 
@@ -1367,7 +1367,7 @@ async function renderCartPage() {
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `
       <div class="customer-cart-empty-state">
-        <div class="customer-cart-empty-icon">⚠️</div>
+        <div class="customer-cart-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải giỏ hàng</h2>
         <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải giỏ hàng.")}</p>
         <button class="customer-button" type="button" data-cart-retry>Thử lại</button>
@@ -1416,7 +1416,7 @@ function renderCartSkeleton() {
 function renderCartEmptyState() {
   return `
     <div class="customer-cart-empty-state">
-      <div class="customer-cart-empty-icon">ðŸ›ï¸</div>
+      <div class="customer-cart-empty-icon"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i></div>
       <h2>Giỏ hàng của bạn đang trống</h2>
       <p>Hãy thêm những sản phẩm bạn yêu thích để bắt đầu trải nghiệm mua sắm.</p>
       <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
@@ -1642,7 +1642,7 @@ function renderCheckoutSkeleton() {
 function renderCheckoutEmptyState() {
   return `
     <div class="customer-cart-empty-state">
-      <div class="customer-cart-empty-icon">ðŸ›ï¸</div>
+      <div class="customer-cart-empty-icon"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i></div>
       <h2>Giỏ hàng của bạn đang trống</h2>
       <p>Vui lòng quay lại sau khi thêm sản phẩm để đặt hàng.</p>
       <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
@@ -1759,7 +1759,7 @@ function renderCheckoutFieldErrors(form) {
 
 async function renderCheckoutPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Thanh toán", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon">ðŸ”</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để tiếp tục thanh toán.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Thanh toán", `<div class="customer-cart-empty-state"><div class="customer-cart-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để tiếp tục thanh toán.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
     return;
   }
 
@@ -1865,7 +1865,7 @@ async function renderCheckoutPage() {
               <div class="customer-payment-options">
                 <label class="customer-payment-card is-active">
                   <input type="radio" name="paymentMethod" value="cod" checked>
-                  <div class="customer-payment-icon">ðŸšš</div>
+                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-box-open"></i></span>
                   <div>
                     <strong>Thanh toán khi nhận hàng (COD)</strong>
                     <p>Thanh toán trực tiếp khi nhận hàng.</p>
@@ -1873,7 +1873,7 @@ async function renderCheckoutPage() {
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="bank_transfer">
-                  <div class="customer-payment-icon">ðŸ¦</div>
+                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
                   <div>
                     <strong>Chuyển khoản ngân hàng</strong>
                     <p>Chuyển khoản trước khi giao hàng.</p>
@@ -1881,7 +1881,7 @@ async function renderCheckoutPage() {
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="vnpay">
-                  <div class="customer-payment-icon">ðŸ’³</div>
+                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
                   <div>
                     <strong>VNPay</strong>
                     <p>Thanh toán nhanh bằng cổng VNPay.</p>
@@ -1889,7 +1889,7 @@ async function renderCheckoutPage() {
                 </label>
                 <label class="customer-payment-card">
                   <input type="radio" name="paymentMethod" value="momo">
-                  <div class="customer-payment-icon">ðŸ“±</div>
+                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
                   <div>
                     <strong>MoMo</strong>
                     <p>Thanh toán bằng ví điện tử MoMo.</p>
@@ -1941,7 +1941,7 @@ async function renderCheckoutPage() {
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Thanh toán", `
       <div class="customer-cart-empty-state">
-        <div class="customer-cart-empty-icon">⚠️</div>
+        <div class="customer-cart-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải checkout</h2>
         <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải dữ liệu checkout.")}</p>
         <button class="customer-button" type="button" data-checkout-retry>Thử lại</button>
@@ -2131,7 +2131,7 @@ function initCheckoutForm(container, checkoutSummary) {
 
 async function renderOrdersPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem lịch sử đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem lịch sử đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
     return;
   }
 
@@ -2150,7 +2150,7 @@ async function renderOrdersPage() {
     if (!orders.length) {
       layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
         <div class="customer-empty-state">
-          <div class="customer-empty-icon">ðŸ§¾</div>
+          <div class="customer-empty-icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></div>
           <h2>Chưa có đơn hàng nào</h2>
           <p>Bạn vẫn chưa đặt đơn nào. Hãy khám phá bộ sưu tập mới hôm nay.</p>
           <div class="customer-order-actions">
@@ -2214,7 +2214,7 @@ async function renderOrdersPage() {
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
       <div class="customer-empty-state">
-        <div class="customer-empty-icon">⚠️</div>
+        <div class="customer-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải đơn hàng</h2>
         <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải lịch sử đơn hàng.")}</p>
         <div class="customer-order-actions">
@@ -2230,12 +2230,12 @@ async function renderOrdersPage() {
 
 async function renderOrderDetailPage(orderId) {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem chi tiết đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem chi tiết đơn hàng.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
     return;
   }
 
   if (!orderId) {
-    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ§¾</div><h2>Không tìm thấy đơn hàng</h2><p>Vui lòng quay lại danh sách đơn hàng để chọn mã đơn.</p><a class="customer-button secondary" href="#orders">Quay lại đơn hàng</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></div><h2>Không tìm thấy đơn hàng</h2><p>Vui lòng quay lại danh sách đơn hàng để chọn mã đơn.</p><a class="customer-button secondary" href="#orders">Quay lại đơn hàng</a></div>`);
     return;
   }
 
@@ -2368,7 +2368,7 @@ async function renderOrderDetailPage(orderId) {
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
       <div class="customer-empty-state">
-        <div class="customer-empty-icon">⚠️</div>
+        <div class="customer-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải đơn hàng</h2>
         <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải chi tiết đơn hàng.")}</p>
         <div class="customer-order-actions">
@@ -2393,7 +2393,7 @@ function renderProfilePage() {
 
 async function renderWishlistPage() {
   if (!customerAuth.isAuthenticated()) {
-    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ”</div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem danh sách yêu thích của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để xem danh sách yêu thích của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
     return;
   }
 
@@ -2414,7 +2414,7 @@ async function renderWishlistPage() {
 
   const wishlistItems = Array.isArray(layoutState.wishlistItems) ? layoutState.wishlistItems : [];
   if (!wishlistItems.length) {
-    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon">ðŸ’–</div><h2>Danh sách yêu thích trống</h2><p>Chọn sản phẩm bạn yêu thích để lưu lại và xem sau.</p><a class="customer-button" href="#home">Tiếp tục mua sắm</a></div>`);
+    layoutState.main.innerHTML = renderPageShell("Yêu thích", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></div><h2>Danh sách yêu thích trống</h2><p>Chọn sản phẩm bạn yêu thích để lưu lại và xem sau.</p><a class="customer-button" href="#home">Tiếp tục mua sắm</a></div>`);
     return;
   }
 
@@ -2808,7 +2808,7 @@ function findPaymentCard(radio) {
 }
 
 function insertPaymentIcon(card, config) {
-  if (card.querySelector(".checkout-payment-card-icon")) return;
+  if (card.querySelector(".checkout-payment-card-icon, .customer-payment-icon i, .customer-payment-icon svg")) return;
   const icon = document.createElement("span");
   icon.className = "checkout-payment-card-icon";
   icon.setAttribute("aria-hidden", "true");
@@ -2844,7 +2844,7 @@ function removeBrokenPaymentEmoji(card) {
 
 function sanitizeBrokenPaymentText(value) {
   return String(value || "")
-    .replace(/ðŸ[\s\S]?/g, "")
+    .replace(/\u00f0\u0178[\s\S]?/g, "")
     .replace(/[📦💵🏦💳👛💰]/gu, "")
     .replace(/\s{2,}/g, " ");
 }
@@ -2949,19 +2949,4 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
