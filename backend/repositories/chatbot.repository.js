@@ -20,7 +20,7 @@ const PRODUCT_COLUMNS = `
 `;
 
 export class ChatbotRepository extends BaseRepository {
-  async searchProducts({ keywords = [], color = "", size = "", priceMax = null, limit = 5 } = {}) {
+  async searchProducts({ keywords = [], color = "", size = "", priceMin = null, priceMax = null, limit = 5 } = {}) {
     const conditions = ["p.deleted_at IS NULL", "p.status = 'active'"];
     const params = [];
     const searchableColumns = ["p.name", "p.slug", "p.sku", "p.brand", "p.short_description", "p.description", "c.name"];
@@ -36,6 +36,11 @@ export class ChatbotRepository extends BaseRepository {
     if (Number.isFinite(Number(priceMax)) && Number(priceMax) > 0) {
       conditions.push("COALESCE(NULLIF(p.sale_price, 0), p.price) <= ?");
       params.push(Number(priceMax));
+    }
+
+    if (Number.isFinite(Number(priceMin)) && Number(priceMin) > 0) {
+      conditions.push("COALESCE(NULLIF(p.sale_price, 0), p.price) >= ?");
+      params.push(Number(priceMin));
     }
 
     const rows = await this.executeProductSelect(
@@ -68,6 +73,60 @@ export class ChatbotRepository extends BaseRepository {
     );
 
     return rows.map(mapProduct);
+  }
+
+  async getNewProducts(limit = 5) {
+    const rows = await this.executeProductSelect(
+      `SELECT ${PRODUCT_COLUMNS}
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
+      WHERE p.deleted_at IS NULL AND p.status = 'active'
+      ORDER BY p.created_at DESC, p.id DESC
+      LIMIT ${Math.min(Math.max(Number(limit) || 5, 1), 5)}`
+    );
+
+    return rows.map(mapProduct);
+  }
+
+  async getBestSellingProducts(limit = 5) {
+    const rows = await this.executeProductSelect(
+      `SELECT ${PRODUCT_COLUMNS}
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
+      WHERE p.deleted_at IS NULL AND p.status = 'active'
+      ORDER BY p.sold DESC, CASE WHEN p.stock > 0 THEN 0 ELSE 1 END, p.created_at DESC
+      LIMIT ${Math.min(Math.max(Number(limit) || 5, 1), 5)}`
+    );
+
+    return rows.map(mapProduct);
+  }
+
+  async getActiveVouchers(limit = 5) {
+    const [rows] = await this.execute(
+      `SELECT
+        id,
+        code,
+        name,
+        description,
+        discount_type,
+        discount_value,
+        min_order_amount,
+        max_discount_amount,
+        quantity,
+        used_quantity,
+        starts_at,
+        expires_at,
+        status
+      FROM vouchers
+      WHERE status = 'active'
+        AND (starts_at IS NULL OR starts_at <= CURRENT_TIMESTAMP)
+        AND (expires_at IS NULL OR expires_at >= CURRENT_TIMESTAMP)
+        AND (quantity IS NULL OR used_quantity < quantity)
+      ORDER BY created_at DESC
+      LIMIT ${Math.min(Math.max(Number(limit) || 5, 1), 5)}`
+    );
+
+    return rows.map(mapVoucher);
   }
 
   async getRecentOrdersByCustomer(customerId, limit = 5) {
@@ -152,4 +211,22 @@ function parseJson(value, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function mapVoucher(row = {}) {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    description: row.description || "",
+    discountType: row.discount_type,
+    discountValue: Number(row.discount_value || 0),
+    minOrderAmount: Number(row.min_order_amount || 0),
+    maxDiscountAmount: row.max_discount_amount === null || row.max_discount_amount === undefined ? null : Number(row.max_discount_amount),
+    quantity: row.quantity === null || row.quantity === undefined ? null : Number(row.quantity),
+    usedQuantity: Number(row.used_quantity || 0),
+    startsAt: row.starts_at || null,
+    expiresAt: row.expires_at || null,
+    status: row.status
+  };
 }

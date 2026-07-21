@@ -88,3 +88,20 @@ test("chatbot returns a friendly message when product data is unavailable", asyn
 
   assert.match(result.reply, /hệ thống đang tạm thời gặp sự cố/);
 });
+
+test("chatbot returns active vouchers from repository data", async () => {
+  const service = new ChatbotService({
+    searchProducts: async () => [],
+    getActiveProductSamples: async () => [],
+    getRecentOrdersByCustomer: async () => [],
+    getActiveVouchers: async () => [{ id: 1, code: "SALE10", discountType: "percentage", discountValue: 10 }]
+  });
+
+  const result = await service.replyToMessage({
+    message: "Shop có voucher nào không?",
+    user: null
+  });
+
+  assert.equal(result.vouchers.length, 1);
+  assert.equal(result.vouchers[0].code, "SALE10");
+});
