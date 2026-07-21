@@ -957,11 +957,10 @@ function renderPageShell(title, content) {
 function renderSocialButtons(label = "đăng nhập") {
   return `<div class="auth-divider"><span>Hoặc ${label} với</span></div>
     <div class="auth-social-grid">
-      <button class="auth-social-button" type="button" data-oauth="google"><span class="auth-social-icon google">G</span>Đăng nhập bằng Google</button>
-      <button class="auth-social-button" type="button" data-oauth="facebook"><span class="auth-social-icon facebook">f</span>Đăng nhập bằng Facebook</button>
+      <button class="auth-social-button" type="button" data-oauth="google"><span class="auth-social-icon google"><i class="fa-brands fa-google" aria-hidden="true"></i></span><span>Đăng nhập bằng Google</span></button>
+      <button class="auth-social-button" type="button" data-oauth="facebook"><span class="auth-social-icon facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span><span>Đăng nhập bằng Facebook</span></button>
     </div>`;
 }
-
 function bindOAuthButtons(root) {
   root.querySelectorAll("[data-oauth]").forEach(button => button.addEventListener("click", () => {
     const provider = button.dataset.oauth;
@@ -1051,24 +1050,25 @@ async function handleOAuthMessage(event) {
   }
 }
 function renderLoginPage() {
-  layoutState.main.innerHTML = `<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card">
-    <a class="auth-back" href="#home">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>Đăng nhập</h1><p>Chào mừng bạn quay lại với trải nghiệm mua sắm riêng của mình.</p></div>
-    <form data-login-form class="auth-form"><div data-auth-message hidden></div>
-      <label><span>Email hoặc số điện thoại</span><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></label>
-      <label><span>Mật khẩu</span><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></label>
+  layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card">
+    <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
+    <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L SHOP</span><h1>Đăng nhập</h1><p>Chào mừng bạn quay lại với trải nghiệm mua sắm riêng của mình.</p></div>
+    <form data-login-form class="auth-form auth-login-form"><div data-auth-message hidden></div>
+      <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
+      <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
       <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
-      <button class="customer-button auth-primary" type="submit">Đăng nhập</button>
+      <button class="customer-button auth-primary" type="submit"><span>Đăng nhập</span></button>
       ${renderSocialButtons("đăng nhập")}
-      <a class="auth-phone-button" href="#phone-login">Đăng nhập bằng số điện thoại</a>
+      <a class="auth-phone-button" href="#phone-login"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>Đăng nhập bằng số điện thoại</span></a>
       <p class="auth-switch">Chưa có tài khoản? <a href="#register">Đăng ký</a></p>
     </form></article></div></section>`;
   const root = layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]");
-    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.textContent="Đang đăng nhập...";
+    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span>Đang đăng nhập...</span>";
     try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
     catch(error){ showCustomerMessage(form,error?.message||"Đăng nhập thất bại."); }
-    finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.textContent="Đăng nhập"; }
+    finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
   });
 }
 
@@ -2876,10 +2876,11 @@ function injectPasswordToggleStyles() {
   const style = document.createElement('style');
   style.id = 'password-toggle-styles';
   style.textContent = `
-    .password-input-wrapper{position:relative;display:inline-block;width:100%}
-    .password-input-wrapper input{padding-right:44px;box-sizing:border-box}
-    .password-toggle-button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:16px;padding:6px;line-height:1}
-    .password-toggle-button:focus{outline:2px solid rgba(59,130,246,0.25);border-radius:6px}
+    .password-input-wrapper{position:relative;display:block;width:100%}
+    .password-input-wrapper input{padding-right:104px;box-sizing:border-box}
+    .password-toggle-button{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:#0b173d;cursor:pointer;font:700 .95rem/1 inherit;padding:8px 10px;display:inline-flex;align-items:center;gap:7px;border-radius:999px}
+    .password-toggle-button:hover{background:rgba(11,23,61,.06)}
+    .password-toggle-button:focus{outline:2px solid rgba(196,143,46,.35);border-radius:999px}
   `;
   document.head.appendChild(style);
 }
@@ -2906,18 +2907,18 @@ function initPasswordToggles(root = document) {
     btn.className = 'password-toggle-button';
     btn.title = 'Hiện mật khẩu';
     btn.setAttribute('aria-label', 'Hiện mật khẩu');
-    btn.textContent = 'Hiện';
+    btn.innerHTML = '<i class="fa-regular fa-eye" aria-hidden="true"></i><span>Hiện</span>';
     wrapper.appendChild(btn);
 
     btn.addEventListener('click', () => {
       if (input.type === 'password') {
         input.type = 'text';
-        btn.textContent = 'Ẩn';
+        btn.innerHTML = '<i class="fa-regular fa-eye-slash" aria-hidden="true"></i><span>Ẩn</span>';
         btn.title = 'Ẩn mật khẩu';
         btn.setAttribute('aria-label', 'Ẩn mật khẩu');
       } else {
         input.type = 'password';
-        btn.textContent = 'Hiện';
+        btn.innerHTML = '<i class="fa-regular fa-eye" aria-hidden="true"></i><span>Hiện</span>';
         btn.title = 'Hiện mật khẩu';
         btn.setAttribute('aria-label', 'Hiện mật khẩu');
       }
