@@ -148,10 +148,11 @@ export class AuthRepository extends BaseRepository {
       `UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL`,
       [userId]
     );
-    await this.client.getPool().execute(
+    const [result] = await this.client.getPool().execute(
       `INSERT INTO password_reset_tokens (user_id, code_hash, expires_at) VALUES (?, ?, ?)`,
       [userId, codeHash, expiresAt]
     );
+    return result.insertId;
   }
 
   async incrementPasswordResetAttempts(id) {
