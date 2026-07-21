@@ -1,5 +1,6 @@
 ﻿import { createCustomerFooter } from "../../components/footer/footer.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
+import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createHomePage, initHomePage } from "../../home/home.js";
@@ -263,6 +264,7 @@ function bootstrapCustomerWebsite() {
   }
 
   renderLayout();
+  initCustomerChatbot();
   bindGlobalEvents();
 
   // Initialize password visibility toggles and observe SPA content changes

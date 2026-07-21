@@ -14,6 +14,7 @@ import adminNewsletterRoutes from "./admin-newsletter.route.js";
 import adminCategoryRoutes from "./admin-category.route.js";
 import cartRoutes from "./cart.routes.js";
 import categoryRoutes from "./category.routes.js";
+import chatbotRoutes from "./chatbot.routes.js";
 import dashboardRoutes from "./dashboard.routes.js";
 import newsletterRoutes from "./newsletter.routes.js";
 import orderRoutes from "./order.routes.js";
@@ -38,6 +39,7 @@ router.use("/admin/vouchers", adminVoucherRoutes);
 router.use("/auth", authRoutes);
 router.use("/cart", cartRoutes);
 router.use("/categories", categoryRoutes);
+router.use("/chatbot", chatbotRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/newsletter", newsletterRoutes);
 router.use("/orders", orderRoutes);
@@ -50,4 +52,3 @@ router.use("/users", userRoutes);
 router.use("/vouchers", voucherRoutes);
 
 export default router;
-
