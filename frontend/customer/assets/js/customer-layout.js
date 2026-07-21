@@ -1090,7 +1090,7 @@ function renderForgotPasswordPage() {
         <button class="customer-button auth-primary" type="submit"><span>Gửi mã xác thực</span></button>
       </div>
       <div data-forgot-reset-step hidden>
-        <label class="auth-field"><span>Mã xác thực</span><div class="auth-input-shell"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></div><small data-field-error="code"></small></label>
+        <label class="auth-field"><span>Mã xác thực</span><div class="auth-input-shell"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="Nhập mã 6 số"></div><small data-field-error="code"></small></label>
         <label class="auth-field"><span>Mật khẩu mới</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" autocomplete="new-password" placeholder="Tối thiểu 8 ký tự"></div><small data-field-error="password"></small></label>
         <label class="auth-field"><span>Xác nhận mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Nhập lại mật khẩu mới"></div><small data-field-error="confirmPassword"></small></label>
         <button class="customer-button auth-primary" type="submit"><span>Đổi mật khẩu</span></button>
@@ -1226,7 +1226,7 @@ function renderPhoneLoginPage() {
     <a class="auth-back" href="#login">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">BẢO MẬT OTP</span><h1>Đăng nhập bằng số điện thoại</h1><p>Mã xác thực có hiệu lực trong 5 phút.</p></div>
     <form data-phone-form class="auth-form"><div data-auth-message hidden></div><label><span>Số điện thoại</span><input type="tel" name="phone" required placeholder="0901234567"></label>
       <button class="auth-phone-button" type="button" data-send-otp>Gửi mã OTP</button>
-      <div data-otp-fields hidden><div class="otp-status">Mã đã gửi. Có thể gửi lại sau <strong data-countdown>60</strong> giây.</div><label><span>Mã OTP</span><input name="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></label>
+      <div data-otp-fields hidden><div class="otp-status">Mã đã gửi. Có thể gửi lại sau <strong data-countdown>60</strong> giây.</div><label><span>Mã OTP</span><input name="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="Nhập mã 6 số"></label>
         <label data-new-password><span>Mật khẩu mới <small>(nếu tài khoản chưa có mật khẩu)</small></span><input type="password" name="password" autocomplete="new-password"></label>
         <label data-confirm-password><span>Xác nhận mật khẩu</span><input type="password" name="confirmPassword" autocomplete="new-password"></label>
         <button class="customer-button auth-primary" type="submit">Xác thực và đăng nhập</button></div>
