@@ -229,14 +229,16 @@ function normalizeEmail(value) {
 
 async function sendPasswordResetEmail(email, code) {
   const subject = "Mã đặt lại mật khẩu N&L Store";
-  const text = `Mã xác thực đặt lại mật khẩu của bạn là ${code}. Mã có hiệu lực trong 10 phút và chỉ dùng một lần.`;
+  const text = `Mã xác thực đặt lại mật khẩu của bạn là ${code}. Mã có hiệu lực trong 10 phút, chỉ dùng một lần. Vui lòng không chia sẻ mã này với bất kỳ ai.`;
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
       <h2 style="color:#0b173d">Mã đặt lại mật khẩu N&amp;L Store</h2>
       <p>Xin chào,</p>
       <p>Mã xác thực đặt lại mật khẩu của bạn là:</p>
       <p style="font-size:28px;font-weight:800;letter-spacing:6px;color:#0b173d">${code}</p>
-      <p>Mã có hiệu lực trong 10 phút và chỉ dùng một lần. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+      <p>Mã có hiệu lực trong 10 phút và chỉ dùng một lần.</p>
+      <p style="color:#b42318;font-weight:700">Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
       <p>Trân trọng,<br>N&amp;L Store</p>
     </div>`;
   await sendMail({ to: email, subject, text, html });
