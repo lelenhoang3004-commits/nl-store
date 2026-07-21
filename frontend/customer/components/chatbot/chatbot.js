@@ -57,6 +57,7 @@ function createChatbotHtml() {
           </form>
         </div>
       </div>
+      <button class="nl-chatbot-label" type="button" data-chatbot-label aria-label="Mở trợ lý AI">Trợ lý AI</button>
       <button class="nl-chatbot-toggle" type="button" data-chatbot-toggle aria-label="Mở chatbot N&L Store">${avatarImage()}</button>
     </section>
   `;
@@ -70,6 +71,7 @@ function bindChatbotEvents() {
   const form = root.querySelector("[data-chatbot-form]");
   const input = root.querySelector("[data-chatbot-input]");
   const toggle = root.querySelector("[data-chatbot-toggle]");
+  const label = root.querySelector("[data-chatbot-label]");
 
   toggle?.addEventListener("pointerdown", handleDragStart);
   toggle?.addEventListener("click", (event) => {
@@ -80,6 +82,7 @@ function bindChatbotEvents() {
     }
     toggleChatbot();
   });
+  label?.addEventListener("click", toggleChatbot);
 
   root.querySelector("[data-chatbot-close]")?.addEventListener("click", () => root.classList.remove("is-open"));
   root.querySelector("[data-chatbot-clear]")?.addEventListener("click", clearConversation);

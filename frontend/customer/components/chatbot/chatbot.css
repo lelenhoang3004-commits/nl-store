@@ -1,5 +1,8 @@
 .nl-chatbot{position:fixed;right:22px;bottom:22px;z-index:900;font-family:inherit;touch-action:none}
 .nl-chatbot.is-open{z-index:1100}
+.nl-chatbot-label{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);border:0;border-radius:999px;padding:7px 12px;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 10px 24px rgba(37,99,235,.26);font:inherit;font-size:12px;font-weight:800;line-height:1;white-space:nowrap;cursor:pointer}
+.nl-chatbot-label::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);border-radius:2px;background:#6d4eea;box-shadow:3px 3px 8px rgba(37,99,235,.12)}
+.nl-chatbot.is-open .nl-chatbot-label{display:none}
 .nl-chatbot-toggle{width:64px;height:64px;border:0;border-radius:50%;padding:3px;background:linear-gradient(135deg,#23c3ff,#7c3cff);box-shadow:0 18px 40px rgba(15,23,42,.22);cursor:grab;transition:transform .18s ease,box-shadow .18s ease;touch-action:none}
 .nl-chatbot.is-dragging .nl-chatbot-toggle{cursor:grabbing;transform:scale(1.02)}
 .nl-chatbot-toggle:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 22px 46px rgba(15,23,42,.28)}
@@ -24,4 +27,4 @@
 .nl-chatbot-form{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px 14px 14px;background:#fff}.nl-chatbot-input{min-height:42px;max-height:96px;resize:none;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font:inherit;font-size:13px;line-height:1.4}.nl-chatbot-send{width:42px;height:42px;border-radius:12px;color:#fff;background:#2563eb}.nl-chatbot-send:disabled{opacity:.62;cursor:not-allowed}.nl-chatbot-clear{grid-column:1/-1;justify-self:start;color:#64748b;background:transparent;font-size:12px;font-weight:600}
 .nl-chatbot-typing{display:inline-flex;gap:4px}.nl-chatbot-typing span{width:6px;height:6px;border-radius:50%;background:#64748b;animation:nlChatTyping .9s infinite ease-in-out}.nl-chatbot-typing span:nth-child(2){animation-delay:.12s}.nl-chatbot-typing span:nth-child(3){animation-delay:.24s}
 @keyframes nlChatTyping{0%,80%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-4px);opacity:1}}
-@media (max-width:640px){.nl-chatbot{right:14px;bottom:14px}.nl-chatbot-panel{position:fixed;right:10px;left:10px;bottom:88px;width:auto;height:min(620px,calc(100vh - 108px));border-radius:16px}.nl-chatbot-toggle{width:58px;height:58px}}
+@media (max-width:640px){.nl-chatbot{right:14px;bottom:14px}.nl-chatbot-label{bottom:68px;padding:6px 10px;font-size:11px}.nl-chatbot-panel{position:fixed;right:10px;left:10px;bottom:88px;width:auto;height:min(620px,calc(100vh - 108px));border-radius:16px}.nl-chatbot-toggle{width:58px;height:58px}}
