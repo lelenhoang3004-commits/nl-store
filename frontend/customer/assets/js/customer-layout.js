@@ -269,6 +269,7 @@ function bootstrapCustomerWebsite() {
 
   // Initialize password visibility toggles and observe SPA content changes
   observePasswordTogglesOnMain();
+  observeCheckoutPaymentCards();
 
   // OAuth callback must save/verify its token before normal session restoration or login routing.
   const initialOAuthCallback = readOAuthCallback();
@@ -2732,6 +2733,130 @@ function resolveAssetUrl(url) {
   return globalThis.normalizeImageUrl?.(url) ?? url;
 }
 
+
+const CHECKOUT_PAYMENT_ICON_MAP = Object.freeze({
+  cod: { icon: "fa-box-open", label: "Thanh toán khi nhận hàng" },
+  bank_transfer: { icon: "fa-building-columns", label: "Chuyển khoản ngân hàng" },
+  vnpay: { icon: "fa-credit-card", label: "VNPay" },
+  momo: { icon: "fa-wallet", label: "MoMo" }
+});
+
+function observeCheckoutPaymentCards() {
+  try {
+    normalizeCheckoutPaymentCards(document);
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.addedNodes.length > 0)) {
+        normalizeCheckoutPaymentCards(document);
+      }
+    });
+    observer.observe(layoutState.main || document.body, { childList: true, subtree: true });
+  } catch (error) {
+    console.debug("[checkout-payment] normalization skipped", error?.message);
+  }
+}
+
+function normalizeCheckoutPaymentCards(root = document) {
+  const radios = Array.from(root.querySelectorAll("input[type='radio']")).filter((input) => {
+    const value = normalizePaymentMethodValue(input.value);
+    return Boolean(CHECKOUT_PAYMENT_ICON_MAP[value]);
+  });
+
+  radios.forEach((radio) => {
+    const method = normalizePaymentMethodValue(radio.value);
+    const config = CHECKOUT_PAYMENT_ICON_MAP[method];
+    const card = findPaymentCard(radio);
+    if (!card || card.dataset.paymentCardNormalized === "true") {
+      syncPaymentCardState(radio, card);
+      return;
+    }
+
+    card.dataset.paymentCardNormalized = "true";
+    card.dataset.paymentMethodCard = method;
+    card.classList.add("checkout-payment-card", "nl-payment-card-normalized");
+
+    removeBrokenPaymentEmoji(card);
+    insertPaymentIcon(card, config);
+    ensurePaymentLabel(card, radio, config.label);
+    syncPaymentCardState(radio, card);
+
+    card.addEventListener("click", (event) => {
+      if (event.target.closest("a,button,input,select,textarea")) return;
+      radio.checked = true;
+      radio.dispatchEvent(new Event("change", { bubbles: true }));
+      syncAllPaymentCardStates();
+    });
+
+    radio.addEventListener("change", syncAllPaymentCardStates);
+  });
+}
+
+function findPaymentCard(radio) {
+  return radio.closest("[data-payment-method-card], .payment-method-card, .checkout-payment-card, label, .form-check, .customer-payment-option") || radio.parentElement;
+}
+
+function insertPaymentIcon(card, config) {
+  if (card.querySelector(".checkout-payment-card-icon")) return;
+  const icon = document.createElement("span");
+  icon.className = "checkout-payment-card-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
+  card.prepend(icon);
+}
+
+function ensurePaymentLabel(card, radio, fallbackLabel) {
+  const textNodes = getDirectTextNodes(card).filter((node) => node.textContent.trim());
+  textNodes.forEach((node) => {
+    node.textContent = sanitizeBrokenPaymentText(node.textContent);
+  });
+
+  const hasReadableText = String(card.textContent || "").replace(/\s+/g, " ").trim().length > 0;
+  if (hasReadableText) return;
+
+  const label = document.createElement("span");
+  label.className = "checkout-payment-card-title";
+  label.textContent = fallbackLabel;
+  radio.insertAdjacentElement("afterend", label);
+}
+
+function removeBrokenPaymentEmoji(card) {
+  getDirectTextNodes(card).forEach((node) => {
+    node.textContent = sanitizeBrokenPaymentText(node.textContent);
+  });
+  card.querySelectorAll("span, strong, small, p, div").forEach((element) => {
+    if (element.children.length === 0) {
+      element.textContent = sanitizeBrokenPaymentText(element.textContent);
+    }
+  });
+}
+
+function sanitizeBrokenPaymentText(value) {
+  return String(value || "")
+    .replace(/ðŸ[\s\S]?/g, "")
+    .replace(/[📦💵🏦💳👛💰]/gu, "")
+    .replace(/\s{2,}/g, " ");
+}
+
+function getDirectTextNodes(element) {
+  return Array.from(element.childNodes).filter((node) => node.nodeType === Node.TEXT_NODE);
+}
+
+function syncAllPaymentCardStates() {
+  document.querySelectorAll("input[type='radio']").forEach((radio) => {
+    const method = normalizePaymentMethodValue(radio.value);
+    if (CHECKOUT_PAYMENT_ICON_MAP[method]) {
+      syncPaymentCardState(radio, findPaymentCard(radio));
+    }
+  });
+}
+
+function syncPaymentCardState(radio, card) {
+  if (!card) return;
+  card.classList.toggle("is-selected", Boolean(radio.checked));
+}
+
+function normalizePaymentMethodValue(value) {
+  return String(value || "").trim().toLowerCase().replace(/-/g, "_");
+}
 // Password visibility toggle: inject styles and attach toggles to inputs[type=password]
 function injectPasswordToggleStyles() {
   if (document.getElementById('password-toggle-styles')) return;
@@ -2811,6 +2936,7 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
 
 
 
