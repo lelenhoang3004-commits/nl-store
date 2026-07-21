@@ -80,7 +80,7 @@ export const appConfig = Object.freeze({
   customerAuthCallbackUrl: resolveCustomerAuthCallbackUrl(),
   smtpHost: process.env.SMTP_HOST || "",
   smtpPort: Number(process.env.SMTP_PORT || 587),
-  smtpSecure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : Number(process.env.SMTP_PORT || 587) === 465,
+  smtpSecure: Number(process.env.SMTP_PORT || 587) === 587 ? false : (process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : Number(process.env.SMTP_PORT || 587) === 465),
   smtpUser: process.env.SMTP_USER || "",
   smtpPass: process.env.SMTP_PASS || "",
   smtpFromName: process.env.SMTP_FROM_NAME || "N&L Store",

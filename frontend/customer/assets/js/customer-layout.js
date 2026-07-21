@@ -1081,6 +1081,7 @@ function renderLoginPage() {
 function renderForgotPasswordPage() {
   let resetEmail = "";
   let countdownTimer = null;
+  let forgotRequestPending = false;
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card">
     <a class="auth-back" href="#login"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại đăng nhập</span></a>
     <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L SHOP</span><h1>Quên mật khẩu</h1><p>Nhập email tài khoản để nhận mã xác thực đặt lại mật khẩu.</p></div>
@@ -1152,31 +1153,48 @@ function renderForgotPasswordPage() {
   });
 
   async function submitForgotEmail(formElement, button, emailValue, options = {}) {
+    if (forgotRequestPending) return;
     const email = String(emailValue || "").trim().toLowerCase();
     if (!email) {
       showCustomerMessage(formElement, "Vui lòng nhập email.");
       return;
     }
-    const originalText = button?.innerHTML || "";
+
+    forgotRequestPending = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+    const idleText = options.resend ? "Gửi lại mã xác thực" : "<span>Gửi mã xác thực</span>";
+
     if (button) {
       button.disabled = true;
       button.innerHTML = options.resend ? "Đang gửi lại..." : "<span>Đang gửi mã...</span>";
     }
+
+    let requestSucceeded = false;
     try {
-      const result = await customerAuth.forgotPassword(email);
+      const result = await customerAuth.forgotPassword(email, { signal: controller.signal });
       resetEmail = email;
       emailStep.hidden = true;
       resetStep.hidden = false;
       resetStep.querySelectorAll("input").forEach((input) => { input.required = true; });
       showCustomerMessage(formElement, result?.message || "Nếu email hợp lệ, mã xác thực đã được gửi.", "success");
       startForgotCountdown(Number(result?.resendAfter || 60));
+      requestSucceeded = true;
       resetStep.querySelector("[name='code']")?.focus();
     } catch (error) {
-      showCustomerMessage(formElement, error?.message || "Không thể gửi mã xác thực.");
-      if (button) button.disabled = false;
+      const message = error?.name === "AbortError"
+        ? "Máy chủ phản hồi quá lâu. Vui lòng thử lại."
+        : (error?.message || "Không thể gửi mã xác thực.");
+      showCustomerMessage(formElement, message);
     } finally {
-      if (button && !options.resend && resetStep.hidden) {
-        button.innerHTML = originalText;
+      window.clearTimeout(timeoutId);
+      forgotRequestPending = false;
+      if (button && (!requestSucceeded || resetStep.hidden)) {
+        button.disabled = false;
+        button.innerHTML = idleText;
+      }
+      if (requestSucceeded && !resetStep.hidden && resendButton) {
+        resendButton.disabled = true;
       }
     }
   }

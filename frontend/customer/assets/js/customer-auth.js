@@ -132,12 +132,13 @@ export const customerAuth = {
     saveSession(response.data, true);
     return response.data;
   },
-  async forgotPassword(email) {
+  async forgotPassword(email, options = {}) {
     const response = await customerApi("/auth/forgot-password", {
       method: "POST",
       body: { email },
       auth: false,
-      refreshOnUnauthorized: false
+      refreshOnUnauthorized: false,
+      signal: options.signal
     });
     return response.data;
   },
@@ -339,7 +340,8 @@ function createRequestOptions(options) {
     method: options.method || "GET",
     headers,
     credentials: "include",
-    body: createRequestBody(options.body)
+    body: createRequestBody(options.body),
+    signal: options.signal
   };
 }
 
