@@ -1,4 +1,4 @@
-const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+﻿const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
     ? "http://localhost:5000/api/v1"
     : "https://nl-store.onrender.com/api/v1"
@@ -130,6 +130,25 @@ export const customerAuth = {
       method: "POST", body: payload, auth: false, refreshOnUnauthorized: false
     });
     saveSession(response.data, true);
+    return response.data;
+  },
+  async forgotPassword(email) {
+    const response = await customerApi("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+      auth: false,
+      refreshOnUnauthorized: false
+    });
+    return response.data;
+  },
+
+  async resetPassword(payload) {
+    const response = await customerApi("/auth/reset-password", {
+      method: "POST",
+      body: payload,
+      auth: false,
+      refreshOnUnauthorized: false
+    });
     return response.data;
   },
   async register(payload) {

@@ -10,6 +10,7 @@ import { comparePassword, hashPassword } from "../utils/password.util.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.util.js";
 import { parseDurationToMs } from "../utils/duration.util.js";
 import { logger } from "../utils/logger.util.js";
+import { sendMail } from "../utils/smtp-mailer.util.js";
 
 export class AuthService extends BaseService {
   constructor(repository = new AuthRepository(), userService = new UserService(), notificationService = new NotificationService()) {
@@ -103,7 +104,6 @@ export class AuthService extends BaseService {
     const otpHash = await hashPassword(otp);
     const expiresAt = new Date(Date.now() + appConfig.otpExpiresInSeconds * 1000);
     await this.repository.saveOtp(phone, otpHash, expiresAt);
-    if (!appConfig.isProduction) logger.info("Development phone OTP generated.", { phone, otp });
     const user = await this.repository.findByPhone(phone);
     return { phone, expiresIn: appConfig.otpExpiresInSeconds, resendAfter: appConfig.otpResendCooldownSeconds, requiresPassword: !user?.passwordHash };
   }
@@ -128,6 +128,63 @@ export class AuthService extends BaseService {
       ? await this.repository.verifyPhoneAndSetPassword(user.id, passwordHash)
       : await this.repository.createPhoneUser(phone, passwordHash);
     return this.issueTokenPair(user, true);
+  }
+
+
+  async forgotPassword({ email }) {
+    const normalizedEmail = normalizeEmail(email);
+    const genericResult = {
+      message: PASSWORD_RESET_GENERIC_MESSAGE,
+      resendAfter: appConfig.passwordResetResendCooldownSeconds,
+      expiresIn: appConfig.passwordResetExpiresInSeconds
+    };
+
+    const user = await this.repository.findByEmail(normalizedEmail);
+    if (!user || !user.isActive()) {
+      return genericResult;
+    }
+
+    const latest = await this.repository.getLatestPasswordResetToken(user.id);
+    if (latest && !latest.used_at) {
+      const elapsed = Number(latest.seconds_since_created || 0);
+      if (elapsed < appConfig.passwordResetResendCooldownSeconds) {
+        throw new AppError(`Vui lòng chờ ${appConfig.passwordResetResendCooldownSeconds - elapsed} giây trước khi gửi lại mã.`, 429, "PASSWORD_RESET_COOLDOWN");
+      }
+    }
+
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+    const codeHash = await hashPassword(code);
+    const expiresAt = new Date(Date.now() + appConfig.passwordResetExpiresInSeconds * 1000);
+    await this.repository.savePasswordResetToken(user.id, codeHash, expiresAt);
+    await sendPasswordResetEmail(user.email, code);
+    return genericResult;
+  }
+
+  async resetPassword({ email, code, password, confirmPassword }) {
+    if (password !== confirmPassword) {
+      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+    }
+
+    const user = await this.repository.findByEmail(normalizeEmail(email));
+    if (!user || !user.isActive()) {
+      throw new AppError("Mã xác thực không đúng hoặc đã hết hạn.", 422, "PASSWORD_RESET_INVALID");
+    }
+
+    const record = await this.repository.getLatestPasswordResetToken(user.id);
+    if (!record || record.used_at || new Date(record.expires_at).getTime() <= Date.now()) {
+      throw new AppError("Mã xác thực không đúng hoặc đã hết hạn.", 422, "PASSWORD_RESET_INVALID");
+    }
+    if (Number(record.attempts || 0) >= appConfig.passwordResetMaxAttempts) {
+      throw new AppError("Bạn đã nhập sai mã quá nhiều lần. Vui lòng gửi mã mới.", 429, "PASSWORD_RESET_TOO_MANY_ATTEMPTS");
+    }
+    if (!/^\d{6}$/.test(String(code || "")) || !await comparePassword(String(code), record.code_hash)) {
+      await this.repository.incrementPasswordResetAttempts(record.id);
+      throw new AppError("Mã xác thực không đúng hoặc đã hết hạn.", 422, "PASSWORD_RESET_INVALID");
+    }
+
+    await this.repository.consumePasswordResetToken(record.id);
+    await this.repository.updatePasswordHash(user.id, await hashPassword(password));
+    return { message: "Mật khẩu đã được đặt lại thành công." };
   }
 
   async refresh(refreshToken) {
@@ -163,6 +220,27 @@ export class AuthService extends BaseService {
   }
 }
 
+
+const PASSWORD_RESET_GENERIC_MESSAGE = "Nếu email hợp lệ, mã xác thực đã được gửi.";
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+async function sendPasswordResetEmail(email, code) {
+  const subject = "Mã đặt lại mật khẩu N&L Store";
+  const text = `Mã xác thực đặt lại mật khẩu của bạn là ${code}. Mã có hiệu lực trong 10 phút và chỉ dùng một lần.`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
+      <h2 style="color:#0b173d">Mã đặt lại mật khẩu N&amp;L Store</h2>
+      <p>Xin chào,</p>
+      <p>Mã xác thực đặt lại mật khẩu của bạn là:</p>
+      <p style="font-size:28px;font-weight:800;letter-spacing:6px;color:#0b173d">${code}</p>
+      <p>Mã có hiệu lực trong 10 phút và chỉ dùng một lần. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+      <p>Trân trọng,<br>N&amp;L Store</p>
+    </div>`;
+  await sendMail({ to: email, subject, text, html });
+}
 function normalizePhone(value) {
   const phone = String(value || "").trim().replace(/[\s.-]/g, "").replace(/^\+84/, "0");
   if (!/^0(3|5|7|8|9)\d{8}$/.test(phone)) throw new AppError("Số điện thoại không hợp lệ.", 422, "INVALID_PHONE");
@@ -190,7 +268,4 @@ function oauthConfig(provider) {
   };
   throw new AppError("OAuth provider không hợp lệ.", 400, "INVALID_OAUTH_PROVIDER");
 }
-
-
-
 

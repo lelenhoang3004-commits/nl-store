@@ -1633,6 +1633,7 @@
   overflow-wrap: anywhere;
 }
 
+
 @media (max-width: 640px) {
   .nl-payment-card-normalized {
     gap: 10px;
@@ -1937,6 +1938,39 @@
   font-size: 0.98rem;
 }
 
+
+.auth-login-form [data-forgot-email-step],
+.auth-login-form [data-forgot-reset-step] {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-login-form [data-forgot-email-step][hidden],
+.auth-login-form [data-forgot-reset-step][hidden] {
+  display: none;
+}
+
+.auth-resend-button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #a7650f;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  text-align: center;
+}
+
+.auth-resend-button:not(:disabled):hover {
+  color: #0b173d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-resend-button:disabled {
+  color: #7a8190;
+  cursor: wait;
+}
 @media (max-width: 640px) {
   .auth-login-page {
     padding: 18px 0 28px;

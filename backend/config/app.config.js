@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Application configuration.
  * Environment values are normalized here so the rest of the codebase avoids direct process.env usage.
  */
@@ -78,6 +78,14 @@ export const appConfig = Object.freeze({
     "/api/v1/auth/facebook/callback"
   ),
   customerAuthCallbackUrl: resolveCustomerAuthCallbackUrl(),
+  smtpHost: process.env.SMTP_HOST || "",
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  smtpFrom: process.env.SMTP_FROM || "N&L Store <no-reply@nl-store.com>",
+  passwordResetExpiresInSeconds: Number(process.env.PASSWORD_RESET_EXPIRES_IN_SECONDS || 600),
+  passwordResetResendCooldownSeconds: Number(process.env.PASSWORD_RESET_RESEND_COOLDOWN_SECONDS || 60),
+  passwordResetMaxAttempts: Number(process.env.PASSWORD_RESET_MAX_ATTEMPTS || 5),
   otpExpiresInSeconds: Number(process.env.OTP_EXPIRES_IN_SECONDS || 300),
   otpResendCooldownSeconds: Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60),
   uploadRateLimitWindowMs: Number(process.env.UPLOAD_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
@@ -165,3 +173,4 @@ function isLocalUrl(value) {
     return true;
   }
 }
+

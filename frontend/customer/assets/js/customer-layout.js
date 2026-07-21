@@ -602,6 +602,12 @@ function renderRoute() {
       renderPhoneLoginPage();
       return;
     }
+
+    if (route === 'forgot-password') {
+      currentRoute = route;
+      renderForgotPasswordPage();
+      return;
+    }
     if (route === 'login') {
       if (customerAuth.isAuthenticated()) {
         const redirect = layoutState.pendingRoute || 'home';
@@ -1072,6 +1078,128 @@ function renderLoginPage() {
   });
 }
 
+function renderForgotPasswordPage() {
+  let resetEmail = "";
+  let countdownTimer = null;
+  layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card">
+    <a class="auth-back" href="#login"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại đăng nhập</span></a>
+    <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L SHOP</span><h1>Quên mật khẩu</h1><p>Nhập email tài khoản để nhận mã xác thực đặt lại mật khẩu.</p></div>
+    <form data-forgot-form class="auth-form auth-login-form"><div data-auth-message hidden></div>
+      <div data-forgot-email-step>
+        <label class="auth-field"><span>Email</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></div><small data-field-error="email"></small></label>
+        <button class="customer-button auth-primary" type="submit"><span>Gửi mã xác thực</span></button>
+      </div>
+      <div data-forgot-reset-step hidden>
+        <label class="auth-field"><span>Mã xác thực</span><div class="auth-input-shell"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><input name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></div><small data-field-error="code"></small></label>
+        <label class="auth-field"><span>Mật khẩu mới</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" autocomplete="new-password" placeholder="Tối thiểu 8 ký tự"></div><small data-field-error="password"></small></label>
+        <label class="auth-field"><span>Xác nhận mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Nhập lại mật khẩu mới"></div><small data-field-error="confirmPassword"></small></label>
+        <button class="customer-button auth-primary" type="submit"><span>Đổi mật khẩu</span></button>
+        <button class="auth-resend-button" type="button" data-forgot-resend disabled>Gửi lại mã sau <strong data-forgot-countdown>60</strong>s</button>
+      </div>
+      <p class="auth-switch">Đã nhớ mật khẩu? <a href="#login">Đăng nhập</a></p>
+    </form></article></div></section>`;
+
+  const root = layoutState.main;
+  const form = root.querySelector("[data-forgot-form]");
+  const emailStep = root.querySelector("[data-forgot-email-step]");
+  const resetStep = root.querySelector("[data-forgot-reset-step]");
+  const resendButton = root.querySelector("[data-forgot-resend]");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const visibleResetStep = !resetStep.hidden;
+    const button = event.submitter?.matches("button[type='submit']") ? event.submitter : form.querySelector("button[type='submit']");
+
+    if (!visibleResetStep) {
+      await submitForgotEmail(form, button, data.get("email"));
+      return;
+    }
+
+    const password = String(data.get("password") || "");
+    const confirmPassword = String(data.get("confirmPassword") || "");
+    const code = String(data.get("code") || "").trim();
+    if (!/^\d{6}$/.test(code)) {
+      showCustomerMessage(form, "Mã xác thực phải gồm 6 chữ số.");
+      return;
+    }
+    if (password.length < 8) {
+      showCustomerMessage(form, "Mật khẩu mới phải có ít nhất 8 ký tự.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showCustomerMessage(form, "Xác nhận mật khẩu không khớp.");
+      return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = "<span>Đang đổi mật khẩu...</span>";
+    try {
+      await customerAuth.resetPassword({ email: resetEmail, code, password, confirmPassword });
+      showCustomerToast("Mật khẩu đã được đặt lại. Vui lòng đăng nhập.", "success");
+      navigateToRoute("login");
+    } catch (error) {
+      showCustomerMessage(form, error?.message || "Không thể đặt lại mật khẩu.");
+    } finally {
+      button.disabled = false;
+      button.innerHTML = "<span>Đổi mật khẩu</span>";
+    }
+  });
+
+  resendButton?.addEventListener("click", async () => {
+    if (!resetEmail) return;
+    await submitForgotEmail(form, resendButton, resetEmail, { resend: true });
+  });
+
+  async function submitForgotEmail(formElement, button, emailValue, options = {}) {
+    const email = String(emailValue || "").trim().toLowerCase();
+    if (!email) {
+      showCustomerMessage(formElement, "Vui lòng nhập email.");
+      return;
+    }
+    const originalText = button?.innerHTML || "";
+    if (button) {
+      button.disabled = true;
+      button.innerHTML = options.resend ? "Đang gửi lại..." : "<span>Đang gửi mã...</span>";
+    }
+    try {
+      const result = await customerAuth.forgotPassword(email);
+      resetEmail = email;
+      emailStep.hidden = true;
+      resetStep.hidden = false;
+      resetStep.querySelectorAll("input").forEach((input) => { input.required = true; });
+      showCustomerMessage(formElement, result?.message || "Nếu email hợp lệ, mã xác thực đã được gửi.", "success");
+      startForgotCountdown(Number(result?.resendAfter || 60));
+      resetStep.querySelector("[name='code']")?.focus();
+    } catch (error) {
+      showCustomerMessage(formElement, error?.message || "Không thể gửi mã xác thực.");
+      if (button) button.disabled = false;
+    } finally {
+      if (button && !options.resend && resetStep.hidden) {
+        button.innerHTML = originalText;
+      }
+    }
+  }
+
+  function startForgotCountdown(seconds) {
+    window.clearInterval(countdownTimer);
+    let left = Math.max(Number(seconds || 60), 1);
+    const counter = root.querySelector("[data-forgot-countdown]");
+    resendButton.disabled = true;
+    const update = () => {
+      if (counter) counter.textContent = String(Math.max(left, 0));
+      resendButton.innerHTML = `Gửi lại mã sau <strong data-forgot-countdown>${Math.max(left, 0)}</strong>s`;
+      left -= 1;
+      if (left < 0) {
+        window.clearInterval(countdownTimer);
+        resendButton.disabled = false;
+        resendButton.textContent = "Gửi lại mã xác thực";
+      }
+    };
+    update();
+    countdownTimer = window.setInterval(update, 1000);
+  }
+}
 function renderRegisterPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card auth-card-wide">
     <a class="auth-back" href="#home">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>Đăng ký</h1><p>Đăng ký để mua sắm cùng N&L Shop</p></div>
@@ -2721,7 +2849,7 @@ function getRouteParam(hash = '') {
 }
 
 function isAppRoute(route) {
-  return ['home','login','register','phone-login','auth-callback','profile','orders','checkout','cart','wishlist','product-detail'].includes(route) || route.startsWith('orders/');
+  return ['home','login','register','phone-login','forgot-password','auth-callback','profile','orders','checkout','cart','wishlist','product-detail'].includes(route) || route.startsWith('orders/');
 }
 
 function escapeHtml(value) {

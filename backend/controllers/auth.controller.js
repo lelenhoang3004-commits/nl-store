@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import { appConfig } from "../config/app.config.js";
 import { BaseController } from "./base.controller.js";
 import { AuthService } from "../services/auth.service.js";
@@ -16,6 +16,8 @@ export class AuthController extends BaseController {
     return this.sendSuccess(res, publicTokenResult(result), "Đăng nhập thành công.");
   });
   register = asyncHandler(async (req, res) => this.sendSuccess(res, await this.service.register(req.body), "Đăng ký thành công.", 201));
+  forgotPassword = asyncHandler(async (req, res) => this.sendSuccess(res, await this.service.forgotPassword(req.body), "Nếu email hợp lệ, mã xác thực đã được gửi."));
+  resetPassword = asyncHandler(async (req, res) => this.sendSuccess(res, await this.service.resetPassword(req.body), "Mật khẩu đã được đặt lại thành công."));
   sendPhoneOtp = asyncHandler(async (req, res) => this.sendSuccess(res, await this.service.sendPhoneOtp(req.body.phone), "Mã OTP đã được tạo."));
   verifyPhoneOtp = asyncHandler(async (req, res) => {
     const result = await this.service.verifyPhoneOtp(req.body); this.setRefreshCookie(res, result, true);
@@ -159,3 +161,4 @@ function redirectOAuthError(res, message, provider = "google") {
 function redactOAuthToken(redirectUrl) {
   return redirectUrl.replace(/([?&]token=)[^&]+/i, "$1[REDACTED]");
 }
+

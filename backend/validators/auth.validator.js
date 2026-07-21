@@ -23,3 +23,22 @@ export function validateVerifyOtpRequest({ body }) {
   if (body.password || body.confirmPassword) { results.push(validatePassword(body.password, { required: true, strong: true })); if (body.password !== body.confirmPassword) errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH")); }
   return mergeValidationResults([...results, createValidationResult(errors)]);
 }
+export function validateForgotPasswordRequest({ body }) {
+  return validateEmail(body.email, { required: true });
+}
+
+export function validateResetPasswordRequest({ body }) {
+  const errors = [];
+  if (!/^\d{6}$/.test(String(body.code || ""))) {
+    errors.push(createValidationError("code", "Mã xác thực phải gồm 6 chữ số.", "body", "INVALID_RESET_CODE_FORMAT"));
+  }
+  if (body.password !== body.confirmPassword) {
+    errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH"));
+  }
+  return mergeValidationResults([
+    validateEmail(body.email, { required: true }),
+    validatePassword(body.password, { required: true, strong: true }),
+    createValidationResult(errors)
+  ]);
+}
+

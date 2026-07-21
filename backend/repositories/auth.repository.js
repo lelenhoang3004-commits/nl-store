@@ -1,10 +1,27 @@
-import { BaseRepository } from "./base.repository.js";
+﻿import { BaseRepository } from "./base.repository.js";
 import { AuthUser } from "../models/auth-user.model.js";
 
 const AUTH_COLUMNS = `id, email, phone, full_name, avatar_url, provider, provider_id,
   password_hash, role, permissions, status, refresh_token_hash`;
 
 export class AuthRepository extends BaseRepository {
+  async ensurePasswordResetSchema() {
+    await this.client.getPool().execute(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT UNSIGNED NOT NULL,
+        code_hash VARCHAR(255) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        used_at DATETIME NULL,
+        attempts INT UNSIGNED NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_password_reset_user_created (user_id, created_at),
+        INDEX idx_password_reset_expires (expires_at),
+        CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+  }
+
   async findByEmail(email) {
     const [rows] = await this.client.getPool().execute(
       `SELECT ${AUTH_COLUMNS} FROM users WHERE LOWER(email) = LOWER(?) AND deleted_at IS NULL LIMIT 1`, [email]
@@ -114,6 +131,49 @@ export class AuthRepository extends BaseRepository {
     );
   }
 
+  async getLatestPasswordResetToken(userId) {
+    await this.ensurePasswordResetSchema();
+    const [rows] = await this.client.getPool().execute(
+      `SELECT id, user_id, code_hash, expires_at, used_at, attempts, created_at,
+        GREATEST(TIMESTAMPDIFF(SECOND, created_at, CURRENT_TIMESTAMP), 0) AS seconds_since_created
+       FROM password_reset_tokens WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
+      [userId]
+    );
+    return rows[0] || null;
+  }
+
+  async savePasswordResetToken(userId, codeHash, expiresAt) {
+    await this.ensurePasswordResetSchema();
+    await this.client.getPool().execute(
+      `UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL`,
+      [userId]
+    );
+    await this.client.getPool().execute(
+      `INSERT INTO password_reset_tokens (user_id, code_hash, expires_at) VALUES (?, ?, ?)`,
+      [userId, codeHash, expiresAt]
+    );
+  }
+
+  async incrementPasswordResetAttempts(id) {
+    await this.ensurePasswordResetSchema();
+    await this.client.getPool().execute(`UPDATE password_reset_tokens SET attempts = attempts + 1 WHERE id = ?`, [id]);
+  }
+
+  async consumePasswordResetToken(id) {
+    await this.ensurePasswordResetSchema();
+    await this.client.getPool().execute(
+      `UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = ? AND used_at IS NULL`,
+      [id]
+    );
+  }
+
+  async updatePasswordHash(userId, passwordHash) {
+    await this.client.getPool().execute(
+      `UPDATE users SET password_hash = ?, refresh_token_hash = NULL, refresh_token_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [passwordHash, userId]
+    );
+    return this.findById(userId);
+  }
   async saveRefreshToken(userId, refreshTokenHash, expiresAt) {
     await this.client.getPool().execute(
       `UPDATE users SET refresh_token_hash = ?, refresh_token_expires_at = ?, last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -127,5 +187,4 @@ export class AuthRepository extends BaseRepository {
     );
   }
 }
-
 
