@@ -51,7 +51,7 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
         </a>
         <button class="header-icon-button" type="button" aria-label="Thông báo" data-popover-toggle="notification">
           <i class="fa-regular fa-bell" aria-hidden="true"></i>
-          <span class="header-badge">3</span>
+          <span class="header-badge is-empty" data-customer-notification-badge>0</span>
         </button>
         <a class="header-icon-button" href="#cart" aria-label="Xem giỏ hàng" data-cart-link>
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
@@ -139,8 +139,9 @@ export function initCustomerHeader(root = document, options = {}) {
     options.onLogout?.();
   });
 
+  popoverRootSafeBind(root);
   bindGlobalHeaderListeners();
-  initCustomerNotifications(root, Boolean(user));
+  initializeUnreadCounter(root);
 }
 
 function createInitials(value) {
@@ -202,6 +203,47 @@ function bindGlobalHeaderListeners() {
   globalHeaderListenersBound = true;
 }
 
+function getCurrentCustomerUser() {
+  try {
+    return customerAuth.getUser?.() || null;
+  } catch (error) {
+    console.debug("[header] Unable to read customer user", error?.message || error);
+    return null;
+  }
+}
+
+function isCustomerLoggedIn() {
+  try {
+    return Boolean(customerAuth.isAuthenticated?.() && getCurrentCustomerUser());
+  } catch (error) {
+    console.debug("[header] Unable to read auth state", error?.message || error);
+    return false;
+  }
+}
+
+function popoverRootSafeBind(root) {
+  const popover = root?.querySelector?.("[data-customer-notification-popover]");
+  if (!popover || popover.dataset.notificationClickBound === "true") return;
+  popover.dataset.notificationClickBound = "true";
+  popover.addEventListener("click", (event) => {
+    handleCustomerNotificationClick(event, root).catch((error) => {
+      console.debug("[header] Notification action failed", error?.message || error);
+      updateCustomerNotificationUI(root, { error: "Không thể cập nhật thông báo." });
+    });
+  });
+}
+
+function initializeUnreadCounter(root = activeHeaderRoot || document) {
+  try {
+    initCustomerNotifications(root, isCustomerLoggedIn());
+  } catch (error) {
+    console.debug("[header] Notification counter skipped", error?.message || error);
+    customerNotificationState.items = [];
+    customerNotificationState.unreadCount = 0;
+    stopCustomerNotificationPolling();
+    updateCustomerNotificationUI(root, { guest: true });
+  }
+}
 const customerNotificationState = {
   interval: null,
   loading: false,
@@ -210,11 +252,11 @@ const customerNotificationState = {
 };
 
 function initCustomerNotifications(root, isAuthenticated) {
-  const badge = root.querySelector("[data-customer-notification-badge]");
-  const popover = root.querySelector("[data-customer-notification-popover]");
+  const badge = root?.querySelector?.("[data-customer-notification-badge]");
+  const popover = root?.querySelector?.("[data-customer-notification-popover]");
   if (!badge || !popover) return;
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !getCurrentCustomerUser()) {
     stopCustomerNotificationPolling();
     customerNotificationState.items = [];
     customerNotificationState.unreadCount = 0;
@@ -240,6 +282,13 @@ function stopCustomerNotificationPolling() {
 }
 
 async function fetchCustomerNotifications(root, options = {}) {
+  if (!isCustomerLoggedIn()) {
+    stopCustomerNotificationPolling();
+    customerNotificationState.items = [];
+    customerNotificationState.unreadCount = 0;
+    updateCustomerNotificationUI(root, { guest: true });
+    return;
+  }
   if (customerNotificationState.loading) return;
   customerNotificationState.loading = true;
   try {
@@ -252,6 +301,8 @@ async function fetchCustomerNotifications(root, options = {}) {
     if (error?.status === 401) {
       customerAuth.clearExternalLogin?.("notifications-unauthorized");
       stopCustomerNotificationPolling();
+      customerNotificationState.items = [];
+      customerNotificationState.unreadCount = 0;
       updateCustomerNotificationUI(root, { guest: true });
     } else if (!options.silent) {
       updateCustomerNotificationUI(root, { error: "Không thể tải thông báo." });
@@ -262,8 +313,8 @@ async function fetchCustomerNotifications(root, options = {}) {
 }
 
 function updateCustomerNotificationUI(root, options = {}) {
-  const badge = root.querySelector("[data-customer-notification-badge]");
-  const popover = root.querySelector("[data-customer-notification-popover]");
+  const badge = root?.querySelector?.("[data-customer-notification-badge]");
+  const popover = root?.querySelector?.("[data-customer-notification-popover]");
   if (!badge || !popover) return;
 
   const unreadCount = options.guest ? 0 : customerNotificationState.unreadCount;
@@ -298,7 +349,11 @@ async function handleCustomerNotificationClick(event, root) {
 
   if (readAllButton) {
     event.preventDefault();
-    await customerApi("/notifications/read-all", { method: "PATCH" });
+    if (!isCustomerLoggedIn()) {
+      updateCustomerNotificationUI(root, { guest: true });
+      return;
+    }
+    await customerApi("/notifications/read-all", { method: "PATCH", auth: true, refreshOnUnauthorized: false });
     customerNotificationState.items = customerNotificationState.items.map((notification) => ({ ...notification, read: true, isRead: true }));
     customerNotificationState.unreadCount = 0;
     updateCustomerNotificationUI(root);
@@ -310,7 +365,9 @@ async function handleCustomerNotificationClick(event, root) {
   const id = item.dataset.customerNotificationId;
   const link = item.getAttribute("href") || "#orders";
   try {
-    await customerApi(`/notifications/${encodeURIComponent(id)}/read`, { method: "PATCH" });
+    if (isCustomerLoggedIn()) {
+      await customerApi(`/notifications/${encodeURIComponent(id)}/read`, { method: "PATCH", auth: true, refreshOnUnauthorized: false });
+    }
   } catch {}
   customerNotificationState.items = customerNotificationState.items.map((notification) => String(notification.id) === String(id) ? { ...notification, read: true, isRead: true } : notification);
   customerNotificationState.unreadCount = customerNotificationState.items.filter((notification) => !notification.read).length;
@@ -321,3 +378,4 @@ async function handleCustomerNotificationClick(event, root) {
 function normalizeCustomerNotification(item = {}) {
   return { ...item, id: item.id, read: Boolean(item.read ?? item.isRead), link: item.link || "#orders" };
 }
+
