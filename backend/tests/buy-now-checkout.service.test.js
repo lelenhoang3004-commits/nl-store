@@ -1,6 +1,6 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
-import { CartService } from "../services/cart.service.js";
+import { CartService, calculateCheckoutTotals } from "../services/cart.service.js";
 import { validateCheckoutRequest } from "../validators/cart.validator.js";
 
 test("buy-now validator accepts exactly one product item", () => {
@@ -69,4 +69,24 @@ test("buy-now requires a variant when the product has variants", async () => {
     service.buildBuyNowItems([{ product_id: 2, quantity: 1 }], {}),
     (error) => error.code === "CART_VARIANT_REQUIRED"
   );
+});
+
+test("checkout totals include VAT and free shipping threshold", () => {
+  assert.deepEqual(calculateCheckoutTotals({ subtotal: 199000, discountTotal: 0 }), {
+    subtotal: 199000,
+    discountTotal: 0,
+    eligibleAmount: 199000,
+    taxTotal: 19900,
+    shippingFee: 30000,
+    grandTotal: 248900
+  });
+
+  assert.deepEqual(calculateCheckoutTotals({ subtotal: 500000, discountTotal: 0 }), {
+    subtotal: 500000,
+    discountTotal: 0,
+    eligibleAmount: 500000,
+    taxTotal: 50000,
+    shippingFee: 0,
+    grandTotal: 550000
+  });
 });

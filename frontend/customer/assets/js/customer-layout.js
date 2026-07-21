@@ -1271,9 +1271,12 @@ async function renderCartPage() {
     const selectedItems = items.filter((item) => item.isSelected);
     const selectedSubtotal = selectedItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
     const voucherSummary = getCartVoucherSummary(selectedSubtotal);
-    const shippingFee = selectedSubtotal > 0 ? (voucherSummary.code === "SHIPFREE" ? 0 : 30000) : 0;
-    const vatAmount = Math.max(Math.round((selectedSubtotal - voucherSummary.discountAmount) * 0.1), 0);
-    const grandTotal = Math.max(selectedSubtotal - voucherSummary.discountAmount + shippingFee + vatAmount, 0);
+    const discountAmount = Math.min(Number(voucherSummary.discountAmount || 0), selectedSubtotal);
+    const eligibleAmount = Math.max(selectedSubtotal - discountAmount, 0);
+    const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
+    const vatAmount = Math.round(eligibleAmount * 0.1);
+    const grandTotal = eligibleAmount + shippingFee + vatAmount;
+    const freeShippingRemaining = eligibleAmount > 0 && eligibleAmount < 500000 ? 500000 - eligibleAmount : 0;
     const selectedCount = selectedItems.length;
 
     layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `
@@ -1342,9 +1345,10 @@ async function renderCartPage() {
 
             <div class="customer-cart-summary-lines">
               <div><span>Tạm tính</span><strong>${formatCurrency(selectedSubtotal)}</strong></div>
-              <div><span>Giảm giá</span><strong>${formatCurrency(voucherSummary.discountAmount)}</strong></div>
+              <div><span>Giảm giá</span><strong>${formatCurrency(discountAmount)}</strong></div>
               <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(vatAmount)}</strong></div>
-              <div><span>Phí vận chuyển</span><strong>${formatCurrency(shippingFee)}</strong></div>
+              <div><span>Phí vận chuyển</span><strong>${formatShippingFee(shippingFee)}</strong></div>
+              ${freeShippingRemaining > 0 ? `<div class="customer-checkout-free-shipping-hint"><span>Mua thêm ${formatCurrency(freeShippingRemaining)} để được miễn phí vận chuyển</span></div>` : ""}
             </div>
 
             <div class="customer-cart-summary-total">
@@ -1650,17 +1654,22 @@ function getCheckoutSummary(items, voucherCode = "") {
   const selectedItems = Array.isArray(items) ? items.filter((item) => item.isSelected) : [];
   const selectedSubtotal = selectedItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
   const voucherSummary = getCartVoucherSummary(selectedSubtotal);
-  const shippingFee = selectedSubtotal > 0 ? (voucherSummary.code === "SHIPFREE" ? 0 : 30000) : 0;
-  const vatAmount = Math.max(Math.round((selectedSubtotal - voucherSummary.discountAmount) * 0.1), 0);
-  const grandTotal = Math.max(selectedSubtotal - voucherSummary.discountAmount + shippingFee + vatAmount, 0);
+  const discountAmount = Math.min(Number(voucherSummary.discountAmount || 0), selectedSubtotal);
+    const eligibleAmount = Math.max(selectedSubtotal - discountAmount, 0);
+    const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
+    const vatAmount = Math.round(eligibleAmount * 0.1);
+    const grandTotal = eligibleAmount + shippingFee + vatAmount;
+    const freeShippingRemaining = eligibleAmount > 0 && eligibleAmount < 500000 ? 500000 - eligibleAmount : 0;
 
   return {
     items: selectedItems,
     selectedSubtotal,
-    discountAmount: voucherSummary.discountAmount,
+    discountAmount,
+    eligibleAmount,
     shippingFee,
     vatAmount,
     grandTotal,
+    freeShippingRemaining,
     voucherSummary
   };
 }
@@ -1915,7 +1924,8 @@ async function renderCheckoutPage() {
               <div><span>Tạm tính</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
               <div><span>Giảm giá</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
               <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
-              <div><span>Phí vận chuyển</span><strong>${formatCurrency(checkoutSummary.shippingFee)}</strong></div>
+              <div><span>Phí vận chuyển</span><strong>${formatShippingFee(checkoutSummary.shippingFee)}</strong></div>
+              ${checkoutSummary.freeShippingRemaining > 0 ? `<div class="customer-checkout-free-shipping-hint"><span>Mua thêm ${formatCurrency(checkoutSummary.freeShippingRemaining)} để được miễn phí vận chuyển</span></div>` : ""}
             </div>
             <div class="customer-checkout-total">
               <span>Tổng thanh toán</span>
@@ -2087,7 +2097,6 @@ function initCheckoutForm(container, checkoutSummary) {
           country: "Vietnam"
         },
         paymentMethod,
-        shippingFee: checkoutSummary.shippingFee,
         voucherCode: checkoutSummary.voucherSummary?.status === "success" ? checkoutSummary.voucherSummary.code : null,
         note
       });
@@ -2724,6 +2733,10 @@ function escapeHtml(value) {
     .replaceAll("'","&#039;");
 }
 
+
+function formatShippingFee(value) {
+  return Number(value || 0) === 0 ? "Miễn phí" : formatCurrency(value);
+}
 function formatCurrency(value) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value || 0));
 }
@@ -2936,6 +2949,9 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
+
+
 
 
 

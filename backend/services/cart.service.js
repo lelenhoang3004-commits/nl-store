@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cart service.
  * It validates product, stock, variants, size, and color before writing cart data.
  */
@@ -162,9 +162,10 @@ export class CartService extends BaseService {
         ? await this.voucherService.validateVoucher({ code: normalizedPayload.voucherCode, orderTotal: subtotal }, { connection, forUpdate: true })
         : null;
       const discountTotal = voucherResult ? Number(voucherResult.discountAmount || 0) : 0;
-      const shippingFee = normalizedPayload.shippingFee;
-      const taxTotal = 0;
-      const grandTotal = Math.max(subtotal - discountTotal + shippingFee + taxTotal, 0);
+      const totals = calculateCheckoutTotals({ subtotal, discountTotal });
+      const shippingFee = totals.shippingFee;
+      const taxTotal = totals.taxTotal;
+      const grandTotal = totals.grandTotal;
       const paymentMethod = normalizedPayload.paymentMethod;
       // Checkout never trusts a client-provided paid flag. Gateway placeholders and COD
       // always start pending and can only be paid through the payment status API.
@@ -284,7 +285,6 @@ export class CartService extends BaseService {
       paymentProvider: String(payload.paymentProvider || paymentMethod).trim().toLowerCase(),
       paymentMethodId: payload.paymentMethodId || null,
       paymentStatus: payload.paymentStatus === "paid" ? "paid" : "unpaid",
-      shippingFee: Number(payload.shippingFee || 30000),
       voucherCode: normalizeOptionalString(payload.voucherCode),
       note: normalizeOptionalString(payload.note)
     };
@@ -448,6 +448,24 @@ export class CartService extends BaseService {
   }
 }
 
+
+export function calculateCheckoutTotals({ subtotal = 0, discountTotal = 0 } = {}) {
+  const normalizedSubtotal = Math.max(Math.round(Number(subtotal || 0)), 0);
+  const normalizedDiscount = Math.min(Math.max(Math.round(Number(discountTotal || 0)), 0), normalizedSubtotal);
+  const eligibleAmount = Math.max(normalizedSubtotal - normalizedDiscount, 0);
+  const taxTotal = Math.round(eligibleAmount * 0.1);
+  const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
+  const grandTotal = eligibleAmount + taxTotal + shippingFee;
+
+  return {
+    subtotal: normalizedSubtotal,
+    discountTotal: normalizedDiscount,
+    eligibleAmount,
+    taxTotal,
+    shippingFee,
+    grandTotal
+  };
+}
 function normalizeRequiredString(value, message, code) {
   const normalizedValue = String(value || "").trim();
 
@@ -510,3 +528,4 @@ function createOrderItemName(item) {
   const variantLabel = [item.color, item.size].filter(Boolean).join(" / ");
   return variantLabel ? `${item.productName} (${variantLabel})` : item.productName;
 }
+
