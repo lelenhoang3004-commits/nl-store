@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Server entry point.
  * This file starts the HTTP process and centralizes shutdown handling.
  */
@@ -6,9 +6,11 @@ import app from "./app.js";
 import { appConfig } from "./config/app.config.js";
 import { closeDatabasePool } from "./utils/database.util.js";
 import { logger } from "./utils/logger.util.js";
+import { verifyBrevoSmtpConnection } from "./utils/smtp-mailer.util.js";
 
 const server = app.listen(appConfig.port, () => {
   logger.info(`Backend server is running on port ${appConfig.port} in ${appConfig.env} mode.`);
+  verifyBrevoSmtpConnection();
 });
 
 async function shutdown(signal) {
@@ -38,3 +40,4 @@ process.on("uncaughtException", (error) => {
   logger.error("Uncaught exception.", error);
   process.exit(1);
 });
+
