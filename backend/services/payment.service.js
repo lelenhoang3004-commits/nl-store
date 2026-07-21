@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Payment service.
  * It owns payment method rules, COD support, transaction lifecycle, history, and order payment summary updates.
  */
@@ -8,6 +8,7 @@ import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { withTransaction } from "../utils/database.util.js";
+import { NotificationService } from "./notification.service.js";
 
 const PAYMENT_METHOD_TYPE = Object.freeze({
   COD: "cod",
@@ -53,8 +54,9 @@ const TRANSACTION_QUERY_OPTIONS = Object.freeze({
 });
 
 export class PaymentService extends BaseService {
-  constructor(repository = new PaymentRepository()) {
+  constructor(repository = new PaymentRepository(), notificationService = new NotificationService()) {
     super(repository);
+    this.notificationService = notificationService;
   }
 
   async getMethods(query) {
@@ -258,6 +260,18 @@ export class PaymentService extends BaseService {
         changedBy
       }, connection);
       await this.syncOrderPaymentStatus(transaction, normalizedStatus, connection, order);
+      await this.notificationService.notifyAdmin({
+        type: "payment",
+        title: "Thanh toán đã cập nhật",
+        message: `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`, 
+        link: "#payments"
+      }, connection);
+      await this.notificationService.notifyCustomer(order.customer_id, {
+        type: "payment",
+        title: "Trạng thái thanh toán đã cập nhật",
+        message: `Thanh toán đơn ${order.order_code || order.id} chuyển sang ${normalizedStatus}.`, 
+        link: "#orders"
+      }, connection);
     });
 
     return this.getPaymentById(id);
@@ -443,3 +457,4 @@ function normalizeTransactionStatus(value) {
 }
 
 export { ORDER_PAYMENT_STATUS, PAYMENT_METHOD_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS };
+

@@ -1,4 +1,5 @@
-import { createCustomerNavigation, initCustomerNavigation } from "../navigation/navigation.js";
+﻿import { createCustomerNavigation, initCustomerNavigation } from "../navigation/navigation.js";
+import { customerApi, customerAuth } from "../../assets/js/customer-auth.js?v=20260717-cloudflare-pages";
 
 let activeHeaderRoot = null;
 let globalHeaderListenersBound = false;
@@ -81,12 +82,10 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
       </div>
     </div>
 
-    <div class="header-popover notification-popover" data-popover="notification">
+    <div class="header-popover notification-popover" data-popover="notification" data-customer-notification-popover>
       <strong>Thông báo</strong>
-      <p>Bộ sưu tập mới đã sẵn sàng.</p>
-      <p>Flash sale bắt đầu lúc 20:00.</p>
+      <p data-customer-notification-empty>${user ? "Đang tải thông báo..." : "Vui lòng đăng nhập để xem thông báo."}</p>
     </div>
-
     <div class="header-popover cart-popover" data-popover="cart">
       <strong>Giỏ hàng</strong>
       ${cartItems.length
@@ -141,6 +140,7 @@ export function initCustomerHeader(root = document, options = {}) {
   });
 
   bindGlobalHeaderListeners();
+  initCustomerNotifications(root, Boolean(user));
 }
 
 function createInitials(value) {
@@ -200,4 +200,124 @@ function bindGlobalHeaderListeners() {
   });
 
   globalHeaderListenersBound = true;
+}
+
+const customerNotificationState = {
+  interval: null,
+  loading: false,
+  items: [],
+  unreadCount: 0
+};
+
+function initCustomerNotifications(root, isAuthenticated) {
+  const badge = root.querySelector("[data-customer-notification-badge]");
+  const popover = root.querySelector("[data-customer-notification-popover]");
+  if (!badge || !popover) return;
+
+  if (!isAuthenticated) {
+    stopCustomerNotificationPolling();
+    customerNotificationState.items = [];
+    customerNotificationState.unreadCount = 0;
+    updateCustomerNotificationUI(root, { guest: true });
+    return;
+  }
+
+  fetchCustomerNotifications(root);
+  if (!customerNotificationState.interval) {
+    customerNotificationState.interval = window.setInterval(() => {
+      const activeRoot = activeHeaderRoot || root;
+      if (customerAuth.isAuthenticated()) fetchCustomerNotifications(activeRoot, { silent: true });
+      else stopCustomerNotificationPolling();
+    }, 45000);
+  }
+}
+
+function stopCustomerNotificationPolling() {
+  if (customerNotificationState.interval) {
+    window.clearInterval(customerNotificationState.interval);
+    customerNotificationState.interval = null;
+  }
+}
+
+async function fetchCustomerNotifications(root, options = {}) {
+  if (customerNotificationState.loading) return;
+  customerNotificationState.loading = true;
+  try {
+    const response = await customerApi("/notifications", { auth: true, refreshOnUnauthorized: false });
+    const data = response?.data || {};
+    customerNotificationState.items = Array.isArray(data.notifications) ? data.notifications.map(normalizeCustomerNotification) : [];
+    customerNotificationState.unreadCount = Number(data.unreadCount || 0);
+    updateCustomerNotificationUI(root);
+  } catch (error) {
+    if (error?.status === 401) {
+      customerAuth.clearExternalLogin?.("notifications-unauthorized");
+      stopCustomerNotificationPolling();
+      updateCustomerNotificationUI(root, { guest: true });
+    } else if (!options.silent) {
+      updateCustomerNotificationUI(root, { error: "Không thể tải thông báo." });
+    }
+  } finally {
+    customerNotificationState.loading = false;
+  }
+}
+
+function updateCustomerNotificationUI(root, options = {}) {
+  const badge = root.querySelector("[data-customer-notification-badge]");
+  const popover = root.querySelector("[data-customer-notification-popover]");
+  if (!badge || !popover) return;
+
+  const unreadCount = options.guest ? 0 : customerNotificationState.unreadCount;
+  badge.textContent = unreadCount;
+  badge.classList.toggle("is-empty", unreadCount === 0);
+
+  if (options.guest) {
+    popover.innerHTML = `<strong>Thông báo</strong><p>Vui lòng đăng nhập để xem thông báo.</p><a href="#login">Đăng nhập</a>`;
+    return;
+  }
+
+  if (options.error) {
+    popover.innerHTML = `<strong>Thông báo</strong><p>${escapeHtml(options.error)}</p>`;
+    return;
+  }
+
+  const items = customerNotificationState.items.slice(0, 5);
+  popover.innerHTML = `
+    <strong>Thông báo</strong>
+    ${items.length ? items.map(createCustomerNotificationItem).join("") : "<p>Chưa có thông báo mới.</p>"}
+    ${items.length ? '<button type="button" data-customer-notification-read-all>Đánh dấu đã đọc</button>' : ""}
+  `;
+}
+
+function createCustomerNotificationItem(item) {
+  return `<a href="${escapeHtml(item.link || "#orders")}" data-customer-notification-id="${escapeHtml(item.id)}" class="${item.read ? "is-read" : "is-unread"}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.message)}</span></a>`;
+}
+
+async function handleCustomerNotificationClick(event, root) {
+  const readAllButton = event.target.closest("[data-customer-notification-read-all]");
+  const item = event.target.closest("[data-customer-notification-id]");
+
+  if (readAllButton) {
+    event.preventDefault();
+    await customerApi("/notifications/read-all", { method: "PATCH" });
+    customerNotificationState.items = customerNotificationState.items.map((notification) => ({ ...notification, read: true, isRead: true }));
+    customerNotificationState.unreadCount = 0;
+    updateCustomerNotificationUI(root);
+    return;
+  }
+
+  if (!item) return;
+  event.preventDefault();
+  const id = item.dataset.customerNotificationId;
+  const link = item.getAttribute("href") || "#orders";
+  try {
+    await customerApi(`/notifications/${encodeURIComponent(id)}/read`, { method: "PATCH" });
+  } catch {}
+  customerNotificationState.items = customerNotificationState.items.map((notification) => String(notification.id) === String(id) ? { ...notification, read: true, isRead: true } : notification);
+  customerNotificationState.unreadCount = customerNotificationState.items.filter((notification) => !notification.read).length;
+  updateCustomerNotificationUI(root);
+  window.location.hash = link.replace(/^#?/, "#");
+}
+
+function normalizeCustomerNotification(item = {}) {
+  return { ...item, id: item.id, read: Boolean(item.read ?? item.isRead), link: item.link || "#orders" };
 }

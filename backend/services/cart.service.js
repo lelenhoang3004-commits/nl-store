@@ -5,16 +5,18 @@
 import { CartRepository } from "../repositories/cart.repository.js";
 import { ProductVariantRepository } from "../repositories/product-variant.repository.js";
 import { VoucherService } from "./voucher.service.js";
+import { NotificationService } from "./notification.service.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { withTransaction } from "../utils/database.util.js";
 import crypto from "node:crypto";
 
 export class CartService extends BaseService {
-  constructor(repository = new CartRepository(), variantRepository = new ProductVariantRepository(), voucherService = new VoucherService()) {
+  constructor(repository = new CartRepository(), variantRepository = new ProductVariantRepository(), voucherService = new VoucherService(), notificationService = new NotificationService()) {
     super(repository);
     this.variantRepository = variantRepository;
     this.voucherService = voucherService;
+    this.notificationService = notificationService;
   }
 
   async getCart(userId) {
@@ -232,6 +234,30 @@ export class CartService extends BaseService {
         changedBy: userId
       }, connection);
 
+      await this.notificationService.notifyAdmin({
+        type: "order",
+        title: "Đơn hàng mới",
+        message: `Đơn ${createdOrderId} vừa được tạo với tổng ${grandTotal.toLocaleString("vi-VN")}đ.`,
+        link: "#orders"
+      }, connection);
+      await this.notificationService.notifyAdmin({
+        type: "payment",
+        title: "Thanh toán mới",
+        message: `Giao dịch ${paymentMethod.toUpperCase()} cho đơn ${createdOrderId} đang chờ xử lý.`,
+        link: "#payments"
+      }, connection);
+      await this.notificationService.notifyCustomer(userId, {
+        type: "order",
+        title: "Đơn hàng đã được tạo",
+        message: `Đơn hàng của bạn đang chờ xác nhận. Tổng thanh toán ${grandTotal.toLocaleString("vi-VN")}đ.`,
+        link: "#orders"
+      }, connection);
+      await this.notificationService.notifyCustomer(userId, {
+        type: "payment",
+        title: "Thanh toán đang chờ xử lý",
+        message: `Phương thức ${paymentMethod.toUpperCase()} đã được ghi nhận cho đơn hàng.`,
+        link: "#orders"
+      }, connection);
       if (voucherResult?.code) {
         await this.voucherService.markVoucherUsed(voucherResult.code, connection);
       }
@@ -528,4 +554,7 @@ function createOrderItemName(item) {
   const variantLabel = [item.color, item.size].filter(Boolean).join(" / ");
   return variantLabel ? `${item.productName} (${variantLabel})` : item.productName;
 }
+
+
+
 

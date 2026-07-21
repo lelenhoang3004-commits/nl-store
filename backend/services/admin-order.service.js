@@ -1,8 +1,9 @@
-import { AdminOrderRepository } from "../repositories/admin-order.repository.js";
+﻿import { AdminOrderRepository } from "../repositories/admin-order.repository.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { createPaginationMeta, parsePagination } from "../utils/query-options.util.js";
 import { withTransaction } from "../utils/database.util.js";
+import { NotificationService } from "./notification.service.js";
 
 const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled", "refunded"];
 const TRANSITIONS = Object.freeze({
@@ -16,8 +17,9 @@ const TRANSITIONS = Object.freeze({
 });
 
 export class AdminOrderService extends BaseService {
-  constructor(repository = new AdminOrderRepository()) {
+  constructor(repository = new AdminOrderRepository(), notificationService = new NotificationService()) {
     super(repository);
+    this.notificationService = notificationService;
   }
 
   async listOrders(query = {}) {
@@ -72,6 +74,12 @@ export class AdminOrderService extends BaseService {
       await this.repository.createOrderHistory({
         orderId: Number(orderId), status, note: note || `Admin changed order status to ${status}.`, changedBy: adminUser.id
       }, connection);
+      await this.notificationService.notifyCustomer(order.customerId, {
+        type: "order",
+        title: "Trạng thái đơn hàng đã cập nhật",
+        message: `Đơn ${order.orderCode} đã chuyển sang trạng thái ${status}.`,
+        link: "#orders"
+      }, connection);
     });
     return this.getOrderDetail(orderId);
   }
@@ -104,6 +112,12 @@ export class AdminOrderService extends BaseService {
     await this.repository.createOrderHistory({
       orderId: order.id, status: "cancelled", note: reason, changedBy: adminUser.id
     }, connection);
+    await this.notificationService.notifyCustomer(order.customerId, {
+      type: "order",
+      title: "Đơn hàng đã bị hủy",
+      message: `Đơn ${order.orderCode} đã bị hủy.`,
+      link: "#orders"
+    }, connection);
   }
 }
 
@@ -123,3 +137,7 @@ function normalizeListOptions(query) {
 }
 
 export { ORDER_STATUSES, TRANSITIONS as ADMIN_ORDER_TRANSITIONS };
+
+
+
+

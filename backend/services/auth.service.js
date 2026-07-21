@@ -1,8 +1,9 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import { appConfig } from "../config/app.config.js";
 import { AUTH_ROLES } from "../config/auth.config.js";
 import { AuthRepository } from "../repositories/auth.repository.js";
 import { UserService } from "./user.service.js";
+import { NotificationService } from "./notification.service.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
@@ -11,9 +12,10 @@ import { parseDurationToMs } from "../utils/duration.util.js";
 import { logger } from "../utils/logger.util.js";
 
 export class AuthService extends BaseService {
-  constructor(repository = new AuthRepository(), userService = new UserService()) {
+  constructor(repository = new AuthRepository(), userService = new UserService(), notificationService = new NotificationService()) {
     super(repository);
     this.userService = userService;
+    this.notificationService = notificationService;
   }
 
   async register(payload) {
@@ -25,6 +27,18 @@ export class AuthService extends BaseService {
       email: normalizedEmail, fullName: String(payload.fullName).trim(), phone: normalizePhone(payload.phone),
       address: { line1: String(payload.address || "").trim(), country: "Vietnam" }, password: payload.password,
       role: AUTH_ROLES.CUSTOMER, permissions: [], status: "active"
+    });
+    await this.notificationService.notifyAdmin({
+      type: "user",
+      title: "Khách hàng mới đăng ký",
+      message: `${user.fullName || user.email || "Khách hàng"} vừa tạo tài khoản.`, 
+      link: "#users"
+    });
+    await this.notificationService.notifyCustomer(user.id, {
+      type: "system",
+      title: "Chào mừng bạn đến với N&L Store",
+      message: "Tài khoản của bạn đã được tạo thành công.",
+      link: "#profile"
     });
     return { user };
   }
@@ -176,6 +190,7 @@ function oauthConfig(provider) {
   };
   throw new AppError("OAuth provider không hợp lệ.", 400, "INVALID_OAUTH_PROVIDER");
 }
+
 
 
 
