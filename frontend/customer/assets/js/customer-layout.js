@@ -2877,9 +2877,9 @@ function injectPasswordToggleStyles() {
   style.id = 'password-toggle-styles';
   style.textContent = `
     .password-input-wrapper{position:relative;display:block;width:100%}
-    .password-input-wrapper input{padding-right:104px;box-sizing:border-box}
-    .password-toggle-button{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:#0b173d;cursor:pointer;font:700 .95rem/1 inherit;padding:8px 10px;display:inline-flex;align-items:center;gap:7px;border-radius:999px}
-    .password-toggle-button:hover{background:rgba(11,23,61,.06)}
+    .password-input-wrapper input{padding-right:94px;box-sizing:border-box}
+    .password-toggle-button{position:absolute;right:8px;top:50%;height:38px;transform:translateY(-50%);border:0;background:transparent;color:#0b173d;cursor:pointer;font:700 .9rem/1 inherit;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px}
+    .password-toggle-button:hover{background:rgba(196,143,46,.10);color:#8f5f12}
     .password-toggle-button:focus{outline:2px solid rgba(196,143,46,.35);border-radius:999px}
   `;
   document.head.appendChild(style);
