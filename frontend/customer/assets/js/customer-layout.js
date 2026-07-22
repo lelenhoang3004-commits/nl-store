@@ -1003,11 +1003,7 @@ function openOAuthLoginPopup(provider, button) {
 }
 
 async function handleOAuthMessage(event) {
-  const allowedOrigins = [
-    "https://nl-store.pages.dev",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
-  ];
+  const allowedOrigins = getAllowedOAuthOrigins();
   if (!allowedOrigins.includes(event.origin)) return;
   const successTypes = ["GOOGLE_AUTH_SUCCESS", "FACEBOOK_AUTH_SUCCESS", "OAUTH_AUTH_SUCCESS"];
   const errorTypes = ["GOOGLE_AUTH_ERROR", "FACEBOOK_AUTH_ERROR", "OAUTH_AUTH_ERROR"];
@@ -1315,12 +1311,7 @@ function forwardOAuthCallbackToOpener() {
         user: callback.user
       };
 
-  const targetOrigins = [...new Set([
-    window.location.origin,
-    "https://nl-store.pages.dev",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
-  ])];
+  const targetOrigins = getAllowedOAuthOrigins();
   targetOrigins.forEach(origin => {
     try {
       window.opener.postMessage(message, origin);
@@ -1330,6 +1321,28 @@ function forwardOAuthCallbackToOpener() {
   });
   try { window.close(); } catch { /* The opener already received the OAuth result. */ }
   return true;
+}
+
+function getAllowedOAuthOrigins() {
+  const origins = new Set([
+    window.location.origin,
+    "https://nl-store.pages.dev"
+  ]);
+
+  try {
+    const current = new URL(window.location.href);
+    if (["localhost", "127.0.0.1"].includes(current.hostname)) {
+      origins.add(`${current.protocol}//${current.host}`);
+      origins.add("http://localhost:5500");
+      origins.add("http://127.0.0.1:5500");
+      origins.add("http://localhost:5000");
+      origins.add("http://127.0.0.1:5000");
+    }
+  } catch {
+    // Keep the static production origin above.
+  }
+
+  return Array.from(origins).filter(Boolean);
 }
 
 function readOAuthCallback() {
@@ -2534,18 +2547,24 @@ async function renderProfilePage() {
   layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-profile-loading">Đang tải hồ sơ...</div>`);
 
   try {
-    const [profileResponse, socialResponse, paymentResponse] = await Promise.all([
-      customerApi("/users/profile"),
+    const profileResponse = await customerApi("/users/profile");
+    const [socialResult, paymentResult] = await Promise.allSettled([
       customerApi("/users/profile/social-connections"),
       customerApi("/users/profile/payment-methods")
     ]);
     const user = profileResponse?.data?.user || customerAuth.getUser() || {};
+    const socialState = socialResult.status === "fulfilled"
+      ? { ...(socialResult.value?.data || {}), error: "" }
+      : { connections: [], error: socialResult.reason?.message || "Không thể tải tài khoản liên kết." };
+    const paymentState = paymentResult.status === "fulfilled"
+      ? { paymentMethods: paymentResult.value?.data?.paymentMethods || [], error: "" }
+      : { paymentMethods: [], error: paymentResult.reason?.message || "Không thể tải phương thức thanh toán." };
     customerAuth.setUser(user);
     renderHeader();
     layoutState.main.innerHTML = renderPageShell("Hồ sơ", createProfilePageHtml(
       user,
-      socialResponse?.data || {},
-      paymentResponse?.data?.paymentMethods || []
+      socialState,
+      paymentState
     ));
     bindProfilePage(user);
   } catch (error) {
@@ -2554,12 +2573,15 @@ async function renderProfilePage() {
   }
 }
 
-function createProfilePageHtml(user = {}, social = {}, paymentMethods = []) {
+function createProfilePageHtml(user = {}, social = {}, paymentState = {}) {
   const avatar = user.avatarUrl || user.avatar_url || user.picture || "";
   const name = user.fullName || user.name || "Khách hàng N&L";
   const addressText = formatAddress(user.address || {});
   const connections = Array.isArray(social.connections) ? social.connections : [];
   const connectionMap = new Map(connections.map((connection) => [connection.provider, connection]));
+  const paymentMethods = Array.isArray(paymentState) ? paymentState : (paymentState.paymentMethods || []);
+  const socialError = social.error || "";
+  const paymentError = !Array.isArray(paymentState) ? (paymentState.error || "") : "";
 
   return `
     <div class="customer-profile-shell">
@@ -2593,6 +2615,7 @@ function createProfilePageHtml(user = {}, social = {}, paymentMethods = []) {
 
         <section class="customer-profile-card">
           <h3>Tài khoản liên kết</h3>
+          ${socialError ? `<div class="customer-profile-inline-error">${escapeHtml(socialError)} <button type="button" data-profile-retry>Thử lại</button></div>` : ""}
           <div class="customer-profile-list">
             ${["google", "facebook"].map((provider) => createSocialConnectionRow(provider, connectionMap.get(provider))).join("")}
           </div>
@@ -2604,6 +2627,7 @@ function createProfilePageHtml(user = {}, social = {}, paymentMethods = []) {
             <button class="customer-button secondary" type="button" data-payment-add><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm</button>
           </div>
           <p class="customer-profile-note">Chức năng đang thử nghiệm. N&L Store chỉ lưu thông tin đã che, không lưu PIN, OTP, CVV hoặc token bí mật.</p>
+          ${paymentError ? `<div class="customer-profile-inline-error">${escapeHtml(paymentError)} <button type="button" data-profile-retry>Thử lại</button></div>` : ""}
           <div class="customer-profile-payment-list">
             ${paymentMethods.length ? paymentMethods.map(createPaymentMethodRow).join("") : '<div class="customer-profile-muted">Chưa có phương thức thanh toán đã lưu.</div>'}
           </div>
@@ -2648,6 +2672,7 @@ function getPaymentVerificationLabel(status) {
 
 function bindProfilePage(user = {}) {
   layoutState.main.querySelector("[data-profile-orders]")?.addEventListener("click", () => navigateToRoute("orders"));
+  layoutState.main.querySelectorAll("[data-profile-retry]").forEach((button) => button.addEventListener("click", renderProfilePage));
   layoutState.main.querySelector("[data-profile-edit]")?.addEventListener("click", () => openProfileEditModal(user));
   layoutState.main.querySelector("[data-profile-password]")?.addEventListener("click", openPasswordModal);
   layoutState.main.querySelector("[data-payment-add]")?.addEventListener("click", openPaymentModal);

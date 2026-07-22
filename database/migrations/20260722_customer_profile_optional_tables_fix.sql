@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS user_payment_methods (
   PRIMARY KEY (id),
   KEY idx_user_payment_methods_user_id (user_id),
   KEY idx_user_payment_methods_default (user_id, is_default),
-  CONSTRAINT fk_user_payment_methods_user
+  CONSTRAINT fk_user_payment_methods_user_fix
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

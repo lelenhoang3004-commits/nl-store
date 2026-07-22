@@ -20,6 +20,7 @@ const USER_QUERY_OPTIONS = Object.freeze({
   allowedSortFields: ["createdAt", "updatedAt", "fullName", "email", "role", "status", "lastLoginAt"],
   allowedFilterFields: ["role", "status"]
 });
+const MISSING_OPTIONAL_PROFILE_TABLE_CODES = new Set(["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR"]);
 
 export class UserService extends BaseService {
   constructor(repository = new UserRepository(), uploadService = new UploadService()) {
@@ -356,14 +357,19 @@ export class UserService extends BaseService {
   }
 
   async createPaymentMethod(userId, payload = {}) {
-    const method = await this.repository.createPaymentMethod(userId, {
-      type: normalizePaymentType(payload.type),
-      providerName: normalizeNullableString(payload.providerName || payload.provider),
-      accountHolderName: normalizeNullableString(payload.accountHolderName),
-      maskedAccountIdentifier: maskAccountIdentifier(payload.accountIdentifier || payload.accountNumber || payload.phone),
-      verificationStatus: "unverified",
-      isDefault: Boolean(payload.isDefault)
-    });
+    let method;
+    try {
+      method = await this.repository.createPaymentMethod(userId, {
+        type: normalizePaymentType(payload.type),
+        providerName: normalizeNullableString(payload.providerName || payload.provider),
+        accountHolderName: normalizeNullableString(payload.accountHolderName),
+        maskedAccountIdentifier: maskAccountIdentifier(payload.accountIdentifier || payload.accountNumber || payload.phone),
+        verificationStatus: "unverified",
+        isDefault: Boolean(payload.isDefault)
+      });
+    } catch (error) {
+      throwProfileTableError(error);
+    }
 
     return {
       paymentMethod: formatPaymentMethod(method),
@@ -372,17 +378,26 @@ export class UserService extends BaseService {
   }
 
   async setDefaultPaymentMethod(userId, id) {
-    const current = await this.repository.findPaymentMethod(userId, id);
-    if (!current) {
-      throw new AppError("Payment method was not found.", 404, "PAYMENT_METHOD_NOT_FOUND");
+    try {
+      const current = await this.repository.findPaymentMethod(userId, id);
+      if (!current) {
+        throw new AppError("Không tìm thấy phương thức thanh toán.", 404, "PAYMENT_METHOD_NOT_FOUND");
+      }
+      return formatPaymentMethod(await this.repository.setDefaultPaymentMethod(userId, id));
+    } catch (error) {
+      throwProfileTableError(error);
     }
-    return formatPaymentMethod(await this.repository.setDefaultPaymentMethod(userId, id));
   }
 
   async deletePaymentMethod(userId, id) {
-    const deleted = await this.repository.deletePaymentMethod(userId, id);
-    if (!deleted) {
-      throw new AppError("Payment method was not found.", 404, "PAYMENT_METHOD_NOT_FOUND");
+    let deleted = false;
+    try {
+      deleted = await this.repository.deletePaymentMethod(userId, id);
+      if (!deleted) {
+        throw new AppError("Không tìm thấy phương thức thanh toán.", 404, "PAYMENT_METHOD_NOT_FOUND");
+      }
+    } catch (error) {
+      throwProfileTableError(error);
     }
     return { id, deleted: true };
   }
@@ -551,6 +566,13 @@ function formatPaymentMethod(row = {}) {
     createdAt: row.created_at || row.createdAt || null,
     updatedAt: row.updated_at || row.updatedAt || null
   };
+}
+
+function throwProfileTableError(error) {
+  if (MISSING_OPTIONAL_PROFILE_TABLE_CODES.has(error?.code)) {
+    throw new AppError("Chức năng hồ sơ chưa sẵn sàng. Vui lòng chạy migration user_social_connections và user_payment_methods.", 503, "PROFILE_OPTIONAL_TABLE_MISSING");
+  }
+  throw error;
 }
 
 export { USER_STATUS };

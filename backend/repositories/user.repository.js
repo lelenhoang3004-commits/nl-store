@@ -7,6 +7,8 @@ import { User } from "../models/user.model.js";
 import { logger } from "../utils/logger.util.js";
 import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
 
+const MISSING_TABLE_CODES = new Set(["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR"]);
+
 const SORT_COLUMNS = Object.freeze({
   fullName: "full_name",
   email: "email",
@@ -313,23 +315,49 @@ export class UserRepository extends BaseRepository {
   }
 
   async listSocialConnections(userId) {
-    const [rows] = await this.execute(
-      `SELECT provider, provider_user_id, provider_email, display_name, avatar_url, linked_at, updated_at
-      FROM user_social_connections
-      WHERE user_id = ?
-      ORDER BY provider`,
-      [userId]
-    );
+    try {
+      const [rows] = await this.execute(
+        `SELECT provider, provider_user_id, provider_email, display_name, avatar_url, linked_at, updated_at
+        FROM user_social_connections
+        WHERE user_id = ?
+        ORDER BY provider`,
+        [userId]
+      );
 
-    return rows;
+      return rows;
+    } catch (error) {
+      if (isMissingOptionalProfileTable(error)) {
+        logger.warn("Social connections table is unavailable; returning an empty list.", {
+          repository: "UserRepository",
+          table: "user_social_connections",
+          code: error.code
+        });
+        return [];
+      }
+      throw error;
+    }
   }
 
   async deleteSocialConnection(userId, provider) {
-    const [result] = await this.execute(
-      `DELETE FROM user_social_connections
-      WHERE user_id = ? AND provider = ?`,
-      [userId, provider]
-    );
+    let affectedRows = 0;
+
+    try {
+      const [result] = await this.execute(
+        `DELETE FROM user_social_connections
+        WHERE user_id = ? AND provider = ?`,
+        [userId, provider]
+      );
+      affectedRows = result.affectedRows;
+    } catch (error) {
+      if (!isMissingOptionalProfileTable(error)) {
+        throw error;
+      }
+      logger.warn("Social connections table is unavailable while unlinking; falling back to legacy user provider fields.", {
+        repository: "UserRepository",
+        table: "user_social_connections",
+        code: error.code
+      });
+    }
 
     await this.execute(
       `UPDATE users
@@ -340,26 +368,38 @@ export class UserRepository extends BaseRepository {
       [userId, provider]
     );
 
-    return result.affectedRows > 0;
+    return affectedRows > 0;
   }
 
   async listPaymentMethods(userId) {
-    const [rows] = await this.execute(
-      `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
-        verification_status, is_default, created_at, updated_at
-      FROM user_saved_payment_methods
-      WHERE user_id = ? AND deleted_at IS NULL
-      ORDER BY is_default DESC, updated_at DESC, id DESC`,
-      [userId]
-    );
+    try {
+      const [rows] = await this.execute(
+        `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
+          verification_status, is_default, created_at, updated_at
+        FROM user_payment_methods
+        WHERE user_id = ? AND deleted_at IS NULL
+        ORDER BY is_default DESC, updated_at DESC, id DESC`,
+        [userId]
+      );
 
-    return rows;
+      return rows;
+    } catch (error) {
+      if (isMissingOptionalProfileTable(error)) {
+        logger.warn("User payment methods table is unavailable; returning an empty list.", {
+          repository: "UserRepository",
+          table: "user_payment_methods",
+          code: error.code
+        });
+        return [];
+      }
+      throw error;
+    }
   }
 
   async createPaymentMethod(userId, payload) {
     if (payload.isDefault) {
       await this.execute(
-        `UPDATE user_saved_payment_methods
+        `UPDATE user_payment_methods
         SET is_default = 0
         WHERE user_id = ? AND deleted_at IS NULL`,
         [userId]
@@ -367,7 +407,7 @@ export class UserRepository extends BaseRepository {
     }
 
     const [result] = await this.execute(
-      `INSERT INTO user_saved_payment_methods
+      `INSERT INTO user_payment_methods
         (user_id, type, provider_name, account_holder_name, masked_account_identifier, verification_status, is_default)
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -388,7 +428,7 @@ export class UserRepository extends BaseRepository {
     const [rows] = await this.execute(
       `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
         verification_status, is_default, created_at, updated_at
-      FROM user_saved_payment_methods
+      FROM user_payment_methods
       WHERE user_id = ? AND id = ? AND deleted_at IS NULL
       LIMIT 1`,
       [userId, id]
@@ -399,13 +439,13 @@ export class UserRepository extends BaseRepository {
 
   async setDefaultPaymentMethod(userId, id) {
     await this.execute(
-      `UPDATE user_saved_payment_methods
+      `UPDATE user_payment_methods
       SET is_default = 0
       WHERE user_id = ? AND deleted_at IS NULL`,
       [userId]
     );
     await this.execute(
-      `UPDATE user_saved_payment_methods
+      `UPDATE user_payment_methods
       SET is_default = 1,
         updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
@@ -417,7 +457,7 @@ export class UserRepository extends BaseRepository {
 
   async deletePaymentMethod(userId, id) {
     const [result] = await this.execute(
-      `UPDATE user_saved_payment_methods
+      `UPDATE user_payment_methods
       SET deleted_at = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
@@ -491,4 +531,8 @@ export class UserRepository extends BaseRepository {
       params
     };
   }
+}
+
+function isMissingOptionalProfileTable(error) {
+  return MISSING_TABLE_CODES.has(error?.code);
 }
