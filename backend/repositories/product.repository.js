@@ -436,7 +436,10 @@ export class ProductRepository extends BaseRepository {
       params.push(options.filter.status);
     }
 
-    if (options.filter.categoryId) {
+    if (Array.isArray(options.filter.categoryIds) && options.filter.categoryIds.length) {
+      conditions.push(`p.category_id IN (${options.filter.categoryIds.map(() => "?").join(", ")})`);
+      params.push(...options.filter.categoryIds);
+    } else if (options.filter.categoryId) {
       conditions.push("p.category_id = ?");
       params.push(options.filter.categoryId);
     }

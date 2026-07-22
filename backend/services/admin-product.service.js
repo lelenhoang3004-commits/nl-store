@@ -22,6 +22,7 @@ export class AdminProductService {
 
   async listProducts(query = {}) {
     const options = parseQueryOptions(query, QUERY_OPTIONS);
+    await this.expandCategoryFilter(options);
     const [products, totalItems] = await Promise.all([
       this.repository.findAll(options),
       this.repository.countAll(options)
@@ -201,6 +202,13 @@ export class AdminProductService {
     if (!await this.categoryRepository.findById(categoryId)) {
       throw new AppError("Category was not found.", 422, "PRODUCT_CATEGORY_NOT_FOUND");
     }
+  }
+
+  async expandCategoryFilter(options) {
+    const categoryId = Number(options.filter.categoryId);
+    if (!Number.isInteger(categoryId) || categoryId < 1) return;
+    const descendantIds = await this.categoryRepository.findDescendantIds(categoryId);
+    options.filter.categoryIds = [categoryId, ...descendantIds];
   }
 }
 

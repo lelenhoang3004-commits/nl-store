@@ -89,6 +89,7 @@ export class CategoryService extends BaseService {
     }
 
     await this.ensureParentCategoryExists(normalizedPayload.parentId);
+    await this.ensureParentIsNotDescendant(id, normalizedPayload.parentId);
 
     const category = await this.repository.update(id, normalizedPayload);
     return category.toJSON();
@@ -152,6 +153,14 @@ export class CategoryService extends BaseService {
 
     if (!parentCategory) {
       throw new AppError("Parent category was not found.", 422, "PARENT_CATEGORY_NOT_FOUND");
+    }
+  }
+
+  async ensureParentIsNotDescendant(categoryId, parentId) {
+    if (!parentId) return;
+    const descendantIds = await this.repository.findDescendantIds(categoryId);
+    if (descendantIds.includes(Number(parentId))) {
+      throw new AppError("Category parent cannot be one of its descendants.", 422, "CATEGORY_PARENT_DESCENDANT_REFERENCE");
     }
   }
 }

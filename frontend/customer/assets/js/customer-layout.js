@@ -757,7 +757,7 @@ async function renderProductListPage() {
 
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
     const apiProducts = getListFromApiPayload(response, "products");
-    const products = categorySlug
+    const products = categorySlug && !category?.id
       ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
       : legacyFilter
         ? apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))

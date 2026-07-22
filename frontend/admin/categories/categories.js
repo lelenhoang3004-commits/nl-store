@@ -177,7 +177,7 @@ function bindEvents(root) {
   root.addEventListener("click", async (event) => {
     const createButton = event.target.closest("[data-category-create]");
     if (createButton) {
-      openCategoryModal(root);
+      await openCategoryModal(root);
       return;
     }
 
@@ -191,7 +191,7 @@ function bindEvents(root) {
     if (editButton) {
       const categoryId = editButton.dataset.categoryEdit;
       const category = state.items.find((item) => String(item.id) === String(categoryId));
-      if (category) openCategoryModal(root, category);
+      if (category) await openCategoryModal(root, category);
       return;
     }
 
@@ -235,8 +235,9 @@ function createSlug(value) {
     .replace(/(^-|-$)/g, "");
 }
 
-function openCategoryModal(root, category = null) {
+async function openCategoryModal(root, category = null) {
   const editing = Boolean(category);
+  const parentCategories = await loadParentCategoryOptions();
   const modal = openModal({
     eyebrow: "Category",
     title: editing ? "Sửa danh mục" : "Thêm danh mục",
@@ -256,7 +257,14 @@ function openCategoryModal(root, category = null) {
             <textarea name="description" rows="4" placeholder="Nhập mô tả">${escapeHtml(category?.description || "")}</textarea>
           </label>
           <label>
-            <span>Trạng thái</span>
+            <span>Danh muc cha</span>
+            <select name="parentId">
+              <option value="">Khong co danh muc cha</option>
+              ${parentCategories.filter((item) => String(item.id) !== String(category?.id || "")).map((item) => `<option value="${escapeHtml(item.id)}" ${String(category?.parentId || category?.parent_id || "") === String(item.id) ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            <span>Trang thai</span>
             <select name="status">
               <option value="active" ${category?.status === "active" ? "selected" : ""}>Đang hiển thị</option>
               <option value="inactive" ${category?.status === "inactive" ? "selected" : ""}>Tạm ẩn</option>
@@ -274,6 +282,7 @@ function openCategoryModal(root, category = null) {
         name: String(formData.get("name") || "").trim(),
         slug: String(formData.get("slug") || "").trim(),
         description: String(formData.get("description") || "").trim(),
+        parentId: String(formData.get("parentId") || "").trim() || null,
         status: String(formData.get("status") || "active").trim().toLowerCase()
       };
       try {
@@ -299,6 +308,15 @@ function openCategoryModal(root, category = null) {
         slugInput.value = createSlug(nameInput.value);
       }
     });
+  }
+}
+
+async function loadParentCategoryOptions() {
+  try {
+    const response = await categoryService.getAll({ limit: 100, sortBy: "name", sortOrder: "asc" }, silent());
+    return response.data?.categories || state.items;
+  } catch {
+    return state.items;
   }
 }
 

@@ -440,19 +440,12 @@ function normalizeProductText(value) {
 
 function isSelectableGalleryProduct(product, variants = []) {
   if (variants.length) return false;
-  const normalize = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const categoryName = product?.categoryName || product?.category?.name || product?.category || "";
-  const searchable = `${normalize(categoryName)} ${normalize(product?.name)}`;
-  return ["phu kien", "day chuyen", "dong ho"].some((keyword) => searchable.includes(keyword));
+  return Boolean(product?.productAttributes && Object.keys(product.productAttributes).length);
 }
 
 function createProductAttributeBox(product) {
-  const normalize = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const isAccessory = normalize(product.categoryName).includes("phu kien")
-    || normalize(product.categoryName).includes("day chuyen")
-    || normalize(product.name).includes("day chuyen");
   const attributes = product.productAttributes;
-  if (!isAccessory || !attributes || typeof attributes !== "object") return "";
+  if (!attributes || typeof attributes !== "object") return "";
   const rows = [
     ["Chất liệu", attributes.material],
     ["Độ dài dây", attributes.chain_length],

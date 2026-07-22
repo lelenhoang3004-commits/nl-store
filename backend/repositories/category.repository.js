@@ -63,7 +63,7 @@ export class CategoryRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return rows.map((row) => new Category(row));
+    return (await this.withTreeProductCounts(rows)).map((row) => new Category(row));
   }
 
   async countAll(options) {
@@ -118,7 +118,8 @@ export class CategoryRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return rows[0] ? new Category(rows[0]) : null;
+    const countedRows = await this.withTreeProductCounts(rows);
+    return countedRows[0] ? new Category(countedRows[0]) : null;
   }
 
   async findBySlug(slug, excludedId = null) {
@@ -239,6 +240,70 @@ export class CategoryRepository extends BaseRepository {
     });
 
     return Number(rows[0]?.total || 0);
+  }
+
+  async findDescendantIds(id) {
+    const [rows] = await this.execute(
+      `WITH RECURSIVE category_tree AS (
+        SELECT id
+        FROM categories
+        WHERE parent_id = ? AND deleted_at IS NULL
+        UNION ALL
+        SELECT child.id
+        FROM categories child
+        INNER JOIN category_tree tree ON child.parent_id = tree.id
+        WHERE child.deleted_at IS NULL
+      )
+      SELECT id FROM category_tree`,
+      [id]
+    );
+
+    return rows.map((row) => Number(row.id)).filter((value) => Number.isInteger(value));
+  }
+
+  async withTreeProductCounts(rows = []) {
+    if (!rows.length) return rows;
+
+    const [categories] = await this.execute(
+      `SELECT id, parent_id
+      FROM categories
+      WHERE deleted_at IS NULL`
+    );
+    const [productCounts] = await this.execute(
+      `SELECT category_id, COUNT(*) AS total
+      FROM products
+      WHERE deleted_at IS NULL AND category_id IS NOT NULL
+      GROUP BY category_id`
+    );
+    const childrenByParent = new Map();
+    const directCounts = new Map();
+
+    categories.forEach((category) => {
+      const parentId = category.parent_id == null ? null : Number(category.parent_id);
+      if (parentId == null) return;
+      if (!childrenByParent.has(parentId)) childrenByParent.set(parentId, []);
+      childrenByParent.get(parentId).push(Number(category.id));
+    });
+
+    productCounts.forEach((item) => {
+      directCounts.set(Number(item.category_id), Number(item.total || 0));
+    });
+
+    const countCache = new Map();
+    const countDescendants = (categoryId) => {
+      if (countCache.has(categoryId)) return countCache.get(categoryId);
+      const children = childrenByParent.get(categoryId) || [];
+      const total = children.length
+        ? children.reduce((sum, childId) => sum + countDescendants(childId), 0)
+        : directCounts.get(categoryId) || 0;
+      countCache.set(categoryId, total);
+      return total;
+    };
+
+    return rows.map((row) => ({
+      ...row,
+      product_count: countDescendants(Number(row.id))
+    }));
   }
 
   async softDelete(id) {
