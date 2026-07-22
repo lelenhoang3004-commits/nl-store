@@ -1,5 +1,6 @@
 .notification-center {
   width: min(420px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 88px));
   padding: 0;
   overflow: hidden;
 }
@@ -121,7 +122,7 @@
 
 .notification-list {
   display: grid;
-  max-height: 360px;
+  max-height: min(360px, calc(100vh - 300px));
   overflow-y: auto;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);

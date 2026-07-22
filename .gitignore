@@ -19,6 +19,7 @@ frontend/.env.*
 
 # Database backup
 *.sql
+!database/migrations/20260722_notification_audience_reads.sql
 n_l_shop.sql
 fashion_shop_backup.sql
 

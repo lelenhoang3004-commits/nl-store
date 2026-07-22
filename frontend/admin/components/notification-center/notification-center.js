@@ -1,5 +1,6 @@
 ﻿import { eventBus, stateActions, stateSelectors } from "../../state/index.js";
 import { apiClient } from "../../services/api/api-client.js";
+import { tokenService } from "../../services/api/token.service.js";
 
 export const NOTIFICATION_EVENTS = Object.freeze({
   incoming: "notification:incoming",
@@ -10,6 +11,7 @@ export const NOTIFICATION_EVENTS = Object.freeze({
 
 const PAGE_SIZE = 4;
 const POLLING_MS = 45000;
+const ADMIN_NOTIFICATION_ENDPOINT = "/admin/notifications";
 const FILTERS = Object.freeze({ all: "all", unread: "unread", read: "read" });
 
 let localState = { page: 1, query: "", filter: FILTERS.all, loading: false, error: "" };
@@ -42,6 +44,10 @@ function bindNotificationEvents(root) {
   const center = root.querySelector("[data-notification-center]");
   if (!center || center.dataset.notificationBound === "true") return;
   center.dataset.notificationBound = "true";
+
+  center.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
 
   center.addEventListener("input", (event) => {
     const searchInput = event.target.closest("[data-notification-search]");
@@ -105,9 +111,15 @@ function startNotificationPolling(root) {
 
 async function fetchNotifications({ root = document, silent = false } = {}) {
   if (fetchPromise) return fetchPromise;
+  if (!tokenService.getAccessToken()) {
+    stateActions.setNotifications({ items: [], unreadCount: 0 });
+    localState = { ...localState, loading: false, error: "" };
+    renderNotificationCenter(root);
+    return null;
+  }
   localState = { ...localState, loading: !silent, error: "" };
   renderNotificationCenter(root);
-  fetchPromise = apiClient.get("/notifications", { showLoading: false, showErrorToast: false })
+  fetchPromise = apiClient.get(ADMIN_NOTIFICATION_ENDPOINT, { showLoading: false, showErrorToast: false })
     .then((response) => {
       const data = response?.data || response || {};
       const notifications = Array.isArray(data.notifications) ? data.notifications : [];
@@ -183,7 +195,7 @@ async function markNotificationRead(id, root, options = {}) {
   stateActions.markNotificationRead(Number(id));
   renderNotificationCenter(root);
   try {
-    await apiClient.patch(`/notifications/${encodeURIComponent(id)}/read`, {}, { showLoading: false, showErrorToast: false });
+    await apiClient.patch(`${ADMIN_NOTIFICATION_ENDPOINT}/${encodeURIComponent(id)}/read`, {}, { showLoading: false, showErrorToast: false });
     eventBus.emit(NOTIFICATION_EVENTS.read, { id });
     if (options.navigate) await fetchNotifications({ root, silent: true });
   } catch {
@@ -195,7 +207,7 @@ async function markAllAsRead(root) {
   stateActions.setNotifications({ items: stateSelectors.notifications().items.map((item) => ({ ...item, read: true, isRead: true })), unreadCount: 0 });
   renderNotificationCenter(root);
   try {
-    await apiClient.patch("/notifications/read-all", {}, { showLoading: false, showErrorToast: false });
+    await apiClient.patch(`${ADMIN_NOTIFICATION_ENDPOINT}/read-all`, {}, { showLoading: false, showErrorToast: false });
     eventBus.emit(NOTIFICATION_EVENTS.cleared);
   } catch {
     await fetchNotifications({ root, silent: true });

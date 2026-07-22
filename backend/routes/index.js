@@ -11,6 +11,7 @@ import adminUserRoutes from "./admin-user.route.js";
 import adminVoucherRoutes from "./admin-voucher.route.js";
 import adminDashboardRoutes from "./admin-dashboard.route.js";
 import adminNewsletterRoutes from "./admin-newsletter.route.js";
+import adminNotificationRoutes from "./admin-notification.route.js";
 import adminCategoryRoutes from "./admin-category.route.js";
 import cartRoutes from "./cart.routes.js";
 import categoryRoutes from "./category.routes.js";
@@ -31,6 +32,7 @@ const router = Router();
 
 router.use("/admin/dashboard", adminDashboardRoutes);
 router.use("/admin/newsletter", adminNewsletterRoutes);
+router.use("/admin/notifications", adminNotificationRoutes);
 router.use("/admin/categories", adminCategoryRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/payments", adminPaymentRoutes);

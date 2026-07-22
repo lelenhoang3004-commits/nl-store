@@ -238,25 +238,15 @@ export class CartService extends BaseService {
         type: "order",
         title: "Đơn hàng mới",
         message: `Đơn ${createdOrderId} vừa được tạo với tổng ${grandTotal.toLocaleString("vi-VN")}đ.`,
-        link: "#orders"
+        link: "#orders",
+        dedupeKey: `order-created:${createdOrderId}`
       }, connection);
       await this.notificationService.notifyAdmin({
         type: "payment",
         title: "Thanh toán mới",
         message: `Giao dịch ${paymentMethod.toUpperCase()} cho đơn ${createdOrderId} đang chờ xử lý.`,
-        link: "#payments"
-      }, connection);
-      await this.notificationService.notifyCustomer(userId, {
-        type: "order",
-        title: "Đơn hàng đã được tạo",
-        message: `Đơn hàng của bạn đang chờ xác nhận. Tổng thanh toán ${grandTotal.toLocaleString("vi-VN")}đ.`,
-        link: "#orders"
-      }, connection);
-      await this.notificationService.notifyCustomer(userId, {
-        type: "payment",
-        title: "Thanh toán đang chờ xử lý",
-        message: `Phương thức ${paymentMethod.toUpperCase()} đã được ghi nhận cho đơn hàng.`,
-        link: "#orders"
+        link: "#payments",
+        dedupeKey: `payment-created:${paymentTransactionId}`
       }, connection);
       if (voucherResult?.code) {
         await this.voucherService.markVoucherUsed(voucherResult.code, connection);

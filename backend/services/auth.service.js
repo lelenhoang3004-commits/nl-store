@@ -33,13 +33,8 @@ export class AuthService extends BaseService {
       type: "user",
       title: "Khách hàng mới đăng ký",
       message: `${user.fullName || user.email || "Khách hàng"} vừa tạo tài khoản.`, 
-      link: "#users"
-    });
-    await this.notificationService.notifyCustomer(user.id, {
-      type: "system",
-      title: "Chào mừng bạn đến với N&L Store",
-      message: "Tài khoản của bạn đã được tạo thành công.",
-      link: "#profile"
+      link: "#users",
+      dedupeKey: `customer-registered:${user.id}`
     });
     return { user };
   }

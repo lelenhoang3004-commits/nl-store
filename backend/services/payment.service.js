@@ -262,15 +262,10 @@ export class PaymentService extends BaseService {
       await this.syncOrderPaymentStatus(transaction, normalizedStatus, connection, order);
       await this.notificationService.notifyAdmin({
         type: "payment",
-        title: "Thanh toán đã cập nhật",
+        title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toán thất bại" : "Thanh toán đã xác nhận",
         message: `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`, 
-        link: "#payments"
-      }, connection);
-      await this.notificationService.notifyCustomer(order.customer_id, {
-        type: "payment",
-        title: "Trạng thái thanh toán đã cập nhật",
-        message: `Thanh toán đơn ${order.order_code || order.id} chuyển sang ${normalizedStatus}.`, 
-        link: "#orders"
+        link: "#payments",
+        dedupeKey: `payment-status:${id}:${normalizedStatus}`
       }, connection);
     });
 

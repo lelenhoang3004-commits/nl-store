@@ -10,8 +10,9 @@ export class NotificationService extends BaseService {
   async listForUser(user, query = {}) {
     const limit = Math.min(Math.max(Number(query.limit || 20), 1), 50);
     const offset = Math.max(Number(query.offset || 0), 0);
+    const status = normalizeStatus(query.status || query.filter);
     const [items, unreadCount] = await Promise.all([
-      this.repository.findForPrincipal(user, { limit, offset }),
+      this.repository.findForPrincipal(user, { limit, offset, status }),
       this.repository.countUnreadForPrincipal(user)
     ]);
     return { notifications: items, unreadCount };
@@ -33,15 +34,20 @@ export class NotificationService extends BaseService {
   }
 
   async notifyAdmin(payload, connection = null) {
-    return this.repository.create({ ...payload, targetType: "role", role: "ADMIN" }, connection);
+    return this.repository.create({ ...payload, audience: "ADMIN", targetType: "role", role: "ADMIN" }, connection);
   }
 
   async notifyCustomer(userId, payload, connection = null) {
     if (!userId) return null;
-    return this.repository.create({ ...payload, targetType: "user", userId }, connection);
+    return this.repository.create({ ...payload, audience: "CUSTOMER", targetType: "user", userId }, connection);
   }
 
   async notifyRole(role, payload, connection = null) {
-    return this.repository.create({ ...payload, targetType: "role", role: String(role || "").toUpperCase() }, connection);
+    return this.repository.create({ ...payload, audience: "ADMIN", targetType: "role", role: String(role || "").toUpperCase() }, connection);
   }
+}
+
+function normalizeStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return ["all", "read", "unread"].includes(status) ? status : "all";
 }
