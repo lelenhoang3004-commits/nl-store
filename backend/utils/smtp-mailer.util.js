@@ -34,15 +34,7 @@ export async function sendMail({ to, subject, text, html }) {
       return;
     } catch (error) {
       logSafeBrevoError(error);
-
-      if (isInvalidBrevoRequest(error) || !hasRequiredSmtpConfig()) {
-        throw new AppError("Hiện chưa thể gửi email xác thực. Vui lòng thử lại sau.", 503, "BREVO_SEND_FAILED");
-      }
-
-      logger.warn("Brevo email failed. Falling back to SMTP.", {
-        code: error?.code || error?.name,
-        status: error?.status
-      });
+      throw new AppError("Hiện chưa thể gửi email xác thực. Vui lòng thử lại sau.", 503, "BREVO_SEND_FAILED");
     }
   }
 
@@ -79,6 +71,7 @@ export async function sendMail({ to, subject, text, html }) {
 async function sendBrevoTransactionalEmail({ to, subject, text, html }) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), appConfig.brevoEmailTimeoutMs);
+  const normalizedRecipientEmail = normalizeEmail(to);
 
   try {
     const response = await fetch(appConfig.brevoApiUrl, {
@@ -93,7 +86,7 @@ async function sendBrevoTransactionalEmail({ to, subject, text, html }) {
           name: appConfig.brevoFromName,
           email: appConfig.brevoFromEmail
         },
-        to: [{ email: to }],
+        to: [{ email: normalizedRecipientEmail }],
         subject,
         htmlContent: html,
         textContent: text
@@ -101,19 +94,22 @@ async function sendBrevoTransactionalEmail({ to, subject, text, html }) {
       signal: controller.signal
     });
 
-    if (!response.ok) {
-      const safeBody = await readSafeBrevoErrorBody(response);
+    const responseBody = await readSafeBrevoResponseBody(response);
+    if (response.status !== 201 || !responseBody.messageId) {
       const error = new Error("Brevo Transactional Email API rejected the request.");
-      error.code = safeBody.code || "BREVO_HTTP_ERROR";
+      error.code = String(responseBody.code || "BREVO_HTTP_ERROR").slice(0, 120);
       error.status = response.status;
       error.statusText = response.statusText;
-      error.responseMessage = safeBody.message;
+      error.responseMessage = String(responseBody.message || "Brevo did not return HTTP 201 with messageId.").slice(0, 500);
+      error.recipientEmailMasked = maskEmail(normalizedRecipientEmail);
       throw error;
     }
 
     logger.info("Password reset email sent by Brevo API.", {
       provider: "brevo",
-      status: response.status
+      status: response.status,
+      messageId: responseBody.messageId,
+      recipientEmail: maskEmail(normalizedRecipientEmail)
     });
   } catch (error) {
     if (error?.name === "AbortError") {
@@ -157,27 +153,29 @@ function hasRequiredSmtpConfig() {
   );
 }
 
-function isInvalidBrevoRequest(error) {
-  return Number(error?.status) === 400;
-}
-
-async function readSafeBrevoErrorBody(response) {
+async function readSafeBrevoResponseBody(response) {
   try {
     const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const body = await response.json();
-      return {
-        code: String(body?.code || "").slice(0, 120),
-        message: String(body?.message || "").slice(0, 500)
-      };
+      return await response.json();
     }
-    return {
-      code: "",
-      message: (await response.text()).slice(0, 500)
-    };
+    return { message: (await response.text()).slice(0, 500) };
   } catch {
-    return { code: "", message: "" };
+    return {};
   }
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function maskEmail(value) {
+  const email = normalizeEmail(value);
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) return "";
+  const visibleStart = localPart.slice(0, Math.min(2, localPart.length));
+  const visibleEnd = localPart.length > 4 ? localPart.slice(-2) : "";
+  return `${visibleStart}${"*".repeat(Math.max(localPart.length - visibleStart.length - visibleEnd.length, 3))}${visibleEnd}@${domain}`;
 }
 
 function logSafeBrevoError(error) {
@@ -185,6 +183,7 @@ function logSafeBrevoError(error) {
     status: error?.status,
     code: error?.code || error?.name,
     responseMessage: error?.responseMessage,
+    recipientEmail: error?.recipientEmailMasked,
     hasApiKey: Boolean(appConfig.brevoApiKey),
     fromEmail: appConfig.brevoFromEmail
   });

@@ -149,7 +149,8 @@ export class AuthService extends BaseService {
 
     const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
     const expiresAt = new Date(Date.now() + appConfig.passwordResetExpiresInSeconds * 1000);
-    await sendPasswordResetEmail(user.email, code);
+    const normalizedUserEmail = normalizeEmail(user.email || normalizedEmail);
+    await sendPasswordResetEmail(normalizedUserEmail, code);
     const codeHash = await hashPassword(code);
     await this.repository.savePasswordResetToken(user.id, codeHash, expiresAt);
     return genericResult;
