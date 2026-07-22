@@ -48,14 +48,15 @@ export function createProductCard(product) {
   const comparePriceText = item.comparePrice ? formatCurrency(item.comparePrice) : "";
   const badgeClass = `product-badge ${getBadgeClass(item.badge)}`;
   const stockLabel = item.inStock ? "Còn hàng" : "Hết hàng";
+  const fallbackImage = escapeHtml(globalThis.FASHION_IMAGE_PLACEHOLDER || "");
 
   return `
     <article class="product-card ds-hover" data-product-card="${item.id}">
       <div class="product-card-media-wrap">
-        <a class="product-media" href="#product-detail/${item.id}" aria-label="${item.name}">
-          <span class="${badgeClass}">${item.badge}</span>
-          <img class="product-media-image primary-image" src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image>
-          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(item.hoverImage)}" alt="${escapeHtml(item.imageAlt || item.name)} alternate" loading="lazy" decoding="async" data-product-image>` : ""}
+        <a class="product-media" href="#product-detail/${item.id}" aria-label="${escapeHtml(item.name)}">
+          <span class="${badgeClass}">${escapeHtml(item.badge)}</span>
+          <img class="product-media-image primary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">
+          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.hoverImage)}" alt="${escapeHtml(item.imageAlt || item.name)} alternate" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">` : ""}
         </a>
         <div class="product-card-actions" aria-label="Hành động sản phẩm">
           <button class="icon-pill product-action-btn ${item.isWishlist ? "is-active" : ""}" type="button" aria-label="Thêm vào yêu thích" data-wishlist-toggle="${item.id}">
@@ -65,15 +66,15 @@ export function createProductCard(product) {
             <i class="fa-regular fa-eye" aria-hidden="true"></i>
           </a>
         </div>
-        ${item.discount ? `<span class="product-discount">-${item.discount}%</span>` : ""}
+        ${item.discount ? `<span class="product-discount">-${escapeHtml(item.discount)}%</span>` : ""}
       </div>
 
       <div class="product-card-content">
         <div class="product-card-meta">
-          <span class="ds-tag">${item.category}</span>
+          <span class="ds-tag">${escapeHtml(item.category)}</span>
           <span class="product-stock ${item.inStock ? "in-stock" : "out-of-stock"}">${stockLabel}</span>
         </div>
-        <h3><a href="#product-detail/${item.id}">${item.name}</a></h3>
+        <h3><a href="#product-detail/${item.id}">${escapeHtml(item.name)}</a></h3>
         <div class="product-rating" aria-label="Đánh giá ${item.rating} trên 5">
           <span>${renderStars(item.rating)}</span>
           <small>${item.rating.toFixed(1)}</small>
@@ -83,7 +84,7 @@ export function createProductCard(product) {
             <strong>${priceText}</strong>
             ${comparePriceText ? `<del>${comparePriceText}</del>` : ""}
           </div>
-          <span class="product-sold">${item.sold} đã bán</span>
+          <span class="product-sold">${escapeHtml(item.sold)} đã bán</span>
         </div>
         <div class="product-card-button-row">
           <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
@@ -111,7 +112,7 @@ export function createProductCard(product) {
 }
 
 export function createProductCardSkeleton(count = 4) {
-  return Array.from({ length: count }, (_, index) => `
+  return Array.from({ length: count }, () => `
     <article class="product-card product-card-skeleton" aria-hidden="true">
       <div class="product-card-media-wrap">
         <div class="skeleton-media product-skeleton-media"></div>
@@ -150,12 +151,12 @@ function formatCurrency(value) {
 }
 
 function renderStars(rating) {
-  const full = Math.round(rating);
+  const full = Math.max(0, Math.min(5, Math.round(rating || 0)));
   return "&#9733;".repeat(full) + "&#9734;".repeat(5 - full);
 }
 
 function getBadgeClass(badge) {
-  switch (badge?.toUpperCase()) {
+  switch (String(badge || "").toUpperCase()) {
     case "HOT":
     case "BÁN CHẠY":
       return "is-hot";
