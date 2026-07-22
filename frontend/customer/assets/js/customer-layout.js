@@ -2525,16 +2525,353 @@ async function renderOrderDetailPage(orderId) {
   }
 }
 
-function renderProfilePage() {
-  const user = customerAuth.getUser();
-  layoutState.main.innerHTML = renderPageShell("Hồ sơ", `
-    <div style="display:grid;gap:8px;max-width:420px;">
-      <p><strong>Họ tên:</strong> ${escapeHtml(user?.fullName || user?.name || "")}</p>
-      <p><strong>Email:</strong> ${escapeHtml(user?.email || "")}</p>
-      <p><strong>Số điện thoại:</strong> ${escapeHtml(user?.phone || "")}</p>
-      <a class="customer-button secondary" href="#orders">Xem đơn hàng</a>
+async function renderProfilePage() {
+  if (!customerAuth.isAuthenticated()) {
+    layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để quản lý hồ sơ của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);
+    return;
+  }
+
+  layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-profile-loading">Đang tải hồ sơ...</div>`);
+
+  try {
+    const [profileResponse, socialResponse, paymentResponse] = await Promise.all([
+      customerApi("/users/profile"),
+      customerApi("/users/profile/social-connections"),
+      customerApi("/users/profile/payment-methods")
+    ]);
+    const user = profileResponse?.data?.user || customerAuth.getUser() || {};
+    customerAuth.setUser(user);
+    renderHeader();
+    layoutState.main.innerHTML = renderPageShell("Hồ sơ", createProfilePageHtml(
+      user,
+      socialResponse?.data || {},
+      paymentResponse?.data?.paymentMethods || []
+    ));
+    bindProfilePage(user);
+  } catch (error) {
+    layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div><h2>Không thể tải hồ sơ</h2><p>${escapeHtml(error?.message || "Vui lòng thử lại sau.")}</p></div>`);
+    showCustomerToast(error?.message || "Không thể tải hồ sơ.", "error");
+  }
+}
+
+function createProfilePageHtml(user = {}, social = {}, paymentMethods = []) {
+  const avatar = user.avatarUrl || user.avatar_url || user.picture || "";
+  const name = user.fullName || user.name || "Khách hàng N&L";
+  const addressText = formatAddress(user.address || {});
+  const connections = Array.isArray(social.connections) ? social.connections : [];
+  const connectionMap = new Map(connections.map((connection) => [connection.provider, connection]));
+
+  return `
+    <div class="customer-profile-shell">
+      <section class="customer-profile-hero">
+        <div class="customer-profile-avatar">
+          ${avatar ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" onerror="this.remove();this.parentElement.classList.add('is-fallback');">` : ""}
+          <i class="fa-solid fa-user" aria-hidden="true"></i>
+        </div>
+        <div class="customer-profile-identity">
+          <h2>${escapeHtml(name)}</h2>
+          <p>${escapeHtml(user.email || "Chưa cập nhật email")}</p>
+          <span>${escapeHtml(addressText)}</span>
+        </div>
+        <div class="customer-profile-actions">
+          <button class="customer-button" type="button" data-profile-edit><i class="fa-solid fa-pen" aria-hidden="true"></i> Chỉnh sửa thông tin</button>
+          <button class="customer-button secondary" type="button" data-profile-password><i class="fa-solid fa-key" aria-hidden="true"></i> Đổi mật khẩu</button>
+          <button class="customer-button secondary" type="button" data-profile-orders><i class="fa-solid fa-box" aria-hidden="true"></i> Xem đơn hàng</button>
+        </div>
+      </section>
+
+      <div class="customer-profile-grid">
+        <section class="customer-profile-card">
+          <h3>Thông tin liên hệ</h3>
+          <div class="customer-profile-info">
+            ${createProfileInfoRow("Họ tên", name)}
+            ${createProfileInfoRow("Email", user.email || "Chưa cập nhật")}
+            ${createProfileInfoRow("Số điện thoại", user.phone || "Chưa cập nhật")}
+            ${createProfileInfoRow("Địa chỉ", addressText)}
+          </div>
+        </section>
+
+        <section class="customer-profile-card">
+          <h3>Tài khoản liên kết</h3>
+          <div class="customer-profile-list">
+            ${["google", "facebook"].map((provider) => createSocialConnectionRow(provider, connectionMap.get(provider))).join("")}
+          </div>
+        </section>
+
+        <section class="customer-profile-card customer-profile-card-wide">
+          <div class="customer-profile-card-title">
+            <h3>Phương thức thanh toán</h3>
+            <button class="customer-button secondary" type="button" data-payment-add><i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm</button>
+          </div>
+          <p class="customer-profile-note">Chức năng đang thử nghiệm. N&L Store chỉ lưu thông tin đã che, không lưu PIN, OTP, CVV hoặc token bí mật.</p>
+          <div class="customer-profile-payment-list">
+            ${paymentMethods.length ? paymentMethods.map(createPaymentMethodRow).join("") : '<div class="customer-profile-muted">Chưa có phương thức thanh toán đã lưu.</div>'}
+          </div>
+        </section>
+      </div>
     </div>
+  `;
+}
+
+function createProfileInfoRow(label, value) {
+  return `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "Chưa cập nhật")}</strong></div>`;
+}
+
+function createSocialConnectionRow(provider, connection = {}) {
+  const label = provider === "google" ? "Google" : "Facebook";
+  const linked = Boolean(connection?.linked);
+  return `
+    <div class="customer-profile-linked-row">
+      <div><strong>${label}</strong><span>${linked ? "Đã liên kết" : "Chưa liên kết"}${connection?.email ? ` - ${escapeHtml(connection.email)}` : ""}</span></div>
+      <button class="customer-button secondary" type="button" data-social-provider="${provider}" data-social-action="${linked ? "unlink" : "link"}">${linked ? "Hủy liên kết" : "Liên kết"}</button>
+    </div>
+  `;
+}
+
+function createPaymentMethodRow(method = {}) {
+  const type = method.type === "momo" ? "Ví MoMo" : "Tài khoản ngân hàng";
+  return `
+    <div class="customer-profile-payment-row">
+      <div><strong>${escapeHtml(type)}${method.isDefault ? " - Mặc định" : ""}</strong><span>${escapeHtml(method.providerName || "Nhà cung cấp")} - ${escapeHtml(method.accountHolderName || "")} - ${escapeHtml(method.maskedAccountIdentifier || "")}</span></div>
+      <div class="customer-profile-payment-actions">
+        <span>${escapeHtml(getPaymentVerificationLabel(method.verificationStatus))}</span>
+        ${method.isDefault ? "" : `<button type="button" data-payment-default="${escapeHtml(method.id)}">Đặt mặc định</button>`}
+        <button type="button" data-payment-delete="${escapeHtml(method.id)}">Xóa</button>
+      </div>
+    </div>
+  `;
+}
+
+function getPaymentVerificationLabel(status) {
+  return { verified: "Đã xác minh", pending: "Đang xác minh", failed: "Xác minh thất bại", unverified: "Chưa xác minh" }[String(status || "").toLowerCase()] || "Chưa xác minh";
+}
+
+function bindProfilePage(user = {}) {
+  layoutState.main.querySelector("[data-profile-orders]")?.addEventListener("click", () => navigateToRoute("orders"));
+  layoutState.main.querySelector("[data-profile-edit]")?.addEventListener("click", () => openProfileEditModal(user));
+  layoutState.main.querySelector("[data-profile-password]")?.addEventListener("click", openPasswordModal);
+  layoutState.main.querySelector("[data-payment-add]")?.addEventListener("click", openPaymentModal);
+  layoutState.main.querySelectorAll("[data-social-provider]").forEach((button) => {
+    button.addEventListener("click", () => handleSocialAction(button.dataset.socialProvider, button.dataset.socialAction));
+  });
+  layoutState.main.querySelectorAll("[data-payment-default]").forEach((button) => {
+    button.addEventListener("click", () => updatePaymentDefault(button.dataset.paymentDefault));
+  });
+  layoutState.main.querySelectorAll("[data-payment-delete]").forEach((button) => {
+    button.addEventListener("click", () => deletePaymentMethod(button.dataset.paymentDelete));
+  });
+}
+
+function openProfileEditModal(user = {}) {
+  const address = user.address || {};
+  const modal = createProfileModal("Chỉnh sửa thông tin", `
+    <form class="customer-profile-form" data-profile-edit-form>
+      <label>Ảnh đại diện<input type="file" name="avatar" accept="image/*"></label>
+      <div class="customer-profile-preview">${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar">` : '<i class="fa-solid fa-user" aria-hidden="true"></i>'}</div>
+      <label>Họ tên<input name="fullName" value="${escapeHtml(user.fullName || "")}" required maxlength="120"></label>
+      <label>Email<input name="email" type="email" value="${escapeHtml(user.email || "")}" required></label>
+      <label>Số điện thoại<input name="phone" value="${escapeHtml(user.phone || "")}"></label>
+      <label>Địa chỉ chi tiết<input name="line1" value="${escapeHtml(address.line1 || address.detailAddress || "")}" maxlength="120"></label>
+      <div class="customer-profile-form-grid">
+        <label>Tỉnh/thành phố<select name="provinceCode" data-profile-province></select></label>
+        <label>Phường/xã<select name="wardCode" data-profile-ward></select></label>
+      </div>
+      <label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="current-password" placeholder="Bắt buộc khi đổi email hoặc số điện thoại"></label>
+      <div data-auth-message hidden></div>
+      <div class="customer-profile-modal-actions">
+        <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
+        <button class="customer-button" type="submit">Lưu thay đổi</button>
+      </div>
+    </form>
   `);
+  const form = modal.querySelector("[data-profile-edit-form]");
+  const provinceSelect = form.querySelector("[data-profile-province]");
+  const wardSelect = form.querySelector("[data-profile-ward]");
+  loadProvinces(provinceSelect);
+  provinceSelect.value = address.provinceCode || "";
+  loadWardsByProvince(wardSelect, provinceSelect.value);
+  wardSelect.value = address.wardCode || "";
+  provinceSelect.addEventListener("change", () => loadWardsByProvince(wardSelect, provinceSelect.value));
+  form.avatar.addEventListener("change", () => {
+    const file = form.avatar.files?.[0];
+    if (file) modal.querySelector(".customer-profile-preview").innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitProfileEdit(form, user, modal);
+  });
+}
+
+async function submitProfileEdit(form, currentUser, modal) {
+  const data = new FormData(form);
+  const province = VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === String(data.get("provinceCode") || ""));
+  const ward = province?.wards.find((item) => item.code === String(data.get("wardCode") || ""));
+  const payload = {
+    fullName: String(data.get("fullName") || "").trim(),
+    email: String(data.get("email") || "").trim(),
+    phone: String(data.get("phone") || "").trim(),
+    currentPassword: String(data.get("currentPassword") || ""),
+    address: {
+      line1: String(data.get("line1") || "").trim(),
+      provinceCode: province?.code || null,
+      provinceName: province?.name || null,
+      province: province?.name || null,
+      wardCode: ward?.code || null,
+      wardName: ward?.name || null,
+      ward: ward?.name || null,
+      country: "Vietnam"
+    }
+  };
+  if (!payload.currentPassword && payload.email === currentUser.email && payload.phone === (currentUser.phone || "")) {
+    delete payload.currentPassword;
+  }
+  try {
+    const response = await customerApi("/users/profile", { method: "PUT", body: payload });
+    let user = response?.data?.user || currentUser;
+    const avatarFile = form.avatar.files?.[0];
+    if (avatarFile) {
+      const avatarData = new FormData();
+      avatarData.append("avatar", avatarFile);
+      const avatarResponse = await customerApi("/users/profile/avatar", { method: "POST", body: avatarData });
+      user = avatarResponse?.data?.user || user;
+    }
+    customerAuth.setUser(user);
+    closeProfileModal(modal);
+    showCustomerToast("Đã cập nhật hồ sơ.", "success");
+    renderHeader();
+    renderProfilePage();
+  } catch (error) {
+    showCustomerMessage(form, error?.message || "Không thể cập nhật hồ sơ.");
+  }
+}
+
+function openPasswordModal() {
+  const modal = createProfileModal("Đổi mật khẩu", `
+    <form class="customer-profile-form" data-password-form>
+      <label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="current-password" required></label>
+      <label>Mật khẩu mới<input name="newPassword" type="password" autocomplete="new-password" required></label>
+      <label>Xác nhận mật khẩu mới<input name="confirmPassword" type="password" autocomplete="new-password" required></label>
+      <div data-auth-message hidden></div>
+      <div class="customer-profile-modal-actions">
+        <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
+        <button class="customer-button" type="submit">Lưu thay đổi</button>
+      </div>
+    </form>
+  `);
+  const form = modal.querySelector("[data-password-form]");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    try {
+      await customerApi("/users/profile/password", {
+        method: "PUT",
+        body: {
+          currentPassword: String(data.get("currentPassword") || ""),
+          newPassword: String(data.get("newPassword") || ""),
+          confirmPassword: String(data.get("confirmPassword") || "")
+        }
+      });
+      closeProfileModal(modal);
+      showCustomerToast("Đã đổi mật khẩu.", "success");
+    } catch (error) {
+      showCustomerMessage(form, error?.message || "Không thể đổi mật khẩu.");
+    }
+  });
+}
+
+function openPaymentModal() {
+  const modal = createProfileModal("Thêm phương thức thanh toán", `
+    <form class="customer-profile-form" data-payment-form>
+      <p class="customer-profile-note">Chức năng đang thử nghiệm. Thông tin sẽ được lưu ở dạng đã che và chưa được xác minh tự động.</p>
+      <label>Loại phương thức<select name="type"><option value="bank_account">Tài khoản ngân hàng</option><option value="momo">Ví MoMo</option></select></label>
+      <label>Ngân hàng/Nhà cung cấp<input name="providerName" maxlength="120"></label>
+      <label>Tên chủ tài khoản<input name="accountHolderName" required maxlength="120"></label>
+      <label>Số tài khoản/Số điện thoại<input name="accountIdentifier" required maxlength="120"></label>
+      <label class="customer-profile-check"><input name="isDefault" type="checkbox"> Đặt làm mặc định</label>
+      <div data-auth-message hidden></div>
+      <div class="customer-profile-modal-actions">
+        <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
+        <button class="customer-button" type="submit">Lưu</button>
+      </div>
+    </form>
+  `);
+  const form = modal.querySelector("[data-payment-form]");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    try {
+      const response = await customerApi("/users/profile/payment-methods", {
+        method: "POST",
+        body: {
+          type: String(data.get("type") || ""),
+          providerName: String(data.get("providerName") || "").trim(),
+          accountHolderName: String(data.get("accountHolderName") || "").trim(),
+          accountIdentifier: String(data.get("accountIdentifier") || "").trim(),
+          isDefault: Boolean(data.get("isDefault"))
+        }
+      });
+      closeProfileModal(modal);
+      showCustomerToast(response?.message || "Đã lưu phương thức thanh toán.", "success");
+      renderProfilePage();
+    } catch (error) {
+      showCustomerMessage(form, error?.message || "Không thể lưu phương thức thanh toán.");
+    }
+  });
+}
+
+async function handleSocialAction(provider, action) {
+  try {
+    if (action === "unlink") {
+      await customerApi(`/users/profile/social-connections/${encodeURIComponent(provider)}`, { method: "DELETE" });
+      showCustomerToast("Đã hủy liên kết tài khoản.", "success");
+      renderProfilePage();
+      return;
+    }
+    const response = await customerApi(`/users/profile/social-connections/${encodeURIComponent(provider)}/link-intent`, { method: "POST" });
+    showCustomerToast(response?.message || "Chức năng liên kết đang thử nghiệm.", "warning");
+  } catch (error) {
+    showCustomerToast(error?.message || "Không thể cập nhật liên kết.", "error");
+  }
+}
+
+async function updatePaymentDefault(id) {
+  try {
+    await customerApi(`/users/profile/payment-methods/${encodeURIComponent(id)}/default`, { method: "PATCH" });
+    showCustomerToast("Đã cập nhật phương thức mặc định.", "success");
+    renderProfilePage();
+  } catch (error) {
+    showCustomerToast(error?.message || "Không thể cập nhật phương thức mặc định.", "error");
+  }
+}
+
+async function deletePaymentMethod(id) {
+  try {
+    await customerApi(`/users/profile/payment-methods/${encodeURIComponent(id)}`, { method: "DELETE" });
+    showCustomerToast("Đã xóa phương thức thanh toán.", "success");
+    renderProfilePage();
+  } catch (error) {
+    showCustomerToast(error?.message || "Không thể xóa phương thức thanh toán.", "error");
+  }
+}
+
+function createProfileModal(title, content) {
+  const modal = document.createElement("div");
+  modal.className = "customer-profile-modal";
+  modal.innerHTML = `<div class="customer-profile-modal-backdrop" data-modal-close></div><section class="customer-profile-modal-card" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}"><div class="customer-profile-modal-header"><h3>${escapeHtml(title)}</h3><button type="button" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>${content}</section>`;
+  document.body.append(modal);
+  modal.querySelectorAll("[data-modal-close]").forEach((button) => button.addEventListener("click", () => closeProfileModal(modal)));
+  const onKeydown = (event) => {
+    if (event.key === "Escape") closeProfileModal(modal);
+  };
+  modal._profileKeydown = onKeydown;
+  document.addEventListener("keydown", onKeydown);
+  return modal;
+}
+
+function closeProfileModal(modal) {
+  if (!modal) return;
+  if (modal._profileKeydown) document.removeEventListener("keydown", modal._profileKeydown);
+  modal.remove();
 }
 
 async function renderWishlistPage() {

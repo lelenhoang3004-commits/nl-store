@@ -16,6 +16,10 @@ export class User extends BaseModel {
     this.role = attributes.role;
     this.permissions = normalizePermissions(attributes.permissions, attributes.role);
     this.status = attributes.status;
+    this.provider = attributes.provider || null;
+    this.providerId = attributes.providerId || attributes.provider_id || null;
+    this.passwordHash = attributes.passwordHash || attributes.password_hash || null;
+    this.hasPassword = Boolean(attributes.hasPassword || attributes.has_password || attributes.password_hash);
     this.address = normalizeAddress(attributes.address || attributes.address_json);
     this.lastLoginAt = attributes.lastLoginAt || attributes.last_login_at || null;
     this.createdAt = attributes.createdAt || attributes.created_at || null;
@@ -32,6 +36,7 @@ export class User extends BaseModel {
       role: this.role,
       permissions: this.permissions,
       status: this.status,
+      hasPassword: this.hasPassword,
       address: this.address,
       lastLoginAt: this.lastLoginAt,
       createdAt: this.createdAt,

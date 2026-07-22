@@ -34,6 +34,16 @@ export const customerAuth = {
     return readJson(USER_KEY);
   },
 
+  setUser(user) {
+    const nextUser = {
+      ...(this.getUser() || {}),
+      ...(user || {})
+    };
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    notifyAuthChanged("profile-updated");
+    return nextUser;
+  },
+
   isAuthenticated() {
     return Boolean(this.getAccessToken() && this.getUser());
   },

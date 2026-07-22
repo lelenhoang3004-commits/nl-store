@@ -7,7 +7,7 @@ import { UserRepository } from "../repositories/user.repository.js";
 import { BaseService } from "./base.service.js";
 import { UploadService } from "./upload.service.js";
 import { AppError } from "../utils/app-error.util.js";
-import { hashPassword } from "../utils/password.util.js";
+import { comparePassword, hashPassword } from "../utils/password.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 
 const USER_STATUS = Object.freeze({
@@ -224,10 +224,29 @@ export class UserService extends BaseService {
   }
 
   async updateProfile(userId, payload) {
-    const currentUser = await this.getUserById(userId);
+    const currentUser = await this.repository.findByIdWithAuth(userId);
+    if (!currentUser) {
+      throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
+    }
+    const email = payload.email === undefined ? currentUser.email : String(payload.email || "").trim().toLowerCase();
+    const phone = payload.phone === undefined ? currentUser.phone : normalizeNullableString(payload.phone);
+    const emailChanged = email !== currentUser.email;
+    const phoneChanged = phone !== currentUser.phone;
+
+    if (emailChanged) {
+      await this.ensureUniqueEmail(email, userId);
+    }
+    if (phoneChanged) {
+      await this.ensureUniquePhone(phone, userId);
+    }
+    if (emailChanged || phoneChanged) {
+      await this.ensureCurrentPassword(currentUser, payload.currentPassword);
+    }
+
     const normalizedPayload = {
+      email,
       fullName: payload.fullName ? String(payload.fullName).trim() : currentUser.fullName,
-      phone: payload.phone === undefined ? currentUser.phone : normalizeNullableString(payload.phone),
+      phone,
       avatarUrl: payload.avatarUrl === undefined ? currentUser.avatarUrl : normalizeNullableString(payload.avatarUrl),
       address: payload.address === undefined ? currentUser.address : normalizeAddress(payload.address)
     };
@@ -237,13 +256,135 @@ export class UserService extends BaseService {
   }
 
   async updateAvatar(userId, file) {
-    const filePayload = this.uploadService.createUploadedFilePayload(file, "images");
+    if (!file) {
+      throw new AppError("Avatar file is required.", 422, "AVATAR_FILE_REQUIRED");
+    }
+    const filePayload = await this.uploadService.createUploadedImagePayload(file);
     const user = await this.repository.updateAvatar(userId, filePayload.url);
 
     return {
       user: user.toJSON(),
       avatar: filePayload
     };
+  }
+
+  async changePassword(userId, payload = {}) {
+    const user = await this.repository.findByIdWithAuth(userId);
+    if (!user) {
+      throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
+    }
+    await this.ensureCurrentPassword(user, payload.currentPassword);
+    if (payload.newPassword !== payload.confirmPassword) {
+      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+    }
+    await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
+    return { changed: true };
+  }
+
+  async getSocialConnections(userId) {
+    const user = await this.repository.findByIdWithAuth(userId);
+    if (!user) {
+      throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
+    }
+    const rows = await this.repository.listSocialConnections(userId);
+    const connections = new Map(["google", "facebook"].map((provider) => [provider, {
+      provider,
+      linked: false,
+      email: null,
+      displayName: null,
+      avatarUrl: null,
+      linkedAt: null
+    }]));
+
+    if (user.provider && connections.has(String(user.provider).toLowerCase())) {
+      const provider = String(user.provider).toLowerCase();
+      connections.set(provider, {
+        ...connections.get(provider),
+        linked: true,
+        email: user.email,
+        linkedAt: user.updatedAt || user.createdAt
+      });
+    }
+
+    rows.forEach((row) => {
+      const provider = String(row.provider || "").toLowerCase();
+      if (!connections.has(provider)) {
+        return;
+      }
+      connections.set(provider, {
+        provider,
+        linked: true,
+        email: row.provider_email || null,
+        displayName: row.display_name || null,
+        avatarUrl: row.avatar_url || null,
+        linkedAt: row.linked_at || null
+      });
+    });
+
+    return {
+      hasPassword: user.hasPassword,
+      connections: Array.from(connections.values())
+    };
+  }
+
+  async createSocialLinkIntent(provider) {
+    const normalizedProvider = normalizeProvider(provider);
+    return {
+      provider: normalizedProvider,
+      status: "not_integrated",
+      authorizationUrl: null,
+      message: `Chức năng liên kết ${providerLabel(normalizedProvider)} đang thử nghiệm. N&L Store chưa kết nối OAuth liên kết tài khoản thật.`
+    };
+  }
+
+  async unlinkSocialConnection(userId, provider) {
+    const normalizedProvider = normalizeProvider(provider);
+    const user = await this.repository.findByIdWithAuth(userId);
+    const social = await this.getSocialConnections(userId);
+    const linkedCount = social.connections.filter((connection) => connection.linked).length;
+
+    if (!user.hasPassword && linkedCount <= 1) {
+      throw new AppError("Không thể hủy liên kết phương thức đăng nhập cuối cùng khi tài khoản chưa có mật khẩu.", 409, "LAST_LOGIN_METHOD_UNLINK_DENIED");
+    }
+
+    await this.repository.deleteSocialConnection(userId, normalizedProvider);
+    return this.getSocialConnections(userId);
+  }
+
+  async getPaymentMethods(userId) {
+    return (await this.repository.listPaymentMethods(userId)).map(formatPaymentMethod);
+  }
+
+  async createPaymentMethod(userId, payload = {}) {
+    const method = await this.repository.createPaymentMethod(userId, {
+      type: normalizePaymentType(payload.type),
+      providerName: normalizeNullableString(payload.providerName || payload.provider),
+      accountHolderName: normalizeNullableString(payload.accountHolderName),
+      maskedAccountIdentifier: maskAccountIdentifier(payload.accountIdentifier || payload.accountNumber || payload.phone),
+      verificationStatus: "unverified",
+      isDefault: Boolean(payload.isDefault)
+    });
+
+    return {
+      paymentMethod: formatPaymentMethod(method),
+      message: "Chức năng đang thử nghiệm. Thông tin được lưu ở dạng đã che và chưa được xác minh qua ngân hàng/MoMo thật."
+    };
+  }
+
+  async setDefaultPaymentMethod(userId, id) {
+    const current = await this.repository.findPaymentMethod(userId, id);
+    if (!current) {
+      throw new AppError("Payment method was not found.", 404, "PAYMENT_METHOD_NOT_FOUND");
+    }
+    return formatPaymentMethod(await this.repository.setDefaultPaymentMethod(userId, id));
+  }
+
+  async deletePaymentMethod(userId, id) {
+    const deleted = await this.repository.deletePaymentMethod(userId, id);
+    if (!deleted) {
+      throw new AppError("Payment method was not found.", 404, "PAYMENT_METHOD_NOT_FOUND");
+    }
+    return { id, deleted: true };
   }
 
   async normalizeUserPayload(payload, options = {}) {
@@ -275,6 +416,26 @@ export class UserService extends BaseService {
 
     if (duplicatedUser) {
       throw new AppError("Email already exists.", 409, "USER_EMAIL_EXISTS");
+    }
+  }
+
+  async ensureUniquePhone(phone, excludedId = null) {
+    if (!phone) {
+      return;
+    }
+    const duplicatedUser = await this.repository.findByPhone(phone, excludedId);
+
+    if (duplicatedUser) {
+      throw new AppError("Phone already exists.", 409, "USER_PHONE_EXISTS");
+    }
+  }
+
+  async ensureCurrentPassword(user, currentPassword) {
+    if (!user.hasPassword) {
+      throw new AppError("Tài khoản chưa có mật khẩu. Vui lòng đặt mật khẩu trước khi thay đổi thông tin đăng nhập.", 409, "PASSWORD_NOT_AVAILABLE");
+    }
+    if (!currentPassword || !await comparePassword(currentPassword, user.passwordHash)) {
+      throw new AppError("Mật khẩu hiện tại không đúng.", 401, "CURRENT_PASSWORD_INVALID");
     }
   }
 }
@@ -330,8 +491,14 @@ function normalizeAddress(address) {
     district: normalizeNullableString(address.district),
     city: normalizeNullableString(address.city),
     province: normalizeNullableString(address.province),
+    provinceCode: normalizeNullableString(address.provinceCode),
+    provinceName: normalizeNullableString(address.provinceName),
+    wardCode: normalizeNullableString(address.wardCode),
+    wardName: normalizeNullableString(address.wardName),
     country: normalizeNullableString(address.country) || "Vietnam",
-    postalCode: normalizeNullableString(address.postalCode)
+    postalCode: normalizeNullableString(address.postalCode),
+    detailAddress: normalizeNullableString(address.detailAddress),
+    fullAddress: normalizeNullableString(address.fullAddress)
   };
 }
 
@@ -341,6 +508,49 @@ function normalizeNullableString(value) {
   }
 
   return String(value).trim();
+}
+
+function normalizeProvider(provider) {
+  const normalized = String(provider || "").trim().toLowerCase();
+  if (!["google", "facebook"].includes(normalized)) {
+    throw new AppError("Provider is invalid.", 422, "INVALID_SOCIAL_PROVIDER");
+  }
+  return normalized;
+}
+
+function providerLabel(provider) {
+  return provider === "google" ? "Google" : "Facebook";
+}
+
+function normalizePaymentType(type) {
+  const normalized = String(type || "").trim().toLowerCase();
+  if (!["bank_account", "momo"].includes(normalized)) {
+    throw new AppError("Payment method type is invalid.", 422, "INVALID_PAYMENT_METHOD_TYPE");
+  }
+  return normalized;
+}
+
+function maskAccountIdentifier(value) {
+  const normalized = normalizeNullableString(value);
+  if (!normalized) {
+    throw new AppError("Account identifier is required.", 422, "PAYMENT_IDENTIFIER_REQUIRED");
+  }
+  const visible = normalized.slice(-4);
+  return `${"*".repeat(Math.max(4, normalized.length - 4))}${visible}`;
+}
+
+function formatPaymentMethod(row = {}) {
+  return {
+    id: row.id,
+    type: row.type,
+    providerName: row.provider_name || row.providerName || null,
+    accountHolderName: row.account_holder_name || row.accountHolderName || null,
+    maskedAccountIdentifier: row.masked_account_identifier || row.maskedAccountIdentifier || null,
+    verificationStatus: row.verification_status || row.verificationStatus || "unverified",
+    isDefault: Boolean(row.is_default ?? row.isDefault),
+    createdAt: row.created_at || row.createdAt || null,
+    updatedAt: row.updated_at || row.updatedAt || null
+  };
 }
 
 export { USER_STATUS };

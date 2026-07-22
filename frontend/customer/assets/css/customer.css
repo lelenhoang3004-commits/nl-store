@@ -1971,7 +1971,285 @@
   color: #7a8190;
   cursor: wait;
 }
+
+.customer-profile-loading,
+.customer-profile-muted {
+  color: #64748b;
+  padding: 18px 0;
+}
+
+.customer-profile-shell {
+  display: grid;
+  gap: 22px;
+}
+
+.customer-profile-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.customer-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #eef2f7;
+  color: #64748b;
+  font-size: 2.4rem;
+  flex: 0 0 auto;
+}
+
+.customer-profile-avatar img,
+.customer-profile-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.customer-profile-avatar img + i,
+.customer-profile-avatar:not(.is-fallback) i {
+  display: none;
+}
+
+.customer-profile-identity {
+  min-width: 0;
+}
+
+.customer-profile-identity h2 {
+  margin: 0 0 6px;
+  font-size: 1.65rem;
+  color: #111827;
+}
+
+.customer-profile-identity p,
+.customer-profile-identity span {
+  display: block;
+  margin: 0;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.customer-profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.customer-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.customer-profile-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 20px;
+}
+
+.customer-profile-card-wide {
+  grid-column: 1 / -1;
+}
+
+.customer-profile-card h3,
+.customer-profile-card-title h3,
+.customer-profile-modal-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.1rem;
+}
+
+.customer-profile-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.customer-profile-info,
+.customer-profile-list,
+.customer-profile-payment-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.customer-profile-info div,
+.customer-profile-linked-row,
+.customer-profile-payment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.customer-profile-info span,
+.customer-profile-linked-row span,
+.customer-profile-payment-row span,
+.customer-profile-note {
+  color: #64748b;
+  font-size: 0.93rem;
+}
+
+.customer-profile-info strong,
+.customer-profile-linked-row strong,
+.customer-profile-payment-row strong {
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.customer-profile-payment-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.customer-profile-payment-actions button {
+  border: 0;
+  background: transparent;
+  color: #0f766e;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-profile-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.customer-profile-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.customer-profile-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 620px);
+  max-height: min(92vh, 760px);
+  overflow: auto;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+.customer-profile-modal-header,
+.customer-profile-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.customer-profile-modal-header button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.customer-profile-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.customer-profile-form label {
+  display: grid;
+  gap: 6px;
+  color: #374151;
+  font-weight: 700;
+}
+
+.customer-profile-form input,
+.customer-profile-form select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #111827;
+  background: #ffffff;
+}
+
+.customer-profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.customer-profile-preview {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #eef2f7;
+  color: #64748b;
+  font-size: 2rem;
+}
+
+.customer-profile-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.customer-profile-check input {
+  width: auto;
+  min-height: auto;
+}
+
 @media (max-width: 640px) {
+  .customer-profile-hero,
+  .customer-profile-grid,
+  .customer-profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-profile-hero {
+    justify-items: start;
+  }
+
+  .customer-profile-actions,
+  .customer-profile-actions .customer-button,
+  .customer-profile-modal-actions .customer-button {
+    width: 100%;
+  }
+
+  .customer-profile-info div,
+  .customer-profile-linked-row,
+  .customer-profile-payment-row,
+  .customer-profile-modal-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .auth-login-page {
     padding: 18px 0 28px;
   }

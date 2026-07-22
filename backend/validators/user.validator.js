@@ -17,7 +17,7 @@ import { validatePassword } from "./password.validator.js";
 import { validatePhone } from "./phone.validator.js";
 
 const USER_STATUSES = ["active", "inactive", "locked"];
-const ADDRESS_FIELDS = ["line1", "line2", "ward", "district", "city", "province", "country", "postalCode"];
+const ADDRESS_FIELDS = ["line1", "line2", "ward", "district", "city", "province", "provinceCode", "provinceName", "wardCode", "wardName", "country", "postalCode", "detailAddress", "fullAddress"];
 
 export function validateUserListRequest({ query }) {
   const errors = [];
@@ -55,8 +55,40 @@ export function validateProfileUpdateRequest({ body }) {
   const errors = [];
 
   pushIfError(errors, validateRequired(body.fullName, "fullName", "body"));
+  if (!isEmpty(body.email)) {
+    errors.push(...validateEmail(body.email, { required: false }).errors);
+  }
+  if (!isEmpty(body.currentPassword)) {
+    errors.push(...validatePassword(body.currentPassword, { required: false, strong: false, minLength: 1, field: "currentPassword" }).errors);
+  }
   validateCommonProfileFields(errors, body);
 
+  return createValidationResult(errors);
+}
+
+export function validateChangePasswordRequest({ body }) {
+  const errors = [];
+  errors.push(...validatePassword(body.currentPassword, { required: true, strong: false, minLength: 1, field: "currentPassword" }).errors);
+  errors.push(...validatePassword(body.newPassword, { required: true, strong: true, field: "newPassword" }).errors);
+  if (body.newPassword !== body.confirmPassword) {
+    errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH"));
+  }
+  return createValidationResult(errors);
+}
+
+export function validatePaymentMethodRequest({ body }) {
+  const errors = [];
+  const type = String(body.type || "").trim().toLowerCase();
+  if (!["bank_account", "momo"].includes(type)) {
+    errors.push(createValidationError("type", "type must be bank_account or momo.", "body", "INVALID_PAYMENT_METHOD_TYPE"));
+  }
+  pushIfError(errors, validateRequired(body.accountHolderName, "accountHolderName", "body"));
+  pushIfError(errors, validateRequired(body.accountIdentifier || body.accountNumber || body.phone, "accountIdentifier", "body"));
+  ["providerName", "accountHolderName", "accountIdentifier", "accountNumber", "phone"].forEach((field) => {
+    if (!isEmpty(body[field]) && String(body[field]).length > 120) {
+      errors.push(createValidationError(field, `${field} must not exceed 120 characters.`, "body", "PAYMENT_FIELD_TOO_LONG"));
+    }
+  });
   return createValidationResult(errors);
 }
 

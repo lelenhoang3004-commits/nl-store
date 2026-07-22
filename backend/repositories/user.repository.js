@@ -23,6 +23,8 @@ const USER_COLUMNS = `
   full_name,
   phone,
   avatar_url,
+  provider,
+  provider_id,
   role,
   permissions,
   status,
@@ -100,6 +102,19 @@ export class UserRepository extends BaseRepository {
     return rows[0] ? new User(rows[0]) : null;
   }
 
+  async findByIdWithAuth(id) {
+    const [rows] = await this.execute(
+      `SELECT ${USER_COLUMNS},
+        password_hash
+      FROM users
+      WHERE id = ? AND deleted_at IS NULL
+      LIMIT 1`,
+      [id]
+    );
+
+    return rows[0] ? new User(rows[0]) : null;
+  }
+
   async findByEmail(email, excludedId = null) {
     const startedAt = Date.now();
     const params = [email];
@@ -112,7 +127,7 @@ export class UserRepository extends BaseRepository {
     const [rows] = await this.execute(
       `SELECT ${USER_COLUMNS}
       FROM users
-      WHERE email = ? AND deleted_at IS NULL ${excludedSql}
+      WHERE LOWER(email) = LOWER(?) AND deleted_at IS NULL ${excludedSql}
       LIMIT 1`,
       params
     );
@@ -122,6 +137,25 @@ export class UserRepository extends BaseRepository {
       operation: "findByEmail",
       durationMs: Date.now() - startedAt
     });
+
+    return rows[0] ? new User(rows[0]) : null;
+  }
+
+  async findByPhone(phone, excludedId = null) {
+    const params = [phone];
+    const excludedSql = excludedId ? "AND id <> ?" : "";
+
+    if (excludedId) {
+      params.push(excludedId);
+    }
+
+    const [rows] = await this.execute(
+      `SELECT ${USER_COLUMNS}
+      FROM users
+      WHERE phone = ? AND deleted_at IS NULL ${excludedSql}
+      LIMIT 1`,
+      params
+    );
 
     return rows[0] ? new User(rows[0]) : null;
   }
@@ -240,13 +274,15 @@ export class UserRepository extends BaseRepository {
     const startedAt = Date.now();
     await this.execute(
       `UPDATE users
-      SET full_name = ?,
+      SET email = ?,
+        full_name = ?,
         phone = ?,
         avatar_url = ?,
         address_json = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`,
       [
+        payload.email,
         payload.fullName,
         payload.phone,
         payload.avatarUrl,
@@ -262,6 +298,133 @@ export class UserRepository extends BaseRepository {
     });
 
     return this.findById(id);
+  }
+
+  async updatePasswordHash(id, passwordHash) {
+    await this.execute(
+      `UPDATE users
+      SET password_hash = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL`,
+      [passwordHash, id]
+    );
+
+    return this.findById(id);
+  }
+
+  async listSocialConnections(userId) {
+    const [rows] = await this.execute(
+      `SELECT provider, provider_user_id, provider_email, display_name, avatar_url, linked_at, updated_at
+      FROM user_social_connections
+      WHERE user_id = ?
+      ORDER BY provider`,
+      [userId]
+    );
+
+    return rows;
+  }
+
+  async deleteSocialConnection(userId, provider) {
+    const [result] = await this.execute(
+      `DELETE FROM user_social_connections
+      WHERE user_id = ? AND provider = ?`,
+      [userId, provider]
+    );
+
+    await this.execute(
+      `UPDATE users
+      SET provider = NULL,
+        provider_id = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND LOWER(provider) = LOWER(?) AND deleted_at IS NULL`,
+      [userId, provider]
+    );
+
+    return result.affectedRows > 0;
+  }
+
+  async listPaymentMethods(userId) {
+    const [rows] = await this.execute(
+      `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
+        verification_status, is_default, created_at, updated_at
+      FROM user_saved_payment_methods
+      WHERE user_id = ? AND deleted_at IS NULL
+      ORDER BY is_default DESC, updated_at DESC, id DESC`,
+      [userId]
+    );
+
+    return rows;
+  }
+
+  async createPaymentMethod(userId, payload) {
+    if (payload.isDefault) {
+      await this.execute(
+        `UPDATE user_saved_payment_methods
+        SET is_default = 0
+        WHERE user_id = ? AND deleted_at IS NULL`,
+        [userId]
+      );
+    }
+
+    const [result] = await this.execute(
+      `INSERT INTO user_saved_payment_methods
+        (user_id, type, provider_name, account_holder_name, masked_account_identifier, verification_status, is_default)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        payload.type,
+        payload.providerName,
+        payload.accountHolderName,
+        payload.maskedAccountIdentifier,
+        payload.verificationStatus,
+        payload.isDefault ? 1 : 0
+      ]
+    );
+
+    return this.findPaymentMethod(userId, result.insertId);
+  }
+
+  async findPaymentMethod(userId, id) {
+    const [rows] = await this.execute(
+      `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
+        verification_status, is_default, created_at, updated_at
+      FROM user_saved_payment_methods
+      WHERE user_id = ? AND id = ? AND deleted_at IS NULL
+      LIMIT 1`,
+      [userId, id]
+    );
+
+    return rows[0] || null;
+  }
+
+  async setDefaultPaymentMethod(userId, id) {
+    await this.execute(
+      `UPDATE user_saved_payment_methods
+      SET is_default = 0
+      WHERE user_id = ? AND deleted_at IS NULL`,
+      [userId]
+    );
+    await this.execute(
+      `UPDATE user_saved_payment_methods
+      SET is_default = 1,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
+      [userId, id]
+    );
+
+    return this.findPaymentMethod(userId, id);
+  }
+
+  async deletePaymentMethod(userId, id) {
+    const [result] = await this.execute(
+      `UPDATE user_saved_payment_methods
+      SET deleted_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
+      [userId, id]
+    );
+
+    return result.affectedRows > 0;
   }
 
   async updateAvatar(id, avatarUrl) {

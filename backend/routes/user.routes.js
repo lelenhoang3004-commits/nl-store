@@ -11,6 +11,8 @@ import { handleUploadError, uploadImage } from "../middleware/upload.middleware.
 import { validateRequest } from "../middleware/validate-request.middleware.js";
 import {
   validateCreateUserRequest,
+  validateChangePasswordRequest,
+  validatePaymentMethodRequest,
   validateProfileUpdateRequest,
   validateUpdateUserRequest,
   validateUserIdRequest,
@@ -25,6 +27,14 @@ router.use(authenticate);
 router.get("/profile", userController.profile);
 router.put("/profile", validateRequest(validateProfileUpdateRequest), userController.updateProfile);
 router.post("/profile/avatar", uploadImage.single("avatar"), handleUploadError, userController.uploadAvatar);
+router.put("/profile/password", validateRequest(validateChangePasswordRequest), userController.changePassword);
+router.get("/profile/social-connections", userController.socialConnections);
+router.post("/profile/social-connections/:provider/link-intent", userController.socialLinkIntent);
+router.delete("/profile/social-connections/:provider", userController.unlinkSocialConnection);
+router.get("/profile/payment-methods", userController.paymentMethods);
+router.post("/profile/payment-methods", validateRequest(validatePaymentMethodRequest), userController.storePaymentMethod);
+router.patch("/profile/payment-methods/:id/default", validateRequest(validateUserIdRequest), userController.setDefaultPaymentMethod);
+router.delete("/profile/payment-methods/:id", validateRequest(validateUserIdRequest), userController.deletePaymentMethod);
 
 router.get(
   "/",
