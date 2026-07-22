@@ -222,7 +222,11 @@ export class UserService extends BaseService {
   }
 
   async getProfile(userId) {
-    return this.getUserById(userId);
+    const user = await this.repository.findByIdWithAuth(userId);
+    if (!user) {
+      throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
+    }
+    return user.toJSON();
   }
 
   async updateProfile(userId, payload) {
@@ -285,8 +289,8 @@ export class UserService extends BaseService {
     if (payload.newPassword !== payload.confirmPassword) {
       throw new AppError("XÃ¡c nháº­n máº­t kháº©u khÃ´ng khá»›p.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
-    await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
-    return { changed: true };
+    const updatedUser = await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
+    return { changed: true, user: updatedUser.toJSON() };
   }
 
   async setPassword(userId, payload = {}) {

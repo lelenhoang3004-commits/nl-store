@@ -14,6 +14,7 @@ export class AuthUser {
     this.role = rawUser.role;
     this.status = rawUser.status;
     this.passwordHash = rawUser.passwordHash || rawUser.password_hash;
+    this.hasPassword = Boolean(rawUser.hasPassword || rawUser.has_password || rawUser.password_hash);
     this.refreshTokenHash = rawUser.refreshTokenHash || rawUser.refresh_token_hash || null;
     this.permissions = normalizePermissions(rawUser.permissions, rawUser.role);
   }
@@ -31,7 +32,9 @@ export class AuthUser {
       avatarUrl: this.avatarUrl,
       role: this.role,
       permissions: this.permissions,
-      status: this.status
+      status: this.status,
+      hasPassword: this.hasPassword,
+      has_password: this.hasPassword
     };
   }
 }

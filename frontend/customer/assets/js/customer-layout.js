@@ -2741,8 +2741,8 @@ function setChangedField(payload, field, nextValue, currentValue) {
 function bindProfilePage(user = {}) {
   layoutState.main.querySelector("[data-profile-orders]")?.addEventListener("click", () => navigateToRoute("orders"));
   layoutState.main.querySelectorAll("[data-profile-retry]").forEach((button) => button.addEventListener("click", renderProfilePage));
-  layoutState.main.querySelector("[data-profile-edit]")?.addEventListener("click", () => openProfileEditModal(user));
-  layoutState.main.querySelector("[data-profile-password]")?.addEventListener("click", openPasswordModal);
+  layoutState.main.querySelector("[data-profile-edit]")?.addEventListener("click", async () => openProfileEditModal(await fetchFreshProfile(user)));
+  layoutState.main.querySelector("[data-profile-password]")?.addEventListener("click", async () => openPasswordModal(await fetchFreshProfile(user)));
   layoutState.main.querySelector("[data-payment-add]")?.addEventListener("click", openPaymentModal);
   layoutState.main.querySelectorAll("[data-social-provider]").forEach((button) => {
     button.addEventListener("click", () => handleSocialAction(button.dataset.socialProvider, button.dataset.socialAction));
@@ -2796,7 +2796,7 @@ function openProfileEditModal(user = {}) {
   provinceSelect.addEventListener("change", () => loadWardsByProvince(wardSelect, provinceSelect.value));
   modal.querySelector("[data-open-set-password]")?.addEventListener("click", () => {
     closeProfileModal(modal);
-    openPasswordModal();
+    openPasswordModal(user);
   });
   form.avatar.addEventListener("change", () => {
     const file = form.avatar.files?.[0];
@@ -2886,8 +2886,8 @@ async function submitProfileEdit(form, currentUser, modal) {
   }
 }
 
-function openPasswordModal() {
-  const user = customerAuth.getUser() || {};
+function openPasswordModal(userOverride = null) {
+  const user = userOverride || customerAuth.getUser() || {};
   const hasPassword = getUserHasPassword(user);
   const modal = createProfileModal(hasPassword ? "Đổi mật khẩu" : "Thiết lập mật khẩu", `
     <form class="customer-profile-form" data-password-form>
@@ -2923,13 +2923,14 @@ function openPasswordModal() {
         return;
       }
       if (hasPassword) body.currentPassword = String(data.get("currentPassword") || "");
-      await customerApi(hasPassword ? "/users/profile/password" : "/users/profile/set-password", {
+      const response = await customerApi(hasPassword ? "/users/profile/password" : "/users/profile/set-password", {
         method: hasPassword ? "PUT" : "POST",
         body
       });
       closeProfileModal(modal);
       showCustomerToast(hasPassword ? "Đã đổi mật khẩu." : "Đã thiết lập mật khẩu.", "success");
-      customerAuth.setUser({ ...(customerAuth.getUser() || {}), hasPassword: true, has_password: true });
+      const latestUser = await refreshCurrentCustomerUser(response?.data?.user);
+      customerAuth.setUser({ ...(latestUser || customerAuth.getUser() || {}), hasPassword: true, has_password: true });
       renderHeader();
       await renderProfilePage();
     } catch (error) {
@@ -2938,6 +2939,33 @@ function openPasswordModal() {
       if (button) button.disabled = false;
     }
   });
+}
+
+async function fetchFreshProfile(fallbackUser = {}) {
+  try {
+    const response = await customerApi("/users/profile");
+    const user = response?.data?.user || fallbackUser || {};
+    customerAuth.setUser(user);
+    renderHeader();
+    return user;
+  } catch {
+    return fallbackUser || customerAuth.getUser() || {};
+  }
+}
+
+async function refreshCurrentCustomerUser(fallbackUser = null) {
+  try {
+    const user = await customerAuth.loadCurrentUser();
+    if (user) return user;
+  } catch {
+    // Keep the successful profile response as the source of truth for this save.
+  }
+  try {
+    const response = await customerApi("/users/profile");
+    return response?.data?.user || fallbackUser;
+  } catch {
+    return fallbackUser;
+  }
 }
 
 function openPaymentModal(method = null) {

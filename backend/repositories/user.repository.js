@@ -232,7 +232,7 @@ export class UserRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return this.findById(id);
+    return this.findByIdWithAuth(id);
   }
 
 
@@ -269,7 +269,7 @@ export class UserRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return this.findById(id);
+    return this.findByIdWithAuth(id);
   }
 
   async updateProfile(id, payload) {
@@ -300,7 +300,7 @@ export class UserRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return this.findById(id);
+    return this.findByIdWithAuth(id);
   }
 
   async updatePasswordHash(id, passwordHash) {
@@ -312,7 +312,7 @@ export class UserRepository extends BaseRepository {
       [passwordHash, id]
     );
 
-    return this.findById(id);
+    return this.findByIdWithAuth(id);
   }
 
   async listSocialConnections(userId) {
@@ -557,7 +557,7 @@ export class UserRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return this.findById(id);
+    return this.findByIdWithAuth(id);
   }
 
   async softDelete(id) {

@@ -205,6 +205,14 @@ export class AuthService extends BaseService {
     catch (error) { logger.warn("Logout received an invalid refresh token.", { code: error.code || error.name }); }
   }
 
+  async getCurrentUser(userId) {
+    const user = await this.repository.findById(userId);
+    if (!user || !user.isActive()) {
+      throw new AppError("Phiên đăng nhập không hợp lệ.", 401, "CURRENT_USER_NOT_FOUND");
+    }
+    return user.toSafeJSON();
+  }
+
   async issueTokenPair(user, remember = false) {
     const accessToken = signAccessToken({ sub: String(user.id), role: user.role, permissions: user.permissions });
     const refreshToken = signRefreshToken({ sub: String(user.id), remember }, remember);

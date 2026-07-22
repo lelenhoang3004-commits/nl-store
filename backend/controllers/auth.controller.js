@@ -89,7 +89,10 @@ export class AuthController extends BaseController {
     return this.sendSuccess(res, publicTokenResult(result), "Token refreshed successfully.");
   });
   logout = asyncHandler(async (req, res) => { await this.service.logout(req.signedCookies?.[appConfig.refreshCookieName]); clearRefreshCookie(res); return this.sendSuccess(res, null, "Logout successful."); });
-  me = asyncHandler(async (req, res) => this.sendSuccess(res, { user: req.user }, "Current session retrieved successfully."));
+  me = asyncHandler(async (req, res) => {
+    const user = await this.service.getCurrentUser(req.user.id);
+    return this.sendSuccess(res, { user }, "Current session retrieved successfully.");
+  });
   setRefreshCookie(res, result, remember) { res.cookie(appConfig.refreshCookieName, result.refreshToken, createRefreshCookieOptions(remember)); }
 }
 function publicTokenResult(r) { return { user: r.user, accessToken: r.accessToken, tokenType: r.tokenType, expiresIn: r.expiresIn }; }
