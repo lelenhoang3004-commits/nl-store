@@ -3,8 +3,6 @@ import { appConfig } from "../config/app.config.js";
 import { AppError } from "./app-error.util.js";
 import { logger } from "./logger.util.js";
 
-const BREVO_SMTP_EMAIL_URL = "https://api.brevo.com/v3/smtp/email";
-
 let transporter = null;
 let verifyStarted = false;
 
@@ -15,7 +13,8 @@ export async function verifyBrevoSmtpConnection() {
   if (hasRequiredBrevoConfig()) {
     logger.info("Brevo Transactional Email API configured.", {
       provider: "brevo",
-      fromEmail: appConfig.brevoFromEmail
+      fromEmail: appConfig.brevoFromEmail,
+      apiUrl: appConfig.brevoApiUrl
     });
     return;
   }
@@ -36,7 +35,7 @@ export async function sendMail({ to, subject, text, html }) {
     } catch (error) {
       logSafeBrevoError(error);
 
-      if (!hasRequiredSmtpConfig()) {
+      if (isInvalidBrevoRequest(error) || !hasRequiredSmtpConfig()) {
         throw new AppError("Hiện chưa thể gửi email xác thực. Vui lòng thử lại sau.", 503, "BREVO_SEND_FAILED");
       }
 
@@ -82,7 +81,7 @@ async function sendBrevoTransactionalEmail({ to, subject, text, html }) {
   const timeout = setTimeout(() => controller.abort(), appConfig.brevoEmailTimeoutMs);
 
   try {
-    const response = await fetch(BREVO_SMTP_EMAIL_URL, {
+    const response = await fetch(appConfig.brevoApiUrl, {
       method: "POST",
       headers: {
         "api-key": appConfig.brevoApiKey,
@@ -91,23 +90,24 @@ async function sendBrevoTransactionalEmail({ to, subject, text, html }) {
       },
       body: JSON.stringify({
         sender: {
-          email: appConfig.brevoFromEmail,
-          name: appConfig.brevoFromName
+          name: appConfig.brevoFromName,
+          email: appConfig.brevoFromEmail
         },
         to: [{ email: to }],
         subject,
-        textContent: text,
-        htmlContent: html
+        htmlContent: html,
+        textContent: text
       }),
       signal: controller.signal
     });
 
     if (!response.ok) {
+      const safeBody = await readSafeBrevoErrorBody(response);
       const error = new Error("Brevo Transactional Email API rejected the request.");
-      error.code = "BREVO_HTTP_ERROR";
+      error.code = safeBody.code || "BREVO_HTTP_ERROR";
       error.status = response.status;
       error.statusText = response.statusText;
-      error.responseBody = await readLimitedErrorBody(response);
+      error.responseMessage = safeBody.message;
       throw error;
     }
 
@@ -145,7 +145,7 @@ function getTransporter() {
 }
 
 function hasRequiredBrevoConfig() {
-  return Boolean(appConfig.brevoApiKey && appConfig.brevoFromEmail);
+  return Boolean(appConfig.brevoApiKey && appConfig.brevoApiUrl && appConfig.brevoFromEmail);
 }
 
 function hasRequiredSmtpConfig() {
@@ -157,21 +157,34 @@ function hasRequiredSmtpConfig() {
   );
 }
 
-async function readLimitedErrorBody(response) {
+function isInvalidBrevoRequest(error) {
+  return Number(error?.status) === 400;
+}
+
+async function readSafeBrevoErrorBody(response) {
   try {
-    return (await response.text()).slice(0, 500);
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const body = await response.json();
+      return {
+        code: String(body?.code || "").slice(0, 120),
+        message: String(body?.message || "").slice(0, 500)
+      };
+    }
+    return {
+      code: "",
+      message: (await response.text()).slice(0, 500)
+    };
   } catch {
-    return "";
+    return { code: "", message: "" };
   }
 }
 
 function logSafeBrevoError(error) {
   console.error("[BREVO_SEND_FAILED]", {
-    code: error?.code || error?.name,
     status: error?.status,
-    statusText: error?.statusText,
-    responseBody: error?.responseBody,
-    message: error?.message,
+    code: error?.code || error?.name,
+    responseMessage: error?.responseMessage,
     hasApiKey: Boolean(appConfig.brevoApiKey),
     fromEmail: appConfig.brevoFromEmail
   });

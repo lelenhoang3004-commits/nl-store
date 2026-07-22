@@ -86,6 +86,7 @@ export const appConfig = Object.freeze({
   smtpFromName: process.env.SMTP_FROM_NAME || "N&L Store",
   smtpFromEmail: process.env.SMTP_FROM_EMAIL || "no-reply@nl-store.com",
   brevoApiKey: process.env.BREVO_API_KEY || "",
+  brevoApiUrl: process.env.BREVO_API_URL || "https://api.brevo.com/v3/smtp/email",
   brevoFromName: process.env.BREVO_FROM_NAME || process.env.SMTP_FROM_NAME || "N&L Store",
   brevoFromEmail: process.env.BREVO_FROM_EMAIL || "",
   brevoEmailTimeoutMs: Number(process.env.BREVO_EMAIL_TIMEOUT_MS || 15000),
