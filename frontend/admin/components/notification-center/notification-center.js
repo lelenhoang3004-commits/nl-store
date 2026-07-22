@@ -13,6 +13,7 @@ const PAGE_SIZE = 4;
 const POLLING_MS = 45000;
 const ADMIN_NOTIFICATION_ENDPOINT = "/admin/notifications";
 const FILTERS = Object.freeze({ all: "all", unread: "unread", read: "read" });
+const ADMIN_NOTIFICATION_TYPES = new Set(["ORDER_CREATED", "ORDER_CANCELLED", "PAYMENT_UPDATED", "VOUCHER_EXPIRED", "VOUCHER_EXPIRING", "PRODUCT_OUT_OF_STOCK", "LOW_STOCK", "CUSTOMER_FEEDBACK", "SYSTEM_ERROR"]);
 
 let localState = { page: 1, query: "", filter: FILTERS.all, loading: false, error: "" };
 let realtimeUnsubscribe = null;
@@ -122,7 +123,7 @@ async function fetchNotifications({ root = document, silent = false } = {}) {
   fetchPromise = apiClient.get(ADMIN_NOTIFICATION_ENDPOINT, { showLoading: false, showErrorToast: false })
     .then((response) => {
       const data = response?.data || response || {};
-      const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+      const notifications = Array.isArray(data.notifications) ? data.notifications.filter((item) => ADMIN_NOTIFICATION_TYPES.has(String(item.type || "").toUpperCase())) : [];
       stateActions.setNotifications({
         items: notifications.map(normalizeNotification),
         unreadCount: Number(data.unreadCount || 0)
@@ -222,7 +223,7 @@ function getFilteredNotifications() {
 }
 
 function normalizeNotification(item = {}) {
-  return { ...item, id: Number(item.id), read: Boolean(item.read ?? item.isRead), createdAt: item.createdAt || item.created_at || new Date().toISOString() };
+  return { ...item, id: Number(item.id), type: String(item.type || "").toUpperCase(), read: Boolean(item.read ?? item.isRead), createdAt: item.createdAt || item.created_at || new Date().toISOString() };
 }
 
 function updateNotificationBadge(root) {
@@ -236,6 +237,6 @@ function updateNotificationBadge(root) {
 function createLoadingState() { return `<div class="notification-empty"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><strong>Đang tải thông báo</strong></div>`; }
 function createErrorState() { return `<div class="notification-empty"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><strong>${escapeHtml(localState.error)}</strong></div>`; }
 function createEmptyState() { return `<div class="notification-empty"><i class="fa-regular fa-bell-slash" aria-hidden="true"></i><strong>Không có thông báo</strong><span>Thông báo mới sẽ xuất hiện tại đây.</span></div>`; }
-function getNotificationIcon(type) { return ({ order: "fa-box-open", payment: "fa-credit-card", inventory: "fa-warehouse", user: "fa-user-plus", voucher: "fa-ticket", system: "fa-bell" })[type] || "fa-bell"; }
+function getNotificationIcon(type) { return ({ ORDER_CREATED: "fa-box-open", ORDER_CANCELLED: "fa-ban", PAYMENT_UPDATED: "fa-credit-card", PRODUCT_OUT_OF_STOCK: "fa-warehouse", LOW_STOCK: "fa-warehouse", VOUCHER_EXPIRED: "fa-ticket", VOUCHER_EXPIRING: "fa-ticket", CUSTOMER_FEEDBACK: "fa-message", SYSTEM_ERROR: "fa-triangle-exclamation" })[type] || "fa-bell"; }
 function formatTime(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }).format(date); }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }

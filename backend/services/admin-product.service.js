@@ -1,6 +1,7 @@
 import { CategoryRepository } from "../repositories/category.repository.js";
 import { ProductRepository } from "../repositories/product.repository.js";
 import { ProductVariantRepository } from "../repositories/product-variant.repository.js";
+import { NotificationService } from "./notification.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { logger } from "../utils/logger.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
@@ -14,10 +15,11 @@ const QUERY_OPTIONS = Object.freeze({
 });
 
 export class AdminProductService {
-  constructor(repository = new ProductRepository(), categoryRepository = new CategoryRepository(), variantRepository = new ProductVariantRepository()) {
+  constructor(repository = new ProductRepository(), categoryRepository = new CategoryRepository(), variantRepository = new ProductVariantRepository(), notificationService = new NotificationService()) {
     this.repository = repository;
     this.categoryRepository = categoryRepository;
     this.variantRepository = variantRepository;
+    this.notificationService = notificationService;
   }
 
   async listProducts(query = {}) {
@@ -49,7 +51,16 @@ export class AdminProductService {
     await this.ensureUnique(normalized);
     await this.ensureCategoryExists(normalized.categoryId);
     await this.ensureProductImageUrls(normalized);
-    return (await this.repository.create(normalized)).toJSON();
+    const product = (await this.repository.create(normalized)).toJSON();
+    await this.notificationService.notifyAllCustomers({
+      type: "NEW_PRODUCT",
+      title: "Sản phẩm mới",
+      message: `${product.name || "Sản phẩm mới"} vừa lên kệ tại N&L Store.`,
+      link: `#product-detail/${product.id}`,
+      relatedId: product.id,
+      eventKey: `new-product:${product.id}`
+    });
+    return product;
   }
 
   async updateProduct(id, payload) {
@@ -59,7 +70,20 @@ export class AdminProductService {
     await this.ensureUnique(normalized, id);
     await this.ensureCategoryExists(normalized.categoryId);
     await this.ensureProductImageUrls(normalized, current);
-    return (await this.repository.update(id, normalized)).toJSON();
+    const product = (await this.repository.update(id, normalized)).toJSON();
+    const previousPrice = Number(current.salePrice ?? current.sale_price ?? current.price ?? 0);
+    const nextPrice = Number(product.salePrice ?? product.sale_price ?? product.price ?? 0);
+    if (previousPrice > 0 && nextPrice > 0 && nextPrice < previousPrice) {
+      await this.notificationService.notifyWishlistCustomers(id, {
+        type: "WISHLIST_PRICE_DROP",
+        title: "Sản phẩm yêu thích giảm giá",
+        message: `${product.name || "Sản phẩm yêu thích"} vừa giảm giá.`,
+        link: `#product-detail/${id}`,
+        relatedId: id,
+        eventKey: `wishlist-price-drop:${id}:${nextPrice}`
+      });
+    }
+    return product;
   }
 
   async updateStock(id, payload) {
@@ -70,7 +94,18 @@ export class AdminProductService {
     if (!Number.isInteger(stock) || stock < 0) {
       throw new AppError("Product stock cannot be negative.", 422, "INVALID_PRODUCT_STOCK");
     }
-    return (await this.repository.updateStock(id, stock)).toJSON();
+    const product = (await this.repository.updateStock(id, stock)).toJSON();
+    if (stock <= 5) {
+      await this.notificationService.notifyAdmin({
+        type: stock <= 0 ? "PRODUCT_OUT_OF_STOCK" : "LOW_STOCK",
+        title: stock <= 0 ? "Sản phẩm hết hàng" : "Sản phẩm sắp hết hàng",
+        message: `${product.name || "Sản phẩm"} còn ${Math.max(stock, 0)} sản phẩm.`,
+        link: "#products",
+        relatedId: id,
+        eventKey: `stock:${id}:${stock <= 0 ? "out" : "low"}`
+      });
+    }
+    return product;
   }
 
   async updateStatus(id, status) {

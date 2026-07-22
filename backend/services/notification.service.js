@@ -42,6 +42,23 @@ export class NotificationService extends BaseService {
     return this.repository.create({ ...payload, audience: "CUSTOMER", targetType: "user", userId }, connection);
   }
 
+  async notifyAllCustomers(payload, connection = null) {
+    return this.repository.create({ ...payload, audience: "CUSTOMER", targetType: "all", role: null, userId: null }, connection);
+  }
+
+  async notifyWishlistCustomers(productId, payload, connection = null) {
+    const userIds = await this.repository.findWishlistUserIds(productId, connection);
+    const results = [];
+    for (const userId of userIds) {
+      results.push(await this.notifyCustomer(userId, {
+        ...payload,
+        eventKey: `${payload.eventKey}:user:${userId}`,
+        dedupeKey: `${payload.eventKey}:user:${userId}`
+      }, connection));
+    }
+    return results;
+  }
+
   async notifyRole(role, payload, connection = null) {
     return this.repository.create({ ...payload, audience: "ADMIN", targetType: "role", role: String(role || "").toUpperCase() }, connection);
   }

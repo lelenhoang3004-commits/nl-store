@@ -235,18 +235,20 @@ export class CartService extends BaseService {
       }, connection);
 
       await this.notificationService.notifyAdmin({
-        type: "order",
+        type: "ORDER_CREATED",
         title: "Đơn hàng mới",
         message: `Đơn ${createdOrderId} vừa được tạo với tổng ${grandTotal.toLocaleString("vi-VN")}đ.`,
         link: "#orders",
-        dedupeKey: `order-created:${createdOrderId}`
+        relatedId: createdOrderId,
+        eventKey: `order-created:${createdOrderId}`
       }, connection);
       await this.notificationService.notifyAdmin({
-        type: "payment",
+        type: "PAYMENT_UPDATED",
         title: "Thanh toán mới",
         message: `Giao dịch ${paymentMethod.toUpperCase()} cho đơn ${createdOrderId} đang chờ xử lý.`,
         link: "#payments",
-        dedupeKey: `payment-created:${paymentTransactionId}`
+        relatedId: paymentTransactionId,
+        eventKey: `payment-created:${paymentTransactionId}`
       }, connection);
       if (voucherResult?.code) {
         await this.voucherService.markVoucherUsed(voucherResult.code, connection);
@@ -256,7 +258,17 @@ export class CartService extends BaseService {
         if (item._variant && !await this.variantRepository.updateInventory(item._variant.id, item.quantity, connection)) {
           throw new AppError("Requested quantity exceeds variant stock.", 409, "CART_VARIANT_STOCK_EXCEEDED");
         }
-        await this.repository.updateProductInventory(item.productId, item.quantity, connection);
+        const inventory = await this.repository.updateProductInventory(item.productId, item.quantity, connection);
+        if (inventory && Number(inventory.stock) <= 5) {
+          await this.notificationService.notifyAdmin({
+            type: Number(inventory.stock) <= 0 ? "PRODUCT_OUT_OF_STOCK" : "LOW_STOCK",
+            title: Number(inventory.stock) <= 0 ? "Sản phẩm hết hàng" : "Sản phẩm sắp hết hàng",
+            message: `${inventory.name || `Sản phẩm ${item.productId}`} còn ${Math.max(Number(inventory.stock || 0), 0)} sản phẩm.`,
+            link: "#products",
+            relatedId: item.productId,
+            eventKey: `stock:${item.productId}:${Number(inventory.stock) <= 0 ? "out" : "low"}`
+          }, connection);
+        }
       }
 
       if (!isBuyNow) {

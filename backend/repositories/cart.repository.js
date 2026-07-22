@@ -332,6 +332,14 @@ export class CartRepository extends BaseRepository {
       WHERE id = ? AND stock >= ? AND deleted_at IS NULL`,
       [quantity, quantity, productId, quantity]
     );
+    const [rows] = await connection.execute(
+      `SELECT id, name, stock
+      FROM products
+      WHERE id = ? AND deleted_at IS NULL
+      LIMIT 1`,
+      [productId]
+    );
+    return rows[0] || null;
   }
 
   async countActiveVariantsForProduct(productId, connection) {

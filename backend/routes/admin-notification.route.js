@@ -8,6 +8,10 @@ const router = Router();
 const controller = new NotificationController();
 
 router.use(authenticate, authorizeRoles(AUTH_ROLES.ADMIN, AUTH_ROLES.STAFF));
+router.use((request, response, next) => {
+  request.notificationAudience = "ADMIN";
+  next();
+});
 router.get("/", controller.index);
 router.patch("/read-all", controller.markAllRead);
 router.patch("/:id/read", controller.markRead);

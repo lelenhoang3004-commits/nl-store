@@ -1,11 +1,12 @@
 import { ProductVariantRepository } from "../repositories/product-variant.repository.js";
 import { ProductRepository } from "../repositories/product.repository.js";
+import { NotificationService } from "./notification.service.js";
 import { AppError } from "../utils/app-error.util.js";
 
 const STATUSES = ["active", "inactive", "out_of_stock"];
 
 export class ProductVariantService {
-  constructor(repository = new ProductVariantRepository(), productRepository = new ProductRepository()) { this.repository = repository; this.productRepository = productRepository; }
+  constructor(repository = new ProductVariantRepository(), productRepository = new ProductRepository(), notificationService = new NotificationService()) { this.repository = repository; this.productRepository = productRepository; this.notificationService = notificationService; }
 
   async list(productId) {
     return this.listVariants(productId);
@@ -29,6 +30,14 @@ export class ProductVariantService {
     try {
       const variant = await this.repository.create(normalized);
       await this.repository.syncProductInventory(productId);
+      await this.notificationService.notifyWishlistCustomers(productId, {
+        type: "WISHLIST_NEW_VARIANT",
+        title: "Sản phẩm yêu thích có mẫu mới",
+        message: "Một sản phẩm trong danh sách yêu thích của bạn vừa có mẫu mới.",
+        link: `#product-detail/${productId}`,
+        relatedId: productId,
+        eventKey: `wishlist-new-variant:${productId}:${variant.id}`
+      });
       return variant.toJSON();
     } catch (error) {
       throw this.mapDuplicateVariantError(error, normalized);

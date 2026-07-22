@@ -74,13 +74,6 @@ export class AdminOrderService extends BaseService {
       await this.repository.createOrderHistory({
         orderId: Number(orderId), status, note: note || `Admin changed order status to ${status}.`, changedBy: adminUser.id
       }, connection);
-      await this.notificationService.notifyAdmin({
-        type: "order",
-        title: "Trạng thái đơn hàng thay đổi",
-        message: `Đơn ${order.orderCode} đã chuyển sang trạng thái ${status}.`,
-        link: "#orders",
-        dedupeKey: `order-status:${order.id}:${status}`
-      }, connection);
     });
     return this.getOrderDetail(orderId);
   }
@@ -114,11 +107,12 @@ export class AdminOrderService extends BaseService {
       orderId: order.id, status: "cancelled", note: reason, changedBy: adminUser.id
     }, connection);
     await this.notificationService.notifyAdmin({
-      type: "order",
+      type: "ORDER_CANCELLED",
       title: "Đơn hàng bị hủy",
       message: `Đơn ${order.orderCode} đã bị hủy. Lý do: ${reason}`,
       link: "#orders",
-      dedupeKey: `order-cancelled:${order.id}`
+      relatedId: order.id,
+      eventKey: `order-cancelled:${order.id}`
     }, connection);
   }
 }

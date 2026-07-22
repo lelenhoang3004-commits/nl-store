@@ -250,6 +250,7 @@ const customerNotificationState = {
   items: [],
   unreadCount: 0
 };
+const CUSTOMER_NOTIFICATION_TYPES = new Set(["PROMOTION", "NEW_PRODUCT", "NEW_VOUCHER", "NEW_ARRIVAL", "WISHLIST_PRICE_DROP", "WISHLIST_NEW_VARIANT", "EVENT", "COLLECTION"]);
 
 function initCustomerNotifications(root, isAuthenticated) {
   const badge = root?.querySelector?.("[data-customer-notification-badge]");
@@ -294,7 +295,9 @@ async function fetchCustomerNotifications(root, options = {}) {
   try {
     const response = await customerApi("/notifications", { auth: true, refreshOnUnauthorized: false });
     const data = response?.data || {};
-    customerNotificationState.items = Array.isArray(data.notifications) ? data.notifications.map(normalizeCustomerNotification) : [];
+    customerNotificationState.items = Array.isArray(data.notifications)
+      ? data.notifications.map(normalizeCustomerNotification).filter((item) => CUSTOMER_NOTIFICATION_TYPES.has(String(item.type || "").toUpperCase()))
+      : [];
     customerNotificationState.unreadCount = Number(data.unreadCount || 0);
     updateCustomerNotificationUI(root);
   } catch (error) {
@@ -376,6 +379,6 @@ async function handleCustomerNotificationClick(event, root) {
 }
 
 function normalizeCustomerNotification(item = {}) {
-  return { ...item, id: item.id, read: Boolean(item.read ?? item.isRead), link: item.link || "#orders" };
+  return { ...item, id: item.id, type: String(item.type || "").toUpperCase(), read: Boolean(item.read ?? item.isRead), link: item.link || "#home" };
 }
 

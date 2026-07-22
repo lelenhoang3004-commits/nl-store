@@ -1,6 +1,7 @@
 ﻿import { VoucherRepository } from "../repositories/voucher.repository.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
+import { NotificationService } from "./notification.service.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 
 const VOUCHER_STATUS = Object.freeze({ ACTIVE: "active", INACTIVE: "inactive", EXPIRED: "expired" });
@@ -11,7 +12,7 @@ const VOUCHER_QUERY_OPTIONS = Object.freeze({
 });
 
 export class VoucherService extends BaseService {
-  constructor(repository = new VoucherRepository()) { super(repository); }
+  constructor(repository = new VoucherRepository(), notificationService = new NotificationService()) { super(repository); this.notificationService = notificationService; }
 
   async getVouchers(query) {
     const options = parseQueryOptions(query, VOUCHER_QUERY_OPTIONS);
@@ -32,7 +33,28 @@ export class VoucherService extends BaseService {
     const normalizedPayload = this.normalizePayload(payload);
     await this.ensureUniqueCode(normalizedPayload.code);
     const voucher = await this.repository.create(normalizedPayload);
-    return voucher.toJSON();
+    const result = voucher.toJSON();
+    if (isExpiringSoon(result.expiresAt)) {
+      await this.notificationService.notifyAdmin({
+        type: "VOUCHER_EXPIRING",
+        title: "Voucher sắp hết hạn",
+        message: `Voucher ${result.code || result.name} sắp hết hạn.`,
+        link: "#vouchers",
+        relatedId: result.id,
+        expiresAt: result.expiresAt || null,
+        eventKey: `voucher-expiring:${result.id}`
+      });
+    }
+    await this.notificationService.notifyAllCustomers({
+      type: "NEW_VOUCHER",
+      title: "Voucher mới",
+      message: `Voucher ${result.code || result.name} đã sẵn sàng sử dụng.`,
+      link: "#vouchers",
+      relatedId: result.id,
+      expiresAt: result.expiresAt || null,
+      eventKey: `new-voucher:${result.id}`
+    });
+    return result;
   }
 
   async updateVoucher(id, payload) {
@@ -146,3 +168,12 @@ function normalizeConditions(value) {
 }
 
 export { DISCOUNT_TYPE, VOUCHER_STATUS };
+
+function isExpiringSoon(value) {
+  if (!value) return false;
+  const expiresAt = new Date(value);
+  if (Number.isNaN(expiresAt.getTime())) return false;
+  const now = Date.now();
+  const diff = expiresAt.getTime() - now;
+  return diff > 0 && diff <= 7 * 24 * 60 * 60 * 1000;
+}
