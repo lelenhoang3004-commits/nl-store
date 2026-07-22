@@ -94,7 +94,15 @@ export function validatePaymentMethodRequest({ body }) {
     errors.push(createValidationError("type", "type must be bank_account or momo.", "body", "INVALID_PAYMENT_METHOD_TYPE"));
   }
   pushIfError(errors, validateRequired(body.accountHolderName, "accountHolderName", "body"));
-  pushIfError(errors, validateRequired(body.accountIdentifier || body.accountNumber || body.phone, "accountIdentifier", "body"));
+  if (type === "momo") {
+    errors.push(...validatePhone(body.phone || body.accountIdentifier, { required: true, field: "phone", location: "body", country: "VN" }).errors);
+  } else {
+    const accountNumber = String(body.accountNumber || body.accountIdentifier || "").replace(/\D/g, "");
+    pushIfError(errors, validateRequired(accountNumber, "accountNumber", "body"));
+    if (accountNumber && !/^\d{6,30}$/.test(accountNumber)) {
+      errors.push(createValidationError("accountNumber", "accountNumber must contain 6 to 30 digits.", "body", "INVALID_BANK_ACCOUNT"));
+    }
+  }
   ["providerName", "accountHolderName", "accountIdentifier", "accountNumber", "phone"].forEach((field) => {
     if (!isEmpty(body[field]) && String(body[field]).length > 120) {
       errors.push(createValidationError(field, `${field} must not exceed 120 characters.`, "body", "PAYMENT_FIELD_TOO_LONG"));

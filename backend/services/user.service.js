@@ -1,8 +1,9 @@
-/**
+﻿/**
  * User service.
  * It owns user business rules, password hashing, role/permission normalization, profile, avatar, and address updates.
  */
 import { AUTH_PERMISSIONS, AUTH_ROLES, getPermissionsByRole } from "../config/auth.config.js";
+import crypto from "node:crypto";
 import { UserRepository } from "../repositories/user.repository.js";
 import { BaseService } from "./base.service.js";
 import { UploadService } from "./upload.service.js";
@@ -132,7 +133,7 @@ export class UserService extends BaseService {
       }
 
       if (String(currentUser.id) === String(actor.id) && normalizedStatus === USER_STATUS.LOCKED) {
-        throw new AppError("Không thể tự khóa tài khoản đang đăng nhập.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
+        throw new AppError("KhÃ´ng thá»ƒ tá»± khÃ³a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
       }
 
       result.status = normalizedStatus;
@@ -158,7 +159,7 @@ export class UserService extends BaseService {
     }
 
     if (String(id) === String(actor.id) && normalizedStatus === USER_STATUS.LOCKED) {
-      throw new AppError("Không thể tự khóa tài khoản đang đăng nhập.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
+      throw new AppError("KhÃ´ng thá»ƒ tá»± khÃ³a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
     }
 
     const user = await this.repository.patchFields(id, { status: normalizedStatus });
@@ -242,7 +243,7 @@ export class UserService extends BaseService {
     }
     if (emailChanged || phoneChanged) {
       if (!currentUser.hasPassword) {
-        throw new AppError("Vui lòng thiết lập mật khẩu trước khi đổi email hoặc số điện thoại.", 409, "PASSWORD_SETUP_REQUIRED");
+        throw new AppError("Vui lÃ²ng thiáº¿t láº­p máº­t kháº©u trÆ°á»›c khi Ä‘á»•i email hoáº·c sá»‘ Ä‘iá»‡n thoáº¡i.", 409, "PASSWORD_SETUP_REQUIRED");
       }
       await this.ensureCurrentPassword(currentUser, payload.currentPassword);
     }
@@ -282,7 +283,7 @@ export class UserService extends BaseService {
     }
     await this.ensureCurrentPassword(user, payload.currentPassword);
     if (payload.newPassword !== payload.confirmPassword) {
-      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+      throw new AppError("XÃ¡c nháº­n máº­t kháº©u khÃ´ng khá»›p.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
     await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
     return { changed: true };
@@ -294,10 +295,10 @@ export class UserService extends BaseService {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
     if (user.hasPassword) {
-      throw new AppError("Tài khoản đã có mật khẩu. Vui lòng dùng chức năng đổi mật khẩu.", 409, "PASSWORD_ALREADY_EXISTS");
+      throw new AppError("TÃ i khoáº£n Ä‘Ã£ cÃ³ máº­t kháº©u. Vui lÃ²ng dÃ¹ng chá»©c nÄƒng Ä‘á»•i máº­t kháº©u.", 409, "PASSWORD_ALREADY_EXISTS");
     }
     if (payload.newPassword !== payload.confirmPassword) {
-      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+      throw new AppError("XÃ¡c nháº­n máº­t kháº©u khÃ´ng khá»›p.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
     await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
     return { changed: true };
@@ -356,7 +357,7 @@ export class UserService extends BaseService {
       provider: normalizedProvider,
       status: "not_integrated",
       authorizationUrl: null,
-      message: `Chức năng liên kết ${providerLabel(normalizedProvider)} đang thử nghiệm. N&L Store chưa kết nối OAuth liên kết tài khoản thật.`
+      message: `Chá»©c nÄƒng liÃªn káº¿t ${providerLabel(normalizedProvider)} Ä‘ang thá»­ nghiá»‡m. N&L Store chÆ°a káº¿t ná»‘i OAuth liÃªn káº¿t tÃ i khoáº£n tháº­t.`
     };
   }
 
@@ -367,7 +368,7 @@ export class UserService extends BaseService {
     const linkedCount = social.connections.filter((connection) => connection.linked).length;
 
     if (!user.hasPassword && linkedCount <= 1) {
-      throw new AppError("Không thể hủy liên kết phương thức đăng nhập cuối cùng khi tài khoản chưa có mật khẩu.", 409, "LAST_LOGIN_METHOD_UNLINK_DENIED");
+      throw new AppError("KhÃ´ng thá»ƒ há»§y liÃªn káº¿t phÆ°Æ¡ng thá»©c Ä‘Äƒng nháº­p cuá»‘i cÃ¹ng khi tÃ i khoáº£n chÆ°a cÃ³ máº­t kháº©u.", 409, "LAST_LOGIN_METHOD_UNLINK_DENIED");
     }
 
     await this.repository.deleteSocialConnection(userId, normalizedProvider);
@@ -381,11 +382,10 @@ export class UserService extends BaseService {
   async createPaymentMethod(userId, payload = {}) {
     let method;
     try {
+      const normalized = normalizePaymentPayload(payload);
+      await this.ensureUniquePaymentMethod(userId, normalized);
       method = await this.repository.createPaymentMethod(userId, {
-        type: normalizePaymentType(payload.type),
-        providerName: normalizeNullableString(payload.providerName || payload.provider),
-        accountHolderName: normalizeNullableString(payload.accountHolderName),
-        maskedAccountIdentifier: maskAccountIdentifier(payload.accountIdentifier || payload.accountNumber || payload.phone),
+        ...normalized,
         verificationStatus: "unverified",
         isDefault: Boolean(payload.isDefault)
       });
@@ -395,8 +395,31 @@ export class UserService extends BaseService {
 
     return {
       paymentMethod: formatPaymentMethod(method),
-      message: "Chức năng đang thử nghiệm. Thông tin được lưu ở dạng đã che và chưa được xác minh qua ngân hàng/MoMo thật."
+      message: "Phương thức thanh toán đã lưu - chưa xác minh."
     };
+  }
+
+  async updatePaymentMethod(userId, id, payload = {}) {
+    try {
+      const current = await this.repository.findPaymentMethod(userId, id);
+      if (!current) {
+        throw new AppError("Không tìm thấy phương thức thanh toán.", 404, "PAYMENT_METHOD_NOT_FOUND");
+      }
+      const normalized = normalizePaymentPayload(payload);
+      await this.ensureUniquePaymentMethod(userId, normalized, id);
+      const method = await this.repository.updatePaymentMethod(userId, id, {
+        ...normalized,
+        verificationStatus: "unverified",
+        isDefault: payload.isDefault === undefined ? Boolean(current.is_default) : Boolean(payload.isDefault)
+      });
+
+      return {
+        paymentMethod: formatPaymentMethod(method),
+        message: "Phương thức thanh toán đã lưu - chưa xác minh."
+      };
+    } catch (error) {
+      throwProfileTableError(error);
+    }
   }
 
   async setDefaultPaymentMethod(userId, id) {
@@ -424,6 +447,12 @@ export class UserService extends BaseService {
     return { id, deleted: true };
   }
 
+  async ensureUniquePaymentMethod(userId, payload, excludedId = null) {
+    const duplicated = await this.repository.findPaymentMethodByFingerprint(userId, payload.type, payload.accountFingerprint, excludedId);
+    if (duplicated) {
+      throw new AppError("Phương thức thanh toán này đã tồn tại.", 409, "PAYMENT_METHOD_DUPLICATED");
+    }
+  }
   async normalizeUserPayload(payload, options = {}) {
     const role = payload.role || AUTH_ROLES.CUSTOMER;
     const permissions = normalizePermissions(payload.permissions, role);
@@ -469,10 +498,10 @@ export class UserService extends BaseService {
 
   async ensureCurrentPassword(user, currentPassword) {
     if (!user.hasPassword) {
-      throw new AppError("Tài khoản chưa có mật khẩu. Vui lòng đặt mật khẩu trước khi thay đổi thông tin đăng nhập.", 409, "PASSWORD_NOT_AVAILABLE");
+      throw new AppError("TÃ i khoáº£n chÆ°a cÃ³ máº­t kháº©u. Vui lÃ²ng Ä‘áº·t máº­t kháº©u trÆ°á»›c khi thay Ä‘á»•i thÃ´ng tin Ä‘Äƒng nháº­p.", 409, "PASSWORD_NOT_AVAILABLE");
     }
     if (!currentPassword || !await comparePassword(currentPassword, user.passwordHash)) {
-      throw new AppError("Mật khẩu hiện tại không đúng.", 401, "CURRENT_PASSWORD_INVALID");
+      throw new AppError("Máº­t kháº©u hiá»‡n táº¡i khÃ´ng Ä‘Ãºng.", 401, "CURRENT_PASSWORD_INVALID");
     }
   }
 }
@@ -576,13 +605,44 @@ function normalizePaymentType(type) {
   return normalized;
 }
 
-function maskAccountIdentifier(value) {
-  const normalized = normalizeNullableString(value);
-  if (!normalized) {
-    throw new AppError("Account identifier is required.", 422, "PAYMENT_IDENTIFIER_REQUIRED");
+function normalizePaymentPayload(payload = {}) {
+  const type = normalizePaymentType(payload.type);
+  const rawIdentifier = type === "momo"
+    ? normalizePhone(payload.phone || payload.accountIdentifier)
+    : normalizeBankAccount(payload.accountNumber || payload.accountIdentifier);
+
+  if (type === "momo" && !/^((0|\+84)(3|5|7|8|9)\d{8})$/.test(rawIdentifier || "")) {
+    throw new AppError("Số điện thoại MoMo không hợp lệ.", 422, "INVALID_MOMO_PHONE");
   }
-  const visible = normalized.slice(-4);
-  return `${"*".repeat(Math.max(4, normalized.length - 4))}${visible}`;
+
+  if (type === "bank_account" && !/^\d{6,30}$/.test(rawIdentifier || "")) {
+    throw new AppError("Số tài khoản ngân hàng không hợp lệ.", 422, "INVALID_BANK_ACCOUNT");
+  }
+
+  return {
+    type,
+    providerName: type === "momo" ? "MoMo" : normalizeNullableString(payload.providerName || payload.bankName),
+    accountHolderName: normalizeNullableString(payload.accountHolderName),
+    maskedAccountIdentifier: type === "momo" ? maskMomoPhone(rawIdentifier) : maskBankAccount(rawIdentifier),
+    accountFingerprint: createPaymentFingerprint(type, rawIdentifier)
+  };
+}
+
+function normalizeBankAccount(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function maskMomoPhone(value) {
+  const normalized = String(value || "");
+  return `${normalized.slice(0, 3)}***${normalized.slice(-4)}`;
+}
+
+function maskBankAccount(value) {
+  return `****${String(value || "").slice(-4)}`;
+}
+
+function createPaymentFingerprint(type, value) {
+  return crypto.createHash("sha256").update(`${type}:${value}`).digest("hex");
 }
 
 function formatPaymentMethod(row = {}) {
@@ -601,7 +661,7 @@ function formatPaymentMethod(row = {}) {
 
 function throwProfileTableError(error) {
   if (MISSING_OPTIONAL_PROFILE_TABLE_CODES.has(error?.code)) {
-    throw new AppError("Chức năng hồ sơ chưa sẵn sàng. Vui lòng chạy migration user_social_connections và user_payment_methods.", 503, "PROFILE_OPTIONAL_TABLE_MISSING");
+    throw new AppError("Chá»©c nÄƒng há»“ sÆ¡ chÆ°a sáºµn sÃ ng. Vui lÃ²ng cháº¡y migration user_social_connections vÃ  user_payment_methods.", 503, "PROFILE_OPTIONAL_TABLE_MISSING");
   }
   throw error;
 }

@@ -409,14 +409,15 @@ export class UserRepository extends BaseRepository {
 
     const [result] = await this.execute(
       `INSERT INTO user_payment_methods
-        (user_id, type, provider_name, account_holder_name, masked_account_identifier, verification_status, is_default)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (user_id, type, provider_name, account_holder_name, masked_account_identifier, account_fingerprint, verification_status, is_default)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         payload.type,
         payload.providerName,
         payload.accountHolderName,
         payload.maskedAccountIdentifier,
+        payload.accountFingerprint,
         payload.verificationStatus,
         payload.isDefault ? 1 : 0
       ]
@@ -438,6 +439,63 @@ export class UserRepository extends BaseRepository {
     return rows[0] || null;
   }
 
+  async findPaymentMethodByFingerprint(userId, type, accountFingerprint, excludedId = null) {
+    const params = [userId, type, accountFingerprint];
+    const excludedSql = excludedId ? "AND id <> ?" : "";
+
+    if (excludedId) {
+      params.push(excludedId);
+    }
+
+    const [rows] = await this.execute(
+      `SELECT id, type, provider_name, account_holder_name, masked_account_identifier,
+        verification_status, is_default, created_at, updated_at
+      FROM user_payment_methods
+      WHERE user_id = ? AND type = ? AND account_fingerprint = ? AND deleted_at IS NULL ${excludedSql}
+      LIMIT 1`,
+      params
+    );
+
+    return rows[0] || null;
+  }
+
+  async updatePaymentMethod(userId, id, payload) {
+    if (payload.isDefault) {
+      await this.execute(
+        `UPDATE user_payment_methods
+        SET is_default = 0
+        WHERE user_id = ? AND deleted_at IS NULL`,
+        [userId]
+      );
+    }
+
+    await this.execute(
+      `UPDATE user_payment_methods
+      SET type = ?,
+        provider_name = ?,
+        account_holder_name = ?,
+        masked_account_identifier = ?,
+        account_fingerprint = ?,
+        verification_status = ?,
+        is_default = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
+      [
+        payload.type,
+        payload.providerName,
+        payload.accountHolderName,
+        payload.maskedAccountIdentifier,
+        payload.accountFingerprint,
+        payload.verificationStatus,
+        payload.isDefault ? 1 : 0,
+        userId,
+        id
+      ]
+    );
+
+    return this.findPaymentMethod(userId, id);
+  }
+
   async setDefaultPaymentMethod(userId, id) {
     await this.execute(
       `UPDATE user_payment_methods
@@ -457,6 +515,7 @@ export class UserRepository extends BaseRepository {
   }
 
   async deletePaymentMethod(userId, id) {
+    const current = await this.findPaymentMethod(userId, id);
     const [result] = await this.execute(
       `UPDATE user_payment_methods
       SET deleted_at = CURRENT_TIMESTAMP,
@@ -464,6 +523,20 @@ export class UserRepository extends BaseRepository {
       WHERE user_id = ? AND id = ? AND deleted_at IS NULL`,
       [userId, id]
     );
+
+    if (result.affectedRows > 0 && current?.is_default) {
+      const [rows] = await this.execute(
+        `SELECT id
+        FROM user_payment_methods
+        WHERE user_id = ? AND deleted_at IS NULL
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1`,
+        [userId]
+      );
+      if (rows[0]?.id) {
+        await this.setDefaultPaymentMethod(userId, rows[0].id);
+      }
+    }
 
     return result.affectedRows > 0;
   }

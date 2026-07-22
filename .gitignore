@@ -24,6 +24,7 @@ frontend/.env.*
 !database/migrations/20260722_category_showcase_images.sql
 !database/migrations/20260722_customer_profile_links_payments.sql
 !database/migrations/20260722_customer_profile_optional_tables_fix.sql
+!database/migrations/20260722_user_payment_methods_fingerprint.sql
 n_l_shop.sql
 fashion_shop_backup.sql
 

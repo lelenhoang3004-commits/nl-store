@@ -36,6 +36,7 @@ router.post("/profile/social-connections/:provider/link-intent", userController.
 router.delete("/profile/social-connections/:provider", userController.unlinkSocialConnection);
 router.get("/profile/payment-methods", userController.paymentMethods);
 router.post("/profile/payment-methods", validateRequest(validatePaymentMethodRequest), userController.storePaymentMethod);
+router.put("/profile/payment-methods/:id", validateRequest(validatePaymentMethodRequest), userController.updatePaymentMethod);
 router.patch("/profile/payment-methods/:id/default", validateRequest(validateUserIdRequest), userController.setDefaultPaymentMethod);
 router.delete("/profile/payment-methods/:id", validateRequest(validateUserIdRequest), userController.deletePaymentMethod);
 

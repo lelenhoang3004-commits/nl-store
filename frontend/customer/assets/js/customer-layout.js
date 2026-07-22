@@ -108,6 +108,8 @@ const layoutState = {
   }
 };
 
+const PROFILE_BANKS = ["Vietcombank", "BIDV", "VietinBank", "Techcombank", "MB Bank", "ACB", "Sacombank", "VPBank", "TPBank", "Agribank"];
+
 const protectedRoutes = new Set(["checkout", "orders", "profile", "cart", "wishlist"]);
 const homeSectionRoutes = new Set(["flash-sale", "featured-product", "new-arrival", "best-seller", "categories", "jewelry", "brands", "reviews", "newsletter", "promotion", "collections", "story", "products"]);
 const FALLBACK_PRODUCT_IMAGE = "https://placehold.co/160x200/f1f5f9/334155?text=Fashion";
@@ -2560,6 +2562,7 @@ async function renderProfilePage() {
       ? { paymentMethods: paymentResult.value?.data?.paymentMethods || [], error: "" }
       : { paymentMethods: [], error: paymentResult.reason?.message || "Không thể tải phương thức thanh toán." };
     customerAuth.setUser(user);
+    layoutState.profilePaymentMethods = paymentState.paymentMethods || [];
     renderHeader();
     layoutState.main.innerHTML = renderPageShell("Hồ sơ", createProfilePageHtml(
       user,
@@ -2647,7 +2650,7 @@ function createSocialConnectionRow(provider, connection = {}) {
   const linked = Boolean(connection?.linked);
   return `
     <div class="customer-profile-linked-row">
-      <div><strong>${label}</strong><span>${linked ? "Đã liên kết" : "Chưa liên kết"}${connection?.email ? ` - ${escapeHtml(connection.email)}` : ""}</span></div>
+      <div><strong>${label}</strong><span class="customer-profile-link-badge ${linked ? "is-linked" : ""}">${linked ? "Đã liên kết" : "Chưa liên kết"}</span>${connection?.email ? `<small>${escapeHtml(connection.email)}</small>` : ""}</div>
       <button class="customer-button secondary" type="button" data-social-provider="${provider}" data-social-action="${linked ? "unlink" : "link"}">${linked ? "Hủy liên kết" : "Liên kết"}</button>
     </div>
   `;
@@ -2661,6 +2664,7 @@ function createPaymentMethodRow(method = {}) {
       <div class="customer-profile-payment-actions">
         <span>${escapeHtml(getPaymentVerificationLabel(method.verificationStatus))}</span>
         ${method.isDefault ? "" : `<button type="button" data-payment-default="${escapeHtml(method.id)}">Đặt mặc định</button>`}
+        <button type="button" data-payment-edit="${escapeHtml(method.id)}">Chỉnh sửa</button>
         <button type="button" data-payment-delete="${escapeHtml(method.id)}">Xóa</button>
       </div>
     </div>
@@ -2673,6 +2677,54 @@ function getPaymentVerificationLabel(status) {
 
 function getUserHasPassword(user = {}) {
   return Boolean(user.has_password ?? user.hasPassword);
+}
+
+function createPasswordField(label, name, autocomplete, required = false) {
+  return `
+    <label class="customer-password-field">${escapeHtml(label)}
+      <span class="customer-password-input">
+        <input name="${escapeHtml(name)}" type="password" autocomplete="${escapeHtml(autocomplete)}" autocapitalize="none" spellcheck="false" ${required ? "required" : ""}>
+        <button type="button" data-password-eye="${escapeHtml(name)}" aria-label="Hiện mật khẩu"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+      </span>
+    </label>
+  `;
+}
+
+function bindPasswordTools(root) {
+  root.querySelectorAll("[data-password-eye]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = root.querySelector(`[name="${CSS.escape(button.dataset.passwordEye)}"]`);
+      if (!input) return;
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      button.setAttribute("aria-label", show ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+      button.innerHTML = `<i class="fa-regular ${show ? "fa-eye-slash" : "fa-eye"}" aria-hidden="true"></i>`;
+    });
+  });
+
+  const password = root.querySelector("[name='newPassword']");
+  const confirm = root.querySelector("[name='confirmPassword']");
+  const strength = root.querySelector("[data-password-strength]");
+  const update = () => {
+    if (strength && password) {
+      const score = calculatePasswordScore(password.value);
+      strength.dataset.level = String(score);
+      strength.querySelector("span").textContent = ["Rất yếu", "Yếu", "Trung bình", "Mạnh", "Rất mạnh"][score] || "Rất yếu";
+    }
+    if (confirm) confirm.setCustomValidity(password && confirm.value && password.value !== confirm.value ? "Xác nhận mật khẩu không khớp." : "");
+  };
+  password?.addEventListener("input", update);
+  confirm?.addEventListener("input", update);
+  update();
+}
+
+function calculatePasswordScore(value = "") {
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 1;
+  if (/\d/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+  return Math.max(0, Math.min(4, score));
 }
 
 function normalizeProfilePhone(value) {
@@ -2697,6 +2749,12 @@ function bindProfilePage(user = {}) {
   });
   layoutState.main.querySelectorAll("[data-payment-default]").forEach((button) => {
     button.addEventListener("click", () => updatePaymentDefault(button.dataset.paymentDefault));
+  });
+  layoutState.main.querySelectorAll("[data-payment-edit]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const method = (layoutState.profilePaymentMethods || []).find((item) => String(item.id) === String(button.dataset.paymentEdit));
+      openPaymentModal(method);
+    });
   });
   layoutState.main.querySelectorAll("[data-payment-delete]").forEach((button) => {
     button.addEventListener("click", () => deletePaymentMethod(button.dataset.paymentDelete));
@@ -2833,9 +2891,10 @@ function openPasswordModal() {
   const hasPassword = getUserHasPassword(user);
   const modal = createProfileModal(hasPassword ? "Đổi mật khẩu" : "Thiết lập mật khẩu", `
     <form class="customer-profile-form" data-password-form>
-      ${hasPassword ? `<label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>` : `<p class="customer-profile-note">Tạo mật khẩu cho tài khoản Google/Facebook để bảo vệ thay đổi email hoặc số điện thoại về sau.</p>`}
-      <label>Mật khẩu mới<input name="newPassword" type="password" autocomplete="new-password" required></label>
-      <label>Xác nhận mật khẩu mới<input name="confirmPassword" type="password" autocomplete="new-password" required></label>
+      ${hasPassword ? createPasswordField("Mật khẩu hiện tại", "currentPassword", "current-password", true) : `<p class="customer-profile-note">Tạo mật khẩu cho tài khoản Google/Facebook để bảo vệ thay đổi email hoặc số điện thoại về sau.</p>`}
+      ${createPasswordField("Mật khẩu mới", "newPassword", "new-password", true)}
+      <div class="customer-password-strength" data-password-strength><span></span></div>
+      ${createPasswordField("Xác nhận mật khẩu mới", "confirmPassword", "new-password", true)}
       <div data-auth-message hidden></div>
       <div class="customer-profile-modal-actions">
         <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
@@ -2844,6 +2903,7 @@ function openPasswordModal() {
     </form>
   `);
   const form = modal.querySelector("[data-password-form]");
+  bindPasswordTools(form);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
@@ -2854,6 +2914,14 @@ function openPasswordModal() {
         newPassword: String(data.get("newPassword") || ""),
         confirmPassword: String(data.get("confirmPassword") || "")
       };
+      if (body.newPassword.length < 8) {
+        showCustomerMessage(form, "Mật khẩu mới phải có ít nhất 8 ký tự.");
+        return;
+      }
+      if (body.newPassword !== body.confirmPassword) {
+        showCustomerMessage(form, "Xác nhận mật khẩu không khớp.");
+        return;
+      }
       if (hasPassword) body.currentPassword = String(data.get("currentPassword") || "");
       await customerApi(hasPassword ? "/users/profile/password" : "/users/profile/set-password", {
         method: hasPassword ? "PUT" : "POST",
@@ -2861,6 +2929,8 @@ function openPasswordModal() {
       });
       closeProfileModal(modal);
       showCustomerToast(hasPassword ? "Đã đổi mật khẩu." : "Đã thiết lập mật khẩu.", "success");
+      customerAuth.setUser({ ...(customerAuth.getUser() || {}), hasPassword: true, has_password: true });
+      renderHeader();
       await renderProfilePage();
     } catch (error) {
       showCustomerMessage(form, error?.message || (hasPassword ? "Không thể đổi mật khẩu." : "Không thể thiết lập mật khẩu."));
@@ -2870,15 +2940,15 @@ function openPasswordModal() {
   });
 }
 
-function openPaymentModal() {
-  const modal = createProfileModal("Thêm phương thức thanh toán", `
+function openPaymentModal(method = null) {
+  const editing = Boolean(method?.id);
+  const selectedType = method?.type || "bank_account";
+  const modal = createProfileModal(editing ? "Chỉnh sửa phương thức thanh toán" : "Thêm phương thức thanh toán", `
     <form class="customer-profile-form" data-payment-form>
-      <p class="customer-profile-note">Chức năng đang thử nghiệm. Thông tin sẽ được lưu ở dạng đã che và chưa được xác minh tự động.</p>
-      <label>Loại phương thức<select name="type"><option value="bank_account">Tài khoản ngân hàng</option><option value="momo">Ví MoMo</option></select></label>
-      <label>Ngân hàng/Nhà cung cấp<input name="providerName" maxlength="120"></label>
-      <label>Tên chủ tài khoản<input name="accountHolderName" required maxlength="120"></label>
-      <label>Số tài khoản/Số điện thoại<input name="accountIdentifier" required maxlength="120"></label>
-      <label class="customer-profile-check"><input name="isDefault" type="checkbox"> Đặt làm mặc định</label>
+      <p class="customer-profile-note">Phương thức thanh toán đã lưu - chưa xác minh. N&L Store không lưu PIN, OTP, mật khẩu, CVV hoặc token bí mật.</p>
+      <label>Loại phương thức<select name="type" data-payment-type><option value="bank_account">Tài khoản ngân hàng</option><option value="momo">Ví MoMo</option></select></label>
+      <div data-payment-fields></div>
+      <label class="customer-profile-check"><input name="isDefault" type="checkbox" ${method?.isDefault ? "checked" : ""}> Đặt làm mặc định</label>
       <div data-auth-message hidden></div>
       <div class="customer-profile-modal-actions">
         <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
@@ -2887,17 +2957,43 @@ function openPaymentModal() {
     </form>
   `);
   const form = modal.querySelector("[data-payment-form]");
+  const typeSelect = form.querySelector("[data-payment-type]");
+  const fieldsRoot = form.querySelector("[data-payment-fields]");
+  typeSelect.value = selectedType;
+  const renderFields = () => {
+    const type = typeSelect.value;
+    fieldsRoot.innerHTML = type === "momo"
+      ? `<input type="hidden" name="providerName" value="MoMo"><label>Tên chủ ví<input name="accountHolderName" required maxlength="120" value="${escapeHtml(method?.accountHolderName || "")}"></label><label>Số điện thoại MoMo<input name="phone" inputmode="tel" required placeholder="0901234567"></label>`
+      : `<label>Tên ngân hàng<select name="providerName" required>${PROFILE_BANKS.map((bank) => `<option value="${escapeHtml(bank)}">${escapeHtml(bank)}</option>`).join("")}</select></label><label>Tên chủ tài khoản<input name="accountHolderName" required maxlength="120" value="${escapeHtml(method?.accountHolderName || "")}"></label><label>Số tài khoản<input name="accountNumber" inputmode="numeric" required placeholder="Nhập 6-30 chữ số"></label>`;
+    if (type !== "momo") fieldsRoot.querySelector("[name='providerName']").value = method?.providerName || PROFILE_BANKS[0];
+  };
+  renderFields();
+  typeSelect.addEventListener("change", renderFields);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
+    const type = String(data.get("type") || "");
+    const accountNumber = String(data.get("accountNumber") || "").replace(/\D/g, "");
+    const phone = normalizeProfilePhone(data.get("phone"));
+    if (type === "momo" && !/^((0|\+84)(3|5|7|8|9)\d{8})$/.test(phone)) {
+      showCustomerMessage(form, "Số điện thoại MoMo không hợp lệ.");
+      return;
+    }
+    if (type === "bank_account" && !/^\d{6,30}$/.test(accountNumber)) {
+      showCustomerMessage(form, "Số tài khoản ngân hàng phải gồm 6-30 chữ số.");
+      return;
+    }
+    const button = form.querySelector("button[type='submit']");
+    if (button) button.disabled = true;
     try {
-      const response = await customerApi("/users/profile/payment-methods", {
-        method: "POST",
+      const response = await customerApi(editing ? `/users/profile/payment-methods/${encodeURIComponent(method.id)}` : "/users/profile/payment-methods", {
+        method: editing ? "PUT" : "POST",
         body: {
-          type: String(data.get("type") || ""),
+          type,
           providerName: String(data.get("providerName") || "").trim(),
           accountHolderName: String(data.get("accountHolderName") || "").trim(),
-          accountIdentifier: String(data.get("accountIdentifier") || "").trim(),
+          phone,
+          accountNumber,
           isDefault: Boolean(data.get("isDefault"))
         }
       });
@@ -2906,6 +3002,8 @@ function openPaymentModal() {
       renderProfilePage();
     } catch (error) {
       showCustomerMessage(form, error?.message || "Không thể lưu phương thức thanh toán.");
+    } finally {
+      if (button) button.disabled = false;
     }
   });
 }

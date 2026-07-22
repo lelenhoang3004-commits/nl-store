@@ -122,6 +122,12 @@ export class UserController extends BaseController {
     return this.sendSuccess(response, result, result.message, 201);
   });
 
+  updatePaymentMethod = asyncHandler(async (request, response) => {
+    const result = await this.service.updatePaymentMethod(request.user.id, request.params.id, request.body);
+
+    return this.sendSuccess(response, result, result.message);
+  });
+
   setDefaultPaymentMethod = asyncHandler(async (request, response) => {
     const paymentMethod = await this.service.setDefaultPaymentMethod(request.user.id, request.params.id);
 
