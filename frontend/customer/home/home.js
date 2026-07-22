@@ -186,7 +186,7 @@ function normalizeHomeCategory(category = {}) {
   const name = category.name || "Danh mục";
   const slug = category.slug || category.code || slugifyCategoryName(name);
   const productCount = Number(category.productCount ?? category.product_count ?? category.productsCount ?? category.totalProducts ?? category.total_products ?? 0);
-  const image = category.imageUrl || category.image_url || category.thumbnailUrl || category.thumbnail_url || category.coverImage || category.cover_image || getCategoryImageByName(name);
+  const image = category.imageUrl || category.image_url || category.thumbnailUrl || category.thumbnail_url || category.coverImage || category.cover_image || "";
 
   return {
     id: category.id,
@@ -223,22 +223,6 @@ function slugifyCategoryName(value = "") {
     .replace(/đ/g, "d")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "products";
-}
-
-function getCategoryImageByName(name = "") {
-  const key = slugifyCategoryName(name);
-  const images = {
-    "ao-khoac": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=600&q=80",
-    "ao-len": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=600&q=80",
-    "chan-vay": "https://images.unsplash.com/photo-1583496661160-fb5886a13d27?auto=format&fit=crop&w=600&q=80",
-    "giay": "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80",
-    "mu-non": "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=600&q=80",
-    "tui-xach": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80",
-    "dong-ho": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&q=80",
-    "trang-suc": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80",
-    "kinh-mat": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
-  };
-  return images[key] || "";
 }
 
 function getCategoryIconByName(name = "") {

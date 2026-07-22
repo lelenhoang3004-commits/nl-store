@@ -275,8 +275,23 @@ export class CategoryRepository extends BaseRepository {
       WHERE deleted_at IS NULL AND category_id IS NOT NULL
       GROUP BY category_id`
     );
+    const [productImages] = await this.execute(
+      `SELECT p.category_id, p.thumbnail_url
+      FROM products p
+      INNER JOIN (
+        SELECT category_id, MIN(id) AS first_id
+        FROM products
+        WHERE deleted_at IS NULL
+          AND status = 'active'
+          AND category_id IS NOT NULL
+          AND thumbnail_url IS NOT NULL
+          AND thumbnail_url <> ''
+        GROUP BY category_id
+      ) first_product ON first_product.first_id = p.id`
+    );
     const childrenByParent = new Map();
     const directCounts = new Map();
+    const directImages = new Map();
 
     categories.forEach((category) => {
       const parentId = category.parent_id == null ? null : Number(category.parent_id);
@@ -288,8 +303,12 @@ export class CategoryRepository extends BaseRepository {
     productCounts.forEach((item) => {
       directCounts.set(Number(item.category_id), Number(item.total || 0));
     });
+    productImages.forEach((item) => {
+      directImages.set(Number(item.category_id), item.thumbnail_url);
+    });
 
     const countCache = new Map();
+    const imageCache = new Map();
     const countDescendants = (categoryId) => {
       if (countCache.has(categoryId)) return countCache.get(categoryId);
       const children = childrenByParent.get(categoryId) || [];
@@ -299,10 +318,18 @@ export class CategoryRepository extends BaseRepository {
       countCache.set(categoryId, total);
       return total;
     };
+    const findFirstTreeImage = (categoryId) => {
+      if (imageCache.has(categoryId)) return imageCache.get(categoryId);
+      const children = childrenByParent.get(categoryId) || [];
+      const image = directImages.get(categoryId) || children.map(findFirstTreeImage).find(Boolean) || null;
+      imageCache.set(categoryId, image);
+      return image;
+    };
 
     return rows.map((row) => ({
       ...row,
-      product_count: countDescendants(Number(row.id))
+      product_count: countDescendants(Number(row.id)),
+      resolved_image_url: row.image_url || findFirstTreeImage(Number(row.id))
     }));
   }
 

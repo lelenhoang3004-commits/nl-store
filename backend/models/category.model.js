@@ -12,7 +12,8 @@ export class Category extends BaseModel {
     this.slug = attributes.slug;
     this.description = attributes.description || "";
     this.parentId = attributes.parentId || attributes.parent_id || null;
-    this.imageUrl = attributes.imageUrl || attributes.image_url || null;
+    this.imageUrl = attributes.imageUrl || attributes.resolved_image_url || attributes.image_url || null;
+    this.configuredImageUrl = attributes.configuredImageUrl || attributes.image_url || null;
     this.status = attributes.status;
     this.sortOrder = attributes.sortOrder ?? attributes.sort_order ?? 0;
     this.productCount = attributes.productCount ?? attributes.product_count ?? 0;
@@ -28,6 +29,8 @@ export class Category extends BaseModel {
       description: this.description,
       parentId: this.parentId,
       imageUrl: this.imageUrl,
+      image_url: this.imageUrl,
+      configuredImageUrl: this.configuredImageUrl,
       status: this.status,
       sortOrder: this.sortOrder,
       productCount: this.productCount,

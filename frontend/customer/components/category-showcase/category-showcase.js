@@ -39,7 +39,7 @@ function createCategoryCard(category, options = {}) {
   return `
     <a class="category-showcase-card" href="${escapeAttr(href)}" data-reveal${hiddenAttrs}>
       <div class="category-showcase-media ${image ? "has-image" : "has-icon"}">
-        ${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(name)}" loading="lazy" decoding="async">` : `<span class="category-showcase-icon"><i class="fa-solid ${escapeAttr(icon)}" aria-hidden="true"></i></span>`}
+        ${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(name)}" loading="lazy" decoding="async" onerror="this.closest('.category-showcase-media').classList.remove('has-image');this.closest('.category-showcase-media').classList.add('has-icon');this.replaceWith(Object.assign(document.createElement('span'),{className:'category-showcase-icon',innerHTML:'<i class=&quot;fa-solid ${escapeAttr(icon)}&quot; aria-hidden=&quot;true&quot;></i>'}));">` : `<span class="category-showcase-icon"><i class="fa-solid ${escapeAttr(icon)}" aria-hidden="true"></i></span>`}
       </div>
       <div class="category-showcase-body">
         <h3>${escapeHtml(name)}</h3>

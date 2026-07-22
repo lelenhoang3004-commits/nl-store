@@ -3,6 +3,7 @@ import { showPageLoading, hidePageLoading } from "../components/loading/loading.
 import { toast } from "../components/toast/toast.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { categoryService } from "../services/category.service.js";
+import { uploadService } from "../services/upload.service.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
 
@@ -238,6 +239,8 @@ function createSlug(value) {
 async function openCategoryModal(root, category = null) {
   const editing = Boolean(category);
   const parentCategories = await loadParentCategoryOptions();
+  const configuredImageUrl = category?.configuredImageUrl || "";
+  const previewImageUrl = configuredImageUrl || category?.imageUrl || category?.image_url || "";
   const modal = openModal({
     eyebrow: "Category",
     title: editing ? "Sửa danh mục" : "Thêm danh mục",
@@ -263,6 +266,24 @@ async function openCategoryModal(root, category = null) {
               ${parentCategories.filter((item) => String(item.id) !== String(category?.id || "")).map((item) => `<option value="${escapeHtml(item.id)}" ${String(category?.parentId || category?.parent_id || "") === String(item.id) ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}
             </select>
           </label>
+          <section class="admin-category-image-field">
+            <input type="hidden" name="imageUrl" value="${escapeHtml(configuredImageUrl)}" data-category-image-url>
+            <div class="admin-category-image-preview ${previewImageUrl ? "has-image" : ""}" data-category-image-preview>
+              ${previewImageUrl ? `<img src="${escapeHtml(resolveCategoryImageUrl(previewImageUrl))}" alt="">` : `<i class="fa-solid fa-image" aria-hidden="true"></i>`}
+            </div>
+            <div class="admin-category-image-actions">
+              <label>
+                <span>Anh dai dien</span>
+                <input type="url" name="imageUrlInput" value="${escapeHtml(configuredImageUrl)}" placeholder="https://...">
+              </label>
+              <input type="file" accept="image/*" data-category-image-file hidden>
+              <div>
+                <button type="button" data-category-image-choose>Chon anh</button>
+                <button type="button" data-category-image-remove ${configuredImageUrl ? "" : "hidden"}>Xoa anh</button>
+              </div>
+              <small data-category-image-status></small>
+            </div>
+          </section>
           <label>
             <span>Trang thai</span>
             <select name="status">
@@ -277,12 +298,16 @@ async function openCategoryModal(root, category = null) {
     saveText: editing ? "Lưu thay đổi" : "Tạo danh mục",
     onSave: async () => {
       const form = document.querySelector("[data-category-form]");
+      if (form?.dataset.imageUploading === "true") {
+        throw new Error("Vui long cho tai anh hoan tat.");
+      }
       const formData = new FormData(form);
       const payload = {
         name: String(formData.get("name") || "").trim(),
         slug: String(formData.get("slug") || "").trim(),
         description: String(formData.get("description") || "").trim(),
         parentId: String(formData.get("parentId") || "").trim() || null,
+        imageUrl: String(formData.get("imageUrl") || formData.get("imageUrlInput") || "").trim() || null,
         status: String(formData.get("status") || "active").trim().toLowerCase()
       };
       try {
@@ -301,6 +326,7 @@ async function openCategoryModal(root, category = null) {
 
   const form = document.querySelector("[data-category-form]");
   if (form) {
+    bindCategoryImagePicker(form);
     const nameInput = form.querySelector("input[name='name']");
     const slugInput = form.querySelector("input[name='slug']");
     nameInput?.addEventListener("input", () => {
@@ -318,6 +344,64 @@ async function loadParentCategoryOptions() {
   } catch {
     return state.items;
   }
+}
+
+function bindCategoryImagePicker(form) {
+  const hiddenInput = form.querySelector("[data-category-image-url]");
+  const urlInput = form.querySelector("input[name='imageUrlInput']");
+  const fileInput = form.querySelector("[data-category-image-file]");
+  const chooseButton = form.querySelector("[data-category-image-choose]");
+  const removeButton = form.querySelector("[data-category-image-remove]");
+  const status = form.querySelector("[data-category-image-status]");
+
+  chooseButton?.addEventListener("click", () => fileInput?.click());
+  removeButton?.addEventListener("click", () => setCategoryImage(form, ""));
+  urlInput?.addEventListener("input", () => setCategoryImage(form, urlInput.value.trim(), { keepStatus: true }));
+  fileInput?.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    form.dataset.imageUploading = "true";
+    if (status) status.textContent = "Dang tai anh...";
+    try {
+      const response = await uploadService.uploadProductImage(file, { showErrorToast: false, loadingMessage: "Dang tai anh danh muc..." });
+      const data = response?.data || response || {};
+      setCategoryImage(form, data.url || data.file?.url || "");
+      if (status) status.textContent = "Da tai anh.";
+    } catch (error) {
+      if (status) status.textContent = message(error);
+    } finally {
+      form.dataset.imageUploading = "false";
+      fileInput.value = "";
+    }
+  });
+
+  if (hiddenInput?.value) setCategoryImage(form, hiddenInput.value, { keepStatus: true });
+}
+
+function setCategoryImage(form, url, options = {}) {
+  const value = String(url || "").trim();
+  const hiddenInput = form.querySelector("[data-category-image-url]");
+  const urlInput = form.querySelector("input[name='imageUrlInput']");
+  const preview = form.querySelector("[data-category-image-preview]");
+  const removeButton = form.querySelector("[data-category-image-remove]");
+  const status = form.querySelector("[data-category-image-status]");
+
+  if (hiddenInput) hiddenInput.value = value;
+  if (urlInput && urlInput.value !== value) urlInput.value = value;
+  if (removeButton) removeButton.hidden = !value;
+  if (preview) {
+    preview.classList.toggle("has-image", Boolean(value));
+    preview.innerHTML = value
+      ? `<img src="${escapeHtml(resolveCategoryImageUrl(value))}" alt="" onerror="this.closest('[data-category-image-preview]').classList.remove('has-image');this.replaceWith(Object.assign(document.createElement('i'),{className:'fa-solid fa-image'}));">`
+      : `<i class="fa-solid fa-image" aria-hidden="true"></i>`;
+  }
+  if (!options.keepStatus && status) status.textContent = value ? "Anh san sang." : "Da xoa anh.";
+}
+
+function resolveCategoryImageUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  return globalThis.normalizeImageUrl?.(value) ?? value;
 }
 
 async function toggleCategoryStatus(root, category) {

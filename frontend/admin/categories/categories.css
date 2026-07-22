@@ -486,6 +486,61 @@
   resize: vertical;
 }
 
+.admin-category-image-field {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.admin-category-image-preview {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #94a3b8;
+  font-size: 1.45rem;
+}
+
+.admin-category-image-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-category-image-actions {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-category-image-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-category-image-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.admin-category-image-actions small {
+  min-height: 18px;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
 .admin-category-form-grid input:focus,
 .admin-category-form-grid textarea:focus,
 .admin-category-form-grid select:focus {
@@ -587,5 +642,14 @@
   .admin-category-control {
     flex: 1 1 100%;
     width: 100%;
+  }
+
+  .admin-category-image-field {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-category-image-preview {
+    width: 100%;
+    max-width: 220px;
   }
 }
