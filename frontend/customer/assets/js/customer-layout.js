@@ -2582,6 +2582,7 @@ function createProfilePageHtml(user = {}, social = {}, paymentState = {}) {
   const paymentMethods = Array.isArray(paymentState) ? paymentState : (paymentState.paymentMethods || []);
   const socialError = social.error || "";
   const paymentError = !Array.isArray(paymentState) ? (paymentState.error || "") : "";
+  const hasPassword = getUserHasPassword(user);
 
   return `
     <div class="customer-profile-shell">
@@ -2597,7 +2598,7 @@ function createProfilePageHtml(user = {}, social = {}, paymentState = {}) {
         </div>
         <div class="customer-profile-actions">
           <button class="customer-button" type="button" data-profile-edit><i class="fa-solid fa-pen" aria-hidden="true"></i> Chỉnh sửa thông tin</button>
-          <button class="customer-button secondary" type="button" data-profile-password><i class="fa-solid fa-key" aria-hidden="true"></i> Đổi mật khẩu</button>
+          <button class="customer-button secondary" type="button" data-profile-password><i class="fa-solid fa-key" aria-hidden="true"></i> ${hasPassword ? "Đổi mật khẩu" : "Thiết lập mật khẩu"}</button>
           <button class="customer-button secondary" type="button" data-profile-orders><i class="fa-solid fa-box" aria-hidden="true"></i> Xem đơn hàng</button>
         </div>
       </section>
@@ -2670,6 +2671,21 @@ function getPaymentVerificationLabel(status) {
   return { verified: "Đã xác minh", pending: "Đang xác minh", failed: "Xác minh thất bại", unverified: "Chưa xác minh" }[String(status || "").toLowerCase()] || "Chưa xác minh";
 }
 
+function getUserHasPassword(user = {}) {
+  return Boolean(user.has_password ?? user.hasPassword);
+}
+
+function normalizeProfilePhone(value) {
+  const text = String(value || "").trim();
+  return text ? text.replace(/[\s.-]/g, "") : "";
+}
+
+function setChangedField(payload, field, nextValue, currentValue) {
+  if (String(nextValue ?? "") !== String(currentValue ?? "")) {
+    payload[field] = nextValue;
+  }
+}
+
 function bindProfilePage(user = {}) {
   layoutState.main.querySelector("[data-profile-orders]")?.addEventListener("click", () => navigateToRoute("orders"));
   layoutState.main.querySelectorAll("[data-profile-retry]").forEach((button) => button.addEventListener("click", renderProfilePage));
@@ -2689,6 +2705,7 @@ function bindProfilePage(user = {}) {
 
 function openProfileEditModal(user = {}) {
   const address = user.address || {};
+  const hasPassword = getUserHasPassword(user);
   const modal = createProfileModal("Chỉnh sửa thông tin", `
     <form class="customer-profile-form" data-profile-edit-form>
       <label>Ảnh đại diện<input type="file" name="avatar" accept="image/*"></label>
@@ -2701,7 +2718,9 @@ function openProfileEditModal(user = {}) {
         <label>Tỉnh/thành phố<select name="provinceCode" data-profile-province></select></label>
         <label>Phường/xã<select name="wardCode" data-profile-ward></select></label>
       </div>
-      <label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="current-password" placeholder="Bắt buộc khi đổi email hoặc số điện thoại"></label>
+      ${hasPassword
+        ? `<label data-current-password-field>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Chỉ nhập khi đổi email hoặc số điện thoại"></label>`
+        : `<div class="customer-profile-inline-error">Tài khoản này chưa có mật khẩu. Bạn vẫn có thể sửa họ tên, avatar và địa chỉ. Nếu muốn đổi email hoặc số điện thoại, hãy thiết lập mật khẩu trước. <button type="button" data-open-set-password>Thiết lập mật khẩu</button></div>`}
       <div data-auth-message hidden></div>
       <div class="customer-profile-modal-actions">
         <button class="customer-button secondary" type="button" data-modal-close>Hủy</button>
@@ -2717,6 +2736,10 @@ function openProfileEditModal(user = {}) {
   loadWardsByProvince(wardSelect, provinceSelect.value);
   wardSelect.value = address.wardCode || "";
   provinceSelect.addEventListener("change", () => loadWardsByProvince(wardSelect, provinceSelect.value));
+  modal.querySelector("[data-open-set-password]")?.addEventListener("click", () => {
+    closeProfileModal(modal);
+    openPasswordModal();
+  });
   form.avatar.addEventListener("change", () => {
     const file = form.avatar.files?.[0];
     if (file) modal.querySelector(".customer-profile-preview").innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Avatar">`;
@@ -2731,27 +2754,60 @@ async function submitProfileEdit(form, currentUser, modal) {
   const data = new FormData(form);
   const province = VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === String(data.get("provinceCode") || ""));
   const ward = province?.wards.find((item) => item.code === String(data.get("wardCode") || ""));
-  const payload = {
-    fullName: String(data.get("fullName") || "").trim(),
-    email: String(data.get("email") || "").trim(),
-    phone: String(data.get("phone") || "").trim(),
-    currentPassword: String(data.get("currentPassword") || ""),
-    address: {
-      line1: String(data.get("line1") || "").trim(),
-      provinceCode: province?.code || null,
-      provinceName: province?.name || null,
-      province: province?.name || null,
-      wardCode: ward?.code || null,
-      wardName: ward?.name || null,
-      ward: ward?.name || null,
-      country: "Vietnam"
-    }
+  const nextAddress = {
+    line1: String(data.get("line1") || "").trim(),
+    provinceCode: province?.code || null,
+    provinceName: province?.name || null,
+    province: province?.name || null,
+    wardCode: ward?.code || null,
+    wardName: ward?.name || null,
+    ward: ward?.name || null,
+    country: "Vietnam"
   };
-  if (!payload.currentPassword && payload.email === currentUser.email && payload.phone === (currentUser.phone || "")) {
-    delete payload.currentPassword;
+  const currentAddress = currentUser.address || {};
+  const nextEmail = String(data.get("email") || "").trim().toLowerCase();
+  const nextPhone = normalizeProfilePhone(data.get("phone"));
+  const currentPhone = normalizeProfilePhone(currentUser.phone);
+  const emailChanged = nextEmail !== String(currentUser.email || "").trim().toLowerCase();
+  const phoneChanged = nextPhone !== currentPhone;
+  const payload = {};
+
+  setChangedField(payload, "fullName", String(data.get("fullName") || "").trim(), currentUser.fullName || "");
+  if (emailChanged) payload.email = nextEmail;
+  if (phoneChanged) payload.phone = nextPhone;
+  if (JSON.stringify(nextAddress) !== JSON.stringify({
+    line1: currentAddress.line1 || currentAddress.detailAddress || "",
+    provinceCode: currentAddress.provinceCode || null,
+    provinceName: currentAddress.provinceName || currentAddress.province || null,
+    province: currentAddress.province || currentAddress.provinceName || null,
+    wardCode: currentAddress.wardCode || null,
+    wardName: currentAddress.wardName || currentAddress.ward || null,
+    ward: currentAddress.ward || currentAddress.wardName || null,
+    country: currentAddress.country || "Vietnam"
+  })) {
+    payload.address = nextAddress;
   }
+
+  if ((emailChanged || phoneChanged) && !getUserHasPassword(currentUser)) {
+    showCustomerMessage(form, "Vui lòng thiết lập mật khẩu trước khi đổi email hoặc số điện thoại.");
+    return;
+  }
+
+  const currentPassword = String(data.get("currentPassword") || "");
+  if (emailChanged || phoneChanged) {
+    if (!currentPassword) {
+      showCustomerMessage(form, "Vui lòng nhập mật khẩu hiện tại để đổi email hoặc số điện thoại.");
+      return;
+    }
+    payload.currentPassword = currentPassword;
+  }
+
+  const button = form.querySelector("button[type='submit']");
+  if (button) button.disabled = true;
   try {
-    const response = await customerApi("/users/profile", { method: "PUT", body: payload });
+    const response = Object.keys(payload).length
+      ? await customerApi("/users/profile", { method: "PATCH", body: payload })
+      : { data: { user: currentUser } };
     let user = response?.data?.user || currentUser;
     const avatarFile = form.avatar.files?.[0];
     if (avatarFile) {
@@ -2767,13 +2823,17 @@ async function submitProfileEdit(form, currentUser, modal) {
     renderProfilePage();
   } catch (error) {
     showCustomerMessage(form, error?.message || "Không thể cập nhật hồ sơ.");
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
 function openPasswordModal() {
-  const modal = createProfileModal("Đổi mật khẩu", `
+  const user = customerAuth.getUser() || {};
+  const hasPassword = getUserHasPassword(user);
+  const modal = createProfileModal(hasPassword ? "Đổi mật khẩu" : "Thiết lập mật khẩu", `
     <form class="customer-profile-form" data-password-form>
-      <label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="current-password" required></label>
+      ${hasPassword ? `<label>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>` : `<p class="customer-profile-note">Tạo mật khẩu cho tài khoản Google/Facebook để bảo vệ thay đổi email hoặc số điện thoại về sau.</p>`}
       <label>Mật khẩu mới<input name="newPassword" type="password" autocomplete="new-password" required></label>
       <label>Xác nhận mật khẩu mới<input name="confirmPassword" type="password" autocomplete="new-password" required></label>
       <div data-auth-message hidden></div>
@@ -2787,19 +2847,25 @@ function openPasswordModal() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(form);
+    const button = form.querySelector("button[type='submit']");
+    if (button) button.disabled = true;
     try {
-      await customerApi("/users/profile/password", {
-        method: "PUT",
-        body: {
-          currentPassword: String(data.get("currentPassword") || ""),
-          newPassword: String(data.get("newPassword") || ""),
-          confirmPassword: String(data.get("confirmPassword") || "")
-        }
+      const body = {
+        newPassword: String(data.get("newPassword") || ""),
+        confirmPassword: String(data.get("confirmPassword") || "")
+      };
+      if (hasPassword) body.currentPassword = String(data.get("currentPassword") || "");
+      await customerApi(hasPassword ? "/users/profile/password" : "/users/profile/set-password", {
+        method: hasPassword ? "PUT" : "POST",
+        body
       });
       closeProfileModal(modal);
-      showCustomerToast("Đã đổi mật khẩu.", "success");
+      showCustomerToast(hasPassword ? "Đã đổi mật khẩu." : "Đã thiết lập mật khẩu.", "success");
+      await renderProfilePage();
     } catch (error) {
-      showCustomerMessage(form, error?.message || "Không thể đổi mật khẩu.");
+      showCustomerMessage(form, error?.message || (hasPassword ? "Không thể đổi mật khẩu." : "Không thể thiết lập mật khẩu."));
+    } finally {
+      if (button) button.disabled = false;
     }
   });
 }

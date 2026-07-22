@@ -86,6 +86,12 @@ export class UserController extends BaseController {
     return this.sendSuccess(response, result, "Password changed successfully.");
   });
 
+  setPassword = asyncHandler(async (request, response) => {
+    const result = await this.service.setPassword(request.user.id, request.body);
+
+    return this.sendSuccess(response, result, "Password set successfully.");
+  });
+
   socialConnections = asyncHandler(async (request, response) => {
     const result = await this.service.getSocialConnections(request.user.id);
 

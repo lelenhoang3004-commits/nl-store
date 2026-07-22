@@ -37,6 +37,7 @@ export class User extends BaseModel {
       permissions: this.permissions,
       status: this.status,
       hasPassword: this.hasPassword,
+      has_password: this.hasPassword,
       address: this.address,
       lastLoginAt: this.lastLoginAt,
       createdAt: this.createdAt,

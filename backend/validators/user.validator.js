@@ -54,9 +54,11 @@ export function validateUpdateUserRequest({ params, body }) {
 export function validateProfileUpdateRequest({ body }) {
   const errors = [];
 
-  pushIfError(errors, validateRequired(body.fullName, "fullName", "body"));
-  if (!isEmpty(body.email)) {
-    errors.push(...validateEmail(body.email, { required: false }).errors);
+  if (body.fullName !== undefined) {
+    pushIfError(errors, validateRequired(body.fullName, "fullName", "body"));
+  }
+  if (body.email !== undefined) {
+    errors.push(...validateEmail(body.email, { required: true }).errors);
   }
   if (!isEmpty(body.currentPassword)) {
     errors.push(...validatePassword(body.currentPassword, { required: false, strong: false, minLength: 1, field: "currentPassword" }).errors);
@@ -69,6 +71,15 @@ export function validateProfileUpdateRequest({ body }) {
 export function validateChangePasswordRequest({ body }) {
   const errors = [];
   errors.push(...validatePassword(body.currentPassword, { required: true, strong: false, minLength: 1, field: "currentPassword" }).errors);
+  errors.push(...validatePassword(body.newPassword, { required: true, strong: true, field: "newPassword" }).errors);
+  if (body.newPassword !== body.confirmPassword) {
+    errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH"));
+  }
+  return createValidationResult(errors);
+}
+
+export function validateSetPasswordRequest({ body }) {
+  const errors = [];
   errors.push(...validatePassword(body.newPassword, { required: true, strong: true, field: "newPassword" }).errors);
   if (body.newPassword !== body.confirmPassword) {
     errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH"));

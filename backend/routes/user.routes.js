@@ -14,6 +14,7 @@ import {
   validateChangePasswordRequest,
   validatePaymentMethodRequest,
   validateProfileUpdateRequest,
+  validateSetPasswordRequest,
   validateUpdateUserRequest,
   validateUserIdRequest,
   validateUserListRequest
@@ -26,8 +27,10 @@ router.use(authenticate);
 
 router.get("/profile", userController.profile);
 router.put("/profile", validateRequest(validateProfileUpdateRequest), userController.updateProfile);
+router.patch("/profile", validateRequest(validateProfileUpdateRequest), userController.updateProfile);
 router.post("/profile/avatar", uploadImage.single("avatar"), handleUploadError, userController.uploadAvatar);
 router.put("/profile/password", validateRequest(validateChangePasswordRequest), userController.changePassword);
+router.post("/profile/set-password", validateRequest(validateSetPasswordRequest), userController.setPassword);
 router.get("/profile/social-connections", userController.socialConnections);
 router.post("/profile/social-connections/:provider/link-intent", userController.socialLinkIntent);
 router.delete("/profile/social-connections/:provider", userController.unlinkSocialConnection);

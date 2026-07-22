@@ -274,23 +274,24 @@ export class UserRepository extends BaseRepository {
 
   async updateProfile(id, payload) {
     const startedAt = Date.now();
+    const entries = Object.entries({
+      email: payload.email,
+      full_name: payload.fullName,
+      phone: payload.phone,
+      avatar_url: payload.avatarUrl,
+      address_json: payload.address === undefined ? undefined : JSON.stringify(payload.address || null)
+    }).filter(([, value]) => value !== undefined);
+
+    if (!entries.length) {
+      return this.findById(id);
+    }
+
     await this.execute(
       `UPDATE users
-      SET email = ?,
-        full_name = ?,
-        phone = ?,
-        avatar_url = ?,
-        address_json = ?,
+      SET ${entries.map(([column]) => `${column} = ?`).join(", ")},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND deleted_at IS NULL`,
-      [
-        payload.email,
-        payload.fullName,
-        payload.phone,
-        payload.avatarUrl,
-        JSON.stringify(payload.address || null),
-        id
-      ]
+      [...entries.map(([, value]) => value), id]
     );
 
     logger.sql("User profile update query executed.", {

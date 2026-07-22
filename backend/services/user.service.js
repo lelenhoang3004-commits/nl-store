@@ -229,8 +229,8 @@ export class UserService extends BaseService {
     if (!currentUser) {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
-    const email = payload.email === undefined ? currentUser.email : String(payload.email || "").trim().toLowerCase();
-    const phone = payload.phone === undefined ? currentUser.phone : normalizeNullableString(payload.phone);
+    const email = payload.email === undefined ? currentUser.email : normalizeEmail(payload.email);
+    const phone = payload.phone === undefined ? currentUser.phone : normalizePhone(payload.phone);
     const emailChanged = email !== currentUser.email;
     const phoneChanged = phone !== currentUser.phone;
 
@@ -241,16 +241,22 @@ export class UserService extends BaseService {
       await this.ensureUniquePhone(phone, userId);
     }
     if (emailChanged || phoneChanged) {
+      if (!currentUser.hasPassword) {
+        throw new AppError("Vui lòng thiết lập mật khẩu trước khi đổi email hoặc số điện thoại.", 409, "PASSWORD_SETUP_REQUIRED");
+      }
       await this.ensureCurrentPassword(currentUser, payload.currentPassword);
     }
 
-    const normalizedPayload = {
-      email,
-      fullName: payload.fullName ? String(payload.fullName).trim() : currentUser.fullName,
-      phone,
-      avatarUrl: payload.avatarUrl === undefined ? currentUser.avatarUrl : normalizeNullableString(payload.avatarUrl),
-      address: payload.address === undefined ? currentUser.address : normalizeAddress(payload.address)
-    };
+    const normalizedPayload = {};
+    const fullName = payload.fullName === undefined ? currentUser.fullName : String(payload.fullName || "").trim();
+    const avatarUrl = payload.avatarUrl === undefined ? currentUser.avatarUrl : normalizeNullableString(payload.avatarUrl);
+    const address = payload.address === undefined ? currentUser.address : normalizeAddress(payload.address);
+
+    if (emailChanged) normalizedPayload.email = email;
+    if (fullName !== currentUser.fullName) normalizedPayload.fullName = fullName;
+    if (phoneChanged) normalizedPayload.phone = phone;
+    if (avatarUrl !== currentUser.avatarUrl) normalizedPayload.avatarUrl = avatarUrl;
+    if (JSON.stringify(address || null) !== JSON.stringify(currentUser.address || null)) normalizedPayload.address = address;
 
     const user = await this.repository.updateProfile(userId, normalizedPayload);
     return user.toJSON();
@@ -275,6 +281,21 @@ export class UserService extends BaseService {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
     await this.ensureCurrentPassword(user, payload.currentPassword);
+    if (payload.newPassword !== payload.confirmPassword) {
+      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+    }
+    await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
+    return { changed: true };
+  }
+
+  async setPassword(userId, payload = {}) {
+    const user = await this.repository.findByIdWithAuth(userId);
+    if (!user) {
+      throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
+    }
+    if (user.hasPassword) {
+      throw new AppError("Tài khoản đã có mật khẩu. Vui lòng dùng chức năng đổi mật khẩu.", 409, "PASSWORD_ALREADY_EXISTS");
+    }
     if (payload.newPassword !== payload.confirmPassword) {
       throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
@@ -324,6 +345,7 @@ export class UserService extends BaseService {
 
     return {
       hasPassword: user.hasPassword,
+      has_password: user.hasPassword,
       connections: Array.from(connections.values())
     };
   }
@@ -523,6 +545,15 @@ function normalizeNullableString(value) {
   }
 
   return String(value).trim();
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizePhone(value) {
+  const normalized = normalizeNullableString(value);
+  return normalized ? normalized.replace(/[\s.-]/g, "") : null;
 }
 
 function normalizeProvider(provider) {
