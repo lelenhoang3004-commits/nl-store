@@ -2495,7 +2495,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 420px;
+  max-width: 460px;
   padding: 58px 42px;
   transform: none;
 }
@@ -2544,6 +2544,7 @@
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
+  word-wrap: normal;
   overflow: visible;
 }
 
@@ -2553,6 +2554,8 @@
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
+  word-wrap: normal;
+  hyphens: manual;
 }
 
 .auth-luxury-copy .login-banner-title .title-primary {
@@ -2563,6 +2566,7 @@
 .auth-luxury-copy .login-banner-title .title-accent {
   color: #F0BD59;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .auth-luxury-copy ul {
