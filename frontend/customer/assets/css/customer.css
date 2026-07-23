@@ -2434,8 +2434,8 @@
 /* Luxury customer login refresh */
 .auth-login-page {
   min-height: calc(100vh - 140px);
-  padding: 38px 0;
-  background: #F8F4EE;
+  padding: 40px 0;
+  background: #FAF7F2;
 }
 
 .auth-login-page .customer-container {
@@ -2449,17 +2449,17 @@
   gap: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #E7DED1;
+  border: 1px solid #E8DDCF;
   border-radius: 28px;
   background: #FFFFFF;
-  box-shadow: 0 26px 70px rgba(16, 42, 86, 0.13);
+  box-shadow: 0 28px 76px rgba(15, 39, 77, 0.14);
 }
 
 .auth-luxury-panel {
   position: relative;
   min-height: 660px;
   overflow: hidden;
-  background: #102A56;
+  background: #0F274D;
   color: #FFFFFF;
 }
 
@@ -2476,7 +2476,7 @@
 .auth-luxury-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(16,42,86,.08), rgba(16,42,86,.52));
+  background: linear-gradient(180deg, rgba(15,39,77,.10), rgba(15,39,77,.36) 48%, rgba(15,39,77,.62));
 }
 
 .auth-luxury-copy {
@@ -2485,8 +2485,10 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 40px 38px;
+  justify-content: center;
+  max-width: 430px;
+  padding: 72px 42px 58px;
+  transform: translateY(5%);
 }
 
 .auth-luxury-logo {
@@ -2510,20 +2512,20 @@
 
 .auth-luxury-kicker {
   margin: 0 0 10px;
-  color: #F4D391;
+  color: #F0CA78;
   font-size: .74rem;
   font-weight: 900;
   letter-spacing: .18em;
 }
 
 .auth-luxury-copy h2 {
-  max-width: 430px;
+  max-width: 410px;
   margin: 0;
   color: #FFFFFF;
   font-family: inherit;
-  font-size: clamp(2rem, 2.42vw, 2.55rem);
+  font-size: clamp(2.05rem, 2.35vw, 2.5rem);
   font-weight: 850;
-  line-height: 1.08;
+  line-height: 1.12;
 }
 
 .auth-luxury-copy h2 span {
@@ -2532,8 +2534,8 @@
 
 .auth-luxury-copy ul {
   display: grid;
-  gap: 10px;
-  margin: 24px 0 0;
+  gap: 12px;
+  margin: 28px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -2543,7 +2545,7 @@
   align-items: center;
   gap: 10px;
   color: rgba(255,255,255,.9);
-  font-size: .92rem;
+  font-size: .94rem;
   font-weight: 650;
 }
 
@@ -2553,8 +2555,8 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: rgba(200,146,46,.94);
-  color: #102A56;
+  background: rgba(200,155,60,.94);
+  color: #0F274D;
   font-size: .7rem;
 }
 
@@ -2562,20 +2564,20 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 42px 50px;
+  padding: 36px 50px;
   background: #FFFFFF;
 }
 
 .auth-login-content .auth-back {
   width: fit-content;
-  margin-bottom: 14px;
-  color: #102A56;
+  margin-bottom: 12px;
+  color: #163A70;
   gap: 8px;
   font-weight: 750;
 }
 
 .auth-login-content .auth-heading {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   text-align: left;
 }
 
@@ -2584,7 +2586,7 @@
   height: 46px;
   margin: 0 0 12px;
   border-radius: 15px;
-  background: #102A56;
+  background: #163A70;
   color: #FFFFFF;
   display: grid;
   place-items: center;
@@ -2592,21 +2594,21 @@
   letter-spacing: 0;
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 12px 24px rgba(16,42,86,.16);
+  box-shadow: 0 12px 24px rgba(22,58,112,.16);
 }
 
 .auth-login-content .auth-kicker {
-  color: #C8922E;
+  color: #C89B3C;
   letter-spacing: .18em;
 }
 
 .auth-login-content .auth-heading h1 {
   max-width: 500px;
   margin: 6px 0 7px;
-  color: #102A56;
+  color: #1A2740;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.35rem, 3vw, 2.6rem);
-  line-height: 1.08;
+  font-size: clamp(2.35rem, 3vw, 2.58rem);
+  line-height: 1.06;
 }
 
 .auth-login-content .auth-heading p {
@@ -2618,14 +2620,23 @@
 }
 
 .auth-login-content .auth-login-form {
-  gap: 11px;
+  gap: 8px;
 }
 
 .auth-login-content .auth-field {
-  gap: 6px;
-  color: #102A56;
+  gap: 5px;
+  color: #1A2740;
   font-size: .94rem;
   font-weight: 760;
+}
+
+.auth-login-content .auth-field small {
+  min-height: 0;
+  line-height: 1.25;
+}
+
+.auth-login-content .auth-field small:empty {
+  display: none;
 }
 
 .auth-login-content .auth-input-shell {
@@ -2633,19 +2644,19 @@
   grid-template-columns: 22px minmax(0,1fr);
   gap: 12px;
   padding: 0 14px 0 16px;
-  border: 1px solid #E7DED1;
+  border: 1px solid #E8DDCF;
   border-radius: 14px;
   background: #FFFFFF;
   transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .auth-login-content .auth-input-shell:focus-within {
-  border-color: #C8922E;
-  box-shadow: 0 0 0 4px rgba(200,146,46,.16);
+  border-color: #C89B3C;
+  box-shadow: 0 0 0 4px rgba(200,155,60,.16);
 }
 
 .auth-login-content .auth-input-shell > i {
-  color: #C8922E;
+  color: #C89B3C;
 }
 
 .auth-login-content .auth-input-shell input,
@@ -2654,7 +2665,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #102A56;
+  color: #1A2740;
 }
 
 .auth-login-content .password-input-wrapper input {
@@ -2664,37 +2675,47 @@
 
 .auth-login-content .auth-row {
   align-items: center;
+  justify-content: space-between;
   margin: 0;
-  min-height: 28px;
+  min-height: 30px;
 }
 
 .auth-login-content .auth-check {
-  color: #2B3444;
+  align-items: center;
+  color: #1A2740;
 }
 
 .auth-login-content .auth-check input {
-  accent-color: #C8922E;
+  margin-top: 0;
+  accent-color: #C89B3C;
 }
 
 .auth-login-content .auth-row a,
 .auth-login-content .auth-switch a {
-  color: #B7791F;
+  color: #B98522;
+}
+
+.auth-login-content .auth-row a:hover,
+.auth-login-content .auth-switch a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .auth-login-content .auth-primary {
   min-height: 52px;
   border: 0;
   border-radius: 14px;
-  background: #102A56;
+  background: #163A70;
   color: #FFFFFF;
   font-size: 1rem;
-  font-weight: 850;
-  box-shadow: 0 14px 28px rgba(16,42,86,.22);
+  font-weight: 800;
+  box-shadow: 0 16px 30px rgba(22,58,112,.22);
 }
 
 .auth-login-content .auth-primary:hover:not(:disabled) {
-  background: #183B73;
+  background: #1D477F;
   transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(22,58,112,.26);
 }
 
 .auth-login-content .auth-primary:disabled,
@@ -2711,7 +2732,7 @@
 
 .auth-login-content .auth-divider:before,
 .auth-login-content .auth-divider:after {
-  background: #E7DED1;
+  background: #E8DDCF;
 }
 
 .auth-login-content .auth-social-grid {
@@ -2722,12 +2743,15 @@
 .auth-login-content .auth-social-button,
 .auth-login-content .auth-phone-button {
   min-height: 48px;
-  border: 1px solid #E7DED1;
+  border: 1px solid #E8DDCF;
   border-radius: 13px;
   background: #FFFFFF;
-  color: #102A56;
+  color: #1A2740;
   box-shadow: none;
-  padding: 0 12px;
+  padding: 0 10px;
+  gap: 8px;
+  font-size: .9rem;
+  font-weight: 750;
   line-height: 1.2;
   text-align: center;
 }
@@ -2735,12 +2759,13 @@
 .auth-login-content .auth-social-button span:last-child,
 .auth-login-content .auth-phone-button span {
   white-space: nowrap;
+  min-width: 0;
 }
 
 .auth-login-content .auth-social-button:hover,
 .auth-login-content .auth-phone-button:hover {
-  border-color: rgba(200,146,46,.48);
-  background: #F8F4EE;
+  border-color: rgba(200,155,60,.48);
+  background: #FAF7F2;
 }
 
 .auth-login-content .auth-phone-button {
@@ -2751,7 +2776,7 @@
 }
 
 .auth-login-content .auth-phone-button i {
-  color: #C8922E;
+  color: #C89B3C;
 }
 
 .auth-login-content .validation-summary {
@@ -2811,7 +2836,7 @@
     padding: 22px;
   }
   .auth-login-content .auth-row {
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
   }
   .auth-login-content .auth-phone-button {
