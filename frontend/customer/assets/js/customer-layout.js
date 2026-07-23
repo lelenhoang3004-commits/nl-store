@@ -1,4 +1,4 @@
-import { createCustomerFooter } from "../../components/footer/footer.js";
+﻿import { createCustomerFooter } from "../../components/footer/footer.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
@@ -319,6 +319,11 @@ function renderLayout() {
 
 
 function initNewsletterOfferPopup() {
+  if (isAuthSurfaceRoute()) {
+    document.querySelector("[data-newsletter-popup]")?.remove();
+    return;
+  }
+
   if (layoutState.newsletterPopup.shown || sessionStorage.getItem("newsletterPopupClosed") === "true") {
     return;
   }
@@ -366,6 +371,11 @@ function createNewsletterOfferPopup() {
     </aside>
   `;
 }
+function isAuthSurfaceRoute() {
+  const route = String(window.location.hash || "#home").replace(/^#/, "").split("?")[0];
+  return ["login", "register", "phone-login", "forgot-password", "auth-callback"].includes(route);
+}
+
 function bindNewsletterOfferPopup(popup) {
   const form = popup.querySelector("[data-newsletter-popup-form]");
   const feedback = popup.querySelector("[data-newsletter-popup-feedback]");
@@ -1054,28 +1064,57 @@ async function handleOAuthMessage(event) {
   }
 }
 function renderLoginPage() {
-  layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card">
-    <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
-    <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L SHOP</span><h1>Đăng nhập</h1><p>Chào mừng bạn quay lại với trải nghiệm mua sắm riêng của mình.</p></div>
-    <form data-login-form class="auth-form auth-login-form"><div data-auth-message hidden></div>
-      <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
-      <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
-      <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
-      <button class="customer-button auth-primary" type="submit"><span>Đăng nhập</span></button>
-      ${renderSocialButtons("đăng nhập")}
-      <a class="auth-phone-button" href="#phone-login"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>Đăng nhập bằng số điện thoại</span></a>
-      <p class="auth-switch">Chưa có tài khoản? <a href="#register">Đăng ký</a></p>
-    </form></article></div></section>`;
+  layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card auth-luxury-card">
+    <aside class="auth-luxury-panel" aria-label="N&L Store">
+      <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=82" alt="Thời trang cao cấp N&L Store">
+      <div class="auth-luxury-overlay"></div>
+      <div class="auth-luxury-copy">
+        <div class="auth-luxury-logo">N&amp;L</div>
+        <p class="auth-luxury-kicker">N&amp;L STORE</p>
+        <h2>Phong cách tinh tuyển cho nhịp sống hiện đại</h2>
+        <ul>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập chọn lọc theo mùa</span></li>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi riêng cho thành viên</span></li>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Theo dõi đơn hàng nhanh chóng</span></li>
+        </ul>
+      </div>
+    </aside>
+    <div class="auth-login-content">
+      <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
+      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L STORE</span><h1>Chào mừng bạn quay lại</h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
+      <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>
+        <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
+        <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
+        <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
+        <button class="customer-button auth-primary" type="submit"><span>Đăng nhập</span></button>
+        ${renderSocialButtons("đăng nhập")}
+        <a class="auth-phone-button" href="#phone-login"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>Đăng nhập bằng số điện thoại</span></a>
+        <p class="auth-switch">Chưa có tài khoản? <a href="#register">Đăng ký</a></p>
+      </form>
+    </div>
+  </article></div></section>`;
   const root = layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
-    event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]");
+    event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]"); clearLoginFieldErrors(form);
     if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span>Đang đăng nhập...</span>";
     try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
-    catch(error){ showCustomerMessage(form,error?.message||"Đăng nhập thất bại."); }
+    catch(error){ showLoginError(form,error); }
     finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
   });
 }
 
+function clearLoginFieldErrors(form) {
+  form.querySelectorAll("[data-field-error]").forEach((node) => { node.textContent = ""; });
+}
+
+function showLoginError(form, error) {
+  const message = error?.message || "Đăng nhập thất bại.";
+  const code = String(error?.code || "");
+  const targetField = code.includes("PASSWORD") || code === "INVALID_CREDENTIALS" ? "password" : "email";
+  const fieldNode = form.querySelector(`[data-field-error="${targetField}"]`);
+  if (fieldNode) fieldNode.textContent = message;
+  showCustomerMessage(form, message);
+}
 function renderForgotPasswordPage() {
   let resetEmail = "";
   let countdownTimer = null;
@@ -3648,4 +3687,8 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
+
+
+
 
