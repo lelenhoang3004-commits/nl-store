@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img" aria-labelledby="title desc">
+  <title id="title">N&amp;L Store fashion banner</title>
+  <desc id="desc">Minimal high-fashion editorial illustration in navy, cream and champagne tones.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fbf7ef"/>
+      <stop offset="0.52" stop-color="#d8e2e9"/>
+      <stop offset="1" stop-color="#9eb5ca"/>
+    </linearGradient>
+    <linearGradient id="navyFade" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#102a56" stop-opacity="0"/>
+      <stop offset="0.72" stop-color="#102a56" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#081b3a" stop-opacity=".52"/>
+    </linearGradient>
+    <linearGradient id="dress" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.58" stop-color="#f7efe5"/>
+      <stop offset="1" stop-color="#d8c7ae"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="30" stdDeviation="28" flood-color="#081b3a" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="900" height="1200" fill="url(#sky)"/>
+  <circle cx="708" cy="158" r="116" fill="#fff" opacity=".48"/>
+  <circle cx="178" cy="220" r="72" fill="#c8922e" opacity=".16"/>
+  <path d="M0 934c126-66 256-91 391-72 134 19 257 81 375 78 53-1 97-16 134-37v297H0Z" fill="#f8f4ee" opacity=".72"/>
+  <g filter="url(#softShadow)">
+    <path d="M424 149c66 2 122 39 144 101 23 64 8 139-38 187-44 46-109 58-168 31-62-28-99-87-100-152-1-89 70-170 162-167Z" fill="#e7c3aa"/>
+    <path d="M302 289c31 32 72 49 123 49 56 0 103-20 138-60 27 84 10 152-51 204-71 60-158 55-260-14 19-62 36-121 50-179Z" fill="#102a56"/>
+    <path d="M328 448c65 46 131 45 199-3 36 57 71 144 104 260 44 155 84 296 121 424H152c38-141 78-282 121-421 31-100 49-187 55-260Z" fill="url(#dress)"/>
+    <path d="M273 709c76 36 151 52 225 48 68-4 112-28 133-72 21 72 41 144 61 217-72 54-159 78-259 73-86-5-166-29-240-72 25-83 51-148 80-194Z" fill="#102a56" opacity=".15"/>
+    <path d="M416 474c-14 83-13 174 4 274 15 89 42 180 80 273H386c-60-166-78-340-54-522 29 1 57-7 84-25Z" fill="#c8922e" opacity=".18"/>
+    <path d="M243 517c109 78 229 83 359 15 12 34 24 71 36 112-142 69-279 60-411-27 5-36 10-69 16-100Z" fill="#ffffff" opacity=".64"/>
+  </g>
+  <g fill="#b7791f" opacity=".72">
+    <circle cx="250" cy="330" r="13"/>
+    <circle cx="658" cy="402" r="9"/>
+    <circle cx="230" cy="824" r="11"/>
+    <circle cx="656" cy="778" r="14"/>
+  </g>
+  <path d="M0 0h900v1200H0z" fill="url(#navyFade)"/>
+</svg>
