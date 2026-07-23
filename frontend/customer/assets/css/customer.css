@@ -2495,8 +2495,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: none;
-  padding: 58px 48px;
+  max-width: 390px;
+  padding: 58px 46px;
   transform: none;
 }
 
@@ -2531,30 +2531,42 @@
 }
 
 .auth-luxury-copy h2 {
-  max-width: 390px;
-  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 16px 0 26px;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(40px, 3vw, 44px);
+  font-size: clamp(36px, 3.4vw, 44px);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  overflow: visible;
 }
 
 .auth-luxury-copy h2 span {
   display: block;
-  white-space: nowrap;
+  width: 100%;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
-.auth-luxury-copy h2 span:last-child {
-  color: #F4C76A;
+.auth-luxury-copy h2 .title-line-primary {
+  color: #FFFFFF;
+}
+
+.auth-luxury-copy h2 .title-line-accent {
+  color: #F2C465;
   font-weight: 700;
 }
 
 .auth-luxury-copy ul {
   display: grid;
   gap: 14px;
-  margin: 30px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
