@@ -1081,7 +1081,7 @@ function renderLoginPage() {
     </aside>
     <div class="auth-login-content">
       <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
-      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L STORE</span><h1>Chào mừng bạn quay lại</h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
+      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L STORE</span><h1><span>Chào mừng bạn</span><span>quay lại</span></h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
       <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>
         <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
         <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
