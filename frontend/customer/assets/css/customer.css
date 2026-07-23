@@ -2458,7 +2458,8 @@
   box-shadow: 0 24px 64px rgba(23,35,60,.11);
 }
 
-.auth-luxury-panel {
+.auth-luxury-panel,
+.login-banner-panel {
   position: relative;
   min-height: 700px;
   overflow: hidden;
@@ -2477,16 +2478,17 @@
   filter: saturate(1.03) contrast(1.03) brightness(1.05);
 }
 
-.auth-luxury-overlay {
+.auth-luxury-overlay,
+.login-banner-overlay {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 18% 24%, rgba(35,78,143,.12), transparent 34%),
-    radial-gradient(circle at 80% 80%, rgba(226,168,74,.08), transparent 30%),
-    linear-gradient(180deg, rgba(22,51,95,.08) 0%, rgba(22,51,95,.22) 45%, rgba(8,27,58,.62) 100%);
+    radial-gradient(circle at 18% 18%, rgba(35,78,143,.16), transparent 34%),
+    radial-gradient(circle at 82% 82%, rgba(226,168,74,.10), transparent 30%),
+    linear-gradient(180deg, rgba(8,27,58,.04) 0%, rgba(8,27,58,.26) 44%, rgba(8,27,58,.70) 100%);
 }
 
-.auth-luxury-copy {
+.login-banner-content {
   position: relative;
   z-index: 1;
   height: 100%;
@@ -2494,19 +2496,23 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   max-width: 460px;
-  padding: 58px 42px;
-  transform: none;
+  padding: 64px 46px 58px;
 }
 
-.auth-luxury-logo {
+.login-banner-brand {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.login-banner-logo {
   width: 56px;
   height: 56px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  margin-bottom: 12px;
   border: 1px solid rgba(255,255,255,.34);
   border-radius: 16px;
   background: rgba(22,51,95,.34);
@@ -2521,8 +2527,7 @@
   box-shadow: 0 16px 34px rgba(8,27,58,.18);
 }
 
-.auth-luxury-kicker {
-  margin: 0 0 14px;
+.login-banner-store {
   color: #E2A84A;
   font-size: 12px;
   font-weight: 600;
@@ -2530,16 +2535,16 @@
   line-height: 1;
 }
 
-.auth-luxury-copy .login-banner-title {
+.login-banner-title {
   width: 100%;
   max-width: 100%;
-  margin: 18px 0 28px;
+  margin: 0 0 18px;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(38px, 3.2vw, 46px);
+  font-size: clamp(36px, 3vw, 44px);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.025em;
+  line-height: 1.07;
+  letter-spacing: -0.018em;
   word-spacing: normal;
   white-space: normal;
   word-break: normal;
@@ -2548,7 +2553,7 @@
   overflow: visible;
 }
 
-.auth-luxury-copy .login-banner-title span {
+.login-banner-title .title-line {
   display: block;
   width: 100%;
   white-space: normal;
@@ -2558,18 +2563,26 @@
   hyphens: manual;
 }
 
-.auth-luxury-copy .login-banner-title .title-primary {
+.login-banner-title .title-line-main {
   color: #FFFFFF;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
-.auth-luxury-copy .login-banner-title .title-accent {
+.login-banner-title .title-line-accent {
   color: #F0BD59;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.auth-luxury-copy ul {
+.login-banner-desc {
+  max-width: 360px;
+  margin: 0 0 24px;
+  color: rgba(255,255,255,.80);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.login-banner-benefits {
   display: grid;
   gap: 14px;
   margin: 0;
@@ -2577,7 +2590,7 @@
   list-style: none;
 }
 
-.auth-luxury-copy li {
+.login-banner-benefits li {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2588,7 +2601,7 @@
   white-space: nowrap;
 }
 
-.auth-luxury-copy li i {
+.login-banner-benefits li i {
   width: 28px;
   height: 28px;
   display: grid;
@@ -2880,14 +2893,14 @@
 }
 
 @media (max-width: 1100px) {
-  .auth-luxury-copy {
-    padding: 52px 42px;
+  .login-banner-content {
+    padding: 56px 42px 52px;
   }
-  .auth-luxury-copy .login-banner-title {
+  .login-banner-title {
     max-width: 100%;
-    font-size: clamp(36px, 3.6vw, 40px);
+    font-size: clamp(32px, 3.35vw, 39px);
   }
-  .auth-luxury-copy li {
+  .login-banner-benefits li {
     font-size: .92rem;
   }
 }

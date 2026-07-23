@@ -1065,14 +1065,17 @@ async function handleOAuthMessage(event) {
 }
 function renderLoginPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card auth-luxury-card">
-    <aside class="auth-luxury-panel" aria-label="N&L Store">
+    <aside class="auth-luxury-panel login-banner-panel" aria-label="N&L Store">
       <img src="assets/images/login-fashion-banner.svg" alt="Thời trang cao cấp N&L Store">
-      <div class="auth-luxury-overlay"></div>
-      <div class="auth-luxury-copy">
-        <div class="auth-luxury-logo">N&amp;L</div>
-        <p class="auth-luxury-kicker">N&amp;L STORE</p>
-        <h2 class="login-banner-title"><span class="title-primary">Phong cách hiện đại</span><span class="title-accent">Dấu ấn riêng của bạn</span></h2>
-        <ul>
+      <div class="login-banner-overlay"></div>
+      <div class="login-banner-content">
+        <div class="login-banner-brand">
+          <div class="login-banner-logo">N&amp;L</div>
+          <div class="login-banner-store">N&amp;L STORE</div>
+        </div>
+        <h2 class="login-banner-title"><span class="title-line title-line-main">Phong cách hiện đại</span><span class="title-line title-line-accent">Dấu ấn riêng của bạn</span></h2>
+        <p class="login-banner-desc">Khám phá trải nghiệm mua sắm tinh tế, hiện đại và ưu đãi dành riêng cho bạn.</p>
+        <ul class="login-banner-benefits">
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập mới mỗi tuần</span></li>
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi dành riêng cho thành viên</span></li>
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Theo dõi đơn hàng nhanh chóng</span></li>
