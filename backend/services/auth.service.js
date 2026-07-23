@@ -1,4 +1,5 @@
-﻿import crypto from "node:crypto";
+import crypto from "node:crypto";
+import bcrypt from "bcrypt";
 import { appConfig } from "../config/app.config.js";
 import { AUTH_ROLES } from "../config/auth.config.js";
 import { AuthRepository } from "../repositories/auth.repository.js";
@@ -44,7 +45,13 @@ export class AuthService extends BaseService {
     if (!user || !user.isActive() || !user.passwordHash) {
       throw new AppError("Email/số điện thoại hoặc mật khẩu không đúng.", 401, "INVALID_CREDENTIALS");
     }
-    if (!await comparePassword(password, user.passwordHash)) {
+    const passwordMatched = await bcrypt.compare(password, user.password_hash);
+    logger.info("Login password check.", {
+      db_user_id: user.id,
+      hasPassword: user.hasPassword,
+      passwordMatched
+    });
+    if (!passwordMatched) {
       throw new AppError("Email/số điện thoại hoặc mật khẩu không đúng.", 401, "INVALID_CREDENTIALS");
     }
     return this.issueTokenPair(user, remember);
@@ -274,4 +281,7 @@ function oauthConfig(provider) {
   };
   throw new AppError("OAuth provider không hợp lệ.", 400, "INVALID_OAUTH_PROVIDER");
 }
+
+
+
 

@@ -23,6 +23,7 @@ class DatabaseClient {
         host: this.poolConfig.host,
         port: this.poolConfig.port,
         database: this.poolConfig.database,
+        source: this.config.source,
         connectionLimit: this.poolConfig.connectionLimit
       });
     }
@@ -166,8 +167,12 @@ function createPoolConfig(config) {
     acquireTimeout,
     healthCheckTimeout,
     reconnectDelay,
+    source,
     ...poolConfig
   } = config;
 
   return poolConfig;
 }
+
+
+

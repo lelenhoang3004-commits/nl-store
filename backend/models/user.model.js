@@ -19,6 +19,7 @@ export class User extends BaseModel {
     this.provider = attributes.provider || null;
     this.providerId = attributes.providerId || attributes.provider_id || null;
     this.passwordHash = attributes.passwordHash || attributes.password_hash || null;
+    this.password_hash = this.passwordHash;
     this.hasPassword = Boolean(attributes.hasPassword || attributes.has_password || attributes.password_hash);
     this.address = normalizeAddress(attributes.address || attributes.address_json);
     this.lastLoginAt = attributes.lastLoginAt || attributes.last_login_at || null;
@@ -78,3 +79,5 @@ function normalizeAddress(address) {
     return null;
   }
 }
+
+

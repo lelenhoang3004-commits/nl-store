@@ -114,6 +114,14 @@ export class UserRepository extends BaseRepository {
       [id]
     );
 
+    if (rows[0]) {
+      logger.info("User auth profile row selected.", {
+        jwt_user_id: id,
+        db_user_id: rows[0].id,
+        hasPassword: Boolean(rows[0].password_hash)
+      });
+    }
+
     return rows[0] ? new User(rows[0]) : null;
   }
 
@@ -610,3 +618,4 @@ export class UserRepository extends BaseRepository {
 function isMissingOptionalProfileTable(error) {
   return MISSING_TABLE_CODES.has(error?.code);
 }
+

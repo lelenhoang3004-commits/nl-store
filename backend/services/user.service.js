@@ -3,13 +3,15 @@
  * It owns user business rules, password hashing, role/permission normalization, profile, avatar, and address updates.
  */
 import { AUTH_PERMISSIONS, AUTH_ROLES, getPermissionsByRole } from "../config/auth.config.js";
+import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 import { UserRepository } from "../repositories/user.repository.js";
 import { BaseService } from "./base.service.js";
 import { UploadService } from "./upload.service.js";
 import { AppError } from "../utils/app-error.util.js";
-import { comparePassword, hashPassword } from "../utils/password.util.js";
+import { hashPassword } from "../utils/password.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
+import { logger } from "../utils/logger.util.js";
 
 const USER_STATUS = Object.freeze({
   ACTIVE: "active",
@@ -249,7 +251,7 @@ export class UserService extends BaseService {
       if (!currentUser.hasPassword) {
         throw new AppError("Vui lòng thiết lập mật khẩu trước khi đổi email hoặc số điện thoại.", 409, "PASSWORD_SETUP_REQUIRED");
       }
-      await this.ensureCurrentPassword(currentUser, payload.current_password);
+      await this.ensureCurrentPassword(currentUser, payload.current_password, userId);
     }
 
     const normalizedPayload = {};
@@ -285,7 +287,7 @@ export class UserService extends BaseService {
     if (!user) {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
-    await this.ensureCurrentPassword(user, payload.current_password);
+    await this.ensureCurrentPassword(user, payload.current_password, userId);
     if (payload.newPassword !== payload.confirmPassword) {
       throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
@@ -500,11 +502,18 @@ export class UserService extends BaseService {
     }
   }
 
-  async ensureCurrentPassword(user, current_password) {
+  async ensureCurrentPassword(user, current_password, jwtUserId = null) {
     if (!user.hasPassword) {
       throw new AppError("Tài khoản chưa có mật khẩu. Vui lòng đặt mật khẩu trước khi thay đổi thông tin đăng nhập.", 409, "PASSWORD_NOT_AVAILABLE");
     }
-    if (!current_password || !await comparePassword(current_password, user.passwordHash)) {
+    const passwordMatched = Boolean(current_password && user.password_hash && await bcrypt.compare(current_password, user.password_hash));
+    logger.info("Profile current password check.", {
+      jwt_user_id: jwtUserId,
+      db_user_id: user.id,
+      hasPassword: user.hasPassword,
+      passwordMatched
+    });
+    if (!passwordMatched) {
       throw new AppError("Mật khẩu hiện tại không đúng.", 401, "CURRENT_PASSWORD_INVALID");
     }
   }
@@ -671,4 +680,7 @@ function throwProfileTableError(error) {
 }
 
 export { USER_STATUS };
+
+
+
 

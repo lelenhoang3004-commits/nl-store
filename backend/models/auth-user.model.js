@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Auth user model.
  * It exposes only authentication-safe fields and keeps password/token hashes private.
  */
@@ -14,6 +14,7 @@ export class AuthUser {
     this.role = rawUser.role;
     this.status = rawUser.status;
     this.passwordHash = rawUser.passwordHash || rawUser.password_hash;
+    this.password_hash = this.passwordHash;
     this.hasPassword = Boolean(rawUser.hasPassword || rawUser.has_password || rawUser.password_hash);
     this.refreshTokenHash = rawUser.refreshTokenHash || rawUser.refresh_token_hash || null;
     this.permissions = normalizePermissions(rawUser.permissions, rawUser.role);
@@ -59,5 +60,7 @@ function normalizePermissions(permissions, role) {
 
   return rolePermissions;
 }
+
+
 
 

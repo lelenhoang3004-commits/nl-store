@@ -169,7 +169,8 @@ function sanitizeMeta(meta) {
   if (meta && typeof meta === "object") {
     return Object.entries(meta).reduce((safeMeta, [key, value]) => {
       const normalizedKey = key.toLowerCase();
-      const isSensitive = SENSITIVE_KEYS.some((sensitiveKey) => normalizedKey.includes(sensitiveKey.toLowerCase()));
+      const isExplicitSafeDiagnostic = normalizedKey === "passwordmatched" || normalizedKey === "haspassword";
+      const isSensitive = !isExplicitSafeDiagnostic && SENSITIVE_KEYS.some((sensitiveKey) => normalizedKey.includes(sensitiveKey.toLowerCase()));
 
       safeMeta[key] = isSensitive ? "[REDACTED]" : sanitizeMeta(value);
       return safeMeta;
@@ -178,3 +179,7 @@ function sanitizeMeta(meta) {
 
   return meta;
 }
+
+
+
+
