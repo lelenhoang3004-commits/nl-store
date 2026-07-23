@@ -1,4 +1,4 @@
-import { BaseRepository } from "./base.repository.js";
+﻿import { BaseRepository } from "./base.repository.js";
 import { Voucher } from "../models/voucher.model.js";
 import { logger } from "../utils/logger.util.js";
 import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
@@ -75,20 +75,21 @@ export class VoucherRepository extends BaseRepository {
     const excludedSql = excludedId ? "AND id <> ?" : "";
     if (excludedId) params.push(excludedId);
     const [rows] = await executor.execute(
-      `SELECT ${VOUCHER_COLUMNS} FROM vouchers WHERE code = ? ${excludedSql} LIMIT 1 ${forUpdate ? "FOR UPDATE" : ""}`,
+      `SELECT ${VOUCHER_COLUMNS} FROM vouchers WHERE UPPER(code) = ? ${excludedSql} LIMIT 1 ${forUpdate ? "FOR UPDATE" : ""}`,
       params
     );
     return rows[0] ? new Voucher(rows[0]) : null;
   }
 
-  async create(payload) {
-    const [result] = await this.execute(
+  async create(payload, connection = null) {
+    const executor = connection || this.client.getPool();
+    const [result] = await executor.execute(
       `INSERT INTO vouchers
         (code, name, description, discount_type, discount_value, min_order_amount, max_discount_amount, quantity, used_quantity, starts_at, expires_at, status, conditions)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      this.toSqlParams(payload)
+      normalizeSqlParams(this.toSqlParams(payload))
     );
-    return this.findById(result.insertId);
+    return this.findById(result.insertId, connection);
   }
 
   async update(id, payload) {
@@ -108,11 +109,17 @@ export class VoucherRepository extends BaseRepository {
 
   async incrementUsedCount(id, connection = null) {
     const executor = connection || this.client.getPool();
-    await executor.execute(`UPDATE vouchers SET used_quantity = used_quantity + 1 WHERE id = ?`, [id]);
+    const [result] = await executor.execute(
+      `UPDATE vouchers
+      SET used_quantity = used_quantity + 1
+      WHERE id = ? AND (quantity IS NULL OR used_quantity < quantity)`,
+      [id]
+    );
+    return result.affectedRows > 0;
   }
 
-  async softDelete(id) {
-    const [result] = await this.execute(`DELETE FROM vouchers WHERE id = ?`, [id]);
+  async deleteUnused(id) {
+    const [result] = await this.execute(`DELETE FROM vouchers WHERE id = ? AND COALESCE(used_quantity, 0) = 0`, [id]);
     return result.affectedRows > 0;
   }
 

@@ -7,7 +7,7 @@ export class Voucher extends BaseModel {
     this.code = attributes.code;
     this.name = attributes.name;
     this.description = attributes.description || "";
-    this.discountType = attributes.discountType || attributes.discount_type;
+    this.discountType = normalizeDiscountType(attributes.discountType || attributes.discount_type);
     this.discountValue = Number(attributes.discountValue ?? attributes.discount_value ?? 0);
     this.minOrderAmount = Number(attributes.minOrderAmount ?? attributes.min_order_amount ?? 0);
     this.maxDiscountAmount = attributes.maxDiscountAmount ?? attributes.max_discount_amount ?? null;
@@ -61,4 +61,9 @@ export class Voucher extends BaseModel {
       updated_at: this.updatedAt
     };
   }
+}
+
+function normalizeDiscountType(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "fixed" ? "fixed_amount" : normalized;
 }
