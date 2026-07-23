@@ -1071,7 +1071,7 @@ function renderLoginPage() {
       <div class="auth-luxury-copy">
         <div class="auth-luxury-logo">N&amp;L</div>
         <p class="auth-luxury-kicker">N&amp;L STORE</p>
-        <h2><span>Phong cách hiện đại,</span><span>dấu ấn riêng của bạn</span></h2>
+        <h2><span>Phong cách hiện đại</span><span>Dấu ấn riêng của bạn</span></h2>
         <ul>
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập mới mỗi tuần</span></li>
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi dành riêng cho thành viên</span></li>
