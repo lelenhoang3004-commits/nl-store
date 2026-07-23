@@ -2619,17 +2619,19 @@
 }
 
 .auth-login-content .auth-heading {
+  width: 100%;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 22px;
-  text-align: left;
+  align-items: center;
+  margin: 0 auto 28px;
+  text-align: center;
 }
 
 .auth-login-content .auth-logo-mark {
-  width: 58px;
-  height: 50px;
-  margin: 0 0 10px;
+  width: 60px;
+  height: 52px;
+  margin: 0 auto 10px;
   border-radius: 14px;
   background: #234E8F;
   color: #FFFFFF;
@@ -2643,7 +2645,7 @@
 }
 
 .auth-login-content .auth-kicker {
-  margin-bottom: 8px;
+  margin: 0 0 10px;
   color: #E2A84A;
   font-size: 12px;
   font-weight: 650;
@@ -2651,12 +2653,13 @@
 }
 
 .auth-login-content .auth-heading h1 {
-  max-width: 440px;
-  margin: 0 0 11px;
+  max-width: 430px;
+  margin: 0 auto 12px;
   color: #17233C;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(36px, 2.8vw, 40px);
-  line-height: 1.12;
+  font-size: clamp(38px, 2.8vw, 42px);
+  line-height: 1.1;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -2665,11 +2668,12 @@
 }
 
 .auth-login-content .auth-heading p {
-  max-width: 440px;
-  margin: 0;
+  max-width: 420px;
+  margin: 0 auto;
   color: #667085;
   font-size: 1rem;
   line-height: 1.5;
+  text-align: center;
   text-wrap: pretty;
 }
 
