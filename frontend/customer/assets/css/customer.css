@@ -2495,8 +2495,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 390px;
-  padding: 58px 46px;
+  max-width: 420px;
+  padding: 58px 42px;
   transform: none;
 }
 
@@ -2530,23 +2530,24 @@
   line-height: 1;
 }
 
-.auth-luxury-copy h2 {
+.auth-luxury-copy .login-banner-title {
   width: 100%;
   max-width: 100%;
-  margin: 16px 0 26px;
+  margin: 18px 0 28px;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(36px, 3.4vw, 44px);
+  font-size: clamp(38px, 3.2vw, 46px);
   font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  word-spacing: normal;
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
   overflow: visible;
 }
 
-.auth-luxury-copy h2 span {
+.auth-luxury-copy .login-banner-title span {
   display: block;
   width: 100%;
   white-space: normal;
@@ -2554,12 +2555,13 @@
   overflow-wrap: normal;
 }
 
-.auth-luxury-copy h2 .title-line-primary {
+.auth-luxury-copy .login-banner-title .title-primary {
   color: #FFFFFF;
+  margin-bottom: 6px;
 }
 
-.auth-luxury-copy h2 .title-line-accent {
-  color: #F2C465;
+.auth-luxury-copy .login-banner-title .title-accent {
+  color: #F0BD59;
   font-weight: 700;
 }
 
@@ -2877,8 +2879,8 @@
   .auth-luxury-copy {
     padding: 52px 42px;
   }
-  .auth-luxury-copy h2 {
-    max-width: 360px;
+  .auth-luxury-copy .login-banner-title {
+    max-width: 100%;
     font-size: clamp(36px, 3.6vw, 40px);
   }
   .auth-luxury-copy li {
