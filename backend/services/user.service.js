@@ -1,4 +1,4 @@
-﻿/**
+/**
  * User service.
  * It owns user business rules, password hashing, role/permission normalization, profile, avatar, and address updates.
  */
@@ -133,7 +133,7 @@ export class UserService extends BaseService {
       }
 
       if (String(currentUser.id) === String(actor.id) && normalizedStatus === USER_STATUS.LOCKED) {
-        throw new AppError("KhÃ´ng thá»ƒ tá»± khÃ³a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
+        throw new AppError("Không thể tự khóa tài khoản đang đăng nhập.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
       }
 
       result.status = normalizedStatus;
@@ -159,7 +159,7 @@ export class UserService extends BaseService {
     }
 
     if (String(id) === String(actor.id) && normalizedStatus === USER_STATUS.LOCKED) {
-      throw new AppError("KhÃ´ng thá»ƒ tá»± khÃ³a tÃ i khoáº£n Ä‘ang Ä‘Äƒng nháº­p.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
+      throw new AppError("Không thể tự khóa tài khoản đang đăng nhập.", 409, "USER_SELF_LOCK_NOT_ALLOWED");
     }
 
     const user = await this.repository.patchFields(id, { status: normalizedStatus });
@@ -247,9 +247,9 @@ export class UserService extends BaseService {
     }
     if (emailChanged || phoneChanged) {
       if (!currentUser.hasPassword) {
-        throw new AppError("Vui lÃ²ng thiáº¿t láº­p máº­t kháº©u trÆ°á»›c khi Ä‘á»•i email hoáº·c sá»‘ Ä‘iá»‡n thoáº¡i.", 409, "PASSWORD_SETUP_REQUIRED");
+        throw new AppError("Vui lòng thiết lập mật khẩu trước khi đổi email hoặc số điện thoại.", 409, "PASSWORD_SETUP_REQUIRED");
       }
-      await this.ensureCurrentPassword(currentUser, payload.currentPassword);
+      await this.ensureCurrentPassword(currentUser, payload.current_password);
     }
 
     const normalizedPayload = {};
@@ -285,9 +285,9 @@ export class UserService extends BaseService {
     if (!user) {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
-    await this.ensureCurrentPassword(user, payload.currentPassword);
+    await this.ensureCurrentPassword(user, payload.current_password);
     if (payload.newPassword !== payload.confirmPassword) {
-      throw new AppError("XÃ¡c nháº­n máº­t kháº©u khÃ´ng khá»›p.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
     const updatedUser = await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
     return { changed: true, user: updatedUser.toJSON() };
@@ -299,10 +299,10 @@ export class UserService extends BaseService {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
     if (user.hasPassword) {
-      throw new AppError("TÃ i khoáº£n Ä‘Ã£ cÃ³ máº­t kháº©u. Vui lÃ²ng dÃ¹ng chá»©c nÄƒng Ä‘á»•i máº­t kháº©u.", 409, "PASSWORD_ALREADY_EXISTS");
+      throw new AppError("Tài khoản đã có mật khẩu. Vui lòng dùng chức năng đổi mật khẩu.", 409, "PASSWORD_ALREADY_EXISTS");
     }
     if (payload.newPassword !== payload.confirmPassword) {
-      throw new AppError("XÃ¡c nháº­n máº­t kháº©u khÃ´ng khá»›p.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
     await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
     return { changed: true };
@@ -361,7 +361,7 @@ export class UserService extends BaseService {
       provider: normalizedProvider,
       status: "not_integrated",
       authorizationUrl: null,
-      message: `Chá»©c nÄƒng liÃªn káº¿t ${providerLabel(normalizedProvider)} Ä‘ang thá»­ nghiá»‡m. N&L Store chÆ°a káº¿t ná»‘i OAuth liÃªn káº¿t tÃ i khoáº£n tháº­t.`
+      message: `Chức năng liên kết ${providerLabel(normalizedProvider)} đang thử nghiệm. N&L Store chưa kết nối OAuth liên kết tài khoản thật.`
     };
   }
 
@@ -372,7 +372,7 @@ export class UserService extends BaseService {
     const linkedCount = social.connections.filter((connection) => connection.linked).length;
 
     if (!user.hasPassword && linkedCount <= 1) {
-      throw new AppError("KhÃ´ng thá»ƒ há»§y liÃªn káº¿t phÆ°Æ¡ng thá»©c Ä‘Äƒng nháº­p cuá»‘i cÃ¹ng khi tÃ i khoáº£n chÆ°a cÃ³ máº­t kháº©u.", 409, "LAST_LOGIN_METHOD_UNLINK_DENIED");
+      throw new AppError("Không thể hủy liên kết phương thức đăng nhập cuối cùng khi tài khoản chưa có mật khẩu.", 409, "LAST_LOGIN_METHOD_UNLINK_DENIED");
     }
 
     await this.repository.deleteSocialConnection(userId, normalizedProvider);
@@ -500,12 +500,12 @@ export class UserService extends BaseService {
     }
   }
 
-  async ensureCurrentPassword(user, currentPassword) {
+  async ensureCurrentPassword(user, current_password) {
     if (!user.hasPassword) {
-      throw new AppError("TÃ i khoáº£n chÆ°a cÃ³ máº­t kháº©u. Vui lÃ²ng Ä‘áº·t máº­t kháº©u trÆ°á»›c khi thay Ä‘á»•i thÃ´ng tin Ä‘Äƒng nháº­p.", 409, "PASSWORD_NOT_AVAILABLE");
+      throw new AppError("Tài khoản chưa có mật khẩu. Vui lòng đặt mật khẩu trước khi thay đổi thông tin đăng nhập.", 409, "PASSWORD_NOT_AVAILABLE");
     }
-    if (!currentPassword || !await comparePassword(currentPassword, user.passwordHash)) {
-      throw new AppError("Máº­t kháº©u hiá»‡n táº¡i khÃ´ng Ä‘Ãºng.", 401, "CURRENT_PASSWORD_INVALID");
+    if (!current_password || !await comparePassword(current_password, user.passwordHash)) {
+      throw new AppError("Mật khẩu hiện tại không đúng.", 401, "CURRENT_PASSWORD_INVALID");
     }
   }
 }
@@ -665,9 +665,10 @@ function formatPaymentMethod(row = {}) {
 
 function throwProfileTableError(error) {
   if (MISSING_OPTIONAL_PROFILE_TABLE_CODES.has(error?.code)) {
-    throw new AppError("Chá»©c nÄƒng há»“ sÆ¡ chÆ°a sáºµn sÃ ng. Vui lÃ²ng cháº¡y migration user_social_connections vÃ  user_payment_methods.", 503, "PROFILE_OPTIONAL_TABLE_MISSING");
+    throw new AppError("Chức năng hồ sơ chưa sẵn sàng. Vui lòng chạy migration user_social_connections và user_payment_methods.", 503, "PROFILE_OPTIONAL_TABLE_MISSING");
   }
   throw error;
 }
 
 export { USER_STATUS };
+

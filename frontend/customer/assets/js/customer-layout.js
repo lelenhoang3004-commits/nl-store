@@ -1,4 +1,4 @@
-﻿import { createCustomerFooter } from "../../components/footer/footer.js";
+import { createCustomerFooter } from "../../components/footer/footer.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
@@ -414,7 +414,7 @@ function bindNewsletterOfferPopup(popup) {
         body: { email, fullName: "", source: "newsletter_popup" }
       });
       if (response?.success !== true) throw new Error(response?.message || "Newsletter subscribe failed.");
-      setNewsletterPopupFeedback(feedback, response.message || "Dang ky thanh cong. Ma uu dai cua ban da san sang.", "success");
+      setNewsletterPopupFeedback(feedback, response.message || "Đăng ký thành công. Mã ưu đãi của bạn đã sẵn sàng.", "success");
       form.hidden = true;
       if (codeBox) codeBox.hidden = false;
       sessionStorage.setItem("newsletterPopupClosed", "true");
@@ -1257,7 +1257,6 @@ async function renderAuthCallbackPage() {
   const callback = readOAuthCallback();
   if (callback.provider === "google") {
     console.info("[Google OAuth] callback URL =", redactOAuthCallbackUrl(window.location.href));
-    console.info("[Google OAuth] token found =", Boolean(callback.token));
   }
 
   layoutState.main.innerHTML = renderPageShell(
@@ -1295,7 +1294,6 @@ function forwardOAuthCallbackToOpener() {
   const provider = callback.provider === "google" ? "google" : callback.provider === "facebook" ? "facebook" : "oauth";
   if (provider === "google") {
     console.info("[Google OAuth] callback URL =", redactOAuthCallbackUrl(window.location.href));
-    console.info("[Google OAuth] token found =", Boolean(callback.token));
   }
   const successType = provider === "google" ? "GOOGLE_AUTH_SUCCESS" : provider === "facebook" ? "FACEBOOK_AUTH_SUCCESS" : "OAUTH_AUTH_SUCCESS";
   const errorType = provider === "google" ? "GOOGLE_AUTH_ERROR" : provider === "facebook" ? "FACEBOOK_AUTH_ERROR" : "OAUTH_AUTH_ERROR";
@@ -2777,7 +2775,7 @@ function openProfileEditModal(user = {}) {
         <label>Phường/xã<select name="wardCode" data-profile-ward></select></label>
       </div>
       ${hasPassword
-        ? `<label data-current-password-field>Mật khẩu hiện tại<input name="currentPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Chỉ nhập khi đổi email hoặc số điện thoại"></label>`
+        ? `${createPasswordField("Mật khẩu hiện tại", "current_password", "current-password", false)}`
         : `<div class="customer-profile-inline-error">Tài khoản này chưa có mật khẩu. Bạn vẫn có thể sửa họ tên, avatar và địa chỉ. Nếu muốn đổi email hoặc số điện thoại, hãy thiết lập mật khẩu trước. <button type="button" data-open-set-password>Thiết lập mật khẩu</button></div>`}
       <div data-auth-message hidden></div>
       <div class="customer-profile-modal-actions">
@@ -2787,6 +2785,7 @@ function openProfileEditModal(user = {}) {
     </form>
   `);
   const form = modal.querySelector("[data-profile-edit-form]");
+  bindPasswordTools(form);
   const provinceSelect = form.querySelector("[data-profile-province]");
   const wardSelect = form.querySelector("[data-profile-ward]");
   loadProvinces(provinceSelect);
@@ -2851,13 +2850,13 @@ async function submitProfileEdit(form, currentUser, modal) {
     return;
   }
 
-  const currentPassword = String(data.get("currentPassword") || "");
+  const current_password = String(data.get("current_password") || "");
   if (emailChanged || phoneChanged) {
-    if (!currentPassword) {
+    if (!current_password) {
       showCustomerMessage(form, "Vui lòng nhập mật khẩu hiện tại để đổi email hoặc số điện thoại.");
       return;
     }
-    payload.currentPassword = currentPassword;
+    payload.current_password = current_password;
   }
 
   const button = form.querySelector("button[type='submit']");
@@ -2891,7 +2890,7 @@ function openPasswordModal(userOverride = null) {
   const hasPassword = getUserHasPassword(user);
   const modal = createProfileModal(hasPassword ? "Đổi mật khẩu" : "Thiết lập mật khẩu", `
     <form class="customer-profile-form" data-password-form>
-      ${hasPassword ? createPasswordField("Mật khẩu hiện tại", "currentPassword", "current-password", true) : `<p class="customer-profile-note">Tạo mật khẩu cho tài khoản Google/Facebook để bảo vệ thay đổi email hoặc số điện thoại về sau.</p>`}
+      ${hasPassword ? createPasswordField("Mật khẩu hiện tại", "current_password", "current-password", true) : `<p class="customer-profile-note">Tạo mật khẩu cho tài khoản Google/Facebook để bảo vệ thay đổi email hoặc số điện thoại về sau.</p>`}
       ${createPasswordField("Mật khẩu mới", "newPassword", "new-password", true)}
       <div class="customer-password-strength" data-password-strength><span></span></div>
       ${createPasswordField("Xác nhận mật khẩu mới", "confirmPassword", "new-password", true)}
@@ -2922,7 +2921,7 @@ function openPasswordModal(userOverride = null) {
         showCustomerMessage(form, "Xác nhận mật khẩu không khớp.");
         return;
       }
-      if (hasPassword) body.currentPassword = String(data.get("currentPassword") || "");
+      if (hasPassword) body.current_password = String(data.get("current_password") || "");
       const response = await customerApi(hasPassword ? "/users/profile/password" : "/users/profile/set-password", {
         method: hasPassword ? "PUT" : "POST",
         body
@@ -3636,7 +3635,6 @@ function observePasswordTogglesOnMain() {
     observer.observe(root, { childList: true, subtree: true });
   } catch (e) {
     // fail silently
-    console.debug('[password-toggle] observer setup failed', e?.message);
   }
 }
 

@@ -1,4 +1,4 @@
-﻿const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
     ? "http://localhost:5000/api/v1"
     : "https://nl-store.onrender.com/api/v1"
@@ -75,7 +75,6 @@ export const customerAuth = {
     const hasValidToken = Boolean(accessToken) && (!isGoogle || isJwtAccessToken(accessToken));
 
     if (isGoogle) {
-      console.info("[Google OAuth] token found =", hasValidToken);
     }
 
     if (!hasValidToken) {
@@ -91,8 +90,6 @@ export const customerAuth = {
     }, remember);
 
     if (isGoogle) {
-      console.info("[Google OAuth] token saved key =", remember ? ACCESS_TOKEN_KEY : ACCESS_TOKEN_SESSION_KEY);
-      console.info("[Google OAuth] /me with bearer =", Boolean(accessToken));
     }
 
     let verifiedUser;
@@ -101,7 +98,6 @@ export const customerAuth = {
     } catch (error) {
       if (error?.status === 401) {
         if (isGoogle) {
-          console.error("[Google OAuth] /me rejected token; bearer present", Boolean(accessToken));
         }
         throw createOAuthTokenError(isGoogle
           ? "Token đăng nhập Google không hợp lệ hoặc chưa được lưu."
@@ -222,16 +218,11 @@ export const customerAuth = {
 
   async loadCurrentUser(tokenOverride = null, options = {}) {
     const token = normalizeAccessToken(tokenOverride || this.getAccessToken());
-    console.info("[Auth] token key =", ACCESS_TOKEN_KEY);
-    console.info("[Auth] token exists =", Boolean(token));
 
     if (!token) {
       setGuestAuthState();
-      console.info("[Auth] skip /me because no token");
       return null;
     }
-
-    console.info("[Auth] call /me with bearer =", Boolean(token));
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
@@ -255,12 +246,9 @@ export const customerAuth = {
 
   async restoreSession() {
     const token = normalizeAccessToken(this.getAccessToken());
-    console.info("[Auth] token key =", ACCESS_TOKEN_KEY);
-    console.info("[Auth] token exists =", Boolean(token));
 
     if (!token) {
       setGuestAuthState();
-      console.info("[Auth] skip /me because no token");
       authInitialized = true;
       hasTriedInitialRefresh = true;
       return null;
@@ -387,7 +375,7 @@ async function createApiError(response) {
     payload = null;
   }
 
-  const error = new Error(payload?.message || "Yeu cau khong thanh cong. Vui long thu lai.");
+  const error = new Error(payload?.message || "Yêu cầu không thành công. Vui lòng thử lại.");
   error.status = response.status;
   error.code = payload?.error?.code || "API_ERROR";
   error.details = payload?.error?.details || null;
@@ -492,4 +480,3 @@ window.addEventListener("storage", (event) => {
     notifyAuthChanged("storage-sync");
   }
 });
-

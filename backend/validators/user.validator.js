@@ -60,8 +60,8 @@ export function validateProfileUpdateRequest({ body }) {
   if (body.email !== undefined) {
     errors.push(...validateEmail(body.email, { required: true }).errors);
   }
-  if (!isEmpty(body.currentPassword)) {
-    errors.push(...validatePassword(body.currentPassword, { required: false, strong: false, minLength: 1, field: "currentPassword" }).errors);
+  if (!isEmpty(body.current_password)) {
+    errors.push(...validatePassword(body.current_password, { required: false, strong: false, minLength: 1, field: "current_password" }).errors);
   }
   validateCommonProfileFields(errors, body);
 
@@ -70,7 +70,7 @@ export function validateProfileUpdateRequest({ body }) {
 
 export function validateChangePasswordRequest({ body }) {
   const errors = [];
-  errors.push(...validatePassword(body.currentPassword, { required: true, strong: false, minLength: 1, field: "currentPassword" }).errors);
+  errors.push(...validatePassword(body.current_password, { required: true, strong: false, minLength: 1, field: "current_password" }).errors);
   errors.push(...validatePassword(body.newPassword, { required: true, strong: true, field: "newPassword" }).errors);
   if (body.newPassword !== body.confirmPassword) {
     errors.push(createValidationError("confirmPassword", "Xác nhận mật khẩu không khớp.", "body", "PASSWORD_CONFIRMATION_MISMATCH"));
@@ -190,3 +190,4 @@ function pushIfError(errors, error) {
     errors.push(error);
   }
 }
+
