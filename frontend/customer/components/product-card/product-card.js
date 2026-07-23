@@ -54,7 +54,10 @@ export function createProductCard(product) {
     <article class="product-card ds-hover" data-product-card="${item.id}">
       <div class="product-card-media-wrap">
         <a class="product-media" href="#product-detail/${item.id}" aria-label="${escapeHtml(item.name)}">
-          <span class="${badgeClass}">${escapeHtml(item.badge)}</span>
+          <span class="product-badge-cluster">
+            <span class="${badgeClass}">${escapeHtml(item.badge)}</span>
+            ${item.discount ? `<span class="product-discount">-${escapeHtml(item.discount)}%</span>` : ""}
+          </span>
           <img class="product-media-image primary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">
           ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.hoverImage)}" alt="${escapeHtml(item.imageAlt || item.name)} alternate" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">` : ""}
         </a>
@@ -66,7 +69,6 @@ export function createProductCard(product) {
             <i class="fa-regular fa-eye" aria-hidden="true"></i>
           </a>
         </div>
-        ${item.discount ? `<span class="product-discount">-${escapeHtml(item.discount)}%</span>` : ""}
       </div>
 
       <div class="product-card-content">

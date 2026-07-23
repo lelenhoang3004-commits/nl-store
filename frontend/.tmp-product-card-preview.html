@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Card Preview</title>
+  <link rel="stylesheet" href="./customer/assets/css/customer.css">
+  <link rel="stylesheet" href="./customer/components/product-card/product-card.css">
+  <style>
+    body { margin: 0; padding: 40px; background: #FAF7F2; font-family: Inter, system-ui, sans-serif; }
+    .preview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; max-width: 1180px; margin: 0 auto; }
+    @media (max-width: 760px) { body { padding: 18px; } .preview-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="preview-grid" id="preview"></main>
+  <script type="module">
+    import { createProductCard, initProductCard } from "./customer/components/product-card/product-card.js";
+    window.FASHION_IMAGE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 750'%3E%3Crect width='600' height='750' fill='%23f4eee5'/%3E%3Cpath d='M180 700c42-175 70-303 85-384h75c14 83 43 211 86 384z' fill='%23163A70' opacity='.22'/%3E%3Ccircle cx='305' cy='190' r='86' fill='%23d8b59b'/%3E%3Cpath d='M214 302c58 44 119 45 183 0l57 184c-96 57-196 57-300 0z' fill='%23ffffff'/%3E%3C/svg%3E";
+    preview.innerHTML = [
+      createProductCard({ id: "1", name: "Quần tối giản dáng suông cao cấp", category: "Quần tối giản", badge: "GIẢM GIÁ", discount: 33, price: 390000, comparePrice: 580000, sold: 0, image: window.FASHION_IMAGE_PLACEHOLDER }),
+      createProductCard({ id: "2", name: "Áo sơ mi linen cổ điển", category: "Áo sơ mi", badge: "MỚI", discount: 0, price: 520000, comparePrice: 0, sold: 28, image: window.FASHION_IMAGE_PLACEHOLDER }),
+      createProductCard({ id: "3", name: "Đầm midi satin thanh lịch cho buổi tối", category: "Đầm", badge: "BÁN CHẠY", discount: 15, price: 820000, comparePrice: 960000, sold: 104, image: window.FASHION_IMAGE_PLACEHOLDER }),
+      createProductCard({ id: "4", name: "Áo khoác dáng ngắn", category: "Áo khoác", badge: "SẢN PHẨM", discount: 0, price: 1250000, comparePrice: 0, sold: 9, image: window.FASHION_IMAGE_PLACEHOLDER })
+    ].join("");
+    initProductCard(document);
+  </script>
+</body>
+</html>
