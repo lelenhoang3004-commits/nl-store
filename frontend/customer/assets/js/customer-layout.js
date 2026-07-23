@@ -1066,16 +1066,16 @@ async function handleOAuthMessage(event) {
 function renderLoginPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card auth-luxury-card">
     <aside class="auth-luxury-panel" aria-label="N&L Store">
-      <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=82" alt="Thời trang cao cấp N&L Store">
+      <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=86" alt="Thời trang cao cấp N&L Store">
       <div class="auth-luxury-overlay"></div>
       <div class="auth-luxury-copy">
         <div class="auth-luxury-logo">N&amp;L</div>
         <p class="auth-luxury-kicker">N&amp;L STORE</p>
-        <h2>Phong cách tinh tuyển cho nhịp sống hiện đại</h2>
+        <h2>Phong cách hiện đại,<br>dấu ấn riêng của bạn</h2>
         <ul>
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập chọn lọc theo mùa</span></li>
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi riêng cho thành viên</span></li>
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Theo dõi đơn hàng nhanh chóng</span></li>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập mới mỗi tuần</span></li>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi thành viên</span></li>
+          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Theo dõi đơn nhanh</span></li>
         </ul>
       </div>
     </aside>
