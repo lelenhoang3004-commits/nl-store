@@ -975,8 +975,8 @@ function renderPageShell(title, content) {
 function renderSocialButtons(label = "đăng nhập") {
   return `<div class="auth-divider"><span>Hoặc ${label} với</span></div>
     <div class="auth-social-grid">
-      <button class="auth-social-button" type="button" data-oauth="google"><span class="auth-social-icon google"><i class="fa-brands fa-google" aria-hidden="true"></i></span><span>Đăng nhập bằng Google</span></button>
-      <button class="auth-social-button" type="button" data-oauth="facebook"><span class="auth-social-icon facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span><span>Đăng nhập bằng Facebook</span></button>
+      <button class="auth-social-button" type="button" data-oauth="google" aria-label="Đăng nhập bằng Google"><span class="auth-social-icon google"><i class="fa-brands fa-google" aria-hidden="true"></i></span><span>Google</span></button>
+      <button class="auth-social-button" type="button" data-oauth="facebook" aria-label="Đăng nhập bằng Facebook"><span class="auth-social-icon facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span><span>Facebook</span></button>
     </div>`;
 }
 function bindOAuthButtons(root) {
@@ -1087,7 +1087,7 @@ function renderLoginPage() {
         <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
         <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
         <button class="customer-button auth-primary" type="submit"><span>Đăng nhập</span></button>
-        ${renderSocialButtons("đăng nhập")}
+        ${renderSocialButtons("tiếp tục")}
         <a class="auth-phone-button" href="#phone-login"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>Đăng nhập bằng số điện thoại</span></a>
         <p class="auth-switch">Chưa có tài khoản? <a href="#register">Đăng ký</a></p>
       </form>
