@@ -2523,54 +2523,24 @@
   backdrop-filter: blur(12px);
 }
 
-.login-banner-title {
+.login-hero-title {
   width: min(100%, 410px);
   max-width: calc(100% - 2px);
   margin: 0 0 18px;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(23px, 1.8vw, 26px);
-  font-weight: 760;
-  line-height: 1.18;
-  letter-spacing: normal;
-  word-spacing: normal;
+  font-size: clamp(22px, 1.72vw, 25px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0;
+  word-spacing: 0;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
   word-wrap: normal;
+  hyphens: manual;
   overflow: visible;
-}
-
-.login-banner-title .title-line-main {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 0 5px;
-  color: #FFFFFF;
-  letter-spacing: 0;
-  word-spacing: 0;
-  text-align: left;
-  white-space: nowrap;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-
-.login-hero-accent {
-  display: block;
-  width: 100%;
-  margin: 0;
-  color: #F0BD59;
-  font: inherit;
-  font-weight: 800;
-  text-align: left;
-  white-space: nowrap;
-  letter-spacing: 0;
-  word-spacing: 0;
-  font-kerning: normal;
-  line-height: 1.2;
-  word-break: normal;
-  overflow-wrap: normal;
 }
 .login-banner-desc {
   max-width: 360px;
@@ -2898,10 +2868,10 @@
     top: 30px;
     left: 34px;
   }
-  .login-banner-title {
+  .login-hero-title {
     width: min(100%, 360px);
     max-width: calc(100% - 2px);
-    font-size: clamp(22px, 2.2vw, 24px);
+    font-size: clamp(21px, 2vw, 23px);
   }
   .login-banner-benefits li {
     font-size: .92rem;
