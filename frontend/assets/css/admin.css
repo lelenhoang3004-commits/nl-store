@@ -598,3 +598,484 @@ body:not(.theme-dark) .notification-copy time,
 body:not(.theme-dark) .notification-empty span {
   color: var(--admin-text-muted);
 }
+/* High contrast light mode pass: overrides page-level dark surfaces loaded after global tokens. */
+body:not(.theme-dark) .admin-shell {
+  background: linear-gradient(180deg, var(--admin-light-bg), #eef4fb 100%) !important;
+}
+
+body:not(.theme-dark) .admin-workspace,
+body:not(.theme-dark) .admin-main,
+body:not(.theme-dark) .admin-users-page,
+body:not(.theme-dark) .admin-vouchers-page,
+body:not(.theme-dark) .admin-newsletter-page,
+body:not(.theme-dark) .admin-category-page,
+body:not(.theme-dark) .admin-categories-page,
+body:not(.theme-dark) .admin-products-page,
+body:not(.theme-dark) .dashboard-page {
+  color: var(--admin-light-text) !important;
+}
+
+body:not(.theme-dark) .admin-header,
+body:not(.theme-dark) .header-search,
+body:not(.theme-dark) .admin-profile,
+body:not(.theme-dark) .dropdown-panel,
+body:not(.theme-dark) .theme-manager-card,
+body:not(.theme-dark) .notification-panel {
+  border-color: var(--admin-light-border) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--admin-light-text-muted) !important;
+  box-shadow: var(--admin-light-shadow) !important;
+}
+
+body:not(.theme-dark) .breadcrumb,
+body:not(.theme-dark) .breadcrumb a,
+body:not(.theme-dark) .header-logo-copy small,
+body:not(.theme-dark) .profile-copy small,
+body:not(.theme-dark) .profile-chevron {
+  color: var(--admin-light-text-soft) !important;
+}
+
+body:not(.theme-dark) .breadcrumb span,
+body:not(.theme-dark) .header-logo-copy strong,
+body:not(.theme-dark) .profile-copy strong,
+body:not(.theme-dark) .header-search input {
+  color: var(--admin-light-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-hero,
+body:not(.theme-dark) .admin-vouchers-hero,
+body:not(.theme-dark) .admin-newsletter-hero,
+body:not(.theme-dark) .admin-category-hero,
+body:not(.theme-dark) .admin-category-table-header,
+body:not(.theme-dark) .admin-products-hero,
+body:not(.theme-dark) .dashboard-heading,
+body:not(.theme-dark) .datatable-header {
+  border: 1px solid var(--admin-light-border) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 56%, #eef4ff 100%) !important;
+  color: var(--admin-light-text) !important;
+  box-shadow: var(--admin-light-shadow-md) !important;
+}
+
+body:not(.theme-dark) .admin-users-hero h1,
+body:not(.theme-dark) .admin-vouchers-hero h1,
+body:not(.theme-dark) .admin-newsletter-hero h1,
+body:not(.theme-dark) .admin-category-hero h1,
+body:not(.theme-dark) .admin-category-table-header h2,
+body:not(.theme-dark) .admin-products-hero h1,
+body:not(.theme-dark) .dashboard-heading h1,
+body:not(.theme-dark) .datatable-header h2 {
+  color: var(--admin-light-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-hero p,
+body:not(.theme-dark) .admin-vouchers-hero p,
+body:not(.theme-dark) .admin-newsletter-hero p,
+body:not(.theme-dark) .admin-category-hero p,
+body:not(.theme-dark) .admin-category-table-copy,
+body:not(.theme-dark) .admin-products-hero p,
+body:not(.theme-dark) .dashboard-heading p,
+body:not(.theme-dark) .datatable-header span {
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-eyebrow,
+body:not(.theme-dark) .admin-vouchers-eyebrow,
+body:not(.theme-dark) .admin-newsletter-kicker,
+body:not(.theme-dark) .admin-category-eyebrow,
+body:not(.theme-dark) .admin-category-table-eyebrow,
+body:not(.theme-dark) .admin-products-eyebrow,
+body:not(.theme-dark) .dashboard-eyebrow,
+body:not(.theme-dark) .datatable-eyebrow {
+  color: var(--admin-light-primary) !important;
+}
+
+body:not(.theme-dark) .admin-users-filters,
+body:not(.theme-dark) .admin-voucher-filters,
+body:not(.theme-dark) .admin-newsletter-filters,
+body:not(.theme-dark) .admin-category-toolbar,
+body:not(.theme-dark) .admin-product-filters,
+body:not(.theme-dark) .datatable-toolbar,
+body:not(.theme-dark) .dashboard-period {
+  border: 1px solid var(--admin-light-border) !important;
+  background: var(--admin-light-surface) !important;
+  color: var(--admin-light-text-muted) !important;
+  box-shadow: var(--admin-light-shadow) !important;
+}
+
+body:not(.theme-dark) .admin-users-filters label,
+body:not(.theme-dark) .admin-voucher-filters label,
+body:not(.theme-dark) .admin-newsletter-filters label,
+body:not(.theme-dark) .admin-category-toolbar label,
+body:not(.theme-dark) .admin-product-filters label > span,
+body:not(.theme-dark) .modal-form-grid span,
+body:not(.theme-dark) .admin-users-form label,
+body:not(.theme-dark) .admin-users-label,
+body:not(.theme-dark) .admin-voucher-form label,
+body:not(.theme-dark) .admin-category-form-grid label,
+body:not(.theme-dark) .admin-product-form label > span {
+  color: var(--admin-light-text-muted) !important;
+  font-weight: 750 !important;
+}
+
+body:not(.theme-dark) .admin-users-control,
+body:not(.theme-dark) .admin-category-control,
+body:not(.theme-dark) .datatable-search,
+body:not(.theme-dark) .datatable-filter,
+body:not(.theme-dark) .notification-search,
+body:not(.theme-dark) .admin-newsletter-filters input,
+body:not(.theme-dark) .admin-newsletter-filters select,
+body:not(.theme-dark) .admin-voucher-filters input,
+body:not(.theme-dark) .admin-voucher-filters select,
+body:not(.theme-dark) .admin-product-filters input,
+body:not(.theme-dark) .admin-product-filters select,
+body:not(.theme-dark) .admin-users-form input:not([type='checkbox']),
+body:not(.theme-dark) .admin-users-form select,
+body:not(.theme-dark) .admin-voucher-form input,
+body:not(.theme-dark) .admin-voucher-form select,
+body:not(.theme-dark) .admin-voucher-form textarea,
+body:not(.theme-dark) .admin-category-form-grid input,
+body:not(.theme-dark) .admin-category-form-grid textarea,
+body:not(.theme-dark) .admin-category-form-grid select,
+body:not(.theme-dark) .admin-product-form input,
+body:not(.theme-dark) .admin-product-form select,
+body:not(.theme-dark) .admin-product-form textarea,
+body:not(.theme-dark) .modal-form-grid input,
+body:not(.theme-dark) .modal-form-grid select,
+body:not(.theme-dark) input,
+body:not(.theme-dark) select,
+body:not(.theme-dark) textarea {
+  border-color: var(--admin-light-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--admin-light-text) !important;
+  box-shadow: none;
+}
+
+body:not(.theme-dark) input::placeholder,
+body:not(.theme-dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+body:not(.theme-dark) .admin-users-control:focus-within,
+body:not(.theme-dark) .admin-category-control:focus-within,
+body:not(.theme-dark) .datatable-search:focus-within,
+body:not(.theme-dark) .datatable-filter:focus-within,
+body:not(.theme-dark) .notification-search:focus-within,
+body:not(.theme-dark) input:focus,
+body:not(.theme-dark) select:focus,
+body:not(.theme-dark) textarea:focus {
+  border-color: var(--admin-light-primary) !important;
+  box-shadow: var(--admin-light-focus) !important;
+  outline: none !important;
+}
+
+body:not(.theme-dark) .admin-users-card,
+body:not(.theme-dark) .admin-voucher-card,
+body:not(.theme-dark) .admin-newsletter-card,
+body:not(.theme-dark) .admin-category-table,
+body:not(.theme-dark) .admin-category-table-card,
+body:not(.theme-dark) .admin-product-card,
+body:not(.theme-dark) .dashboard-card,
+body:not(.theme-dark) .stat-card,
+body:not(.theme-dark) .datatable-surface,
+body:not(.theme-dark) .modal-dialog,
+body:not(.theme-dark) .admin-users-modal-dialog,
+body:not(.theme-dark) .admin-voucher-dialog,
+body:not(.theme-dark) .admin-payment-modal-dialog,
+body:not(.theme-dark) .admin-order-modal-dialog {
+  border: 1px solid var(--admin-light-border) !important;
+  background: var(--admin-light-surface) !important;
+  color: var(--admin-light-text) !important;
+  box-shadow: var(--admin-light-shadow) !important;
+}
+
+body:not(.theme-dark) .admin-users-table,
+body:not(.theme-dark) .admin-voucher-table,
+body:not(.theme-dark) .admin-newsletter-table,
+body:not(.theme-dark) .admin-category-table table,
+body:not(.theme-dark) .admin-product-table,
+body:not(.theme-dark) .orders-table,
+body:not(.theme-dark) .datatable table {
+  background: var(--admin-light-surface) !important;
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-table th,
+body:not(.theme-dark) .admin-voucher-table th,
+body:not(.theme-dark) .admin-newsletter-table th,
+body:not(.theme-dark) .admin-category-table th,
+body:not(.theme-dark) .admin-product-table th,
+body:not(.theme-dark) .orders-table th,
+body:not(.theme-dark) .datatable th {
+  border-bottom: 1px solid var(--admin-light-border) !important;
+  background: var(--admin-light-surface-2) !important;
+  color: #334155 !important;
+  font-weight: 850 !important;
+}
+
+body:not(.theme-dark) .admin-users-table td,
+body:not(.theme-dark) .admin-voucher-table td,
+body:not(.theme-dark) .admin-newsletter-table td,
+body:not(.theme-dark) .admin-category-table td,
+body:not(.theme-dark) .admin-product-table td,
+body:not(.theme-dark) .orders-table td,
+body:not(.theme-dark) .datatable td {
+  border-bottom: 1px solid var(--admin-light-border) !important;
+  background: transparent !important;
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-table td strong,
+body:not(.theme-dark) .admin-voucher-table td strong,
+body:not(.theme-dark) .admin-newsletter-table td strong,
+body:not(.theme-dark) .admin-category-name,
+body:not(.theme-dark) .admin-product-table td > a,
+body:not(.theme-dark) .datatable td strong {
+  color: var(--admin-light-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-table tbody tr:nth-child(even),
+body:not(.theme-dark) .admin-voucher-table tbody tr:nth-child(even),
+body:not(.theme-dark) .admin-newsletter-table tbody tr:nth-child(even),
+body:not(.theme-dark) .admin-category-table tbody tr:nth-child(even),
+body:not(.theme-dark) .admin-product-table tbody tr:nth-child(even),
+body:not(.theme-dark) .datatable tbody tr:nth-child(even) {
+  background: #fbfdff !important;
+}
+
+body:not(.theme-dark) .admin-users-table tbody tr:hover,
+body:not(.theme-dark) .admin-voucher-table tbody tr:hover,
+body:not(.theme-dark) .admin-newsletter-table tbody tr:hover,
+body:not(.theme-dark) .admin-category-table tbody tr:hover,
+body:not(.theme-dark) .admin-product-table tbody tr:hover,
+body:not(.theme-dark) .datatable tbody tr:hover {
+  background: var(--admin-light-primary-soft) !important;
+}
+
+body:not(.theme-dark) .admin-users-id,
+body:not(.theme-dark) .admin-voucher-code,
+body:not(.theme-dark) .admin-category-id,
+body:not(.theme-dark) .admin-category-slug,
+body:not(.theme-dark) code,
+body:not(.theme-dark) .variant-badge,
+body:not(.theme-dark) .stock-color {
+  border: 1px solid var(--admin-light-border) !important;
+  background: var(--admin-light-surface-2) !important;
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-status.is-active,
+body:not(.theme-dark) .admin-newsletter-status.is-subscribed,
+body:not(.theme-dark) .admin-voucher-status.is-active,
+body:not(.theme-dark) .admin-category-status.is-active,
+body:not(.theme-dark) .admin-product-status.is-active,
+body:not(.theme-dark) .datatable-status.is-success,
+body:not(.theme-dark) .dashboard-badge.is-completed,
+body:not(.theme-dark) .dashboard-badge.is-paid {
+  border: 1px solid #bbf7d0 !important;
+  background: var(--admin-light-success-bg) !important;
+  color: var(--admin-light-success-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-status.is-inactive,
+body:not(.theme-dark) .admin-voucher-status.is-inactive,
+body:not(.theme-dark) .admin-category-status.is-inactive,
+body:not(.theme-dark) .datatable-status.is-muted,
+body:not(.theme-dark) .dashboard-badge,
+body:not(.theme-dark) .admin-product-status {
+  border: 1px solid var(--admin-light-border) !important;
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+body:not(.theme-dark) .admin-users-status.is-locked,
+body:not(.theme-dark) .admin-voucher-status.is-expired,
+body:not(.theme-dark) .admin-product-status.is-out_of_stock,
+body:not(.theme-dark) .dashboard-badge.is-cancelled,
+body:not(.theme-dark) .dashboard-badge.is-failed,
+body:not(.theme-dark) .variant-badge.is-empty {
+  border: 1px solid #fecaca !important;
+  background: var(--admin-light-danger-bg) !important;
+  color: var(--admin-light-danger-text) !important;
+}
+
+body:not(.theme-dark) .admin-newsletter-status.is-unsubscribed,
+body:not(.theme-dark) .admin-voucher-status.is-soldout,
+body:not(.theme-dark) .datatable-status.is-warning,
+body:not(.theme-dark) .dashboard-badge.is-pending,
+body:not(.theme-dark) .dashboard-badge.is-unpaid,
+body:not(.theme-dark) .variant-badge.is-low {
+  border: 1px solid #fde68a !important;
+  background: var(--admin-light-warning-bg) !important;
+  color: var(--admin-light-warning-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-role.is-admin,
+body:not(.theme-dark) .admin-users-permission-chip,
+body:not(.theme-dark) .admin-voucher-status.is-scheduled,
+body:not(.theme-dark) .dashboard-badge.is-confirmed,
+body:not(.theme-dark) .dashboard-badge.is-shipping {
+  border: 1px solid #bfdbfe !important;
+  background: var(--admin-light-primary-soft) !important;
+  color: #1d4ed8 !important;
+}
+
+body:not(.theme-dark) .admin-users-role.is-staff,
+body:not(.theme-dark) .dashboard-badge.is-processing,
+body:not(.theme-dark) .dashboard-badge.is-partial {
+  border: 1px solid #e9d5ff !important;
+  background: var(--admin-light-purple-bg) !important;
+  color: var(--admin-light-purple-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-role.is-customer {
+  border: 1px solid #99f6e4 !important;
+  background: #ccfbf1 !important;
+  color: #0f766e !important;
+}
+
+body:not(.theme-dark) .admin-users-actions button,
+body:not(.theme-dark) .admin-voucher-actions button,
+body:not(.theme-dark) .admin-newsletter-actions button,
+body:not(.theme-dark) .admin-category-actions button,
+body:not(.theme-dark) .admin-product-actions button,
+body:not(.theme-dark) .admin-product-actions a,
+body:not(.theme-dark) .row-actions button,
+body:not(.theme-dark) .icon-button,
+body:not(.theme-dark) .modal-icon-button {
+  border: 1px solid var(--admin-light-border) !important;
+  background: #ffffff !important;
+  color: var(--admin-light-text-muted) !important;
+  box-shadow: var(--admin-light-shadow) !important;
+}
+
+body:not(.theme-dark) .admin-users-actions button:hover,
+body:not(.theme-dark) .admin-voucher-actions button:hover,
+body:not(.theme-dark) .admin-newsletter-actions button:hover,
+body:not(.theme-dark) .admin-category-actions button:hover,
+body:not(.theme-dark) .admin-product-actions button:hover,
+body:not(.theme-dark) .admin-product-actions a:hover,
+body:not(.theme-dark) .row-actions button:hover,
+body:not(.theme-dark) .icon-button:hover,
+body:not(.theme-dark) .modal-icon-button:hover {
+  border-color: #bfdbfe !important;
+  background: var(--admin-light-primary-soft) !important;
+  color: var(--admin-light-primary) !important;
+}
+
+body:not(.theme-dark) .is-danger,
+body:not(.theme-dark) .admin-users-actions .is-danger,
+body:not(.theme-dark) .admin-voucher-actions .is-danger,
+body:not(.theme-dark) .admin-newsletter-actions .is-danger,
+body:not(.theme-dark) .admin-category-actions .is-delete,
+body:not(.theme-dark) .admin-product-actions .is-danger {
+  color: var(--admin-light-danger-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-refresh,
+body:not(.theme-dark) .admin-voucher-primary,
+body:not(.theme-dark) .admin-newsletter-refresh,
+body:not(.theme-dark) .admin-category-primary,
+body:not(.theme-dark) .admin-category-refresh,
+body:not(.theme-dark) .datatable-primary-action,
+body:not(.theme-dark) .modal-primary-button,
+body:not(.theme-dark) .admin-product-filters button,
+body:not(.theme-dark) .admin-products-hero button,
+body:not(.theme-dark) .admin-products-hero a,
+body:not(.theme-dark) .admin-users-pagination button,
+body:not(.theme-dark) .admin-voucher-pagination button,
+body:not(.theme-dark) .admin-newsletter-pagination button,
+body:not(.theme-dark) .admin-product-pagination button {
+  border: 0 !important;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18) !important;
+}
+
+body:not(.theme-dark) .admin-users-modal,
+body:not(.theme-dark) .admin-voucher-modal,
+body:not(.theme-dark) .admin-product-modal,
+body:not(.theme-dark) .modal-overlay {
+  background: rgba(15, 23, 42, 0.34) !important;
+}
+
+body:not(.theme-dark) .admin-users-modal-dialog header,
+body:not(.theme-dark) .admin-users-modal-dialog footer,
+body:not(.theme-dark) .admin-voucher-dialog header,
+body:not(.theme-dark) .admin-voucher-dialog footer,
+body:not(.theme-dark) .modal-header,
+body:not(.theme-dark) .modal-footer,
+body:not(.theme-dark) .admin-product-modal-header,
+body:not(.theme-dark) .admin-product-form-footer {
+  border-color: var(--admin-light-border) !important;
+  background: #ffffff !important;
+  color: var(--admin-light-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-modal-body,
+body:not(.theme-dark) .admin-voucher-modal-body,
+body:not(.theme-dark) .modal-body,
+body:not(.theme-dark) .admin-product-form-body,
+body:not(.theme-dark) .admin-product-stock-form,
+body:not(.theme-dark) .admin-users-permission-list,
+body:not(.theme-dark) .admin-category-image-field,
+body:not(.theme-dark) .admin-category-image-preview,
+body:not(.theme-dark) .admin-product-upload-box,
+body:not(.theme-dark) .admin-product-thumbnail-preview,
+body:not(.theme-dark) .admin-product-variant-step,
+body:not(.theme-dark) .admin-product-variant-row,
+body:not(.theme-dark) .dashboard-stat-list > div {
+  border-color: var(--admin-light-border) !important;
+  background: var(--admin-light-surface-2) !important;
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-permission-list label {
+  border-color: var(--admin-light-border) !important;
+  background: #ffffff !important;
+  color: var(--admin-light-text-muted) !important;
+}
+
+body:not(.theme-dark) .admin-users-form-error:not(:empty),
+body:not(.theme-dark) .admin-voucher-form-error:not(:empty),
+body:not(.theme-dark) .admin-category-form-error:not(:empty),
+body:not(.theme-dark) .admin-newsletter-error,
+body:not(.theme-dark) .admin-voucher-error,
+body:not(.theme-dark) .admin-users-error,
+body:not(.theme-dark) .admin-product-error,
+body:not(.theme-dark) .dashboard-error {
+  border: 1px solid #fecaca !important;
+  background: var(--admin-light-danger-bg) !important;
+  color: var(--admin-light-danger-text) !important;
+}
+
+body:not(.theme-dark) .admin-users-empty,
+body:not(.theme-dark) .admin-voucher-empty,
+body:not(.theme-dark) .admin-newsletter-empty,
+body:not(.theme-dark) .admin-category-empty,
+body:not(.theme-dark) .admin-product-empty,
+body:not(.theme-dark) .datatable-empty,
+body:not(.theme-dark) .dashboard-empty {
+  color: var(--admin-light-text-muted) !important;
+  background: transparent !important;
+}
+
+body:not(.theme-dark) .admin-users-table-wrap::-webkit-scrollbar,
+body:not(.theme-dark) .admin-voucher-table-wrap::-webkit-scrollbar,
+body:not(.theme-dark) .admin-newsletter-table-wrap::-webkit-scrollbar,
+body:not(.theme-dark) .admin-category-table-scroll::-webkit-scrollbar,
+body:not(.theme-dark) .admin-product-table-wrap::-webkit-scrollbar,
+body:not(.theme-dark) .datatable-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body:not(.theme-dark) .admin-users-table-wrap::-webkit-scrollbar-thumb,
+body:not(.theme-dark) .admin-voucher-table-wrap::-webkit-scrollbar-thumb,
+body:not(.theme-dark) .admin-newsletter-table-wrap::-webkit-scrollbar-thumb,
+body:not(.theme-dark) .admin-category-table-scroll::-webkit-scrollbar-thumb,
+body:not(.theme-dark) .admin-product-table-wrap::-webkit-scrollbar-thumb,
+body:not(.theme-dark) .datatable-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: var(--admin-light-border-strong);
+}
