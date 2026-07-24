@@ -1068,16 +1068,14 @@ function renderLoginPage() {
     <aside class="auth-luxury-panel login-banner-panel" aria-label="N&L Store">
       <img src="assets/images/login-fashion-photo-placeholder.svg" alt="Thời trang cao cấp N&L Store">
       <div class="login-banner-overlay"></div>
-      <div class="login-banner-content">
-        <div class="login-banner-brand">
-          <div class="login-banner-store">N&amp;L STORE</div>
-        </div>
-        <h2 class="login-hero-title"><span class="login-hero-title-line">KHẲNG ĐỊNH GU THỜI THƯỢNG</span><span class="login-hero-title-line login-hero-title-line--gold">– KIẾN TẠO DẤU ẤN RIÊNG</span></h2>
-        <p class="login-banner-desc">Khám phá trải nghiệm mua sắm tinh tế, hiện đại và ưu đãi dành riêng cho bạn.</p>
-        <ul class="login-banner-benefits">
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập mới mỗi tuần</span></li>
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Ưu đãi dành riêng cho thành viên</span></li>
-          <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Theo dõi đơn hàng nhanh chóng</span></li>
+      <div class="login-hero-content">
+        <div class="login-hero-brand">N&amp;L STORE</div>
+        <h2 class="login-hero-title"><span>Khẳng định gu thời thượng</span><span>Kiến tạo dấu ấn riêng</span></h2>
+        <p class="login-hero-subtitle">Khám phá trải nghiệm mua sắm tinh tế, hiện đại và ưu đãi dành riêng cho bạn.</p>
+        <ul class="login-hero-benefits">
+          <li>Bộ sưu tập mới mỗi tuần</li>
+          <li>Ưu đãi dành riêng cho thành viên</li>
+          <li>Theo dõi đơn hàng nhanh chóng</li>
         </ul>
       </div>
     </aside>

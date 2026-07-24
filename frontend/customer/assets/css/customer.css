@@ -2485,31 +2485,23 @@
   background: linear-gradient(90deg, rgba(5,12,28,.78) 0%, rgba(5,12,28,.48) 54%, rgba(5,12,28,.26) 100%), linear-gradient(180deg, rgba(5,12,28,.18) 0%, rgba(5,12,28,.42) 100%);
 }
 
-.login-banner-content {
+.login-hero-content {
   position: relative;
   z-index: 1;
-  height: 100%;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  max-width: none;
   padding: 108px 42px 58px;
 }
 
-.login-banner-brand {
+.login-hero-brand {
   position: absolute;
   top: 34px;
   left: 42px;
-  display: flex;
-  align-items: center;
-  margin: 0;
-}
-
-
-.login-banner-store {
   padding: 8px 11px;
   border: 1px solid rgba(255,255,255,.24);
   border-radius: 999px;
@@ -2517,8 +2509,8 @@
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1.8px;
   line-height: 1;
+  letter-spacing: .08em;
   white-space: nowrap;
   backdrop-filter: blur(12px);
 }
@@ -2531,40 +2523,34 @@
   padding: 0;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(18px, 1.55vw, 23px);
+  font-size: clamp(26px, 2.15vw, 32px);
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.18;
   letter-spacing: 0;
   word-spacing: 0;
   text-align: left;
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
-  word-wrap: normal;
   hyphens: none;
   text-transform: none;
-  overflow: visible;
 }
 
-.login-hero-title-line {
+.login-hero-title span {
   display: block;
-  width: 100%;
-  max-width: 100%;
   white-space: nowrap;
   letter-spacing: 0;
   word-spacing: 0;
   word-break: keep-all;
   overflow-wrap: normal;
-  word-wrap: normal;
-  text-align: left;
-  text-transform: none;
 }
 
-.login-hero-title-line--gold {
-  margin-top: 4px;
+.login-hero-title span + span {
+  margin-top: 5px;
   color: #e8aa35;
 }
-.login-banner-desc {
+
+.login-hero-subtitle {
   max-width: 360px;
   margin: 0 0 24px;
   color: rgba(255,255,255,.80);
@@ -2572,7 +2558,7 @@
   line-height: 1.55;
 }
 
-.login-banner-benefits {
+.login-hero-benefits {
   display: grid;
   gap: 14px;
   margin: 0;
@@ -2580,27 +2566,31 @@
   list-style: none;
 }
 
-.login-banner-benefits li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.login-hero-benefits li {
+  position: relative;
+  padding-left: 40px;
   color: rgba(255,255,255,0.78);
   font-size: 15px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 28px;
   white-space: nowrap;
 }
 
-.login-banner-benefits li i {
+.login-hero-benefits li::before {
+  content: "\f00c";
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 28px;
   height: 28px;
   display: grid;
   place-items: center;
-  flex: 0 0 28px;
   border-radius: 999px;
   background: rgba(226,168,74,.14);
   color: #E2A84A;
+  font-family: "Font Awesome 6 Free";
   font-size: .72rem;
+  font-weight: 900;
   box-shadow: inset 0 0 0 1px rgba(226,168,74,.20);
 }
 
@@ -2883,10 +2873,10 @@
 }
 
 @media (max-width: 1100px) {
-  .login-banner-content {
+  .login-hero-content {
     padding: 98px 34px 48px;
   }
-  .login-banner-brand {
+  .login-hero-brand {
     top: 30px;
     left: 34px;
   }
@@ -2894,7 +2884,7 @@
     max-width: 420px;
     font-size: clamp(18px, 1.5vw, 22px);
   }
-  .login-banner-benefits li {
+  .login-hero-benefits li {
     font-size: .92rem;
   }
 }
