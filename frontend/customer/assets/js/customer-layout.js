@@ -747,13 +747,14 @@ async function renderProductListPage() {
   const legacyFilter = PRODUCT_MENU_FILTERS[keywordKey];
   let category = null;
   let title = searchKeyword ? `Kết quả tìm kiếm cho: ${searchKeyword}` : legacyFilter?.label || "Tất cả sản phẩm";
+  const shellOptions = { showTitle: !searchKeyword };
 
   layoutState.main.innerHTML = renderPageShell(title, `
     <div class="customer-empty-state">
       <div class="customer-button-spinner"></div>
       <p>Đang tải sản phẩm...</p>
     </div>
-  `);
+  `, shellOptions);
 
   try {
     if (categorySlug && !searchKeyword) {
@@ -784,11 +785,15 @@ async function renderProductListPage() {
       layoutState.main.innerHTML = renderPageShell(title, `
         <div class="customer-empty-state">
           <div class="customer-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
-          <h2>${searchKeyword ? "Không tìm thấy sản phẩm phù hợp." : `Danh mục: ${escapeHtml(title)}`}</h2>
-          <p>${searchKeyword ? "Hãy thử từ khóa khác hoặc xem tất cả sản phẩm." : "Chưa có sản phẩm phù hợp."}</p>
+          ${searchKeyword ? `<span class="ds-tag">TÌM KIẾM SẢN PHẨM</span>
+          <h1>Kết quả tìm kiếm cho: ${escapeHtml(searchKeyword)}</h1>
+          <p>Tìm thấy 0 sản phẩm phù hợp.</p>
+          <p>Không tìm thấy sản phẩm phù hợp.</p>
+          <p>Hãy thử từ khóa khác hoặc xem tất cả sản phẩm.</p>` : `<h2>Danh mục: ${escapeHtml(title)}</h2>
+          <p>Chưa có sản phẩm phù hợp.</p>`}
           <a class="customer-button secondary" href="#products">Xem tất cả sản phẩm</a>
         </div>
-      `);
+      `, shellOptions);
       return;
     }
 
@@ -805,7 +810,7 @@ async function renderProductListPage() {
         </div>
         <div class="product-grid">${cards}</div>
       </section>
-    `);
+    `, shellOptions);
     initProductCard(layoutState.main);
     syncWishlistToggleButtons();
   } catch (error) {
@@ -817,7 +822,7 @@ async function renderProductListPage() {
         <p>${escapeHtml(getCustomerProductErrorMessage(error))}</p>
         <button class="customer-button" type="button" data-products-retry>Thử lại</button>
       </div>
-    `);
+    `, shellOptions);
     layoutState.main.querySelector("[data-products-retry]")?.addEventListener("click", renderProductListPage);
   }
 }
@@ -1024,12 +1029,12 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function renderPageShell(title, content) {
+function renderPageShell(title, content, options = {}) {
   return `
     <section class="customer-section">
       <div class="customer-container customer-page-shell">
         <article class="customer-card" style="padding:24px;">
-          <h1 style="margin-bottom:12px;">${escapeHtml(title)}</h1>
+          ${options.showTitle === false ? "" : `<h1 style="margin-bottom:12px;">${escapeHtml(title)}</h1>`}
           ${content}
         </article>
       </div>
