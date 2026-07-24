@@ -443,7 +443,7 @@
   grid-template-columns: 48px minmax(0, 1fr) 42px;
   min-height: 52px;
   border: 1px solid #cbd8e6;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
   transform: none;
@@ -451,12 +451,26 @@
 
 .customer-search-box:focus-within {
   border-color: #2f6fed;
-  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.16);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
-.customer-search-box input {
+.customer-search-box input,
+.customer-search-box input:focus,
+.customer-search-box input:focus-visible {
+  width: 100%;
+  min-width: 0;
   height: 50px;
+  min-height: 0;
   padding: 0 8px 0 0;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  appearance: none;
+  -webkit-appearance: none;
+  color: #17233c;
+  font: inherit;
   font-size: 0.98rem;
 }
 
@@ -468,7 +482,10 @@
 }
 
 .customer-search-submit:focus-visible,
-.customer-search-clear:focus-visible,
+.customer-search-clear:focus-visible {
+  outline: none;
+}
+
 .customer-search-close:focus-visible {
   outline: 3px solid rgba(47, 111, 237, 0.18);
   outline-offset: 2px;
@@ -504,7 +521,7 @@
   .customer-search-box {
     grid-template-columns: 42px minmax(0, 1fr) 36px;
     min-height: 52px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .customer-search-box input {
