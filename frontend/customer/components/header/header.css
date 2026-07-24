@@ -454,6 +454,15 @@
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
+
+.customer-search-box input::-webkit-search-cancel-button,
+.customer-search-box input::-webkit-search-decoration,
+.customer-search-box input::-webkit-search-results-button,
+.customer-search-box input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
 .customer-search-box input,
 .customer-search-box input:focus,
 .customer-search-box input:focus-visible {
