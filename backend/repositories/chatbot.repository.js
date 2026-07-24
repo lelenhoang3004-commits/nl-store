@@ -7,6 +7,7 @@ const PRODUCT_COLUMNS = `
   p.slug,
   p.sku,
   c.name AS category_name,
+  c.slug AS category_slug,
   p.brand,
   p.short_description,
   p.description,
@@ -23,7 +24,7 @@ export class ChatbotRepository extends BaseRepository {
   async searchProducts({ keywords = [], color = "", size = "", priceMin = null, priceMax = null, limit = 5 } = {}) {
     const conditions = ["p.deleted_at IS NULL", "p.status = 'active'"];
     const params = [];
-    const searchableColumns = ["p.name", "p.slug", "p.sku", "p.brand", "p.short_description", "p.description", "c.name"];
+    const searchableColumns = ["p.name", "p.slug", "p.sku", "p.brand", "p.tags", "p.short_description", "p.description", "c.name", "c.slug"];
 
     const allKeywords = [...keywords, color, size].map((item) => String(item || "").trim()).filter(Boolean).slice(0, 8);
     if (allKeywords.length) {
@@ -189,6 +190,7 @@ function mapProduct(row = {}) {
     slug: row.slug,
     sku: row.sku,
     categoryName: row.category_name || "Sản phẩm",
+    categorySlug: row.category_slug || "",
     brand: row.brand || "",
     shortDescription: row.short_description || "",
     description: row.description || "",

@@ -1,4 +1,4 @@
-import { customerApi } from "../../assets/js/customer-auth.js?v=20260717-cloudflare-pages";
+import { customerApi, customerAuth } from "../../assets/js/customer-auth.js?v=20260717-cloudflare-pages";
 
 const STORAGE_KEY = "nl-store-chatbot-history";
 const CONVERSATION_KEY = "nl-store-chatbot-conversation-id";
@@ -7,7 +7,20 @@ const AVATAR_URL = "./assets/images/chatbotai.png";
 const MAX_MESSAGES = 30;
 const EDGE_PADDING = 12;
 const DRAG_THRESHOLD = 8;
-const DEFAULT_SUGGESTIONS = ["Tìm sản phẩm", "Sản phẩm mới", "Sản phẩm bán chạy", "Voucher hiện có", "Tư vấn size", "Phí vận chuyển", "Thanh toán", "Kiểm tra đơn hàng"];
+const DEFAULT_SUGGESTIONS = [
+  "Tìm sản phẩm",
+  "Sản phẩm mới",
+  "Sản phẩm bán chạy",
+  "Voucher hiện có",
+  "Kiểm tra đơn hàng",
+  "Phí vận chuyển",
+  "Thanh toán",
+  "Đổi trả",
+  "Chính sách bảo hành",
+  "Tư vấn size",
+  "Thời gian giao hàng",
+  "Liên hệ hỗ trợ"
+];
 const WELCOME_MESSAGE = "Xin chào! Tôi là trợ lý của N&L Store. Tôi có thể giúp bạn tìm sản phẩm, tư vấn kích thước, kiểm tra đơn hàng và giải đáp chính sách của cửa hàng. Bạn cần hỗ trợ gì ạ?";
 
 let chatbotState = {
@@ -41,8 +54,8 @@ function createChatbotHtml() {
     <section class="nl-chatbot" data-nl-chatbot>
       <div class="nl-chatbot-panel" role="dialog" aria-modal="false" aria-label="Trợ lý N&L Store">
         <header class="nl-chatbot-header">
-          <div class="nl-chatbot-avatar">${avatarImage()}</div>
-          <div class="nl-chatbot-title"><strong>Trợ lý N&amp;L Store</strong><span>Đang hoạt động</span></div>
+          <div class="nl-chatbot-avatar"><span class="nl-chatbot-online-dot" aria-hidden="true"></span>${avatarImage()}</div>
+          <div class="nl-chatbot-title"><strong>Trợ lý N&amp;L Store</strong><span><i class="nl-chatbot-status-dot" aria-hidden="true"></i>Đang hoạt động</span></div>
           <button class="nl-chatbot-reset" type="button" data-chatbot-reset aria-label="Đưa chatbot về vị trí mặc định"><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i></button>
           <button class="nl-chatbot-close" type="button" data-chatbot-close aria-label="Đóng chatbot"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </header>
@@ -183,7 +196,7 @@ async function sendMessage(value) {
   try {
     const response = await customerApi("/chatbot/message", {
       method: "POST",
-      auth: true,
+      auth: isChatbotAuthenticated(),
       refreshOnUnauthorized: false,
       body: { message: text, conversationId: chatbotState.conversationId }
     });
@@ -280,20 +293,37 @@ function renderTypingMessage() {
 function renderSuggestions(suggestions = DEFAULT_SUGGESTIONS) {
   const target = chatbotState.root?.querySelector("[data-chatbot-suggestions]");
   if (!target) return;
-  target.innerHTML = suggestions.slice(0, 8).map(createSuggestionButton).join("");
+  target.innerHTML = uniqueSuggestions(suggestions).slice(0, 12).map(createSuggestionButton).join("");
 }
 
 function renderQuickSuggestions() {
   const target = chatbotState.root?.querySelector("[data-chatbot-quick]");
   if (!target || target.dataset.rendered === "true") return;
   target.dataset.rendered = "true";
-  target.innerHTML = DEFAULT_SUGGESTIONS.slice(0, 4).map(createSuggestionButton).join("");
+  target.innerHTML = DEFAULT_SUGGESTIONS.slice(0, 6).map(createSuggestionButton).join("");
 }
 
 function createSuggestionButton(label) {
   return `<button class="nl-chatbot-suggestion" type="button" data-chatbot-suggestion="${escapeAttribute(label)}">${escapeHtml(label)}</button>`;
 }
 
+function uniqueSuggestions(items = []) {
+  const seen = new Set();
+  return [...items, ...DEFAULT_SUGGESTIONS].map((item) => String(item || "").trim()).filter((item) => {
+    const key = item.toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function isChatbotAuthenticated() {
+  try {
+    return Boolean(customerAuth.isAuthenticated?.());
+  } catch {
+    return false;
+  }
+}
 function clearConversation() {
   chatbotState.messages = [createMessage("bot", WELCOME_MESSAGE)];
   localStorage.removeItem(STORAGE_KEY);
