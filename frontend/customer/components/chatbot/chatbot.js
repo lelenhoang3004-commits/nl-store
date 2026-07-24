@@ -28,7 +28,9 @@ let chatbotState = {
   messages: [],
   isSending: false,
   conversationId: "",
-  drag: null
+  drag: null,
+  suggestionsExpanded: false,
+  currentSuggestions: DEFAULT_SUGGESTIONS
 };
 
 export function initCustomerChatbot() {
@@ -59,9 +61,8 @@ function createChatbotHtml() {
           <button class="nl-chatbot-reset" type="button" data-chatbot-reset aria-label="Đưa chatbot về vị trí mặc định"><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i></button>
           <button class="nl-chatbot-close" type="button" data-chatbot-close aria-label="Đóng chatbot"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </header>
-        <div class="nl-chatbot-quick" data-chatbot-quick></div>
         <div class="nl-chatbot-messages" data-chatbot-messages aria-live="polite"></div>
-        <div>
+        <div class="nl-chatbot-footer">
           <div class="nl-chatbot-suggestions" data-chatbot-suggestions></div>
           <form class="nl-chatbot-form" data-chatbot-form>
             <textarea class="nl-chatbot-input" data-chatbot-input maxlength="1000" rows="1" placeholder="Nhập câu hỏi của bạn..." aria-label="Nội dung tin nhắn"></textarea>
@@ -101,7 +102,6 @@ function bindChatbotEvents() {
   root.querySelector("[data-chatbot-clear]")?.addEventListener("click", clearConversation);
   root.querySelector("[data-chatbot-reset]")?.addEventListener("click", resetPosition);
   root.querySelector("[data-chatbot-suggestions]")?.addEventListener("click", handleSuggestionClick);
-  root.querySelector("[data-chatbot-quick]")?.addEventListener("click", handleSuggestionClick);
 
   input?.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" || event.shiftKey) return;
@@ -118,6 +118,13 @@ function bindChatbotEvents() {
 }
 
 function handleSuggestionClick(event) {
+  const moreButton = event.target.closest("[data-chatbot-more]");
+  if (moreButton) {
+    chatbotState.suggestionsExpanded = !chatbotState.suggestionsExpanded;
+    renderSuggestions();
+    return;
+  }
+
   const button = event.target.closest("[data-chatbot-suggestion]");
   if (button) sendMessage(button.dataset.chatbotSuggestion || button.textContent || "");
 }
@@ -206,6 +213,7 @@ async function sendMessage(value) {
       orders: Array.isArray(data.orders) ? data.orders : [],
       vouchers: Array.isArray(data.vouchers) ? data.vouchers : []
     }));
+    chatbotState.suggestionsExpanded = false;
     renderSuggestions(Array.isArray(data.suggestions) && data.suggestions.length ? data.suggestions : DEFAULT_SUGGESTIONS);
   } catch (error) {
     chatbotState.messages.push(createMessage("bot", getChatbotErrorMessage(error)));
@@ -221,7 +229,6 @@ function renderMessages(options = {}) {
   const target = chatbotState.root?.querySelector("[data-chatbot-messages]");
   if (!target) return;
   target.innerHTML = chatbotState.messages.map(renderMessage).join("") + (options.typing ? renderTypingMessage() : "");
-  renderQuickSuggestions();
   scrollToBottom();
 }
 
@@ -290,17 +297,16 @@ function renderTypingMessage() {
   return `<article class="nl-chatbot-message is-bot"><div class="nl-chatbot-message-avatar">${avatarImage()}</div><div class="nl-chatbot-bubble"><span class="nl-chatbot-typing" aria-label="Chatbot đang xử lý"><span></span><span></span><span></span></span></div></article>`;
 }
 
-function renderSuggestions(suggestions = DEFAULT_SUGGESTIONS) {
+function renderSuggestions(suggestions = null) {
   const target = chatbotState.root?.querySelector("[data-chatbot-suggestions]");
   if (!target) return;
-  target.innerHTML = uniqueSuggestions(suggestions).slice(0, 12).map(createSuggestionButton).join("");
-}
-
-function renderQuickSuggestions() {
-  const target = chatbotState.root?.querySelector("[data-chatbot-quick]");
-  if (!target || target.dataset.rendered === "true") return;
-  target.dataset.rendered = "true";
-  target.innerHTML = DEFAULT_SUGGESTIONS.slice(0, 6).map(createSuggestionButton).join("");
+  if (Array.isArray(suggestions)) chatbotState.currentSuggestions = suggestions;
+  const items = uniqueSuggestions(chatbotState.currentSuggestions).slice(0, 12);
+  const visibleItems = chatbotState.suggestionsExpanded ? items : items.slice(0, 6);
+  const moreButton = items.length > 6
+    ? `<button class="nl-chatbot-suggestion is-more" type="button" data-chatbot-more>${chatbotState.suggestionsExpanded ? "Thu gọn" : "Xem thêm"}</button>`
+    : "";
+  target.innerHTML = visibleItems.map(createSuggestionButton).join("") + moreButton;
 }
 
 function createSuggestionButton(label) {
