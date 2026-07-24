@@ -2542,32 +2542,36 @@
   overflow: visible;
 }
 
-.login-banner-title .title-line {
+.login-banner-title .title-line-main {
   display: block;
-  width: auto;
+  width: 100%;
   max-width: 100%;
-  letter-spacing: normal;
+  margin: 0 0 5px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  word-spacing: 0;
   text-align: left;
   white-space: nowrap;
   word-break: normal;
   overflow-wrap: normal;
-  word-wrap: normal;
-  hyphens: manual;
 }
 
-.login-banner-title .title-line-main {
-  color: #FFFFFF;
-  margin-bottom: 5px;
-}
-
-.login-banner-title .title-line-accent {
+.login-hero-accent {
+  display: block;
+  width: 100%;
+  margin: 0;
   color: #F0BD59;
-  font-size: 1em;
+  font: inherit;
   font-weight: 800;
-  letter-spacing: normal;
+  text-align: left;
   white-space: nowrap;
+  letter-spacing: 0;
+  word-spacing: 0;
+  font-kerning: normal;
+  line-height: 1.2;
+  word-break: normal;
+  overflow-wrap: normal;
 }
-
 .login-banner-desc {
   max-width: 360px;
   margin: 0 0 24px;
