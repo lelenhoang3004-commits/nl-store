@@ -2475,17 +2475,14 @@
   height: 100%;
   object-fit: cover;
   object-position: 50% center;
-  filter: saturate(1.03) contrast(1.03) brightness(1.05);
+  filter: saturate(1.02) contrast(1.04) brightness(.92);
 }
 
 .auth-luxury-overlay,
 .login-banner-overlay {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(35,78,143,.16), transparent 34%),
-    radial-gradient(circle at 82% 82%, rgba(226,168,74,.10), transparent 30%),
-    linear-gradient(180deg, rgba(8,27,58,.04) 0%, rgba(8,27,58,.26) 44%, rgba(8,27,58,.70) 100%);
+  background: linear-gradient(90deg, rgba(5,12,28,.78) 0%, rgba(5,12,28,.48) 54%, rgba(5,12,28,.26) 100%), linear-gradient(180deg, rgba(5,12,28,.18) 0%, rgba(5,12,28,.42) 100%);
 }
 
 .login-banner-content {
@@ -2496,43 +2493,34 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  max-width: 460px;
-  padding: 64px 46px 58px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: none;
+  padding: 108px 42px 58px;
 }
 
 .login-banner-brand {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 18px;
+  position: absolute;
+  top: 34px;
+  left: 42px;
+  display: flex;
+  align-items: center;
+  margin: 0;
 }
 
-.login-banner-logo {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border: 1px solid rgba(255,255,255,.34);
-  border-radius: 16px;
-  background: rgba(22,51,95,.34);
-  color: #FFFFFF;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.08rem;
-  font-weight: 760;
-  letter-spacing: 0;
-  line-height: 1;
-  white-space: nowrap;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 16px 34px rgba(8,27,58,.18);
-}
 
 .login-banner-store {
-  color: #E2A84A;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 3px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 999px;
+  background: rgba(5,12,28,.28);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
   line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
 }
 
 .login-banner-title {
@@ -2541,22 +2529,23 @@
   margin: 0 0 18px;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(36px, 3vw, 44px);
-  font-weight: 700;
-  line-height: 1.07;
-  letter-spacing: -0.018em;
+  font-size: clamp(28px, 2.42vw, 39px);
+  font-weight: 760;
+  line-height: 1.12;
+  letter-spacing: 0;
   word-spacing: normal;
-  white-space: normal;
+  white-space: nowrap;
   word-break: normal;
   overflow-wrap: normal;
   word-wrap: normal;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .login-banner-title .title-line {
   display: block;
-  width: 100%;
-  white-space: normal;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
   word-break: normal;
   overflow-wrap: normal;
   word-wrap: normal;
@@ -2570,7 +2559,8 @@
 
 .login-banner-title .title-line-accent {
   color: #F0BD59;
-  font-weight: 700;
+  font-size: .96em;
+  font-weight: 800;
   white-space: nowrap;
 }
 
@@ -2894,11 +2884,15 @@
 
 @media (max-width: 1100px) {
   .login-banner-content {
-    padding: 56px 42px 52px;
+    padding: 98px 34px 48px;
+  }
+  .login-banner-brand {
+    top: 30px;
+    left: 34px;
   }
   .login-banner-title {
     max-width: 100%;
-    font-size: clamp(32px, 3.35vw, 39px);
+    font-size: clamp(25px, 2.75vw, 32px);
   }
   .login-banner-benefits li {
     font-size: .92rem;
