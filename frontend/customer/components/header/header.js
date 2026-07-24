@@ -3,6 +3,8 @@ import { customerApi, customerAuth } from "../../assets/js/customer-auth.js?v=20
 
 let activeHeaderRoot = null;
 let globalHeaderListenersBound = false;
+const SEARCH_SUGGESTIONS = ["Áo khoác", "Áo len", "Chân váy", "Túi xách", "Đồng hồ", "Kính mắt"];
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function createCustomerHeader(user = null, cart = null, wishlistCount = 0) {
   const initials = createInitials(user?.name || user?.fullName || user?.email || "AN");
@@ -71,12 +73,21 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
     </div>
 
     <div class="customer-search-panel" data-search-panel>
-      <div class="customer-container">
-        <label>
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="search" placeholder="Tìm áo khoác, đầm midi, quần jeans..." aria-label="Tìm sản phẩm">
-        </label>
-        <button type="button" aria-label="Đóng tìm kiếm" data-search-close>
+      <div class="customer-container customer-search-shell">
+        <form class="customer-search-box" role="search" data-customer-search-form>
+          <button class="customer-search-submit" type="submit" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+          <input type="search" placeholder="Tìm áo khoác, đầm midi, quần jeans..." aria-label="Tìm sản phẩm" autocomplete="off" data-customer-search-input>
+          <button class="customer-search-clear" type="button" aria-label="Xóa nội dung tìm kiếm" data-search-clear hidden>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+          <div class="customer-search-suggestions" data-search-suggestions>
+            <strong>Tìm kiếm phổ biến:</strong>
+            <div>
+              ${SEARCH_SUGGESTIONS.map((item) => `<button type="button" data-search-suggestion="${escapeHtml(item)}">${escapeHtml(item)}</button>`).join("")}
+            </div>
+          </div>
+        </form>
+        <button class="customer-search-close" type="button" aria-label="Đóng tìm kiếm" data-search-close>
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </div>
@@ -113,14 +124,7 @@ export function initCustomerHeader(root = document, options = {}) {
     nav?.classList.toggle("is-open");
   });
 
-  root.querySelector("[data-search-toggle]")?.addEventListener("click", () => {
-    searchPanel?.classList.add("is-open");
-    searchPanel?.querySelector("input")?.focus();
-  });
-
-  root.querySelector("[data-search-close]")?.addEventListener("click", () => {
-    searchPanel?.classList.remove("is-open");
-  });
+  bindHeaderSearch(root, searchPanel);
 
   root.querySelectorAll("[data-popover-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -144,6 +148,99 @@ export function initCustomerHeader(root = document, options = {}) {
   initializeUnreadCounter(root);
 }
 
+function bindHeaderSearch(root, searchPanel) {
+  const input = root.querySelector("[data-customer-search-input]");
+  const form = root.querySelector("[data-customer-search-form]");
+  const clearButton = root.querySelector("[data-search-clear]");
+  const suggestions = root.querySelector("[data-search-suggestions]");
+  let debounceTimer = 0;
+
+  const syncSearchUi = () => {
+    const hasValue = Boolean(input?.value.trim());
+    if (clearButton) clearButton.hidden = !hasValue;
+    suggestions?.classList.toggle("is-visible", Boolean(searchPanel?.classList.contains("is-open") && !hasValue));
+  };
+
+  const openSearch = () => {
+    closeHeaderPopovers(root);
+    searchPanel?.classList.add("is-open");
+    window.requestAnimationFrame(() => input?.focus());
+    syncSearchUi();
+  };
+
+  const closeSearch = () => {
+    searchPanel?.classList.remove("is-open");
+    suggestions?.classList.remove("is-visible");
+  };
+
+  const runSearch = (rawValue = input?.value || "", options = {}) => {
+    const keyword = normalizeSearchKeyword(rawValue);
+    if (input && input.value !== rawValue) input.value = rawValue;
+    syncSearchUi();
+
+    if (!keyword) {
+      if (normalizeRouteFromHash(window.location.hash) === "products") {
+        window.location.hash = "#products";
+      }
+      return;
+    }
+
+    const nextHash = `#products?search=${encodeURIComponent(keyword)}`;
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+    if (options.close) closeSearch();
+  };
+
+  root.querySelector("[data-search-toggle]")?.addEventListener("click", openSearch);
+  root.querySelector("[data-search-close]")?.addEventListener("click", closeSearch);
+
+  input?.addEventListener("input", () => {
+    syncSearchUi();
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => runSearch(input.value), SEARCH_DEBOUNCE_MS);
+  });
+
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    window.clearTimeout(debounceTimer);
+    runSearch(input?.value || "", { close: true });
+  });
+
+  clearButton?.addEventListener("click", () => {
+    if (input) input.value = "";
+    window.clearTimeout(debounceTimer);
+    syncSearchUi();
+    input?.focus();
+    if (normalizeRouteFromHash(window.location.hash) === "products") {
+      window.location.hash = "#products";
+    }
+  });
+
+  root.querySelectorAll("[data-search-suggestion]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const keyword = button.textContent?.trim() || button.dataset.searchSuggestion || "";
+      if (input) input.value = keyword;
+      runSearch(keyword, { close: true });
+    });
+  });
+
+  syncSearchUi();
+}
+
+function normalizeSearchKeyword(value = "") {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeRouteFromHash(hash = "") {
+  return String(hash || "#home").replace(/^#\/?/, "").split("?")[0].toLowerCase() || "home";
+}
+
+function closeHeaderPopovers(root) {
+  root.querySelectorAll("[data-popover]").forEach((popover) => {
+    popover.classList.remove("is-open");
+  });
+}
 function createInitials(value) {
   return String(value || "AN")
     .trim()
@@ -381,4 +478,5 @@ async function handleCustomerNotificationClick(event, root) {
 function normalizeCustomerNotification(item = {}) {
   return { ...item, id: item.id, type: String(item.type || "").toUpperCase(), read: Boolean(item.read ?? item.isRead), link: item.link || "#home" };
 }
+
 

@@ -743,9 +743,10 @@ async function renderProductListPage() {
   const params = new URLSearchParams(hashQuery);
   const categorySlug = decodeURIComponent(params.get("category") || "").toLowerCase();
   const keywordKey = decodeURIComponent(params.get("keyword") || "").toLowerCase();
+  const searchKeyword = normalizeSearchTerm(params.get("search") || params.get("q") || "");
   const legacyFilter = PRODUCT_MENU_FILTERS[keywordKey];
   let category = null;
-  let title = legacyFilter?.label || "Tất cả sản phẩm";
+  let title = searchKeyword ? "Tìm kiếm sản phẩm" : legacyFilter?.label || "Tất cả sản phẩm";
 
   layoutState.main.innerHTML = renderPageShell(title, `
     <div class="customer-empty-state">
@@ -755,45 +756,48 @@ async function renderProductListPage() {
   `);
 
   try {
-    if (categorySlug) {
+    if (categorySlug && !searchKeyword) {
       category = await getCustomerCategoryBySlug(categorySlug);
       title = category?.name || categorySlug;
     }
 
-    const query = new URLSearchParams({ status: "active", limit: "100" });
-    if (category?.id) {
+    const query = new URLSearchParams({ status: "active", limit: "500" });
+    if (category?.id && !searchKeyword) {
       query.set("categoryId", String(category.id));
-    } else if (legacyFilter) {
+    } else if (legacyFilter && !searchKeyword) {
       query.set("search", [...legacyFilter.keywords, keywordKey].join("|"));
     }
 
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
-    const apiProducts = getListFromApiPayload(response, "products");
-    const products = categorySlug && !category?.id
-      ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
-      : legacyFilter
-        ? apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
-        : apiProducts;
+    const apiProducts = getListFromApiPayload(response, "products").filter(isActiveCustomerProduct);
+    const products = searchKeyword
+      ? apiProducts.filter((product) => matchesProductSearch(product, searchKeyword))
+      : categorySlug && !category?.id
+        ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
+        : legacyFilter
+          ? apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
+          : apiProducts;
 
     if (!products.length) {
       layoutState.main.innerHTML = renderPageShell(title, `
         <div class="customer-empty-state">
-          <div class="customer-empty-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div>
-          <h2>Danh mục: ${escapeHtml(title)}</h2>
-          <p>Chưa có sản phẩm phù hợp.</p>
-          <a class="customer-button secondary" href="#home">Quay lại trang chủ</a>
+          <div class="customer-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
+          <h2>${searchKeyword ? "Không tìm thấy sản phẩm phù hợp." : `Danh mục: ${escapeHtml(title)}`}</h2>
+          <p>${searchKeyword ? `Không có sản phẩm nào khớp với “${escapeHtml(searchKeyword)}”.` : "Chưa có sản phẩm phù hợp."}</p>
+          <a class="customer-button secondary" href="#products">Xem tất cả sản phẩm</a>
         </div>
       `);
       return;
     }
 
     const cards = products.map((product) => createProductCard(mapApiProductForCard(product))).join("");
+    const resultHeading = searchKeyword ? `Kết quả tìm kiếm cho: ${escapeHtml(searchKeyword)}` : `Danh mục: ${escapeHtml(title)}`;
     layoutState.main.innerHTML = renderPageShell(title, `
       <section class="customer-product-results">
         <div class="section-heading">
           <div>
-            <span class="ds-tag">DANH MỤC SẢN PHẨM</span>
-            <h1>Danh mục: ${escapeHtml(title)}</h1>
+            <span class="ds-tag">${searchKeyword ? "TÌM KIẾM SẢN PHẨM" : "DANH MỤC SẢN PHẨM"}</span>
+            <h1>${resultHeading}</h1>
             <p>Tìm thấy ${products.length} sản phẩm phù hợp.</p>
           </div>
         </div>
@@ -928,6 +932,54 @@ function mapApiProductForCard(product = {}) {
   };
 }
 
+
+function normalizeSearchTerm(value = "") {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeSearchText(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isActiveCustomerProduct(product = {}) {
+  const status = String(product.status || "active").toLowerCase();
+  return status === "active" && !(product.deletedAt || product.deleted_at);
+}
+
+function matchesProductSearch(product = {}, rawKeyword = "") {
+  const normalizedKeyword = normalizeSearchText(rawKeyword);
+  if (!normalizedKeyword) return true;
+  const tags = normalizeTagsForSearch(product.tags);
+  const searchable = normalizeSearchText([
+    product.name,
+    product.slug,
+    tags,
+    product.shortDescription || product.short_description,
+    product.description,
+    product.categoryName || product.category_name || product.category,
+    product.brand
+  ].filter(Boolean).join(" "));
+  return normalizedKeyword.split(" ").every((part) => searchable.includes(part));
+}
+
+function normalizeTagsForSearch(tags) {
+  if (Array.isArray(tags)) return tags.join(" ");
+  if (typeof tags !== "string") return "";
+  try {
+    const parsed = JSON.parse(tags);
+    return Array.isArray(parsed) ? parsed.join(" ") : tags;
+  } catch {
+    return tags;
+  }
+}
 function matchesProductMenuFilter(product = {}, filter = {}) {
   const normalize = (value) => String(value || "")
     .normalize("NFD")
