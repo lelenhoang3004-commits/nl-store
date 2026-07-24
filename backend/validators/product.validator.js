@@ -29,6 +29,14 @@ export function validateProductListRequest({ query }) {
     errors.push(createValidationError("stockStatus", "stockStatus must be inStock, lowStock, or outOfStock.", "query", "INVALID_STOCK_STATUS"));
   }
 
+  if (!isEmpty(query.search) && typeof query.search !== "string") {
+    errors.push(createValidationError("search", "search must be a string.", "query", "INVALID_PRODUCT_SEARCH"));
+  }
+
+  if (!isEmpty(query.search) && String(query.search).trim().length > 150) {
+    errors.push(createValidationError("search", "search must not exceed 150 characters.", "query", "PRODUCT_SEARCH_TOO_LONG"));
+  }
+
   if (!isEmpty(query.categoryId)) {
     errors.push(...validateId(query.categoryId, { field: "categoryId", location: "query" }).errors);
   }

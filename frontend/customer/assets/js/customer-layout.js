@@ -1,4 +1,4 @@
-﻿import { createCustomerFooter } from "../../components/footer/footer.js";
+import { createCustomerFooter } from "../../components/footer/footer.js";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
@@ -743,10 +743,10 @@ async function renderProductListPage() {
   const params = new URLSearchParams(hashQuery);
   const categorySlug = decodeURIComponent(params.get("category") || "").toLowerCase();
   const keywordKey = decodeURIComponent(params.get("keyword") || "").toLowerCase();
-  const searchKeyword = normalizeSearchTerm(params.get("search") || params.get("q") || "");
+  const searchKeyword = normalizeSearchTerm(params.get("search") || "");
   const legacyFilter = PRODUCT_MENU_FILTERS[keywordKey];
   let category = null;
-  let title = searchKeyword ? "Tìm kiếm sản phẩm" : legacyFilter?.label || "Tất cả sản phẩm";
+  let title = searchKeyword ? `Kết quả tìm kiếm cho: ${searchKeyword}` : legacyFilter?.label || "Tất cả sản phẩm";
 
   layoutState.main.innerHTML = renderPageShell(title, `
     <div class="customer-empty-state">
@@ -761,11 +761,13 @@ async function renderProductListPage() {
       title = category?.name || categorySlug;
     }
 
-    const query = new URLSearchParams({ status: "active", limit: "500" });
+    const query = new URLSearchParams({ status: "active", page: "1", limit: "100" });
     if (category?.id && !searchKeyword) {
       query.set("categoryId", String(category.id));
     } else if (legacyFilter && !searchKeyword) {
       query.set("search", [...legacyFilter.keywords, keywordKey].join("|"));
+    } else if (searchKeyword) {
+      query.set("search", searchKeyword);
     }
 
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
@@ -783,7 +785,7 @@ async function renderProductListPage() {
         <div class="customer-empty-state">
           <div class="customer-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
           <h2>${searchKeyword ? "Không tìm thấy sản phẩm phù hợp." : `Danh mục: ${escapeHtml(title)}`}</h2>
-          <p>${searchKeyword ? `Không có sản phẩm nào khớp với “${escapeHtml(searchKeyword)}”.` : "Chưa có sản phẩm phù hợp."}</p>
+          <p>${searchKeyword ? "Hãy thử từ khóa khác hoặc xem tất cả sản phẩm." : "Chưa có sản phẩm phù hợp."}</p>
           <a class="customer-button secondary" href="#products">Xem tất cả sản phẩm</a>
         </div>
       `);
@@ -807,16 +809,27 @@ async function renderProductListPage() {
     initProductCard(layoutState.main);
     syncWishlistToggleButtons();
   } catch (error) {
+    console.error("[products] Unable to load customer products", error);
     layoutState.main.innerHTML = renderPageShell(title, `
       <div class="customer-empty-state">
         <div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
         <h2>Không thể tải sản phẩm</h2>
-        <p>${escapeHtml(error?.message || "Đã xảy ra lỗi khi tải danh sách sản phẩm.")}</p>
+        <p>${escapeHtml(getCustomerProductErrorMessage(error))}</p>
         <button class="customer-button" type="button" data-products-retry>Thử lại</button>
       </div>
     `);
     layoutState.main.querySelector("[data-products-retry]")?.addEventListener("click", renderProductListPage);
   }
+}
+
+function getCustomerProductErrorMessage(error) {
+  if (error?.status === 400 || error?.status === 422) {
+    return "Không thể tìm kiếm sản phẩm với bộ lọc hiện tại. Vui lòng thử lại.";
+  }
+  if (error?.status >= 500) {
+    return "Hệ thống đang bận. Vui lòng thử lại sau.";
+  }
+  return "Đã xảy ra lỗi khi tải danh sách sản phẩm. Vui lòng thử lại.";
 }
 
 let customerCategoryCache = { items: [], loadedAt: 0, promise: null };
@@ -3742,8 +3755,3 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
-
-
-
-
-

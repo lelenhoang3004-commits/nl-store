@@ -1,4 +1,4 @@
-﻿/* Premium customer header with sticky glass surface and commerce actions. */
+/* Premium customer header with sticky glass surface and commerce actions. */
 .customer-header {
   position: sticky;
   top: 0;
@@ -430,5 +430,89 @@
     width: 42px;
     height: 48px;
     border-radius: 14px;
+  }
+}
+/* Customer product search refinement */
+.customer-search-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.customer-search-box {
+  grid-template-columns: 48px minmax(0, 1fr) 42px;
+  min-height: 52px;
+  border: 1px solid #cbd8e6;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  transform: none;
+}
+
+.customer-search-box:focus-within {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.16), 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.customer-search-box input {
+  height: 50px;
+  padding: 0 8px 0 0;
+  font-size: 0.98rem;
+}
+
+.customer-search-submit,
+.customer-search-clear {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+.customer-search-submit:focus-visible,
+.customer-search-clear:focus-visible,
+.customer-search-close:focus-visible {
+  outline: 3px solid rgba(47, 111, 237, 0.18);
+  outline-offset: 2px;
+}
+
+.customer-search-clear {
+  color: #64748b;
+}
+
+.customer-search-close {
+  width: 42px;
+  height: 42px;
+  align-self: center;
+  border-radius: 14px;
+  border-color: #cbd8e6;
+  color: #64748b;
+  background: #ffffff;
+}
+
+.customer-search-close:hover,
+.customer-search-clear:hover,
+.customer-search-submit:hover {
+  background: #eef5ff;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 560px) {
+  .customer-search-shell {
+    max-width: none;
+  }
+
+  .customer-search-box {
+    grid-template-columns: 42px minmax(0, 1fr) 36px;
+    min-height: 52px;
+  }
+
+  .customer-search-box input {
+    height: 50px;
+    font-size: 0.92rem;
+  }
+
+  .customer-search-close {
+    width: 40px;
+    height: 40px;
   }
 }

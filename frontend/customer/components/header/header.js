@@ -1,4 +1,4 @@
-﻿import { createCustomerNavigation, initCustomerNavigation } from "../navigation/navigation.js";
+import { createCustomerNavigation, initCustomerNavigation } from "../navigation/navigation.js";
 import { customerApi, customerAuth } from "../../assets/js/customer-auth.js?v=20260717-cloudflare-pages";
 
 let activeHeaderRoot = null;
@@ -154,6 +154,8 @@ function bindHeaderSearch(root, searchPanel) {
   const clearButton = root.querySelector("[data-search-clear]");
   const suggestions = root.querySelector("[data-search-suggestions]");
   let debounceTimer = 0;
+  let lastSubmittedHash = "";
+  let returnHash = normalizeRouteFromHash(window.location.hash) === "products" ? "#products" : window.location.hash || "#products";
 
   const syncSearchUi = () => {
     const hasValue = Boolean(input?.value.trim());
@@ -163,14 +165,19 @@ function bindHeaderSearch(root, searchPanel) {
 
   const openSearch = () => {
     closeHeaderPopovers(root);
+    const currentHash = window.location.hash || "#products";
+    if (!isProductSearchHash(currentHash)) returnHash = currentHash;
     searchPanel?.classList.add("is-open");
     window.requestAnimationFrame(() => input?.focus());
     syncSearchUi();
   };
 
-  const closeSearch = () => {
+  const closeSearch = (options = {}) => {
     searchPanel?.classList.remove("is-open");
     suggestions?.classList.remove("is-visible");
+    if (options.restore && isProductSearchHash(window.location.hash)) {
+      window.location.hash = returnHash && !isProductSearchHash(returnHash) ? returnHash : "#products";
+    }
   };
 
   const runSearch = (rawValue = input?.value || "", options = {}) => {
@@ -179,21 +186,23 @@ function bindHeaderSearch(root, searchPanel) {
     syncSearchUi();
 
     if (!keyword) {
-      if (normalizeRouteFromHash(window.location.hash) === "products") {
+      if (normalizeRouteFromHash(window.location.hash) === "products" && window.location.hash !== "#products") {
+        lastSubmittedHash = "#products";
         window.location.hash = "#products";
       }
       return;
     }
 
     const nextHash = `#products?search=${encodeURIComponent(keyword)}`;
-    if (window.location.hash !== nextHash) {
+    if (window.location.hash !== nextHash && lastSubmittedHash !== nextHash) {
+      lastSubmittedHash = nextHash;
       window.location.hash = nextHash;
     }
     if (options.close) closeSearch();
   };
 
   root.querySelector("[data-search-toggle]")?.addEventListener("click", openSearch);
-  root.querySelector("[data-search-close]")?.addEventListener("click", closeSearch);
+  root.querySelector("[data-search-close]")?.addEventListener("click", () => closeSearch({ restore: true }));
 
   input?.addEventListener("input", () => {
     syncSearchUi();
@@ -212,7 +221,8 @@ function bindHeaderSearch(root, searchPanel) {
     window.clearTimeout(debounceTimer);
     syncSearchUi();
     input?.focus();
-    if (normalizeRouteFromHash(window.location.hash) === "products") {
+    if (normalizeRouteFromHash(window.location.hash) === "products" && window.location.hash !== "#products") {
+      lastSubmittedHash = "#products";
       window.location.hash = "#products";
     }
   });
@@ -234,6 +244,11 @@ function normalizeSearchKeyword(value = "") {
 
 function normalizeRouteFromHash(hash = "") {
   return String(hash || "#home").replace(/^#\/?/, "").split("?")[0].toLowerCase() || "home";
+}
+
+function isProductSearchHash(hash = "") {
+  const value = String(hash || "");
+  return normalizeRouteFromHash(value) === "products" && new URLSearchParams(value.split("?")[1] || "").has("search");
 }
 
 function closeHeaderPopovers(root) {
@@ -478,5 +493,3 @@ async function handleCustomerNotificationClick(event, root) {
 function normalizeCustomerNotification(item = {}) {
   return { ...item, id: item.id, type: String(item.type || "").toUpperCase(), read: Boolean(item.read ?? item.isRead), link: item.link || "#home" };
 }
-
-

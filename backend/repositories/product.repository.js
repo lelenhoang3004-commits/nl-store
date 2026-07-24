@@ -66,6 +66,34 @@ const normalizePagination = (pagination = {}) => {
 
 const normalizeSqlParams = (params = []) => params.map((value) => value === undefined ? null : value);
 
+const VIETNAMESE_REPLACEMENTS = Object.freeze([
+  ["àáạảãâầấậẩẫăằắặẳẵ", "a"],
+  ["èéẹẻẽêềếệểễ", "e"],
+  ["ìíịỉĩ", "i"],
+  ["òóọỏõôồốộổỗơờớợởỡ", "o"],
+  ["ùúụủũưừứựửữ", "u"],
+  ["ỳýỵỷỹ", "y"],
+  ["đ", "d"]
+]);
+
+function normalizeVietnameseSearchText(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function createAccentFoldSql(column) {
+  return VIETNAMESE_REPLACEMENTS.reduce((expression, [chars, replacement]) => {
+    return Array.from(chars).reduce((nextExpression, char) => `REPLACE(${nextExpression}, '${char}', '${replacement}')`, expression);
+  }, `LOWER(COALESCE(${column}, ''))`);
+}
+
 export class ProductRepository extends BaseRepository {
   async findAll(options) {
     const startedAt = Date.now();
@@ -424,10 +452,14 @@ export class ProductRepository extends BaseRepository {
 
     if (options.search.enabled) {
       const keywords = options.search.keyword.split("|").map((item) => item.trim()).filter(Boolean).slice(0, 12);
-      const searchableColumns = ["p.name", "p.slug", "p.sku", "p.brand", "p.tags", "p.short_description", "p.description", "c.name"];
-      conditions.push(`(${keywords.map(() => `(${searchableColumns.map((column) => `${column} LIKE ?`).join(" OR ")})`).join(" OR ")})`);
+      const searchableColumns = ["p.name", "p.slug", "p.brand", "p.tags", "p.short_description", "p.description", "c.name", "c.slug"];
+      const accentFoldColumns = searchableColumns.map(createAccentFoldSql);
+      conditions.push(`(${keywords.map(() => `(${searchableColumns.map((column) => `LOWER(COALESCE(${column}, '')) LIKE LOWER(?)`).join(" OR ")} OR ${accentFoldColumns.map((column) => `${column} LIKE ?`).join(" OR ")})`).join(" OR ")})`);
       keywords.forEach((keyword) => {
-        searchableColumns.forEach(() => params.push(`%${keyword}%`));
+        const trimmedKeyword = String(keyword).trim();
+        const normalizedKeyword = normalizeVietnameseSearchText(trimmedKeyword);
+        searchableColumns.forEach(() => params.push(`%${trimmedKeyword}%`));
+        accentFoldColumns.forEach(() => params.push(`%${normalizedKeyword}%`));
       });
     }
 
