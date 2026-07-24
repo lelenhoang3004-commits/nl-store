@@ -160,14 +160,12 @@ async function loadAndOpenForm(root, productId) {
   const loadKey = String(productId);
 
   if (activeProductLoadKey === loadKey && activeProductLoadPromise) {
-    console.debug("[PRODUCT MODAL] skip duplicate product load", loadKey);
     return activeProductLoadPromise;
   }
 
   activeProductLoadKey = loadKey;
   activeProductLoadPromise = (async () => {
     try {
-      console.debug("[PRODUCT MODAL] open product", loadKey);
       const response = await productService.getProductById(productId, silent());
       openProductForm(root, response.data?.product);
     } catch (error) {
@@ -214,7 +212,6 @@ function openProductForm(root, product = null) {
   modal.querySelector("[data-product-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget, payload = formPayload(form), validation = validateFormPayload(payload);
-    try { console.log("[admin product submit] rating_average ->", payload.rating_average); } catch (e) {}
     const errorTarget = form.querySelector("[data-product-form-error]");
     clearFormErrors(form);
     if (form.dataset.imageUploading === "true") { errorTarget.textContent = "Vui lòng chờ tải ảnh hoàn tất."; return; }
@@ -687,12 +684,6 @@ async function validateAndNormalizeProductImages(payload, form = null) {
 
   const selectedThumbnailUrl = payload.thumbnail_url || "";
   const selectedNewMainImage = selectedThumbnailUrl && selectedThumbnailUrl !== originalThumbnailUrl;
-  console.debug("[admin product images] normalized", {
-    thumbnail_url: payload.thumbnail_url,
-    gallery_urls: payload.gallery_urls,
-    original_thumbnail_url: originalThumbnailUrl || null,
-    selected_new_main_image: Boolean(selectedNewMainImage)
-  });
 
   if (!selectedNewMainImage || isPlaceholderImageUrl(selectedThumbnailUrl)) return;
 
@@ -1214,18 +1205,15 @@ function bindProductVariantSection(modal, product, root = null) {
     if (!product?.id) return;
 
     if (variantsLoadingProductId === product.id) {
-      console.debug("[VARIANTS] skip duplicate request", product.id);
       return;
     }
 
     if (!force && variantsLoadedProductId === product.id && Array.isArray(currentVariantsCache)) {
-      console.debug("[VARIANTS] use cached variants", product.id, currentVariantsCache.length);
       renderVariantTable(currentVariantsCache);
       return;
     }
 
     variantsLoadingProductId = product.id;
-    console.debug("[VARIANTS] load start", product.id);
 
     try {
       const variants = await loadProductVariants(product.id, { force });
@@ -1359,27 +1347,22 @@ function bindProductVariantSection(modal, product, root = null) {
     if (!productId) return [];
 
     if (variantsLoadingProductId === productId) {
-      console.debug("[VARIANTS] already loading", productId);
       return currentVariantsCache;
     }
 
     if (!force && variantsLoadedProductId === productId && Array.isArray(currentVariantsCache)) {
-      console.debug("[VARIANTS] use cached variants", productId, currentVariantsCache.length);
       return currentVariantsCache;
     }
 
     variantsLoadingProductId = productId;
-    console.debug("[VARIANTS] load start", productId);
 
     try {
       const response = await productService.getVariants(productId, silent());
       const variants = Array.isArray(response.data?.variants) ? response.data.variants : [];
       currentVariantsCache = variants;
       variantsLoadedProductId = productId;
-      console.debug("[VARIANTS] load done", productId, variants.length);
       return variants;
     } catch (error) {
-      console.debug("[VARIANTS] load failed", productId, error?.message || error);
       throw error;
     } finally {
       if (variantsLoadingProductId === productId) {
