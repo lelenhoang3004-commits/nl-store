@@ -186,8 +186,8 @@
 
 .footer-column h2 {
   position: relative;
-  margin: 0 0 4px;
-  padding-bottom: 9px;
+  margin: 0 0 5px;
+  padding-bottom: 8px;
   color: #0f172a;
   font-size: 0.96rem;
   font-weight: 800;
@@ -199,10 +199,11 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 28px;
-  height: 2px;
+  width: 24px;
+  height: 1.5px;
   border-radius: 999px;
-  background: #2563eb;
+  background: linear-gradient(90deg, rgba(30, 64, 175, 0.72), rgba(14, 165, 233, 0.32));
+  opacity: 0.9;
 }
 
 .footer-column a {
