@@ -2515,40 +2515,6 @@
   backdrop-filter: blur(12px);
 }
 
-.login-hero-title {
-  display: block;
-  width: 100%;
-  max-width: 440px;
-  margin: 0 0 18px;
-  padding: 0;
-  color: #FFFFFF;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(26px, 2.15vw, 32px);
-  font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: 0;
-  word-spacing: 0;
-  text-align: left;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: normal;
-  hyphens: none;
-  text-transform: none;
-}
-
-.login-hero-title span {
-  display: block;
-  white-space: nowrap;
-  letter-spacing: 0;
-  word-spacing: 0;
-  word-break: keep-all;
-  overflow-wrap: normal;
-}
-
-.login-hero-title span + span {
-  margin-top: 5px;
-  color: #e8aa35;
-}
 
 .login-hero-subtitle {
   max-width: 360px;
@@ -2880,10 +2846,6 @@
     top: 30px;
     left: 34px;
   }
-  .login-hero-title {
-    max-width: 420px;
-    font-size: clamp(18px, 1.5vw, 22px);
-  }
   .login-hero-benefits li {
     font-size: .92rem;
   }
@@ -2964,5 +2926,56 @@
   }
   .auth-login-content .auth-phone-button {
     width: 100%;
+  }
+}
+/* Clean login slogan: isolated from legacy text styles. */
+.nl-login-slogan {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 18px;
+  padding: 0;
+  text-align: left;
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: clamp(20px, 1.6vw, 26px);
+  font-weight: 700;
+  line-height: 1.18;
+  text-transform: none;
+}
+
+.nl-login-slogan__white,
+.nl-login-slogan__gold {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: 1.18;
+  text-align: left;
+  text-transform: none;
+  white-space: nowrap;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+  font-kerning: normal;
+  font-variant-ligatures: normal;
+}
+
+.nl-login-slogan__white {
+  color: #ffffff;
+}
+
+.nl-login-slogan__gold {
+  margin-top: 5px;
+  color: #e9a62f;
+}
+
+@media (max-width: 1100px) {
+  .nl-login-slogan {
+    font-size: clamp(18px, 1.55vw, 22px);
   }
 }

@@ -1070,7 +1070,10 @@ function renderLoginPage() {
       <div class="login-banner-overlay"></div>
       <div class="login-hero-content">
         <div class="login-hero-brand">N&amp;L STORE</div>
-        <h2 class="login-hero-title"><span>Khẳng định gu thời thượng</span><span>Kiến tạo dấu ấn riêng</span></h2>
+        <div class="nl-login-slogan" data-no-text-split="true" aria-label="Khẳng định gu thời thượng – Kiến tạo dấu ấn riêng">
+          <div class="nl-login-slogan__white">KH&#7858;NG &#272;&#7882;NH GU TH&#7900;I TH&#431;&#7906;NG</div>
+          <div class="nl-login-slogan__gold">&#8211; KI&#7870;N T&#7840;O D&#7844;U &#7844;N RI&#202;NG</div>
+        </div>
         <p class="login-hero-subtitle">Khám phá trải nghiệm mua sắm tinh tế, hiện đại và ưu đãi dành riêng cho bạn.</p>
         <ul class="login-hero-benefits">
           <li>Bộ sưu tập mới mỗi tuần</li>
