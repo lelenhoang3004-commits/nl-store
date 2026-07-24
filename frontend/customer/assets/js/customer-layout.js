@@ -1072,7 +1072,7 @@ function renderLoginPage() {
         <div class="login-banner-brand">
           <div class="login-banner-store">N&amp;L STORE</div>
         </div>
-        <h2 class="login-hero-title">KHẲNG ĐỊNH GU THỜI THƯỢNG – KIẾN TẠO DẤU ẤN RIÊNG</h2>
+        <h2 class="login-hero-title"><span>KHẲNG ĐỊNH GU THỜI THƯỢNG</span><span>– KIẾN TẠO DẤU ẤN RIÊNG</span></h2>
         <p class="login-banner-desc">Khám phá trải nghiệm mua sắm tinh tế, hiện đại và ưu đãi dành riêng cho bạn.</p>
         <ul class="login-banner-benefits">
           <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>Bộ sưu tập mới mỗi tuần</span></li>

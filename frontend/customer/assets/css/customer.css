@@ -2524,23 +2524,43 @@
 }
 
 .login-hero-title {
-  width: min(100%, 410px);
-  max-width: calc(100% - 2px);
+  display: block;
+  width: min(100%, 440px);
+  max-width: 100%;
   margin: 0 0 18px;
+  padding: 0;
   color: #FFFFFF;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(22px, 1.72vw, 25px);
+  font-size: clamp(18px, 1.65vw, 24px);
   font-weight: 800;
-  line-height: 1.22;
+  line-height: 1.25;
   letter-spacing: 0;
-  word-spacing: 0;
+  word-spacing: normal;
   text-align: left;
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
   word-wrap: normal;
-  hyphens: manual;
+  hyphens: none;
   overflow: visible;
+}
+
+.login-hero-title span {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  word-wrap: normal;
+  letter-spacing: 0;
+  word-spacing: normal;
+  text-align: left;
+}
+
+.login-hero-title span + span {
+  margin-top: 4px;
+  color: var(--gold-color, #d9a441);
 }
 .login-banner-desc {
   max-width: 360px;
@@ -2869,9 +2889,9 @@
     left: 34px;
   }
   .login-hero-title {
-    width: min(100%, 360px);
-    max-width: calc(100% - 2px);
-    font-size: clamp(21px, 2vw, 23px);
+    width: min(100%, 420px);
+    max-width: 100%;
+    font-size: clamp(18px, 1.7vw, 22px);
   }
   .login-banner-benefits li {
     font-size: .92rem;
