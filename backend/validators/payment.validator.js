@@ -14,9 +14,9 @@ import { validatePagination } from "./pagination.validator.js";
 import { validatePrice } from "./price.validator.js";
 
 const METHOD_TYPES = ["cod", "online", "bank_transfer"];
-const PROVIDERS = ["cod", "manual", "bank", "momo", "vnpay", "paypal", "stripe"];
+const PROVIDERS = ["cod", "manual", "bank", "momo", "vnpay", "credit_card", "paypal", "stripe"];
 const TRANSACTION_STATUSES = ["pending", "paid", "success", "failed", "cancelled", "refunded"];
-const PAYMENT_METHODS = ["cod", "bank_transfer", "vnpay", "momo"];
+const PAYMENT_METHODS = ["cod", "bank_transfer", "vnpay", "credit_card", "momo"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
 const CODE_REGEX = /^[a-z0-9][a-z0-9_-]{1,63}$/;
 
@@ -184,7 +184,8 @@ function validatePaymentMethodPayload(body = {}) {
 }
 
 function validateAllowed(errors, value, field, allowedValues, location, code) {
-  if (!isEmpty(value) && !allowedValues.includes(value)) {
+  const normalizedValue = String(value || "").toLowerCase();
+  if (!isEmpty(value) && !allowedValues.includes(normalizedValue)) {
     errors.push(createValidationError(field, `${field} is invalid.`, location, code));
   }
 }

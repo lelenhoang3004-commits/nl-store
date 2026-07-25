@@ -285,7 +285,10 @@ function statusBadge(status) {
 
 function normalizeStatus(status) { return status === "success" ? "paid" : String(status || "").toLowerCase(); }
 function getPaymentStatusLabel(status) { return ({ pending: "Chờ thanh toán", paid: "Đã thanh toán", success: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", cancelled: "Đã hủy" })[status] || status || "-"; }
-function getPaymentMethodLabel(method) { return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản ngân hàng", vnpay: "VNPay", momo: "MoMo" })[method] || method || "-"; }
+function getPaymentMethodLabel(method) {
+  const value = String(method || "").toLowerCase();
+  return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản ngân hàng", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo" })[value] || method || "-";
+}
 function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }
 function formatMetadata(value) { if (!value) return "-"; try { return JSON.stringify(value, null, 2); } catch { return String(value); } }

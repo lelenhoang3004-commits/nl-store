@@ -179,6 +179,7 @@ function getPaymentMethodLabel(method = "") {
   const labels = {
     cod: "Thanh toán khi nhận hàng",
     bank_transfer: "Chuyển khoản ngân hàng",
+    credit_card: "Thẻ tín dụng",
     vnpay: "VNPay",
     momo: "MoMo"
   };
@@ -2151,11 +2152,11 @@ async function renderCheckoutPage() {
                   </div>
                 </label>
                 <label class="customer-payment-card">
-                  <input type="radio" name="paymentMethod" value="vnpay">
+                  <input type="radio" name="paymentMethod" value="CREDIT_CARD">
                   <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
                   <div>
-                    <strong>VNPay</strong>
-                    <p>Thanh toán nhanh bằng cổng VNPay.</p>
+                    <strong>Thanh toán bằng thẻ tín dụng</strong>
+                    <p>Thanh toán an toàn bằng thẻ Visa, Mastercard hoặc thẻ ngân hàng.</p>
                   </div>
                 </label>
                 <label class="customer-payment-card">
@@ -3561,6 +3562,7 @@ function resolveAssetUrl(url) {
 const CHECKOUT_PAYMENT_ICON_MAP = Object.freeze({
   cod: { icon: "fa-box-open", label: "Thanh toán khi nhận hàng" },
   bank_transfer: { icon: "fa-building-columns", label: "Chuyển khoản ngân hàng" },
+  credit_card: { icon: "fa-credit-card", label: "Thanh toán bằng thẻ tín dụng" },
   vnpay: { icon: "fa-credit-card", label: "VNPay" },
   momo: { icon: "fa-wallet", label: "MoMo" }
 });

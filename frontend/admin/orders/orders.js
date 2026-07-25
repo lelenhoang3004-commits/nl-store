@@ -326,7 +326,10 @@ function canCancel(order) { return ["pending", "confirmed"].includes(order.statu
 function badge(label, status) { return `<span class="admin-order-badge is-${escapeHtml(status || "neutral")}">${escapeHtml(label)}</span>`; }
 function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", confirmed: "Đã xác nhận", processing: "Đang xử lý", shipping: "Đang giao", completed: "Hoàn thành", cancelled: "Đã hủy", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
 function paymentStatusLabel(status) { return ({ unpaid: "Chưa thanh toán", pending: "Chờ thanh toán", partial: "Thanh toán một phần", paid: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", cancelled: "Đã hủy" })[status] || status || "—"; }
-function paymentMethodLabel(method) { return ({ cod: "COD", bank_transfer: "Chuyển khoản", vnpay: "VNPay", momo: "MoMo" })[method] || method || "—"; }
+function paymentMethodLabel(method) {
+  const value = String(method || "").toLowerCase();
+  return ({ cod: "COD", bank_transfer: "Chuyển khoản", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo" })[value] || method || "—";
+}
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }
 function formatAddress(address = {}) { return address.full_address || address.fullAddress || [address.detail_address || address.detailAddress || address.address || address.line1, address.ward_name || address.wardName || address.ward, address.province_name || address.provinceName || address.province || address.city, address.country].filter(Boolean).join(", ") || "Chưa cập nhật"; }

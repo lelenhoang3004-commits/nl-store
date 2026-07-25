@@ -6,7 +6,7 @@ import { dashboardService } from "../services/dashboard.service.js";
 const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='53%25' text-anchor='middle' fill='%2364748b' font-size='12'%3ENo image%3C/text%3E%3C/svg%3E";
 const STATUS_ORDER = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled"];
-const PAYMENT_METHODS = ["cod", "bank_transfer", "vnpay", "momo"];
+const PAYMENT_METHODS = ["cod", "bank_transfer", "credit_card", "vnpay", "momo"];
 
 let dashboardState = null;
 let dashboardError = null;
@@ -171,7 +171,10 @@ function setBusy(root, busy) { root.querySelectorAll("button, select").forEach((
 function resolveImageUrl(url) { if (!url) return PLACEHOLDER_IMAGE; return globalThis.normalizeImageUrl?.(url) ?? url; }
 function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", confirmed: "Đã xác nhận", processing: "Đang xử lý", shipping: "Đang giao", completed: "Hoàn thành", cancelled: "Đã hủy", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
 function paymentStatusLabel(status) { return ({ unpaid: "Chưa thanh toán", partial: "Thanh toán một phần", paid: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
-function paymentMethodLabel(method) { return ({ cod: "COD", bank_transfer: "Bank Transfer", vnpay: "VNPay", momo: "MoMo", unknown: "Chưa xác định" })[method] || method || "—"; }
+function paymentMethodLabel(method) {
+  const value = String(method || "").toLowerCase();
+  return ({ cod: "COD", bank_transfer: "Bank Transfer", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo", unknown: "Chưa xác định" })[value] || method || "—";
+}
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatCompactCurrency(value) { return new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0)); }
 function formatNumber(value) { return new Intl.NumberFormat("vi-VN").format(Number(value || 0)); }

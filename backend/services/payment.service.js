@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Payment service.
  * It owns payment method rules, COD support, transaction lifecycle, history, and order payment summary updates.
  */
@@ -328,7 +328,7 @@ export class PaymentService extends BaseService {
 
   normalizeMethodPayload(payload) {
     return {
-      code: String(payload.code).trim().toLowerCase(),
+      code: String(payload.code).trim(),
       name: String(payload.name).trim(),
       provider: String(payload.provider || PAYMENT_PROVIDER.COD).trim().toLowerCase(),
       type: String(payload.type || PAYMENT_METHOD_TYPE.COD).trim().toLowerCase(),
@@ -424,13 +424,13 @@ function createPaymentTransactionCode() {
 
 function normalizeSupportedMethod(value) {
   const method = String(value || "").trim().toLowerCase();
-  const supportedMethods = ["cod", "bank_transfer", "vnpay", "momo"];
+  const supportedMethods = ["cod", "bank_transfer", "vnpay", "credit_card", "momo"];
 
   if (!supportedMethods.includes(method)) {
     throw new AppError("Payment method is invalid.", 422, "INVALID_PAYMENT_METHOD");
   }
 
-  return method;
+  return method === "credit_card" ? "CREDIT_CARD" : method;
 }
 
 function normalizeTransactionStatus(value) {
@@ -453,4 +453,3 @@ function normalizeTransactionStatus(value) {
 }
 
 export { ORDER_PAYMENT_STATUS, PAYMENT_METHOD_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS };
-

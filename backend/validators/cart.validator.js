@@ -81,7 +81,7 @@ export function validateCheckoutRequest({ body }) {
     errors.push(...validatePhone(address.phone, { field: "shippingAddress.phone", location: "body", country: "VN" }).errors);
   }
 
-  if (!isEmpty(body.paymentMethod) && !["cod", "bank_transfer", "momo", "vnpay"].includes(String(body.paymentMethod).toLowerCase())) {
+  if (!isEmpty(body.paymentMethod) && !["cod", "bank_transfer", "momo", "vnpay", "credit_card"].includes(String(body.paymentMethod).toLowerCase())) {
     errors.push(createValidationError("paymentMethod", "paymentMethod is invalid.", "body", "INVALID_PAYMENT_METHOD"));
   }
 

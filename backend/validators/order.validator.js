@@ -19,7 +19,7 @@ const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delive
 const PAYMENT_STATUSES = ["unpaid", "partial", "paid", "failed", "refunded"];
 const TRANSACTION_STATUSES = ["pending", "success", "failed", "refunded"];
 const PAYMENT_METHODS = ["cod", "bank_transfer", "credit_card", "momo", "vnpay", "paypal"];
-const TRANSACTION_PROVIDERS = ["manual", "bank", "momo", "vnpay", "paypal", "stripe"];
+const TRANSACTION_PROVIDERS = ["manual", "bank", "momo", "vnpay", "credit_card", "paypal", "stripe"];
 
 export function validateOrderListRequest({ query }) {
   const errors = [];
@@ -156,7 +156,8 @@ function validateShippingAddress(errors, address) {
 }
 
 function validateOptionalAllowed(errors, value, field, allowedValues, location, code) {
-  if (!isEmpty(value) && !allowedValues.includes(value)) {
+  const normalizedValue = String(value || "").toLowerCase();
+  if (!isEmpty(value) && !allowedValues.includes(normalizedValue)) {
     errors.push(createValidationError(field, `${field} is invalid.`, location, code));
   }
 }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cart service.
  * It validates product, stock, variants, size, and color before writing cart data.
  */
@@ -309,8 +309,8 @@ export class CartService extends BaseService {
         full_address: fullAddress,
         country: normalizeOptionalString(shippingAddress.country) || "Vietnam"
       },
-      paymentMethod,
-      paymentProvider: String(payload.paymentProvider || paymentMethod).trim().toLowerCase(),
+      paymentMethod: normalizePaymentMethodCode(paymentMethod),
+      paymentProvider: normalizePaymentMethodCode(payload.paymentProvider || paymentMethod),
       paymentMethodId: payload.paymentMethodId || null,
       paymentStatus: payload.paymentStatus === "paid" ? "paid" : "unpaid",
       voucherCode: normalizeOptionalString(payload.voucherCode),
@@ -536,6 +536,11 @@ function isSameProductImage(allowedImageUrl, selectedImageUrl) {
   }
 }
 
+function normalizePaymentMethodCode(value) {
+  const method = String(value || "").trim().toLowerCase();
+  return method === "credit_card" ? "CREDIT_CARD" : method;
+}
+
 function normalizeOptionalString(value) {
   if (value === undefined || value === null || value === "") {
     return null;
@@ -556,7 +561,3 @@ function createOrderItemName(item) {
   const variantLabel = [item.color, item.size].filter(Boolean).join(" / ");
   return variantLabel ? `${item.productName} (${variantLabel})` : item.productName;
 }
-
-
-
-
