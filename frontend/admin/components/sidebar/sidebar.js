@@ -8,43 +8,43 @@ const REFRESH_INTERVAL_MS = 60000;
 const BADGE_CONFIG = Object.freeze({
   products: {
     key: "products_attention",
-    title: (count) => `${count} sản phẩm cần kiểm tra tồn kho`,
-    aria: (count) => `${count} sản phẩm cần kiểm tra tồn kho`
+    title: (count) => `${count} s\u1ea3n ph\u1ea9m c\u1ea7n ki\u1ec3m tra t\u1ed3n kho`,
+    aria: (count) => `${count} s\u1ea3n ph\u1ea9m c\u1ea7n ki\u1ec3m tra t\u1ed3n kho`
   },
   inventory: {
     key: "products_attention",
-    title: (count) => `${count} sản phẩm có biến thể hết hàng hoặc sắp hết`,
-    aria: (count) => `${count} sản phẩm có biến thể hết hàng hoặc sắp hết`
+    title: (count) => `${count} s\u1ea3n ph\u1ea9m c\u00f3 bi\u1ebfn th\u1ec3 h\u1ebft h\u00e0ng ho\u1eb7c s\u1eafp h\u1ebft`,
+    aria: (count) => `${count} s\u1ea3n ph\u1ea9m c\u00f3 bi\u1ebfn th\u1ec3 h\u1ebft h\u00e0ng ho\u1eb7c s\u1eafp h\u1ebft`
   },
   orders: {
     key: "pending_orders",
-    title: (count) => `${count} đơn hàng đang chờ xác nhận`,
-    aria: (count) => `${count} đơn hàng đang chờ xác nhận`
+    title: (count) => `${count} \u0111\u01a1n h\u00e0ng \u0111ang ch\u1edd x\u00e1c nh\u1eadn`,
+    aria: (count) => `${count} \u0111\u01a1n h\u00e0ng \u0111ang ch\u1edd x\u00e1c nh\u1eadn`
   },
   payments: {
     key: "pending_payments",
-    title: (count) => `${count} giao dịch đang chờ xác nhận`,
-    aria: (count) => `${count} giao dịch đang chờ xác nhận`
+    title: (count) => `${count} giao d\u1ecbch \u0111ang ch\u1edd x\u00e1c nh\u1eadn`,
+    aria: (count) => `${count} giao d\u1ecbch \u0111ang ch\u1edd x\u00e1c nh\u1eadn`
   },
   emails: {
     key: "unread_newsletter",
-    title: (count) => `${count} đăng ký email mới`,
-    aria: (count) => `${count} đăng ký email mới`
+    title: (count) => `${count} \u0111\u0103ng k\u00fd email m\u1edbi`,
+    aria: (count) => `${count} \u0111\u0103ng k\u00fd email m\u1edbi`
   }
 });
 
 export const adminMenuItems = [
   { page: "dashboard", icon: "fa-chart-line", label: "Dashboard", permissions: [PERMISSIONS.DASHBOARD_VIEW] },
-  { page: "products", icon: "fa-shirt", label: "Quản lý sản phẩm", badgeKey: "products", permissions: [PERMISSIONS.PRODUCT_VIEW] },
-  { page: "inventory", icon: "fa-warehouse", label: "Quản lý tồn kho", badgeKey: "inventory", permissions: [PERMISSIONS.INVENTORY_VIEW] },
-  { page: "categories", icon: "fa-tags", label: "Quản lý danh mục", permissions: [PERMISSIONS.CATEGORY_VIEW] },
-  { page: "users", icon: "fa-users", label: "Quản lý người dùng", permissions: [PERMISSIONS.USER_VIEW] },
-  { page: "orders", icon: "fa-box-open", label: "Quản lý đơn hàng", badgeKey: "orders", permissions: [PERMISSIONS.ORDER_VIEW] },
-  { page: "payments", icon: "fa-credit-card", label: "Quản lý thanh toán", badgeKey: "payments", permissions: [PERMISSIONS.PAYMENT_VIEW] },
-  { page: "vouchers", icon: "fa-ticket", label: "Quản lý mã giảm giá", permissions: [PERMISSIONS.VOUCHER_VIEW] },
-  { page: "emails", icon: "fa-envelope-open-text", label: "Đăng ký Email", badgeKey: "emails", permissions: [PERMISSIONS.EMAIL_VIEW] },
-  { page: "statistics", icon: "fa-chart-pie", label: "Thống kê", permissions: [PERMISSIONS.STATISTIC_VIEW] },
-  { page: "settings", icon: "fa-gear", label: "Cài đặt", permissions: [PERMISSIONS.SETTING_VIEW] }
+  { page: "products", icon: "fa-shirt", label: "Qu\u1ea3n l\u00fd s\u1ea3n ph\u1ea9m", badgeKey: "products", permissions: [PERMISSIONS.PRODUCT_VIEW] },
+  { page: "inventory", icon: "fa-warehouse", label: "Qu\u1ea3n l\u00fd t\u1ed3n kho", badgeKey: "inventory", permissions: [PERMISSIONS.INVENTORY_VIEW] },
+  { page: "categories", icon: "fa-tags", label: "Qu\u1ea3n l\u00fd danh m\u1ee5c", permissions: [PERMISSIONS.CATEGORY_VIEW] },
+  { page: "users", icon: "fa-users", label: "Qu\u1ea3n l\u00fd ng\u01b0\u1eddi d\u00f9ng", permissions: [PERMISSIONS.USER_VIEW] },
+  { page: "orders", icon: "fa-box-open", label: "Qu\u1ea3n l\u00fd \u0111\u01a1n h\u00e0ng", badgeKey: "orders", permissions: [PERMISSIONS.ORDER_VIEW] },
+  { page: "payments", icon: "fa-credit-card", label: "Qu\u1ea3n l\u00fd thanh to\u00e1n", badgeKey: "payments", permissions: [PERMISSIONS.PAYMENT_VIEW] },
+  { page: "vouchers", icon: "fa-ticket", label: "Qu\u1ea3n l\u00fd m\u00e3 gi\u1ea3m gi\u00e1", permissions: [PERMISSIONS.VOUCHER_VIEW] },
+  { page: "emails", icon: "fa-envelope-open-text", label: "\u0110\u0103ng k\u00fd Email", badgeKey: "emails", permissions: [PERMISSIONS.EMAIL_VIEW] },
+  { page: "statistics", icon: "fa-chart-pie", label: "Th\u1ed1ng k\u00ea", permissions: [PERMISSIONS.STATISTIC_VIEW] },
+  { page: "settings", icon: "fa-gear", label: "C\u00e0i \u0111\u1eb7t", permissions: [PERMISSIONS.SETTING_VIEW] }
 ];
 
 let sidebarCounts = {};
@@ -66,7 +66,7 @@ export function createSidebar(activePage = "dashboard") {
         <strong>N&amp;L Store</strong>
         <span>${currentUser.role}</span>
       </div>
-      <button class="sidebar-collapse-button" type="button" aria-label="Thu gọn sidebar" data-sidebar-collapse>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu g\u1ecdn sidebar" data-sidebar-collapse>
         <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
       </button>
     </div>
@@ -148,8 +148,8 @@ function createMenuItem(item, activePage) {
 function createBadge(badgeKey) {
   const config = BADGE_CONFIG[badgeKey];
   if (!config) return "";
-  const count = Number(sidebarCounts[config.key] || 0);
-  if (count <= 0) return `<span class="nav-badge" data-sidebar-badge="${badgeKey}" hidden></span>`;
+  const count = normalizeCount(sidebarCounts[config.key]);
+  if (count <= 0) return `<span class="nav-badge" data-sidebar-badge="${badgeKey}" hidden aria-hidden="true"></span>`;
   return renderBadgeElement(badgeKey, count);
 }
 
@@ -157,30 +157,49 @@ function updateSidebarBadges() {
   document.querySelectorAll("[data-sidebar-badge]").forEach((badge) => {
     const badgeKey = badge.dataset.sidebarBadge;
     const config = BADGE_CONFIG[badgeKey];
-    const count = Number(sidebarCounts[config?.key] || 0);
-    if (!config || count <= 0) {
-      badge.hidden = true;
-      badge.textContent = "";
-      badge.removeAttribute("title");
-      badge.removeAttribute("aria-label");
-      return;
-    }
-    badge.hidden = false;
-    badge.textContent = formatBadgeCount(count);
-    badge.title = config.title(count);
-    badge.setAttribute("aria-label", config.aria(count));
+    const count = normalizeCount(sidebarCounts[config?.key]);
+    updateSidebarBadge(badge, count, config);
   });
 }
 
 function renderBadgeElement(badgeKey, count) {
   const config = BADGE_CONFIG[badgeKey];
-  const title = config.title(count);
-  const aria = config.aria(count);
-  return `<span class="nav-badge" data-sidebar-badge="${badgeKey}" title="${title}" aria-label="${aria}">${formatBadgeCount(count)}</span>`;
+  const normalizedCount = normalizeCount(count);
+  const title = config.title(normalizedCount);
+  const aria = config.aria(normalizedCount);
+  return `<span class="nav-badge" data-sidebar-badge="${badgeKey}" title="${title}" aria-label="${aria}">${formatBadgeCount(normalizedCount)}</span>`;
+}
+
+function updateSidebarBadge(element, count, config) {
+  if (!element || !config || !Number.isFinite(count) || count <= 0) {
+    if (element) {
+      element.hidden = true;
+      element.setAttribute("hidden", "");
+      element.setAttribute("aria-hidden", "true");
+      element.textContent = "";
+      element.removeAttribute("title");
+      element.removeAttribute("aria-label");
+    }
+    return;
+  }
+
+  const normalizedCount = Math.floor(count);
+  element.hidden = false;
+  element.removeAttribute("hidden");
+  element.removeAttribute("aria-hidden");
+  element.textContent = formatBadgeCount(normalizedCount);
+  element.title = config.title(normalizedCount);
+  element.setAttribute("aria-label", config.aria(normalizedCount));
 }
 
 function normalizeCounts(value) {
-  return Object.fromEntries(Object.keys(value).map((key) => [key, Math.max(Number(value[key] || 0), 0)]));
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(Object.keys(value).map((key) => [key, normalizeCount(value[key])]));
+}
+
+function normalizeCount(value) {
+  const count = Number(value);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
 }
 
 function formatBadgeCount(count) {

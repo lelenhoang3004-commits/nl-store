@@ -1,4 +1,4 @@
-﻿import { toast } from "../components/toast/toast.js";
+import { toast } from "../components/toast/toast.js";
 import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
@@ -9,7 +9,7 @@ import { refreshAdminSidebarCounts } from "../components/sidebar/sidebar.js";
 import { uploadService } from "../services/upload.service.js";
 import { syncProductVariantState } from "./variant-state.js";
 
-const OLD_UPLOAD_LOST_MESSAGE = "áº¢nh cÅ© Ä‘Ã£ máº¥t, vui lÃ²ng táº£i láº¡i áº£nh.";
+const OLD_UPLOAD_LOST_MESSAGE = "Ảnh cũ đã mất, vui lòng tải lại ảnh.";
 const PLACEHOLDER = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='52%25' text-anchor='middle' fill='%2364748b' font-size='12'%3EKhong co anh%3C/text%3E%3C/svg%3E";
 const DEFAULT_QUERY = Object.freeze({ page: 1, limit: 10, sortBy: "updatedAt", sortOrder: "desc" });
 let state = { items: [], categories: [], pagination: null, query: { ...DEFAULT_QUERY }, error: null, busy: false, detail: null };
@@ -22,13 +22,13 @@ let variantsLoadedProductId = null;
 let currentVariantsCache = [];
 
 const SIZE_PRESETS = Object.freeze({
-  quanao: { label: "Quáº§n Ã¡o", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["quan ao", "ao", "quan", "thoi trang"] },
-  chanvay: { label: "ChÃ¢n vÃ¡y", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["chan vay", "vay"] },
-  giay: { label: "GiÃ y", sizes: ["35", "36", "37", "38", "39", "40", "41", "42", "43"], keywords: ["giay", "sneaker", "dep"] },
-  mu: { label: "MÅ©", sizes: ["Freesize", "M", "L"], keywords: ["mu", "non"] },
-  daychuyen: { label: "DÃ¢y chuyá»n", sizes: ["40cm", "45cm", "50cm", "55cm"], keywords: ["day chuyen", "vong co"] },
-  matkinh: { label: "Máº¯t kÃ­nh", sizes: ["Freesize", "Gá»ng nhá»", "Gá»ng vá»«a", "Gá»ng lá»›n"], keywords: ["mat kinh", "kinh"] },
-  dongho: { label: "Äá»“ng há»“", sizes: ["36mm", "38mm", "40mm", "42mm", "44mm"], keywords: ["dong ho"] }
+  quanao: { label: "Quần áo", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["quan ao", "ao", "quan", "thoi trang"] },
+  chanvay: { label: "Chân váy", sizes: ["S", "M", "L", "XL", "XXL"], keywords: ["chan vay", "vay"] },
+  giay: { label: "Giày", sizes: ["35", "36", "37", "38", "39", "40", "41", "42", "43"], keywords: ["giay", "sneaker", "dep"] },
+  mu: { label: "Mũ", sizes: ["Freesize", "M", "L"], keywords: ["mu", "non"] },
+  daychuyen: { label: "Dây chuyền", sizes: ["40cm", "45cm", "50cm", "55cm"], keywords: ["day chuyen", "vong co"] },
+  matkinh: { label: "Mắt kính", sizes: ["Freesize", "Gọng nhỏ", "Gọng vừa", "Gọng lớn"], keywords: ["mat kinh", "kinh"] },
+  dongho: { label: "Đồng hồ", sizes: ["36mm", "38mm", "40mm", "42mm", "44mm"], keywords: ["dong ho"] }
 });
 
 
@@ -85,7 +85,7 @@ function bindListEvents(root) {
   });
   root.querySelector("[data-product-reset]")?.addEventListener("click", async () => { form?.reset(); state.query = { ...DEFAULT_QUERY }; await reload(root); });
   root.querySelector("[data-product-create]")?.addEventListener("click", () => {
-    if (!hasProductPermission(PERMISSIONS.PRODUCT_CREATE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n thÃªm sáº£n pháº©m.");
+    if (!hasProductPermission(PERMISSIONS.PRODUCT_CREATE)) return toast.error("Bạn không có quyền thêm sản phẩm.");
     openProductForm(root);
   });
   root.addEventListener("click", async (event) => {
@@ -116,10 +116,10 @@ function renderRows(root) {
   const body = root.querySelector("[data-product-rows]");
   if (!body) return;
   if (state.error) {
-    body.innerHTML = `<tr><td colspan="11"><div class="admin-product-error">${escapeHtml(message(state.error))}<button type="button" data-product-retry>Thá»­ láº¡i</button></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="11"><div class="admin-product-error">${escapeHtml(message(state.error))}<button type="button" data-product-retry>Thử lại</button></div></td></tr>`;
     return renderPagination(root);
   }
-  body.innerHTML = state.items.length ? state.items.map(renderRow).join("") : '<tr><td colspan="11" class="admin-product-empty">KhÃ´ng cÃ³ sáº£n pháº©m phÃ¹ há»£p.</td></tr>';
+  body.innerHTML = state.items.length ? state.items.map(renderRow).join("") : '<tr><td colspan="11" class="admin-product-empty">Không có sản phẩm phù hợp.</td></tr>';
   bindImageFallbacks(body);
   renderPagination(root);
 }
@@ -130,11 +130,11 @@ function renderRow(product) {
   const nextStatus = product.status === "active" ? "inactive" : "active";
   return `<tr>
     <td><img class="admin-product-thumb" src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product.thumbnailUrl))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" data-product-image></td>
-    <td><a href="#products/${id(product.id)}" data-page="products/${id(product.id)}"><strong>${escapeHtml(product.name)}</strong></a><small>${escapeHtml(product.brand || "-")}</small><div class="admin-product-variant-pill">${Number(product.variantCount || 0)} biáº¿n thá»ƒ</div></td>
+    <td><a href="#products/${id(product.id)}" data-page="products/${id(product.id)}"><strong>${escapeHtml(product.name)}</strong></a><small>${escapeHtml(product.brand || "-")}</small><div class="admin-product-variant-pill">${Number(product.variantCount || 0)} biến thể</div></td>
     <td>${escapeHtml(product.sku)}</td><td>${escapeHtml(product.categoryName || "-")}</td>
     <td><strong>${formatCurrency(product.price)}</strong></td><td>${product.salePrice === null ? "-" : formatCurrency(product.salePrice)}</td>
     <td>${stockBadge(product.stock)}</td><td>${Number(product.sold || 0)}</td><td>${statusBadge(product.status)}</td><td>${formatDate(product.updatedAt)}</td>
-    <td><div class="admin-product-actions"><a class="product-action-btn is-view" href="#products/${id(product.id)}" data-page="products/${id(product.id)}"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>Xem</span></a>${canUpdate ? `<button type="button" class="product-action-btn is-edit" data-product-edit="${id(product.id)}"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>Sá»­a</span></button><button type="button" class="product-action-btn is-stock" data-product-stock="${id(product.id)}"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Cáº­p nháº­t kho</span></button><button type="button" class="product-action-btn is-variants" data-product-variants="${id(product.id)}"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quáº£n lÃ½ biáº¿n thá»ƒ</span></button>${product.status !== "out_of_stock" ? `<button type="button" class="product-action-btn is-visibility" data-product-id="${id(product.id)}" data-product-status="${nextStatus}"><i class="fa-regular fa-eye-slash" aria-hidden="true"></i><span>${nextStatus === "active" ? "Hiá»‡n" : "áº¨n"}</span></button>` : ""}` : ""}${canDelete ? `<button type="button" class="product-action-btn is-danger" data-product-delete="${id(product.id)}"><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>XÃ³a</span></button>` : ""}</div></td>
+    <td><div class="admin-product-actions"><a class="product-action-btn is-view" href="#products/${id(product.id)}" data-page="products/${id(product.id)}"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>Xem</span></a>${canUpdate ? `<button type="button" class="product-action-btn is-edit" data-product-edit="${id(product.id)}"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>Sửa</span></button><button type="button" class="product-action-btn is-stock" data-product-stock="${id(product.id)}"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Cập nhật kho</span></button><button type="button" class="product-action-btn is-variants" data-product-variants="${id(product.id)}"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quản lý biến thể</span></button>${product.status !== "out_of_stock" ? `<button type="button" class="product-action-btn is-visibility" data-product-id="${id(product.id)}" data-product-status="${nextStatus}"><i class="fa-regular fa-eye-slash" aria-hidden="true"></i><span>${nextStatus === "active" ? "Hiện" : "Ẩn"}</span></button>` : ""}` : ""}${canDelete ? `<button type="button" class="product-action-btn is-danger" data-product-delete="${id(product.id)}"><i class="fa-regular fa-trash-can" aria-hidden="true"></i><span>Xóa</span></button>` : ""}</div></td>
   </tr>`;
 }
 
@@ -142,7 +142,7 @@ function renderPagination(root) {
   const target = root.querySelector("[data-product-pagination]");
   if (!target || !state.pagination || state.error) { if (target) target.innerHTML = ""; return; }
   const p = state.pagination, page = Number(p.page || 1), pages = Math.max(Number(p.totalPages || 0), 1);
-  target.innerHTML = `<span>Trang ${page}/${pages} Â· ${Number(p.totalItems || 0)} sáº£n pháº©m</span><div><button type="button" data-product-page="${page - 1}" ${(p.hasPreviousPage ?? page > 1) ? "" : "disabled"}>TrÆ°á»›c</button><button type="button" data-product-page="${page + 1}" ${(p.hasNextPage ?? page < pages) ? "" : "disabled"}>Sau</button></div>`;
+  target.innerHTML = `<span>Trang ${page}/${pages} · ${Number(p.totalItems || 0)} sản phẩm</span><div><button type="button" data-product-page="${page - 1}" ${(p.hasPreviousPage ?? page > 1) ? "" : "disabled"}>Trước</button><button type="button" data-product-page="${page + 1}" ${(p.hasNextPage ?? page < pages) ? "" : "disabled"}>Sau</button></div>`;
 }
 
 function hydrateFilters(root) {
@@ -152,11 +152,11 @@ function hydrateFilters(root) {
 }
 function renderCategoryFilter(root) {
   const select = root.querySelector("[data-product-category-filter]"); if (!select) return;
-  select.innerHTML = '<option value="">Táº¥t cáº£ danh má»¥c</option>' + categoryOptions(state.query.categoryId);
+  select.innerHTML = '<option value="">Tất cả danh mục</option>' + categoryOptions(state.query.categoryId);
 }
 
 async function loadAndOpenForm(root, productId) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n sá»­a sáº£n pháº©m.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền sửa sản phẩm.");
 
   const loadKey = String(productId);
 
@@ -187,25 +187,25 @@ function openProductForm(root, product = null) {
   closeModal();
   const editing = Boolean(product);
   const modal = createModal(`
-    <header class="admin-product-modal-header"><div><h2 id="product-form-title">${editing ? "Sá»­a sáº£n pháº©m" : "ThÃªm sáº£n pháº©m"}</h2><p>Cáº­p nháº­t thÃ´ng tin hiá»ƒn thá»‹, giÃ¡ bÃ¡n vÃ  tá»“n kho sáº£n pháº©m</p></div><button type="button" data-modal-close aria-label="ÄÃ³ng form sáº£n pháº©m"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
+    <header class="admin-product-modal-header"><div><h2 id="product-form-title">${editing ? "Sửa sản phẩm" : "Thêm sản phẩm"}</h2><p>Cập nhật thông tin hiển thị, giá bán và tồn kho sản phẩm</p></div><button type="button" data-modal-close aria-label="Đóng form sản phẩm"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
     <form class="admin-product-form" data-product-form novalidate>
       <div class="admin-product-form-body">
         <p class="admin-product-form-error" data-product-form-error role="alert"></p>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-box"></i><div><h3>ThÃ´ng tin cÆ¡ báº£n</h3><p>ThÃ´ng tin nháº­n diá»‡n vÃ  tráº¡ng thÃ¡i hiá»ƒn thá»‹</p></div></div><div class="admin-product-section-grid">
-          ${field("TÃªn sáº£n pháº©m", "name", product?.name, "text", true, 'placeholder="VÃ­ dá»¥: Ão thun nam basic"')}${field("Slug", "slug", product?.slug, "text", false, 'placeholder="ao-thun-nam-basic"')}${field("SKU", "sku", product?.sku, "text", true, 'placeholder="SP001"')}
-          <label data-product-field="category_id"><span>Danh má»¥c</span><select name="category_id"><option value="">KhÃ´ng cÃ³ danh má»¥c</option>${categoryOptions(product?.categoryId)}</select><small class="admin-field-error" data-field-error="category_id"></small></label>
-          ${field("ThÆ°Æ¡ng hiá»‡u", "brand", product?.brand, "text", false, 'placeholder="N&L Store"')}
-          <label data-product-field="status"><span>Tráº¡ng thÃ¡i</span><select name="status"><option value="active" ${selected(product?.status, "active")}>Äang bÃ¡n</option><option value="inactive" ${selected(product?.status, "inactive")}>Táº¡m áº©n</option><option value="out_of_stock" ${selected(product?.status, "out_of_stock")}>Háº¿t hÃ ng</option></select><small class="admin-field-error" data-field-error="status"></small></label>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-box"></i><div><h3>Thông tin cơ bản</h3><p>Thông tin nhận diện và trạng thái hiển thị</p></div></div><div class="admin-product-section-grid">
+          ${field("Tên sản phẩm", "name", product?.name, "text", true, 'placeholder="Ví dụ: Áo thun nam basic"')}${field("Slug", "slug", product?.slug, "text", false, 'placeholder="ao-thun-nam-basic"')}${field("SKU", "sku", product?.sku, "text", true, 'placeholder="SP001"')}
+          <label data-product-field="category_id"><span>Danh mục</span><select name="category_id"><option value="">Không có danh mục</option>${categoryOptions(product?.categoryId)}</select><small class="admin-field-error" data-field-error="category_id"></small></label>
+          ${field("Thương hiệu", "brand", product?.brand, "text", false, 'placeholder="N&L Store"')}
+          <label data-product-field="status"><span>Trạng thái</span><select name="status"><option value="active" ${selected(product?.status, "active")}>Đang bán</option><option value="inactive" ${selected(product?.status, "inactive")}>Tạm ẩn</option><option value="out_of_stock" ${selected(product?.status, "out_of_stock")}>Hết hàng</option></select><small class="admin-field-error" data-field-error="status"></small></label>
         </div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-tags"></i><div><h3>GiÃ¡ vÃ  kho</h3><p>Quáº£n lÃ½ giÃ¡ bÃ¡n vÃ  sá»‘ lÆ°á»£ng sáºµn cÃ³</p></div></div><div class="admin-product-section-grid is-four">
-          ${field("GiÃ¡", "price", product?.price ?? 0, "number", true, 'min="0" step="1000" placeholder="250000"')}${field("GiÃ¡ sale", "sale_price", product?.salePrice, "number", false, 'min="0" step="1000" placeholder="199000"')}${field("Tá»“n kho", "stock", product?.stock ?? 0, "number", false, 'min="0" step="1"')}${field("ÄÃ£ bÃ¡n", "sold", product?.sold ?? 0, "number", false, 'readonly aria-readonly="true"')}${field("ÄÃ¡nh giÃ¡ sao", "rating_average", product?.rating_average ?? product?.ratingAverage ?? product?.rating ?? "", "number", false, 'min="0" max="5" step="0.1" placeholder="4.8"')}
-        </div><div class="admin-product-helper-row"><span><i class="fa-solid fa-circle-info"></i> GiÃ¡ sale pháº£i nhá» hÆ¡n hoáº·c báº±ng giÃ¡ gá»‘c</span><span><i class="fa-solid fa-circle-info"></i> Tá»“n kho khÃ´ng Ä‘Æ°á»£c Ã¢m</span></div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biáº¿n thá»ƒ sáº£n pháº©m</h3><p>Quáº£n lÃ½ mÃ u sáº¯c, kÃ­ch thÆ°á»›c, giÃ¡ vÃ  tá»“n kho tá»«ng biáº¿n thá»ƒ</p></div></div><div class="admin-product-variant-section" data-product-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-product-variant-hint>Sá»‘ lÆ°á»£ng Ä‘Ã£ bÃ¡n Ä‘Æ°á»£c tá»± Ä‘á»™ng cáº­p nháº­t tá»« Ä‘Æ¡n hÃ ng.</span><button type="button" class="admin-product-variant-add" data-product-variant-add ${product?.id ? "" : "disabled"}>ThÃªm biáº¿n thá»ƒ</button></div><div class="admin-product-variant-editor" data-product-variant-editor hidden></div><div class="admin-product-variant-table" data-product-variant-table></div></div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-images"></i><div><h3>áº¢nh sáº£n pháº©m</h3><p>Táº£i áº£nh Ä‘áº¡i diá»‡n tá»« mÃ¡y tÃ­nh vÃ  quáº£n lÃ½ thÆ° viá»‡n áº£nh</p></div></div><div class="admin-product-image-layout"><div class="admin-product-upload-column"><input type="hidden" name="thumbnail_url" value="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}" data-original-thumbnail-url="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}"><input class="admin-product-file-input" id="product-thumbnail-file" type="file" multiple accept="image/*" data-product-image-input><div class="admin-product-upload-box" data-product-dropzone tabindex="0" role="button" aria-label="Chá»n áº£nh sáº£n pháº©m tá»« mÃ¡y tÃ­nh"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>KÃ©o tháº£ áº£nh vÃ o Ä‘Ã¢y</strong><span>hoáº·c báº¥m Ä‘á»ƒ chá»n áº£nh tá»« mÃ¡y tÃ­nh</span><small>Há»— trá»£ JPG, PNG, WEBP. Tá»‘i Ä‘a 5MB.</small><button type="button" data-product-choose-image>Chá»n áº£nh sáº£n pháº©m</button></div><div class="admin-product-upload-status" aria-live="polite"><span data-product-file-name>${(product?.thumbnailUrl || product?.thumbnail_url) ? "áº¢nh hiá»‡n táº¡i" : "ChÆ°a chá»n áº£nh"}</span><strong data-product-upload-message>${(product?.thumbnailUrl || product?.thumbnail_url) ? "Sáºµn sÃ ng Ä‘á»•i áº£nh" : ""}</strong></div></div><div class="admin-product-thumbnail-card"><div class="admin-product-thumbnail-preview"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product?.thumbnailUrl || product?.thumbnail_url))}" alt="Xem trÆ°á»›c áº£nh thumbnail" loading="lazy" decoding="async" data-product-image data-thumbnail-preview></div><div><button type="button" class="admin-product-remove-image" data-product-remove-image ${(product?.thumbnailUrl || product?.thumbnail_url) ? "" : "hidden"}><i class="fa-regular fa-trash-can"></i> XÃ³a áº£nh</button></div></div><label class="admin-product-gallery-field"><span>Gallery URLs</span><textarea name="gallery_urls" rows="5" placeholder="Má»—i dÃ²ng má»™t URL áº£nh">${escapeHtml((product?.galleryUrls || product?.gallery_urls || []).join("\n"))}</textarea><small class="admin-product-field-hint">Gallery váº«n há»— trá»£ má»—i dÃ²ng má»™t URL. Tá»‘i Ä‘a nÃªn dÃ¹ng 8 áº£nh.</small></label></div><div class="admin-product-gallery-preview" data-gallery-preview></div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-align-left"></i><div><h3>MÃ´ táº£</h3><p>Ná»™i dung khÃ¡ch hÃ ng nhÃ¬n tháº¥y trÃªn trang sáº£n pháº©m</p></div></div><div class="admin-product-description-grid"><label><span>MÃ´ táº£ ngáº¯n</span><textarea name="short_description" maxlength="500" rows="4" placeholder="MÃ´ táº£ ngáº¯n gá»n vá» sáº£n pháº©m">${escapeHtml(product?.shortDescription || "")}</textarea></label><label><span>MÃ´ táº£ chi tiáº¿t</span><textarea name="description" rows="7" placeholder="Cháº¥t liá»‡u, kiá»ƒu dÃ¡ng, hÆ°á»›ng dáº«n báº£o quáº£n...">${escapeHtml(product?.description || "")}</textarea></label></div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-hashtag"></i><div><h3>Tags</h3><p>Há»— trá»£ tÃ¬m kiáº¿m vÃ  phÃ¢n loáº¡i sáº£n pháº©m</p></div></div>${field("Tags", "tags", (product?.tags || []).join(", "), "text", false, 'placeholder="Ã¡o nam, basic, cotton"')}<small class="admin-product-field-hint">Nháº­p nhiá»u tags, phÃ¢n cÃ¡ch báº±ng dáº¥u pháº©y.</small></section>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-tags"></i><div><h3>Giá và kho</h3><p>Quản lý giá bán và số lượng sẵn có</p></div></div><div class="admin-product-section-grid is-four">
+          ${field("Giá", "price", product?.price ?? 0, "number", true, 'min="0" step="1000" placeholder="250000"')}${field("Giá sale", "sale_price", product?.salePrice, "number", false, 'min="0" step="1000" placeholder="199000"')}${field("Tồn kho", "stock", product?.stock ?? 0, "number", false, 'min="0" step="1"')}${field("Đã bán", "sold", product?.sold ?? 0, "number", false, 'readonly aria-readonly="true"')}${field("Đánh giá sao", "rating_average", product?.rating_average ?? product?.ratingAverage ?? product?.rating ?? "", "number", false, 'min="0" max="5" step="0.1" placeholder="4.8"')}
+        </div><div class="admin-product-helper-row"><span><i class="fa-solid fa-circle-info"></i> Giá sale phải nhỏ hơn hoặc bằng giá gốc</span><span><i class="fa-solid fa-circle-info"></i> Tồn kho không được âm</span></div></section>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Quản lý màu sắc, kích thước, giá và tồn kho từng biến thể</p></div></div><div class="admin-product-variant-section" data-product-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-product-variant-hint>Số lượng đã bán được tự động cập nhật từ đơn hàng.</span><button type="button" class="admin-product-variant-add" data-product-variant-add ${product?.id ? "" : "disabled"}>Thêm biến thể</button></div><div class="admin-product-variant-editor" data-product-variant-editor hidden></div><div class="admin-product-variant-table" data-product-variant-table></div></div></section>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-images"></i><div><h3>Ảnh sản phẩm</h3><p>Tải ảnh đại diện từ máy tính và quản lý thư viện ảnh</p></div></div><div class="admin-product-image-layout"><div class="admin-product-upload-column"><input type="hidden" name="thumbnail_url" value="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}" data-original-thumbnail-url="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}"><input class="admin-product-file-input" id="product-thumbnail-file" type="file" multiple accept="image/*" data-product-image-input><div class="admin-product-upload-box" data-product-dropzone tabindex="0" role="button" aria-label="Chọn ảnh sản phẩm từ máy tính"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>Kéo thả ảnh vào đây</strong><span>hoặc bấm để chọn ảnh từ máy tính</span><small>Hỗ trợ JPG, PNG, WEBP. Tối đa 5MB.</small><button type="button" data-product-choose-image>Chọn ảnh sản phẩm</button></div><div class="admin-product-upload-status" aria-live="polite"><span data-product-file-name>${(product?.thumbnailUrl || product?.thumbnail_url) ? "Ảnh hiện tại" : "Chưa chọn ảnh"}</span><strong data-product-upload-message>${(product?.thumbnailUrl || product?.thumbnail_url) ? "Sẵn sàng đổi ảnh" : ""}</strong></div></div><div class="admin-product-thumbnail-card"><div class="admin-product-thumbnail-preview"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product?.thumbnailUrl || product?.thumbnail_url))}" alt="Xem trước ảnh thumbnail" loading="lazy" decoding="async" data-product-image data-thumbnail-preview></div><div><button type="button" class="admin-product-remove-image" data-product-remove-image ${(product?.thumbnailUrl || product?.thumbnail_url) ? "" : "hidden"}><i class="fa-regular fa-trash-can"></i> Xóa ảnh</button></div></div><label class="admin-product-gallery-field"><span>Gallery URLs</span><textarea name="gallery_urls" rows="5" placeholder="Mỗi dòng một URL ảnh">${escapeHtml((product?.galleryUrls || product?.gallery_urls || []).join("\n"))}</textarea><small class="admin-product-field-hint">Gallery vẫn hỗ trợ mỗi dòng một URL. Tối đa nên dùng 8 ảnh.</small></label></div><div class="admin-product-gallery-preview" data-gallery-preview></div></section>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-align-left"></i><div><h3>Mô tả</h3><p>Nội dung khách hàng nhìn thấy trên trang sản phẩm</p></div></div><div class="admin-product-description-grid"><label><span>Mô tả ngắn</span><textarea name="short_description" maxlength="500" rows="4" placeholder="Mô tả ngắn gọn về sản phẩm">${escapeHtml(product?.shortDescription || "")}</textarea></label><label><span>Mô tả chi tiết</span><textarea name="description" rows="7" placeholder="Chất liệu, kiểu dáng, hướng dẫn bảo quản...">${escapeHtml(product?.description || "")}</textarea></label></div></section>
+        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-hashtag"></i><div><h3>Tags</h3><p>Hỗ trợ tìm kiếm và phân loại sản phẩm</p></div></div>${field("Tags", "tags", (product?.tags || []).join(", "), "text", false, 'placeholder="áo nam, basic, cotton"')}<small class="admin-product-field-hint">Nhập nhiều tags, phân cách bằng dấu phẩy.</small></section>
       </div>
-      <footer class="admin-product-form-footer"><button type="button" class="is-secondary" data-modal-close>Há»§y</button><button type="submit" data-product-submit data-idle-label="${editing ? "LÆ°u thay Ä‘á»•i" : "Táº¡o sáº£n pháº©m"}">${editing ? "LÆ°u thay Ä‘á»•i" : "Táº¡o sáº£n pháº©m"}</button></footer>
+      <footer class="admin-product-form-footer"><button type="button" class="is-secondary" data-modal-close>Hủy</button><button type="submit" data-product-submit data-idle-label="${editing ? "Lưu thay đổi" : "Tạo sản phẩm"}">${editing ? "Lưu thay đổi" : "Tạo sản phẩm"}</button></footer>
     </form>`, "[name='name']");
   bindProductImageUpload(modal);
   bindProductAttributeSection(modal, product);
@@ -215,14 +215,14 @@ function openProductForm(root, product = null) {
     const form = event.currentTarget, payload = formPayload(form), validation = validateFormPayload(payload);
     const errorTarget = form.querySelector("[data-product-form-error]");
     clearFormErrors(form);
-    if (form.dataset.imageUploading === "true") { errorTarget.textContent = "Vui lÃ²ng chá» táº£i áº£nh hoÃ n táº¥t."; return; }
+    if (form.dataset.imageUploading === "true") { errorTarget.textContent = "Vui lòng chờ tải ảnh hoàn tất."; return; }
     if (validation) { showFieldError(form, validation.field, validation.message); return; }
     setFormBusy(form, true);
     try {
       await validateAndNormalizeProductImages(payload, form);
       if (editing) await productService.updateProduct(product.id, payload, silent());
       else await productService.createProduct(payload, silent());
-      closeModal(); toast.success(editing ? "ÄÃ£ cáº­p nháº­t sáº£n pháº©m." : "ÄÃ£ thÃªm sáº£n pháº©m."); await reload(root);
+      closeModal(); toast.success(editing ? "Đã cập nhật sản phẩm." : "Đã thêm sản phẩm."); await reload(root);
     } catch (error) { errorTarget.textContent = message(error); errorTarget.scrollIntoView({ behavior: "smooth", block: "center" }); toast.error(message(error)); setFormBusy(form, false); }
   });
 }
@@ -234,13 +234,13 @@ function bindProductAttributeSection(modal, product) {
   const section = document.createElement("section");
   section.className = "admin-product-form-section";
   section.dataset.productAttributeSection = "";
-  section.innerHTML = `<div class="admin-product-form-section-title"><i class="fa-solid fa-gem"></i><div><h3>ThÃ´ng tin dÃ¢y chuyá»n</h3><p>Thuá»™c tÃ­nh riÃªng cho sáº£n pháº©m phá»¥ kiá»‡n, khÃ´ng táº¡o biáº¿n thá»ƒ mÃ u hoáº·c kÃ­ch thÆ°á»›c</p></div></div><div class="admin-product-section-grid is-three">
-    ${field("Cháº¥t liá»‡u", "attribute_material", attributes.material, "text", false, 'maxlength="200" placeholder="Báº¡c titan"')}
-    ${field("Äá»™ dÃ i dÃ¢y", "attribute_chain_length", attributes.chain_length, "text", false, 'maxlength="200" placeholder="45cm"')}
-    ${field("Loáº¡i máº·t dÃ¢y", "attribute_pendant_type", attributes.pendant_type, "text", false, 'maxlength="200" placeholder="Máº·t kim cÆ°Æ¡ng"')}
-    ${field("MÃ u Ä‘Ã¡ / mÃ u máº·t", "attribute_stone_color", attributes.stone_color, "text", false, 'maxlength="200" placeholder="Tráº¯ng"')}
-    ${field("KÃ­ch thÆ°á»›c máº·t", "attribute_pendant_size", attributes.pendant_size, "text", false, 'maxlength="200" placeholder="1.5cm"')}
-    ${field("Báº£o hÃ nh", "attribute_warranty", attributes.warranty, "text", false, 'maxlength="200" placeholder="7 ngÃ y"')}
+  section.innerHTML = `<div class="admin-product-form-section-title"><i class="fa-solid fa-gem"></i><div><h3>Thông tin dây chuyền</h3><p>Thuộc tính riêng cho sản phẩm phụ kiện, không tạo biến thể màu hoặc kích thước</p></div></div><div class="admin-product-section-grid is-three">
+    ${field("Chất liệu", "attribute_material", attributes.material, "text", false, 'maxlength="200" placeholder="Bạc titan"')}
+    ${field("Độ dài dây", "attribute_chain_length", attributes.chain_length, "text", false, 'maxlength="200" placeholder="45cm"')}
+    ${field("Loại mặt dây", "attribute_pendant_type", attributes.pendant_type, "text", false, 'maxlength="200" placeholder="Mặt kim cương"')}
+    ${field("Màu đá / màu mặt", "attribute_stone_color", attributes.stone_color, "text", false, 'maxlength="200" placeholder="Trắng"')}
+    ${field("Kích thước mặt", "attribute_pendant_size", attributes.pendant_size, "text", false, 'maxlength="200" placeholder="1.5cm"')}
+    ${field("Bảo hành", "attribute_warranty", attributes.warranty, "text", false, 'maxlength="200" placeholder="7 ngày"')}
   </div>`;
   variantSection.before(section);
 
@@ -263,33 +263,33 @@ function isAccessoryProduct(name, categoryName) {
 }
 
 function openStockModal(root, product, onSuccess = () => reload(root)) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n cáº­p nháº­t kho.");
-  const modal = createModal(`<header><div><p class="admin-products-eyebrow">Inventory</p><h2>Cáº­p nháº­t tá»“n kho</h2></div><button type="button" data-modal-close>Ã—</button></header><form class="admin-product-stock-form" data-stock-form><p>Tá»“n kho hiá»‡n táº¡i: <strong>${Number(product.stock)}</strong></p>${field("Tá»“n kho má»›i", "stock", product.stock, "number", true, 'min="0" step="1"')}<label><span>LÃ½ do cáº­p nháº­t</span><textarea name="reason" maxlength="500" placeholder="VÃ­ dá»¥: Nháº­p thÃªm hÃ ng"></textarea></label><p class="admin-product-form-error" data-product-form-error></p><footer><button type="button" class="is-secondary" data-modal-close>ÄÃ³ng</button><button type="submit">Cáº­p nháº­t</button></footer></form>`);
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền cập nhật kho.");
+  const modal = createModal(`<header><div><p class="admin-products-eyebrow">Inventory</p><h2>Cập nhật tồn kho</h2></div><button type="button" data-modal-close>×</button></header><form class="admin-product-stock-form" data-stock-form><p>Tồn kho hiện tại: <strong>${Number(product.stock)}</strong></p>${field("Tồn kho mới", "stock", product.stock, "number", true, 'min="0" step="1"')}<label><span>Lý do cập nhật</span><textarea name="reason" maxlength="500" placeholder="Ví dụ: Nhập thêm hàng"></textarea></label><p class="admin-product-form-error" data-product-form-error></p><footer><button type="button" class="is-secondary" data-modal-close>Đóng</button><button type="submit">Cập nhật</button></footer></form>`);
   modal.querySelector("[data-stock-form]").addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget, data = new FormData(form), stock = Number(data.get("stock"));
-    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tá»“n kho khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tồn kho không được âm.");
     setFormBusy(form, true);
-    try { await productService.updateStock(product.id, { stock, reason: String(data.get("reason") || "").trim() }, silent()); closeModal(); toast.success("ÄÃ£ cáº­p nháº­t tá»“n kho."); refreshAdminSidebarCounts(); await onSuccess(); }
+    try { await productService.updateStock(product.id, { stock, reason: String(data.get("reason") || "").trim() }, silent()); closeModal(); toast.success("Đã cập nhật tồn kho."); refreshAdminSidebarCounts(); await onSuccess(); }
     catch (error) { form.querySelector("[data-product-form-error]").textContent = message(error); toast.error(message(error)); setFormBusy(form, false); }
   });
 }
 
 async function changeStatus(root, productId, status) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n cáº­p nháº­t tráº¡ng thÃ¡i.");
-  if (!confirm(`XÃ¡c nháº­n chuyá»ƒn tráº¡ng thÃ¡i sang "${statusLabel(status)}"?`)) return;
-  try { await productService.updateStatus(productId, status, silent()); toast.success("ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i sáº£n pháº©m."); refreshAdminSidebarCounts(); await reload(root); }
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền cập nhật trạng thái.");
+  if (!confirm(`Xác nhận chuyển trạng thái sang "${statusLabel(status)}"?`)) return;
+  try { await productService.updateStatus(productId, status, silent()); toast.success("Đã cập nhật trạng thái sản phẩm."); refreshAdminSidebarCounts(); await reload(root); }
   catch (error) { toast.error(message(error)); }
 }
 async function deleteProduct(root, productId) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_DELETE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n xÃ³a sáº£n pháº©m.");
-  if (!confirm("XÃ³a má»m sáº£n pháº©m nÃ y? Dá»¯ liá»‡u Ä‘Æ¡n hÃ ng cÅ© váº«n Ä‘Æ°á»£c giá»¯ nguyÃªn.")) return;
-  try { await productService.deleteProduct(productId, silent()); toast.success("ÄÃ£ xÃ³a sáº£n pháº©m."); await reload(root); }
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_DELETE)) return toast.error("Bạn không có quyền xóa sản phẩm.");
+  if (!confirm("Xóa mềm sản phẩm này? Dữ liệu đơn hàng cũ vẫn được giữ nguyên.")) return;
+  try { await productService.deleteProduct(productId, silent()); toast.success("Đã xóa sản phẩm."); await reload(root); }
   catch (error) { toast.error(message(error)); }
 }
 
 function renderDetail(product) {
   if (!product) return renderPageError({ status: 404 });
-  return `<section class="admin-product-detail"><header class="admin-products-hero"><div><p class="admin-products-eyebrow">Chi tiáº¿t sáº£n pháº©m</p><h1>${escapeHtml(product.name)}</h1><p>${escapeHtml(product.sku)}</p></div><a href="#products" data-page="products">â† Danh sÃ¡ch</a></header><div class="admin-product-detail-grid"><article class="admin-product-card admin-product-detail-image"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product.thumbnailUrl))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" data-product-image>${statusBadge(product.status)}${stockBadge(product.stock)}</article><article class="admin-product-card"><h2>ThÃ´ng tin sáº£n pháº©m</h2>${detailRow("Danh má»¥c", product.categoryName)}${detailRow("ThÆ°Æ¡ng hiá»‡u", product.brand)}${detailRow("GiÃ¡", formatCurrency(product.price))}${detailRow("GiÃ¡ sale", product.salePrice === null ? "-" : formatCurrency(product.salePrice))}${detailRow("ÄÃ£ bÃ¡n", product.sold)}${detailRow("ÄÃ¡nh giÃ¡", `${Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8).toFixed(1)} sao`)}${detailRow("Biáº¿n thá»ƒ", product.variantCount || 0)}${detailRow("Slug", product.slug)}${detailRow("Cáº­p nháº­t", formatDate(product.updatedAt))}<div class="admin-product-detail-actions">${hasProductPermission(PERMISSIONS.PRODUCT_UPDATE) ? `<button type="button" data-detail-edit="${id(product.id)}">Sá»­a sáº£n pháº©m</button><button type="button" data-detail-stock="${id(product.id)}">Cáº­p nháº­t kho</button><button type="button" data-detail-variants="${id(product.id)}">Quáº£n lÃ½ biáº¿n thá»ƒ</button>` : ""}</div></article></div><article class="admin-product-card"><h2>MÃ´ táº£ ngáº¯n</h2><p>${escapeHtml(product.shortDescription || "-")}</p><h2>MÃ´ táº£ chi tiáº¿t</h2><p class="admin-product-description">${escapeHtml(product.description || "-")}</p><h2>Tags</h2><p>${escapeHtml((product.tags || []).join(", ") || "-")}</p></article></section>`;
+  return `<section class="admin-product-detail"><header class="admin-products-hero"><div><p class="admin-products-eyebrow">Chi tiết sản phẩm</p><h1>${escapeHtml(product.name)}</h1><p>${escapeHtml(product.sku)}</p></div><a href="#products" data-page="products">← Danh sách</a></header><div class="admin-product-detail-grid"><article class="admin-product-card admin-product-detail-image"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product.thumbnailUrl))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" data-product-image>${statusBadge(product.status)}${stockBadge(product.stock)}</article><article class="admin-product-card"><h2>Thông tin sản phẩm</h2>${detailRow("Danh mục", product.categoryName)}${detailRow("Thương hiệu", product.brand)}${detailRow("Giá", formatCurrency(product.price))}${detailRow("Giá sale", product.salePrice === null ? "-" : formatCurrency(product.salePrice))}${detailRow("Đã bán", product.sold)}${detailRow("Đánh giá", `${Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8).toFixed(1)} sao`)}${detailRow("Biến thể", product.variantCount || 0)}${detailRow("Slug", product.slug)}${detailRow("Cập nhật", formatDate(product.updatedAt))}<div class="admin-product-detail-actions">${hasProductPermission(PERMISSIONS.PRODUCT_UPDATE) ? `<button type="button" data-detail-edit="${id(product.id)}">Sửa sản phẩm</button><button type="button" data-detail-stock="${id(product.id)}">Cập nhật kho</button><button type="button" data-detail-variants="${id(product.id)}">Quản lý biến thể</button>` : ""}</div></article></div><article class="admin-product-card"><h2>Mô tả ngắn</h2><p>${escapeHtml(product.shortDescription || "-")}</p><h2>Mô tả chi tiết</h2><p class="admin-product-description">${escapeHtml(product.description || "-")}</p><h2>Tags</h2><p>${escapeHtml((product.tags || []).join(", ") || "-")}</p></article></section>`;
 }
 function bindDetailEvents(root, productId) {
   bindImageFallbacks(root);
@@ -303,73 +303,73 @@ function openStockModalForDetail(root, product) {
 }
 
 function openVariantModal(root, product) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Báº¡n khÃ´ng cÃ³ quyá»n quáº£n lÃ½ biáº¿n thá»ƒ.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền quản lý biến thể.");
   const modal = createModal(`
     <div class="variant-modal-shell">
       <header class="variant-modal-header">
         <div>
           <p class="admin-products-eyebrow">Variants</p>
-          <h2>Quáº£n lÃ½ biáº¿n thá»ƒ</h2>
-          <p>Cáº­p nháº­t mÃ u sáº¯c, kÃ­ch thÆ°á»›c, giÃ¡ vÃ  tá»“n kho</p>
+          <h2>Quản lý biến thể</h2>
+          <p>Cập nhật màu sắc, kích thước, giá và tồn kho</p>
         </div>
-        <button type="button" class="admin-product-variant-close" data-modal-close aria-label="ÄÃ³ng modal">&times;</button>
+        <button type="button" class="admin-product-variant-close" data-modal-close aria-label="Đóng modal">&times;</button>
       </header>
-      <nav class="variant-modal-tabs" aria-label="Quáº£n lÃ½ biáº¿n thá»ƒ">
-        <button type="button" class="is-active" data-variant-tab="list">Danh sÃ¡ch biáº¿n thá»ƒ</button>
-        <button type="button" data-variant-tab="stock">Cáº­p nháº­t tá»“n kho nhanh</button>
-        <button type="button" data-variant-tab="price">Cáº­p nháº­t giÃ¡ nhanh</button>
-        <button type="button" data-variant-tab="form">ThÃªm / sá»­a biáº¿n thá»ƒ</button>
+      <nav class="variant-modal-tabs" aria-label="Quản lý biến thể">
+        <button type="button" class="is-active" data-variant-tab="list">Danh sách biến thể</button>
+        <button type="button" data-variant-tab="stock">Cập nhật tồn kho nhanh</button>
+        <button type="button" data-variant-tab="price">Cập nhật giá nhanh</button>
+        <button type="button" data-variant-tab="form">Thêm / sửa biến thể</button>
       </nav>
       <div class="variant-modal-body admin-product-variant-modal is-upgraded" data-variant-root>
         <p class="admin-product-form-error" data-variant-error></p>
         <section class="variant-tab-panel is-active" data-variant-panel="list">
           <div class="variant-panel-toolbar">
-            <div><strong>Danh sÃ¡ch biáº¿n thá»ƒ</strong><span>Quáº£n lÃ½ SKU, mÃ u, size, giÃ¡ vÃ  tá»“n kho hiá»‡n táº¡i.</span></div>
-            <div class="variant-panel-actions"><button type="button" data-variant-add>+ ThÃªm biáº¿n thá»ƒ</button><button type="button" class="is-danger" data-variant-delete-all hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i> XÃ³a táº¥t cáº£ biáº¿n thá»ƒ</button></div>
+            <div><strong>Danh sách biến thể</strong><span>Quản lý SKU, màu, size, giá và tồn kho hiện tại.</span></div>
+            <div class="variant-panel-actions"><button type="button" data-variant-add>+ Thêm biến thể</button><button type="button" class="is-danger" data-variant-delete-all hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa tất cả biến thể</button></div>
           </div>
           <div class="admin-product-variant-list" data-variant-list></div>
         </section>
         <section class="variant-tab-panel" data-variant-panel="stock">
           <div class="variant-panel-toolbar">
-            <div><strong>Cáº­p nháº­t tá»“n kho nhanh</strong><span>Chá»n pháº¡m vi rá»“i Ã¡p dá»¥ng tá»“n kho cho cÃ¡c biáº¿n thá»ƒ phÃ¹ há»£p.</span></div>
+            <div><strong>Cập nhật tồn kho nhanh</strong><span>Chọn phạm vi rồi áp dụng tồn kho cho các biến thể phù hợp.</span></div>
           </div>
           <p class="admin-product-form-error" data-bulk-status></p>
           <div class="variant-stock-cards">
-            <article><h3>Ãp dá»¥ng cho táº¥t cáº£</h3><label><span>Tá»“n kho má»›i</span><input type="number" min="0" step="1" data-bulk-all-stock placeholder="VD: 10"></label><button type="button" data-bulk-apply="all">Ãp dá»¥ng</button></article>
-            <article><h3>Ãp dá»¥ng theo mÃ u</h3><label><span>MÃ u</span><select data-bulk-color><option value="">Chá»n mÃ u</option></select></label><label><span>Tá»“n kho má»›i</span><input type="number" min="0" step="1" data-bulk-color-stock placeholder="VD: 5"></label><button type="button" data-bulk-apply="color">Ãp dá»¥ng</button></article>
-            <article><h3>Ãp dá»¥ng theo size</h3><label><span>Size</span><select data-bulk-size><option value="">Chá»n size</option></select></label><label><span>Tá»“n kho má»›i</span><input type="number" min="0" step="1" data-bulk-size-stock placeholder="VD: 2"></label><button type="button" data-bulk-apply="size">Ãp dá»¥ng</button></article>
+            <article><h3>Áp dụng cho tất cả</h3><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-all-stock placeholder="VD: 10"></label><button type="button" data-bulk-apply="all">Áp dụng</button></article>
+            <article><h3>Áp dụng theo màu</h3><label><span>Màu</span><select data-bulk-color><option value="">Chọn màu</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-color-stock placeholder="VD: 5"></label><button type="button" data-bulk-apply="color">Áp dụng</button></article>
+            <article><h3>Áp dụng theo size</h3><label><span>Size</span><select data-bulk-size><option value="">Chọn size</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-size-stock placeholder="VD: 2"></label><button type="button" data-bulk-apply="size">Áp dụng</button></article>
           </div>
         </section>
         <section class="variant-tab-panel" data-variant-panel="price">
           <div class="variant-panel-toolbar">
-            <div><strong>Cáº­p nháº­t giÃ¡ nhanh cho táº¥t cáº£ size</strong><span>Ãp dá»¥ng cho toÃ n bá»™ biáº¿n thá»ƒ cá»§a sáº£n pháº©m, giá»¯ nguyÃªn mÃ u, size, tá»“n kho vÃ  tráº¡ng thÃ¡i.</span></div>
+            <div><strong>Cập nhật giá nhanh cho tất cả size</strong><span>Áp dụng cho toàn bộ biến thể của sản phẩm, giữ nguyên màu, size, tồn kho và trạng thái.</span></div>
           </div>
           <form class="variant-quick-price-card" data-bulk-price-form>
             <div class="variant-quick-price-grid">
-              <label><span>GiÃ¡ má»›i <em>*</em></span><input type="number" min="0" step="1000" name="bulkVariantPrice" placeholder="VD: 250000" required></label>
-              <label><span>GiÃ¡ sale má»›i</span><input type="number" min="0" step="1000" name="bulkVariantSalePrice" placeholder="Äá»ƒ trá»‘ng Ä‘á»ƒ xÃ³a giÃ¡ sale" disabled></label>
+              <label><span>Giá mới <em>*</em></span><input type="number" min="0" step="1000" name="bulkVariantPrice" placeholder="VD: 250000" required></label>
+              <label><span>Giá sale mới</span><input type="number" min="0" step="1000" name="bulkVariantSalePrice" placeholder="Để trống để xóa giá sale" disabled></label>
             </div>
-            <label class="variant-quick-price-toggle"><input type="checkbox" data-bulk-price-sale-toggle><span>Cáº­p nháº­t cáº£ giÃ¡ sale</span></label>
-            <div class="variant-quick-price-summary"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span data-bulk-price-summary>Äang táº£i danh sÃ¡ch biáº¿n thá»ƒ...</span></div>
+            <label class="variant-quick-price-toggle"><input type="checkbox" data-bulk-price-sale-toggle><span>Cập nhật cả giá sale</span></label>
+            <div class="variant-quick-price-summary"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span data-bulk-price-summary>Đang tải danh sách biến thể...</span></div>
             <p class="admin-product-form-error" data-bulk-price-error></p>
-            <div class="variant-modal-footer-actions"><button type="submit" data-bulk-price-apply>Ãp dá»¥ng giÃ¡ cho táº¥t cáº£ size</button></div>
+            <div class="variant-modal-footer-actions"><button type="submit" data-bulk-price-apply>Áp dụng giá cho tất cả size</button></div>
           </form>
         </section>
         <section class="variant-tab-panel" data-variant-panel="form">
           <form class="admin-product-variant-form is-card" data-variant-form>
-            <div class="admin-product-variant-card-title"><div><strong data-variant-form-title>ThÃªm biáº¿n thá»ƒ</strong><span>KhÃ´ng cho sá»­a trá»±c tiáº¿p sá»‘ Ä‘Ã£ bÃ¡n.</span></div></div>
+            <div class="admin-product-variant-card-title"><div><strong data-variant-form-title>Thêm biến thể</strong><span>Không cho sửa trực tiếp số đã bán.</span></div></div>
             <div class="admin-product-variant-form-grid">
-              <label data-product-field="sku"><span>SKU biáº¿n thá»ƒ <em>*</em></span><input type="text" name="sku" required><small class="admin-field-error" data-field-error="sku"></small></label>
-              <label data-product-field="color"><span>MÃ u <em>*</em></span><input type="text" name="color" required><small class="admin-field-error" data-field-error="color"></small></label>
-              <label data-product-field="colorCode"><span>MÃ£ mÃ u</span><input type="text" name="colorCode" placeholder="#000000"><small class="admin-field-error" data-field-error="colorCode"></small></label>
-              <label data-product-field="size"><span>KÃ­ch thÆ°á»›c <em>*</em></span><input type="text" name="size" required><small class="admin-field-error" data-field-error="size"></small></label>
-              <label data-product-field="price"><span>GiÃ¡</span><input type="number" name="price" min="0" step="1000"><small class="admin-field-error" data-field-error="price"></small></label>
-              <label data-product-field="salePrice"><span>GiÃ¡ sale</span><input type="number" name="salePrice" min="0" step="1000"><small class="admin-field-error" data-field-error="salePrice"></small></label>
-              <label data-product-field="stock"><span>Tá»“n kho <em>*</em></span><input type="number" name="stock" min="0" step="1" required><small class="admin-field-error" data-field-error="stock"></small></label>
-              <label data-product-field="status"><span>Tráº¡ng thÃ¡i</span><select name="status"><option value="active">active</option><option value="inactive">inactive</option></select><small class="admin-field-error" data-field-error="status"></small></label>
+              <label data-product-field="sku"><span>SKU biến thể <em>*</em></span><input type="text" name="sku" required><small class="admin-field-error" data-field-error="sku"></small></label>
+              <label data-product-field="color"><span>Màu <em>*</em></span><input type="text" name="color" required><small class="admin-field-error" data-field-error="color"></small></label>
+              <label data-product-field="colorCode"><span>Mã màu</span><input type="text" name="colorCode" placeholder="#000000"><small class="admin-field-error" data-field-error="colorCode"></small></label>
+              <label data-product-field="size"><span>Kích thước <em>*</em></span><input type="text" name="size" required><small class="admin-field-error" data-field-error="size"></small></label>
+              <label data-product-field="price"><span>Giá</span><input type="number" name="price" min="0" step="1000"><small class="admin-field-error" data-field-error="price"></small></label>
+              <label data-product-field="salePrice"><span>Giá sale</span><input type="number" name="salePrice" min="0" step="1000"><small class="admin-field-error" data-field-error="salePrice"></small></label>
+              <label data-product-field="stock"><span>Tồn kho <em>*</em></span><input type="number" name="stock" min="0" step="1" required><small class="admin-field-error" data-field-error="stock"></small></label>
+              <label data-product-field="status"><span>Trạng thái</span><select name="status"><option value="active">active</option><option value="inactive">inactive</option></select><small class="admin-field-error" data-field-error="status"></small></label>
             </div>
             <input type="hidden" name="variantId" value="">
-            <footer class="admin-product-variant-form-actions"><button type="button" class="is-secondary" data-variant-cancel>Há»§y</button><button type="submit">LÆ°u biáº¿n thá»ƒ</button></footer>
+            <footer class="admin-product-variant-form-actions"><button type="button" class="is-secondary" data-variant-cancel>Hủy</button><button type="submit">Lưu biến thể</button></footer>
           </form>
         </section>
       </div>
@@ -401,8 +401,8 @@ function openVariantModal(root, product) {
       const variants = response.data?.variants || [];
       variantsCache = variants;
       if (bulkPriceSummary) bulkPriceSummary.textContent = variants.length
-        ? `Sáº½ Ã¡p dá»¥ng cho ${variants.length} biáº¿n thá»ƒ thuá»™c táº¥t cáº£ mÃ u vÃ  size.`
-        : "Sáº£n pháº©m chÆ°a cÃ³ biáº¿n thá»ƒ Ä‘á»ƒ cáº­p nháº­t giÃ¡.";
+        ? `Sẽ áp dụng cho ${variants.length} biến thể thuộc tất cả màu và size.`
+        : "Sản phẩm chưa có biến thể để cập nhật giá.";
       product.variantCount = variants.length;
       product.variants = variants;
       syncProductVariantState(state, { id: product.id, variantCount: variants.length, variants });
@@ -411,19 +411,19 @@ function openVariantModal(root, product) {
       if (deleteAllButton) deleteAllButton.hidden = variants.length === 0;
 
       if (!variants.length) {
-        listTarget.innerHTML = '<div class="admin-product-variant-empty-state">Sáº£n pháº©m chÆ°a cÃ³ biáº¿n thá»ƒ.</div>';
+        listTarget.innerHTML = '<div class="admin-product-variant-empty-state">Sản phẩm chưa có biến thể.</div>';
         return;
       }
 
-      listTarget.innerHTML = `<div class="admin-product-variant-table is-upgraded"><div class="admin-product-variant-row admin-product-variant-head"><span>SKU</span><span>MÃ u</span><span>Size</span><span>Tá»“n kho</span><span>ÄÃ£ bÃ¡n</span><span>GiÃ¡</span><span>Tráº¡ng thÃ¡i</span><span>HÃ nh Ä‘á»™ng</span></div>${variants.map(renderVariantRow).join("")}</div>`;
+      listTarget.innerHTML = `<div class="admin-product-variant-table is-upgraded"><div class="admin-product-variant-row admin-product-variant-head"><span>SKU</span><span>Màu</span><span>Size</span><span>Tồn kho</span><span>Đã bán</span><span>Giá</span><span>Trạng thái</span><span>Hành động</span></div>${variants.map(renderVariantRow).join("")}</div>`;
       listTarget.querySelectorAll("[data-variant-edit]").forEach((button) => button.addEventListener("click", () => {
         const variant = variants.find((item) => String(item.id) === String(button.dataset.variantEdit));
         populateForm(variant);
         setActiveTab("form");
       }));
       listTarget.querySelectorAll("[data-variant-delete]").forEach((button) => button.addEventListener("click", async () => {
-        if (!confirm("Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a biáº¿n thá»ƒ nÃ y khÃ´ng?")) return;
-        try { await productService.deleteVariant(product.id, button.dataset.variantDelete, silent()); toast.success("ÄÃ£ xÃ³a biáº¿n thá»ƒ"); await renderVariants(); }
+        if (!confirm("Bạn có chắc muốn xóa biến thể này không?")) return;
+        try { await productService.deleteVariant(product.id, button.dataset.variantDelete, silent()); toast.success("Đã xóa biến thể"); await renderVariants(); }
         catch (error) { errorTarget.textContent = message(error); toast.error(message(error)); }
       }));
     } catch (error) {
@@ -435,7 +435,7 @@ function openVariantModal(root, product) {
   function openDeleteAllVariantsModal() {
     if (document.querySelector(".variant-delete-all-overlay")) return;
     if (!variantsCache.length) {
-      toast.error("Sáº£n pháº©m khÃ´ng cÃ³ biáº¿n thá»ƒ Ä‘á»ƒ xÃ³a.");
+      toast.error("Sản phẩm không có biến thể để xóa.");
       return;
     }
 
@@ -445,17 +445,17 @@ function openVariantModal(root, product) {
       <section class="variant-delete-all-dialog" role="dialog" aria-modal="true" aria-labelledby="variant-delete-all-title">
         <header>
           <div class="variant-delete-all-icon"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></div>
-          <div><h2 id="variant-delete-all-title">XÃ³a táº¥t cáº£ biáº¿n thá»ƒ?</h2><p>HÃ nh Ä‘á»™ng nÃ y sáº½ xÃ³a toÃ n bá»™ biáº¿n thá»ƒ cá»§a sáº£n pháº©m hiá»‡n táº¡i vÃ  khÃ´ng thá»ƒ hoÃ n tÃ¡c.</p></div>
+          <div><h2 id="variant-delete-all-title">Xóa tất cả biến thể?</h2><p>Hành động này sẽ xóa toàn bộ biến thể của sản phẩm hiện tại và không thể hoàn tác.</p></div>
         </header>
         <div class="variant-delete-all-summary">
-          <p><span>TÃªn sáº£n pháº©m</span><strong>${escapeHtml(product?.name || "-")}</strong></p>
-          <p><span>Tá»•ng sá»‘ biáº¿n thá»ƒ sáº½ bá»‹ xÃ³a</span><strong>${variantsCache.length}</strong></p>
+          <p><span>Tên sản phẩm</span><strong>${escapeHtml(product?.name || "-")}</strong></p>
+          <p><span>Tổng số biến thể sẽ bị xóa</span><strong>${variantsCache.length}</strong></p>
         </div>
-        <label class="variant-delete-all-confirm"><span>Nháº­p XOA TAT CA Ä‘á»ƒ xÃ¡c nháº­n</span><input type="text" data-delete-all-confirm-input autocomplete="off" spellcheck="false"></label>
+        <label class="variant-delete-all-confirm"><span>Nhập XOA TAT CA để xác nhận</span><input type="text" data-delete-all-confirm-input autocomplete="off" spellcheck="false"></label>
         <p class="admin-product-form-error" data-delete-all-error></p>
         <footer>
-          <button type="button" class="is-secondary" data-delete-all-cancel>Há»§y</button>
-          <button type="button" class="is-danger" data-delete-all-submit disabled>XÃ³a táº¥t cáº£ biáº¿n thá»ƒ</button>
+          <button type="button" class="is-secondary" data-delete-all-cancel>Hủy</button>
+          <button type="button" class="is-danger" data-delete-all-submit disabled>Xóa tất cả biến thể</button>
         </footer>
       </section>`;
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -513,14 +513,14 @@ function openVariantModal(root, product) {
       cancelButton.disabled = true;
       if (deleteAllButton) {
         deleteAllButton.disabled = true;
-        deleteAllButton.textContent = "Äang xÃ³a...";
+        deleteAllButton.textContent = "Đang xóa...";
       }
-      submitButton.textContent = "Äang xÃ³a...";
+      submitButton.textContent = "Đang xóa...";
       errorNode.textContent = "";
       try {
         await productService.deleteAllVariants(product.id, silent());
         close();
-        toast.success("ÄÃ£ xÃ³a táº¥t cáº£ biáº¿n thá»ƒ cá»§a sáº£n pháº©m.");
+        toast.success("Đã xóa tất cả biến thể của sản phẩm.");
         refreshAdminSidebarCounts();
         await renderVariants();
         setActiveTab("list");
@@ -530,11 +530,11 @@ function openVariantModal(root, product) {
         toast.error(errorMessage);
       } finally {
         deleteAllInFlight = false;
-        submitButton.textContent = "XÃ³a táº¥t cáº£ biáº¿n thá»ƒ";
+        submitButton.textContent = "Xóa tất cả biến thể";
         cancelButton.disabled = false;
         if (deleteAllButton) {
           deleteAllButton.disabled = false;
-          deleteAllButton.innerHTML = '<i class="fa-regular fa-trash-can" aria-hidden="true"></i> XÃ³a táº¥t cáº£ biáº¿n thá»ƒ';
+          deleteAllButton.innerHTML = '<i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa tất cả biến thể';
         }
         submitButton.disabled = input.value.trim() !== "XOA TAT CA";
       }
@@ -542,8 +542,8 @@ function openVariantModal(root, product) {
   }
   function renderVariantRow(variant) {
     const stock = Number(variant.stock || 0);
-    const stockBadge = stock === 0 ? `<span class="variant-badge is-empty">Háº¿t hÃ ng</span>` : stock <= 5 ? `<span class="variant-badge is-low">Sáº¯p háº¿t Â· ${stock}</span>` : `<span class="variant-badge is-ok">CÃ²n hÃ ng Â· ${stock}</span>`;
-    return `<div class="admin-product-variant-row" data-variant-row="${id(variant.id)}"><span class="variant-sku">${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${stockBadge}</span><span>${Number(variant.sold || 0)}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span><span class="variant-status ${variant.status === "active" ? "is-active" : "is-inactive"}">${escapeHtml(variant.status || "active")}</span></span><span class="variant-actions"><button type="button" data-variant-edit="${id(variant.id)}"><i class="fa-regular fa-pen-to-square"></i> Sá»­a</button><button type="button" data-variant-delete="${id(variant.id)}" class="is-danger"><i class="fa-regular fa-trash-can"></i> XÃ³a</button></span></div>`;
+    const stockBadge = stock === 0 ? `<span class="variant-badge is-empty">Hết hàng</span>` : stock <= 5 ? `<span class="variant-badge is-low">Sắp hết · ${stock}</span>` : `<span class="variant-badge is-ok">Còn hàng · ${stock}</span>`;
+    return `<div class="admin-product-variant-row" data-variant-row="${id(variant.id)}"><span class="variant-sku">${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${stockBadge}</span><span>${Number(variant.sold || 0)}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span><span class="variant-status ${variant.status === "active" ? "is-active" : "is-inactive"}">${escapeHtml(variant.status || "active")}</span></span><span class="variant-actions"><button type="button" data-variant-edit="${id(variant.id)}"><i class="fa-regular fa-pen-to-square"></i> Sửa</button><button type="button" data-variant-delete="${id(variant.id)}" class="is-danger"><i class="fa-regular fa-trash-can"></i> Xóa</button></span></div>`;
   }
 
   function populateForm(variant) {
@@ -557,8 +557,8 @@ function openVariantModal(root, product) {
     form.elements.stock.value = variant?.stock ?? "";
     form.elements.status.value = variant?.status || "active";
     form.elements.variantId.value = variant?.id || "";
-    form.querySelector("[data-variant-form-title]").textContent = variant ? "Sá»­a biáº¿n thá»ƒ" : "ThÃªm biáº¿n thá»ƒ";
-    form.querySelector("button[type='submit']").textContent = variant ? "LÆ°u thay Ä‘á»•i" : "LÆ°u biáº¿n thá»ƒ";
+    form.querySelector("[data-variant-form-title]").textContent = variant ? "Sửa biến thể" : "Thêm biến thể";
+    form.querySelector("button[type='submit']").textContent = variant ? "Lưu thay đổi" : "Lưu biến thể";
   }
 
   function collectVariantPayload() {
@@ -573,42 +573,42 @@ function openVariantModal(root, product) {
       stock: Number(data.get("stock") || 0),
       status: String(data.get("status") || "active").trim().toLowerCase()
     };
-    if (!payload.sku) throw new Error("SKU khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
-    if (!payload.color) throw new Error("MÃ u khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
-    if (!payload.size) throw new Error("Size khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
-    if (!Number.isInteger(payload.stock) || payload.stock < 0) throw new Error("Tá»“n kho khÃ´ng Ä‘Æ°á»£c Ã¢m.");
-    if (payload.price !== null && payload.price < 0) throw new Error("GiÃ¡ khÃ´ng Ä‘Æ°á»£c Ã¢m.");
-    if (payload.salePrice !== null && payload.price !== null && payload.salePrice > payload.price) throw new Error("GiÃ¡ sale khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n giÃ¡.");
+    if (!payload.sku) throw new Error("SKU không được để trống.");
+    if (!payload.color) throw new Error("Màu không được để trống.");
+    if (!payload.size) throw new Error("Size không được để trống.");
+    if (!Number.isInteger(payload.stock) || payload.stock < 0) throw new Error("Tồn kho không được âm.");
+    if (payload.price !== null && payload.price < 0) throw new Error("Giá không được âm.");
+    if (payload.salePrice !== null && payload.price !== null && payload.salePrice > payload.price) throw new Error("Giá sale không được lớn hơn giá.");
     return payload;
   }
 
   function renderBulkTools(variants) {
     const colors = uniqueValues(variants.map((variant) => variant.color));
     const sizes = uniqueValues(variants.map((variant) => variant.size));
-    fillSelect(modal.querySelector("[data-bulk-color]"), colors, "Chá»n mÃ u");
-    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chá»n size");
+    fillSelect(modal.querySelector("[data-bulk-color]"), colors, "Chọn màu");
+    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
   }
 
   async function applyBulkStock(mode, trigger = null) {
     const setBulkStatus = (textValue) => { if (bulkStatus) bulkStatus.textContent = textValue; };
-    const originalLabel = trigger?.textContent || "Ãp dá»¥ng";
+    const originalLabel = trigger?.textContent || "Áp dụng";
     if (trigger) {
       trigger.disabled = true;
-      trigger.textContent = "Äang cáº­p nháº­t...";
+      trigger.textContent = "Đang cập nhật...";
     }
     try {
       setBulkStatus("");
       const updates = buildBulkStockUpdates(mode);
-      if (!updates.length) throw new Error("KhÃ´ng cÃ³ biáº¿n thá»ƒ nÃ o cáº§n cáº­p nháº­t.");
+      if (!updates.length) throw new Error("Không có biến thể nào cần cập nhật.");
       const invalid = updates.find((item) => !Number.isInteger(item.stock) || item.stock < 0);
-      if (invalid) throw new Error("Tá»“n kho pháº£i lÃ  sá»‘ nguyÃªn khÃ´ng Ã¢m.");
-      setBulkStatus("Äang cáº­p nháº­t...");
+      if (invalid) throw new Error("Tồn kho phải là số nguyên không âm.");
+      setBulkStatus("Đang cập nhật...");
       const results = await Promise.allSettled(updates.map((item) => productService.updateVariantStock(product.id, item.id, { stock: item.stock }, silent())));
       const failed = results.filter((result) => result.status === "rejected");
-      if (failed.length) throw new Error(`${failed.length}/${results.length} biáº¿n thá»ƒ cáº­p nháº­t tháº¥t báº¡i.`);
-      toast.success("Cáº­p nháº­t tá»“n kho thÃ nh cÃ´ng");
+      if (failed.length) throw new Error(`${failed.length}/${results.length} biến thể cập nhật thất bại.`);
+      toast.success("Cập nhật tồn kho thành công");
       refreshAdminSidebarCounts();
-      setBulkStatus("Cáº­p nháº­t tá»“n kho thÃ nh cÃ´ng");
+      setBulkStatus("Cập nhật tồn kho thành công");
       await renderVariants();
       if (root) renderRows(root);
     } catch (error) {
@@ -626,35 +626,35 @@ function openVariantModal(root, product) {
   function buildBulkStockUpdates(mode) {
     if (mode === "all") {
       const stockInput = modal.querySelector("[data-bulk-all-stock]");
-      if (!stockInput) throw new Error("KhÃ´ng tÃ¬m tháº¥y Ã´ nháº­p tá»“n kho cho táº¥t cáº£ biáº¿n thá»ƒ.");
+      if (!stockInput) throw new Error("Không tìm thấy ô nhập tồn kho cho tất cả biến thể.");
       const stock = parseStockInput(stockInput.value);
       return variantsCache.map((variant) => ({ id: variant.id, stock }));
     }
     if (mode === "color") {
       const colorSelect = modal.querySelector("[data-bulk-color]");
       const stockInput = modal.querySelector("[data-bulk-color-stock]");
-      if (!colorSelect || !stockInput) throw new Error("KhÃ´ng tÃ¬m tháº¥y Ã´ cáº­p nháº­t tá»“n kho theo mÃ u.");
+      if (!colorSelect || !stockInput) throw new Error("Không tìm thấy ô cập nhật tồn kho theo màu.");
       const color = colorSelect.value;
       const stock = parseStockInput(stockInput.value);
-      if (!color) throw new Error("Vui lÃ²ng chá»n mÃ u cáº§n cáº­p nháº­t.");
+      if (!color) throw new Error("Vui lòng chọn màu cần cập nhật.");
       return variantsCache.filter((variant) => String(variant.color || "") === color).map((variant) => ({ id: variant.id, stock }));
     }
     if (mode === "size") {
       const sizeSelect = modal.querySelector("[data-bulk-size]");
       const stockInput = modal.querySelector("[data-bulk-size-stock]");
-      if (!sizeSelect || !stockInput) throw new Error("KhÃ´ng tÃ¬m tháº¥y Ã´ cáº­p nháº­t tá»“n kho theo size.");
+      if (!sizeSelect || !stockInput) throw new Error("Không tìm thấy ô cập nhật tồn kho theo size.");
       const size = sizeSelect.value;
       const stock = parseStockInput(stockInput.value);
-      if (!size) throw new Error("Vui lÃ²ng chá»n size cáº§n cáº­p nháº­t.");
+      if (!size) throw new Error("Vui lòng chọn size cần cập nhật.");
       return variantsCache.filter((variant) => String(variant.size || "") === size).map((variant) => ({ id: variant.id, stock }));
     }
     return [];
   }
 
   function parseStockInput(value) {
-    if (value === "") throw new Error("Vui lÃ²ng nháº­p tá»“n kho má»›i.");
+    if (value === "") throw new Error("Vui lòng nhập tồn kho mới.");
     const stock = Number(value);
-    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tá»“n kho pháº£i lÃ  sá»‘ nguyÃªn khÃ´ng Ã¢m.");
+    if (!Number.isInteger(stock) || stock < 0) throw new Error("Tồn kho phải là số nguyên không âm.");
     return stock;
   }
 
@@ -672,7 +672,7 @@ function openVariantModal(root, product) {
       const payload = collectVariantPayload();
       if (editingVariantId) await productService.updateVariant(product.id, editingVariantId, payload, silent());
       else await productService.createVariant(product.id, payload, silent());
-      toast.success(editingVariantId ? "ÄÃ£ cáº­p nháº­t biáº¿n thá»ƒ." : "ÄÃ£ thÃªm biáº¿n thá»ƒ.");
+      toast.success(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
       populateForm(null);
       form.reset();
       form.elements.status.value = "active";
@@ -693,7 +693,7 @@ function openVariantModal(root, product) {
     event.preventDefault();
     bulkPriceError.textContent = "";
     if (!variantsCache.length) {
-      bulkPriceError.textContent = "Sáº£n pháº©m chÆ°a cÃ³ biáº¿n thá»ƒ Ä‘á»ƒ cáº­p nháº­t giÃ¡.";
+      bulkPriceError.textContent = "Sản phẩm chưa có biến thể để cập nhật giá.";
       return;
     }
     const priceInput = bulkPriceForm.elements.bulkVariantPrice.value;
@@ -702,32 +702,32 @@ function openVariantModal(root, product) {
     const saleInput = bulkVariantSalePrice?.value ?? "";
     const salePrice = saleInput === "" ? null : Number(saleInput);
     if (priceInput === "" || !Number.isFinite(price) || price < 0) {
-      bulkPriceError.textContent = "GiÃ¡ má»›i pháº£i lÃ  sá»‘ khÃ´ng Ã¢m.";
+      bulkPriceError.textContent = "Giá mới phải là số không âm.";
       return;
     }
     if (updateSalePrice && salePrice !== null && (!Number.isFinite(salePrice) || salePrice < 0 || salePrice > price)) {
-      bulkPriceError.textContent = "GiÃ¡ sale pháº£i lÃ  sá»‘ khÃ´ng Ã¢m vÃ  khÃ´ng lá»›n hÆ¡n giÃ¡ má»›i.";
+      bulkPriceError.textContent = "Giá sale phải là số không âm và không lớn hơn giá mới.";
       return;
     }
     if (!updateSalePrice && variantsCache.some((variant) => variant.salePrice !== null && Number(variant.salePrice) > price)) {
-      bulkPriceError.textContent = "Má»™t sá»‘ giÃ¡ sale hiá»‡n táº¡i lá»›n hÆ¡n giÃ¡ má»›i. HÃ£y báº­t â€œCáº­p nháº­t cáº£ giÃ¡ saleâ€.";
+      bulkPriceError.textContent = "Một số giá sale hiện tại lớn hơn giá mới. Hãy bật “Cập nhật cả giá sale”.";
       return;
     }
     if (!updateSalePrice && product.salePrice !== null && product.salePrice !== undefined && Number(product.salePrice) > price) {
-      bulkPriceError.textContent = "GiÃ¡ sale cá»§a sáº£n pháº©m Ä‘ang lá»›n hÆ¡n giÃ¡ má»›i. HÃ£y báº­t â€œCáº­p nháº­t cáº£ giÃ¡ saleâ€.";
+      bulkPriceError.textContent = "Giá sale của sản phẩm đang lớn hơn giá mới. Hãy bật “Cập nhật cả giá sale”.";
       return;
     }
 
     const submitButton = bulkPriceForm.querySelector("[data-bulk-price-apply]");
     submitButton.disabled = true;
-    submitButton.textContent = "Äang cáº­p nháº­t...";
+    submitButton.textContent = "Đang cập nhật...";
     try {
       const results = await Promise.allSettled(variantsCache.map((variant) => productService.updateVariant(product.id, variant.id, {
         price,
         ...(updateSalePrice ? { salePrice } : {})
       }, silent())));
       const failed = results.filter((result) => result.status === "rejected");
-      if (failed.length) throw new Error(`${failed.length}/${results.length} biáº¿n thá»ƒ cáº­p nháº­t giÃ¡ tháº¥t báº¡i.`);
+      if (failed.length) throw new Error(`${failed.length}/${results.length} biến thể cập nhật giá thất bại.`);
       const productResponse = await productService.updateProduct(product.id, {
         price,
         ...(updateSalePrice ? { salePrice } : {})
@@ -744,7 +744,7 @@ function openVariantModal(root, product) {
         state.detail.price = product.price;
         if (updateSalePrice) state.detail.salePrice = product.salePrice;
       }
-      toast.success(`ÄÃ£ cáº­p nháº­t giÃ¡ cho ${results.length} biáº¿n thá»ƒ.`);
+      toast.success(`Đã cập nhật giá cho ${results.length} biến thể.`);
       await renderVariants();
       setActiveTab("list");
     } catch (error) {
@@ -752,7 +752,7 @@ function openVariantModal(root, product) {
       toast.error(message(error));
     } finally {
       submitButton.disabled = false;
-      submitButton.textContent = "Ãp dá»¥ng giÃ¡ cho táº¥t cáº£ size";
+      submitButton.textContent = "Áp dụng giá cho tất cả size";
     }
   });
 
@@ -766,7 +766,7 @@ function openVariantModal(root, product) {
 }
 
 function createModal(html, initialFocus = "[data-modal-close]") {
-  closeModal(); const overlay = document.createElement("div"); overlay.className = "admin-product-modal"; overlay.innerHTML = `<section class="admin-product-modal-dialog" role="dialog" aria-modal="true" tabindex="-1">${html}</section>`; const dialog = overlay.querySelector("[role='dialog']"); const title = dialog.querySelector("h2"); if (title?.id) dialog.setAttribute("aria-labelledby", title.id); else dialog.setAttribute("aria-label", title?.textContent || "Modal quáº£n lÃ½ sáº£n pháº©m"); document.body.appendChild(overlay); document.body.classList.add("modal-open"); activeModal = overlay; modalUxCleanup = activateModalUX(overlay, { onClose: closeModal, initialFocus }); requestAnimationFrame(() => overlay.classList.add("is-visible")); overlay.querySelectorAll("[data-modal-close]").forEach((button) => { if (!button.getAttribute("aria-label")) button.setAttribute("aria-label", "ÄÃ³ng modal"); }); overlay.addEventListener("click", (event) => { if (event.target === overlay || event.target.closest("[data-modal-close]")) closeModal(); }); return overlay;
+  closeModal(); const overlay = document.createElement("div"); overlay.className = "admin-product-modal"; overlay.innerHTML = `<section class="admin-product-modal-dialog" role="dialog" aria-modal="true" tabindex="-1">${html}</section>`; const dialog = overlay.querySelector("[role='dialog']"); const title = dialog.querySelector("h2"); if (title?.id) dialog.setAttribute("aria-labelledby", title.id); else dialog.setAttribute("aria-label", title?.textContent || "Modal quản lý sản phẩm"); document.body.appendChild(overlay); document.body.classList.add("modal-open"); activeModal = overlay; modalUxCleanup = activateModalUX(overlay, { onClose: closeModal, initialFocus }); requestAnimationFrame(() => overlay.classList.add("is-visible")); overlay.querySelectorAll("[data-modal-close]").forEach((button) => { if (!button.getAttribute("aria-label")) button.setAttribute("aria-label", "Đóng modal"); }); overlay.addEventListener("click", (event) => { if (event.target === overlay || event.target.closest("[data-modal-close]")) closeModal(); }); return overlay;
 }
 function closeModal() { modalUxCleanup?.(); modalUxCleanup = null; activeModal?._productPreviewCleanup?.(); activeModal?.remove(); activeModal = null; document.body.classList.remove("modal-open"); }
 function field(label, name, value = "", type = "text", required = false, extra = "") { return `<label data-product-field="${name}"><span>${escapeHtml(label)}${required ? " <em>*</em>" : ""}</span><input type="${type}" name="${name}" value="${escapeHtml(value ?? "")}" ${required ? "required" : ""} ${extra}><small class="admin-field-error" data-field-error="${name}"></small></label>`; }
@@ -787,7 +787,7 @@ function formPayload(form) {
     product_attributes: { material: attribute("material"), chain_length: attribute("chain_length"), pendant_type: attribute("pendant_type"), stone_color: attribute("stone_color"), pendant_size: attribute("pendant_size"), warranty: attribute("warranty") }
   };
 }
-function validateFormPayload(p) { if (!p.name) return { field: "name", message: "TÃªn sáº£n pháº©m lÃ  báº¯t buá»™c." }; if (!p.sku) return { field: "sku", message: "SKU lÃ  báº¯t buá»™c." }; if (!Number.isFinite(p.price) || p.price < 0) return { field: "price", message: "GiÃ¡ pháº£i lÃ  sá»‘ khÃ´ng Ã¢m." }; if (p.sale_price !== null && (p.sale_price < 0 || p.sale_price > p.price)) return { field: "sale_price", message: "GiÃ¡ sale pháº£i nhá» hÆ¡n hoáº·c báº±ng giÃ¡ gá»‘c." }; if (!Number.isInteger(p.stock) || p.stock < 0) return { field: "stock", message: "Tá»“n kho pháº£i lÃ  sá»‘ nguyÃªn khÃ´ng Ã¢m." }; if (!Number.isFinite(p.rating_average) || p.rating_average < 0 || p.rating_average > 5 || Math.round(p.rating_average * 10) !== p.rating_average * 10) return { field: "rating_average", message: "ÄÃ¡nh giÃ¡ sao pháº£i tá»« 0 Ä‘áº¿n 5 vÃ  cÃ³ 1 chá»¯ sá»‘ tháº­p phÃ¢n." }; return null; }
+function validateFormPayload(p) { if (!p.name) return { field: "name", message: "Tên sản phẩm là bắt buộc." }; if (!p.sku) return { field: "sku", message: "SKU là bắt buộc." }; if (!Number.isFinite(p.price) || p.price < 0) return { field: "price", message: "Giá phải là số không âm." }; if (p.sale_price !== null && (p.sale_price < 0 || p.sale_price > p.price)) return { field: "sale_price", message: "Giá sale phải nhỏ hơn hoặc bằng giá gốc." }; if (!Number.isInteger(p.stock) || p.stock < 0) return { field: "stock", message: "Tồn kho phải là số nguyên không âm." }; if (!Number.isFinite(p.rating_average) || p.rating_average < 0 || p.rating_average > 5 || Math.round(p.rating_average * 10) !== p.rating_average * 10) return { field: "rating_average", message: "Đánh giá sao phải từ 0 đến 5 và có 1 chữ số thập phân." }; return null; }
 
 async function validateAndNormalizeProductImages(payload, form = null) {
   const normalizeForSave = (value) => normalizeProductImageUrl(value);
@@ -805,7 +805,7 @@ async function validateAndNormalizeProductImages(payload, form = null) {
   const reachable = await imageUrlLoads(selectedThumbnailUrl, "thumbnail_url");
   if (!reachable) {
     console.warn("[admin product images] unreachable selected main image", { field: "thumbnail_url", url: selectedThumbnailUrl });
-    throw new Error(isLegacyUploadUrl(selectedThumbnailUrl) ? OLD_UPLOAD_LOST_MESSAGE : "áº¢nh sáº£n pháº©m hiá»‡n khÃ´ng truy cáº­p Ä‘Æ°á»£c. Vui lÃ²ng táº£i láº¡i áº£nh hoáº·c chá»n má»™t áº£nh há»£p lá»‡.");
+    throw new Error(isLegacyUploadUrl(selectedThumbnailUrl) ? OLD_UPLOAD_LOST_MESSAGE : "Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.");
   }
 }
 function imageUrlLoads(url, label) {
@@ -880,13 +880,13 @@ function bindProductImageUpload(modal) {
   const maxGalleryImages = 8;
   let objectUrls = [];
 
-  const setMainImage = (url, { message = "ÄÃ£ chá»n áº£nh chÃ­nh" } = {}) => {
+  const setMainImage = (url, { message = "Đã chọn ảnh chính" } = {}) => {
     const nextUrl = String(url || "").trim();
     hiddenInput.value = nextUrl;
     thumbnail.src = resolveImageUrl(nextUrl);
     removeButton.hidden = !nextUrl;
     if (nextUrl) {
-      fileName.textContent = "áº¢nh chÃ­nh Ä‘Ã£ chá»n";
+      fileName.textContent = "Ảnh chính đã chọn";
       uploadMessage.textContent = message;
       uploadMessage.className = "is-success";
     }
@@ -904,11 +904,11 @@ function bindProductImageUpload(modal) {
     gallery.innerHTML = urls.length ? urls.map((url, index) => {
       const isMain = String(url).trim() === selectedUrl;
       return `<div class="admin-product-gallery-item${isMain ? " is-main" : ""}" style="position:relative;border:2px solid ${isMain ? "#16a34a" : "#e2e8f0"};border-radius:8px;padding:6px;display:grid;gap:6px;background:#fff;">
-        ${isMain ? '<span class="admin-product-main-badge" style="position:absolute;left:8px;top:8px;background:#16a34a;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700;">áº¢nh chÃ­nh</span>' : ""}
-        <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(url))}" alt="áº¢nh gallery ${index + 1}" loading="lazy" decoding="async" data-product-image>
-        <button type="button" data-product-main-image="${escapeHtml(url)}" ${isMain ? "disabled" : ""} style="border:1px solid ${isMain ? "#16a34a" : "#cbd5e1"};background:${isMain ? "#dcfce7" : "#fff"};color:${isMain ? "#166534" : "#334155"};border-radius:6px;padding:6px 8px;font-weight:700;cursor:${isMain ? "default" : "pointer"};"><i class="fa-${isMain ? "solid" : "regular"} fa-star" aria-hidden="true"></i> ${isMain ? "áº¢nh chÃ­nh" : "Äáº·t lÃ m áº£nh chÃ­nh"}</button>
+        ${isMain ? '<span class="admin-product-main-badge" style="position:absolute;left:8px;top:8px;background:#16a34a;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700;">Ảnh chính</span>' : ""}
+        <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(url))}" alt="Ảnh gallery ${index + 1}" loading="lazy" decoding="async" data-product-image>
+        <button type="button" data-product-main-image="${escapeHtml(url)}" ${isMain ? "disabled" : ""} style="border:1px solid ${isMain ? "#16a34a" : "#cbd5e1"};background:${isMain ? "#dcfce7" : "#fff"};color:${isMain ? "#166534" : "#334155"};border-radius:6px;padding:6px 8px;font-weight:700;cursor:${isMain ? "default" : "pointer"};"><i class="fa-${isMain ? "solid" : "regular"} fa-star" aria-hidden="true"></i> ${isMain ? "Ảnh chính" : "Đặt làm ảnh chính"}</button>
       </div>`;
-    }).join("") : '<span>ChÆ°a cÃ³ áº£nh gallery</span>';
+    }).join("") : '<span>Chưa có ảnh gallery</span>';
     bindImageFallbacks(gallery);
   };
 
@@ -924,35 +924,35 @@ function bindProductImageUpload(modal) {
   dropzone.addEventListener("drop", (event) => { const files = event.dataTransfer?.files; if (files?.length) uploadImages(files); });
   removeButton.addEventListener("click", () => {
     hiddenInput.value = ""; fileInput.value = ""; thumbnail.src = PLACEHOLDER; updateGallery();
-    fileName.textContent = "ChÆ°a chá»n áº£nh"; uploadMessage.textContent = "áº¢nh sáº½ Ä‘Æ°á»£c xÃ³a khi lÆ°u sáº£n pháº©m";
+    fileName.textContent = "Chưa chọn ảnh"; uploadMessage.textContent = "Ảnh sẽ được xóa khi lưu sản phẩm";
     uploadMessage.className = "is-warning"; removeButton.hidden = true;
   });
 
   async function uploadImages(fileList) {
     const files = Array.from(fileList || []);
     const invalidType = files.find((file) => !allowedTypes.includes(file.type));
-    if (invalidType) return showUploadError("Chá»‰ há»— trá»£ áº£nh JPG, PNG vÃ  WEBP.");
+    if (invalidType) return showUploadError("Chỉ hỗ trợ ảnh JPG, PNG và WEBP.");
     const oversized = files.find((file) => file.size > maxImageSize);
-    if (oversized) return showUploadError(`áº¢nh "${oversized.name}" vÆ°á»£t quÃ¡ 5MB.`);
+    if (oversized) return showUploadError(`Ảnh "${oversized.name}" vượt quá 5MB.`);
     const currentUrls = readGalleryUrls();
-    if (currentUrls.length + files.length > maxGalleryImages) return showUploadError(`Gallery tá»‘i Ä‘a ${maxGalleryImages} áº£nh. Hiá»‡n Ä‘Ã£ cÃ³ ${currentUrls.length} áº£nh.`);
+    if (currentUrls.length + files.length > maxGalleryImages) return showUploadError(`Gallery tối đa ${maxGalleryImages} ảnh. Hiện đã có ${currentUrls.length} ảnh.`);
 
     const previousThumbnailUrl = hiddenInput.value;
     const previousGalleryValue = galleryInput.value;
     clearObjectUrls();
     objectUrls = files.map((file) => URL.createObjectURL(file));
     if (!hiddenInput.value && objectUrls[0]) thumbnail.src = objectUrls[0];
-    fileName.textContent = files.length === 1 ? files[0].name : `${files.length} áº£nh Ä‘Ã£ chá»n`;
-    uploadMessage.textContent = `Äang táº£i ${files.length} áº£nh...`;
+    fileName.textContent = files.length === 1 ? files[0].name : `${files.length} ảnh đã chọn`;
+    uploadMessage.textContent = `Đang tải ${files.length} ảnh...`;
     uploadMessage.className = "is-uploading"; form.dataset.imageUploading = "true"; chooseButton.disabled = true;
     form.querySelector("[data-product-submit]").disabled = true;
 
     try {
       const response = files.length > 1
-        ? await uploadService.uploadImages(files, { showErrorToast: false, loadingMessage: "Äang táº£i áº£nh sáº£n pháº©m..." })
-        : await uploadService.uploadProductImage(files[0], { showErrorToast: false, loadingMessage: "Äang táº£i áº£nh sáº£n pháº©m..." });
+        ? await uploadService.uploadImages(files, { showErrorToast: false, loadingMessage: "Đang tải ảnh sản phẩm..." })
+        : await uploadService.uploadProductImage(files[0], { showErrorToast: false, loadingMessage: "Đang tải ảnh sản phẩm..." });
       const uploadedUrls = extractUploadedUrls(response);
-      if (!uploadedUrls.length) throw new Error("Backend khÃ´ng tráº£ vá» URL áº£nh.");
+      if (!uploadedUrls.length) throw new Error("Backend không trả về URL ảnh.");
       appendGalleryUrls(uploadedUrls);
       const firstUrl = uploadedUrls[0];
       if (!hiddenInput.value && firstUrl) {
@@ -960,10 +960,10 @@ function bindProductImageUpload(modal) {
         thumbnail.src = resolveImageUrl(firstUrl);
         removeButton.hidden = false;
       }
-      uploadMessage.textContent = `Táº£i thÃ nh cÃ´ng ${uploadedUrls.length} áº£nh`;
+      uploadMessage.textContent = `Tải thành công ${uploadedUrls.length} ảnh`;
       uploadMessage.className = "is-success";
-      fileName.textContent = files.length === 1 ? (response.data?.originalName || files[0].name) : `${uploadedUrls.length} áº£nh Ä‘Ã£ thÃªm vÃ o gallery`;
-      toast.success(`ÄÃ£ thÃªm ${uploadedUrls.length} áº£nh vÃ o Gallery URLs.`);
+      fileName.textContent = files.length === 1 ? (response.data?.originalName || files[0].name) : `${uploadedUrls.length} ảnh đã thêm vào gallery`;
+      toast.success(`Đã thêm ${uploadedUrls.length} ảnh vào Gallery URLs.`);
     } catch (error) {
       hiddenInput.value = previousThumbnailUrl;
       thumbnail.src = resolveImageUrl(previousThumbnailUrl);
@@ -1018,19 +1018,19 @@ function bindProductVariantSection(modal, product, root = null) {
   let selectedSizes = [];
   let renderSelectionLists = null;
   let colorOptions = [
-    { name: "Äen", value: "Black", colorCode: "#000000" },
-    { name: "Tráº¯ng", value: "White", colorCode: "#FFFFFF" },
+    { name: "Đen", value: "Black", colorCode: "#000000" },
+    { name: "Trắng", value: "White", colorCode: "#FFFFFF" },
     { name: "Xanh", value: "Green", colorCode: "#10B981" },
-    { name: "XÃ¡m", value: "Gray", colorCode: "#9CA3AF" },
-    { name: "Há»“ng", value: "Pink", colorCode: "#EC4899" },
-    { name: "Äá»", value: "Red", colorCode: "#EF4444" }
+    { name: "Xám", value: "Gray", colorCode: "#9CA3AF" },
+    { name: "Hồng", value: "Pink", colorCode: "#EC4899" },
+    { name: "Đỏ", value: "Red", colorCode: "#EF4444" }
   ];
   let activeSizePresetKey = getProductSizePreset(product)?.key || "quanao";
   let sizeOptions = [...(SIZE_PRESETS[activeSizePresetKey]?.sizes || SIZE_PRESETS.quanao.sizes)];
 
   if (!product?.id) {
-    section.innerHTML = `<div class="admin-product-variant-empty">Sáº£n pháº©m nÃ y chÆ°a cÃ³ biáº¿n thá»ƒ. Táº¡o sáº£n pháº©m trÆ°á»›c rá»“i quay láº¡i pháº§n nÃ y Ä‘á»ƒ táº¡o biáº¿n thá»ƒ theo mÃ u vÃ  size.</div>`;
-    if (hint) hint.textContent = "Táº¡o sáº£n pháº©m trÆ°á»›c, sau Ä‘Ã³ thÃªm biáº¿n thá»ƒ tá»« Ä‘Ã¢y.";
+    section.innerHTML = `<div class="admin-product-variant-empty">Sản phẩm này chưa có biến thể. Tạo sản phẩm trước rồi quay lại phần này để tạo biến thể theo màu và size.</div>`;
+    if (hint) hint.textContent = "Tạo sản phẩm trước, sau đó thêm biến thể từ đây.";
     return;
   }
 
@@ -1040,50 +1040,50 @@ function bindProductVariantSection(modal, product, root = null) {
   function renderBuilder() {
     section.innerHTML = `
       <div class="admin-product-variant-toolbar">
-        <span class="admin-product-variant-hint" data-product-variant-hint>Chá»n mÃ u vÃ  size, sau Ä‘Ã³ táº¡o biáº¿n thá»ƒ hÃ ng loáº¡t báº±ng cáº¥u hÃ¬nh máº·c Ä‘á»‹nh.</span>
+        <span class="admin-product-variant-hint" data-product-variant-hint>Chọn màu và size, sau đó tạo biến thể hàng loạt bằng cấu hình mặc định.</span>
       </div>
       <div class="admin-product-variant-builder">
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">1. Chá»n mÃ u sáº¯c</div>
+          <div class="admin-product-variant-step-title">1. Chọn màu sắc</div>
           <div class="admin-product-variant-chip-list" data-color-options></div>
           <form class="admin-product-variant-inline-form" data-custom-color-form>
             <div class="admin-product-variant-inline-fields">
-              <label><span>TÃªn mÃ u</span><input type="text" name="customColorName" placeholder="VÃ­ dá»¥: Xanh navy" /></label>
-              <label><span>MÃ£ mÃ u HEX</span><input type="text" name="customColorCode" placeholder="#1E3A8A" /></label>
-              <button type="submit">+ ThÃªm mÃ u khÃ¡c</button>
+              <label><span>Tên màu</span><input type="text" name="customColorName" placeholder="Ví dụ: Xanh navy" /></label>
+              <label><span>Mã màu HEX</span><input type="text" name="customColorCode" placeholder="#1E3A8A" /></label>
+              <button type="submit">+ Thêm màu khác</button>
             </div>
           </form>
         </div>
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">2. Chá»n kÃ­ch thÆ°á»›c</div>
+          <div class="admin-product-variant-step-title">2. Chọn kích thước</div>
           <div class="admin-product-variant-preset-row">
             ${Object.entries(SIZE_PRESETS).map(([key, preset]) => `<button type="button" class="admin-product-variant-preset${key === activeSizePresetKey ? " is-active" : ""}" data-size-preset="${escapeHtml(key)}">${escapeHtml(preset.label)}</button>`).join("")}
           </div>
           <div class="admin-product-variant-chip-list" data-size-options></div>
           <form class="admin-product-variant-inline-form" data-custom-size-form>
             <div class="admin-product-variant-inline-fields">
-              <label><span>Size má»›i</span><input type="text" name="customSize" placeholder="VÃ­ dá»¥: XXL" /></label>
-              <button type="submit">+ ThÃªm size khÃ¡c</button>
+              <label><span>Size mới</span><input type="text" name="customSize" placeholder="Ví dụ: XXL" /></label>
+              <button type="submit">+ Thêm size khác</button>
             </div>
           </form>
         </div>
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">3. Táº¡o biáº¿n thá»ƒ</div>
+          <div class="admin-product-variant-step-title">3. Tạo biến thể</div>
           <p class="admin-product-form-error" data-bulk-create-error></p>
-          <button type="button" class="admin-product-variant-create" data-product-variant-create>Táº¡o biáº¿n thá»ƒ Ä‘Ã£ chá»n</button>
+          <button type="button" class="admin-product-variant-create" data-product-variant-create>Tạo biến thể đã chọn</button>
         </div>
         <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">4. Cáº­p nháº­t tá»“n kho hÃ ng loáº¡t</div>
+          <div class="admin-product-variant-step-title">4. Cập nhật tồn kho hàng loạt</div>
           <div class="admin-product-variant-bulk-stock">
             <div class="admin-product-variant-bulk-grid">
-              <label><span>Pháº¡m vi</span><select data-bulk-stock-scope><option value="all">Táº¥t cáº£ biáº¿n thá»ƒ</option><option value="color">Theo mÃ u</option><option value="size">Theo kÃ­ch thÆ°á»›c</option></select></label>
-              <label class="bulk-stock-color" hidden><span>MÃ u</span><select data-bulk-stock-color><option value="">Chá»n mÃ u</option></select></label>
-              <label class="bulk-stock-size" hidden><span>Size</span><select data-bulk-stock-size><option value="">Chá»n size</option></select></label>
-              <label class="bulk-stock-value"><span>Tá»“n kho má»›i</span><input type="number" name="bulkStockValue" min="0" step="1" value="0" /></label>
+              <label><span>Phạm vi</span><select data-bulk-stock-scope><option value="all">Tất cả biến thể</option><option value="color">Theo màu</option><option value="size">Theo kích thước</option></select></label>
+              <label class="bulk-stock-color" hidden><span>Màu</span><select data-bulk-stock-color><option value="">Chọn màu</option></select></label>
+              <label class="bulk-stock-size" hidden><span>Size</span><select data-bulk-stock-size><option value="">Chọn size</option></select></label>
+              <label class="bulk-stock-value"><span>Tồn kho mới</span><input type="number" name="bulkStockValue" min="0" step="1" value="0" /></label>
             </div>
             <div class="admin-product-variant-bulk-actions">
-              <button type="button" class="admin-product-variant-create" data-bulk-stock-apply>Cáº­p nháº­t tá»“n kho</button>
-              <span class="admin-product-variant-hint">Chá»n pháº¡m vi rá»“i báº¥m cáº­p nháº­t tá»“n kho cho cÃ¡c biáº¿n thá»ƒ phÃ¹ há»£p.</span>
+              <button type="button" class="admin-product-variant-create" data-bulk-stock-apply>Cập nhật tồn kho</button>
+              <span class="admin-product-variant-hint">Chọn phạm vi rồi bấm cập nhật tồn kho cho các biến thể phù hợp.</span>
             </div>
             <p class="admin-product-form-error" data-bulk-error></p>
           </div>
@@ -1159,8 +1159,8 @@ function bindProductVariantSection(modal, product, root = null) {
       const formData = new FormData(customColorForm);
       const name = String(formData.get("customColorName") || "").trim();
       const code = String(formData.get("customColorCode") || "").trim();
-      if (!name) return toast.error("Vui lÃ²ng nháº­p tÃªn mÃ u.");
-      if (code && !/^#[0-9a-f]{6}$/i.test(code)) return toast.error("MÃ£ mÃ u pháº£i cÃ³ Ä‘á»‹nh dáº¡ng HEX nhÆ° #1E3A8A.");
+      if (!name) return toast.error("Vui lòng nhập tên màu.");
+      if (code && !/^#[0-9a-f]{6}$/i.test(code)) return toast.error("Mã màu phải có định dạng HEX như #1E3A8A.");
       const value = name;
       if (!colorOptions.some((item) => item.value === value || item.name === name)) {
         colorOptions = [...colorOptions, { name, value, colorCode: code || "#cccccc" }];
@@ -1168,21 +1168,21 @@ function bindProductVariantSection(modal, product, root = null) {
       }
       customColorForm.reset();
       renderSelectionLists();
-      toast.success(`ÄÃ£ thÃªm mÃ u ${name}.`);
+      toast.success(`Đã thêm màu ${name}.`);
     });
 
     customSizeForm?.addEventListener("submit", (event) => {
       event.preventDefault();
       const formData = new FormData(customSizeForm);
       const value = String(formData.get("customSize") || "").trim();
-      if (!value) return toast.error("Vui lÃ²ng nháº­p size má»›i.");
+      if (!value) return toast.error("Vui lòng nhập size mới.");
       if (!sizeOptions.includes(value)) {
         sizeOptions = [...sizeOptions, value];
         selectedSizes = [...selectedSizes, value];
       }
       customSizeForm.reset();
       renderSelectionLists();
-      toast.success(`ÄÃ£ thÃªm size ${value}.`);
+      toast.success(`Đã thêm size ${value}.`);
     });
 
     section.querySelectorAll("[data-size-preset]").forEach((button) => button.addEventListener("click", () => {
@@ -1204,11 +1204,11 @@ function bindProductVariantSection(modal, product, root = null) {
       bulkCreateErrorTarget.textContent = "";
       if (createButton.disabled) return;
       if (!selectedColors.length) {
-        bulkCreateErrorTarget.textContent = "Vui lÃ²ng chá»n Ã­t nháº¥t má»™t mÃ u.";
+        bulkCreateErrorTarget.textContent = "Vui lòng chọn ít nhất một màu.";
         return;
       }
       if (!selectedSizes.length) {
-        bulkCreateErrorTarget.textContent = "Vui lÃ²ng chá»n Ã­t nháº¥t má»™t kÃ­ch thÆ°á»›c.";
+        bulkCreateErrorTarget.textContent = "Vui lòng chọn ít nhất một kích thước.";
         return;
       }
       const price = Number(product?.price ?? 0);
@@ -1239,14 +1239,14 @@ function bindProductVariantSection(modal, product, root = null) {
       }
 
       if (!variantsPayload.length) {
-        bulkCreateErrorTarget.textContent = "KhÃ´ng cÃ³ biáº¿n thá»ƒ nÃ o cáº§n táº¡o.";
+        bulkCreateErrorTarget.textContent = "Không có biến thể nào cần tạo.";
         return;
       }
 
       const originalText = createButton.textContent;
       createButton.disabled = true;
-      createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Äang táº¡o ${variantsPayload.length} biáº¿n thá»ƒ...`;
-      bulkCreateErrorTarget.textContent = `Äang táº¡o ${variantsPayload.length} biáº¿n thá»ƒ...`;
+      createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tạo ${variantsPayload.length} biến thể...`;
+      bulkCreateErrorTarget.textContent = `Đang tạo ${variantsPayload.length} biến thể...`;
 
       try {
         const response = await productService.createVariantsBulk(product.id, variantsPayload, silent());
@@ -1257,8 +1257,8 @@ function bindProductVariantSection(modal, product, root = null) {
         const failed = Number(result.failed_count || 0);
         const processed = created + restored + existing;
         const summary = failed
-          ? `ÄÃ£ xá»­ lÃ½ ${processed}/${variantsPayload.length} biáº¿n thá»ƒ. CÃ³ ${failed} biáº¿n thá»ƒ khÃ´ng thá»ƒ táº¡o.`
-          : `ÄÃ£ táº¡o ${created} biáº¿n thá»ƒ, khÃ´i phá»¥c ${restored} biáº¿n thá»ƒ vÃ  bá» qua ${existing} biáº¿n thá»ƒ Ä‘ang tá»“n táº¡i.`;
+          ? `Đã xử lý ${processed}/${variantsPayload.length} biến thể. Có ${failed} biến thể không thể tạo.`
+          : `Đã tạo ${created} biến thể, khôi phục ${restored} biến thể và bỏ qua ${existing} biến thể đang tồn tại.`;
         bulkCreateErrorTarget.textContent = summary;
         if (failed) toast.error(summary); else toast.success(summary);
         await renderVariants({ force: true });
@@ -1283,12 +1283,12 @@ function bindProductVariantSection(modal, product, root = null) {
       const updates = [];
 
       if (stockValue === null || !Number.isInteger(stockValue) || stockValue < 0) {
-        bulkErrorTarget.textContent = "Tá»“n kho pháº£i lÃ  sá»‘ nguyÃªn khÃ´ng Ã¢m.";
+        bulkErrorTarget.textContent = "Tồn kho phải là số nguyên không âm.";
         return;
       }
 
       if (!allVariants.length) {
-        bulkErrorTarget.textContent = "KhÃ´ng cÃ³ biáº¿n thá»ƒ nÃ o Ä‘á»ƒ cáº­p nháº­t.";
+        bulkErrorTarget.textContent = "Không có biến thể nào để cập nhật.";
         return;
       }
 
@@ -1296,15 +1296,15 @@ function bindProductVariantSection(modal, product, root = null) {
       if (scope === "all") {
         targetVariants = allVariants;
       } else if (scope === "color") {
-        if (!selectedColor) { bulkErrorTarget.textContent = "Vui lÃ²ng chá»n mÃ u."; return; }
+        if (!selectedColor) { bulkErrorTarget.textContent = "Vui lòng chọn màu."; return; }
         targetVariants = allVariants.filter((variant) => normalizeVariantKey(variant.color) === normalizeVariantKey(selectedColor));
       } else if (scope === "size") {
-        if (!selectedSize) { bulkErrorTarget.textContent = "Vui lÃ²ng chá»n size."; return; }
+        if (!selectedSize) { bulkErrorTarget.textContent = "Vui lòng chọn size."; return; }
         targetVariants = allVariants.filter((variant) => normalizeVariantKey(variant.size) === normalizeVariantKey(selectedSize));
       }
 
       if (!targetVariants.length) {
-        bulkErrorTarget.textContent = "KhÃ´ng cÃ³ biáº¿n thá»ƒ nÃ o phÃ¹ há»£p Ä‘á»ƒ cáº­p nháº­t.";
+        bulkErrorTarget.textContent = "Không có biến thể nào phù hợp để cập nhật.";
         return;
       }
 
@@ -1314,10 +1314,10 @@ function bindProductVariantSection(modal, product, root = null) {
       const successCount = results.filter((result) => result.status === "fulfilled").length;
       const failedCount = results.length - successCount;
       if (successCount) {
-        toast.success(`ÄÃ£ cáº­p nháº­t tá»“n kho cho ${successCount} biáº¿n thá»ƒ.`);
+        toast.success(`Đã cập nhật tồn kho cho ${successCount} biến thể.`);
       }
       if (failedCount) {
-        bulkErrorTarget.textContent = `KhÃ´ng cáº­p nháº­t Ä‘Æ°á»£c ${failedCount} biáº¿n thá»ƒ.`;
+        bulkErrorTarget.textContent = `Không cập nhật được ${failedCount} biến thể.`;
       }
       await renderVariants({ force: true });
       if (root) renderRows(root);
@@ -1367,7 +1367,7 @@ function bindProductVariantSection(modal, product, root = null) {
     }
     renderSelectionLists?.();
     if (!variants.length) {
-      table.innerHTML = '<div class="admin-product-variant-empty">ChÆ°a cÃ³ biáº¿n thá»ƒ nÃ o. HÃ£y chá»n mÃ u vÃ  size, sau Ä‘Ã³ táº¡o biáº¿n thá»ƒ hÃ ng loáº¡t.</div>';
+      table.innerHTML = '<div class="admin-product-variant-empty">Chưa có biến thể nào. Hãy chọn màu và size, sau đó tạo biến thể hàng loạt.</div>';
     } else {
       table.innerHTML = `<div class="admin-product-variant-grid">${variants.map((variant) => {
         const isEditing = String(inlineEditingId) === String(variant.id);
@@ -1381,13 +1381,13 @@ function bindProductVariantSection(modal, product, root = null) {
             <span><input class="variant-input" name="sale_price" type="number" min="0" value="${variant.salePrice === null ? "" : Number(variant.salePrice)}"></span>
             <span><input class="variant-input" name="stock" type="number" min="0" value="${Number(variant.stock || 0)}"></span>
             <span>${escapeHtml(String(variant.sold || 0))}</span>
-            <span><select class="variant-input" name="status"><option value="active" ${variant.status === 'active' ? 'selected' : ''}>Äang bÃ¡n</option><option value="inactive" ${variant.status === 'inactive' ? 'selected' : ''}>Táº¡m áº©n</option><option value="out_of_stock" ${variant.status === 'out_of_stock' ? 'selected' : ''}>Háº¿t hÃ ng</option></select></span>
-            <div class="admin-product-variant-actions"><button type="button" class="btn-save" data-variant-save="${variant.id}">LÆ°u thay Ä‘á»•i</button><button type="button" class="btn-cancel" data-variant-cancel="${variant.id}">Há»§y</button></div>
+            <span><select class="variant-input" name="status"><option value="active" ${variant.status === 'active' ? 'selected' : ''}>Đang bán</option><option value="inactive" ${variant.status === 'inactive' ? 'selected' : ''}>Tạm ẩn</option><option value="out_of_stock" ${variant.status === 'out_of_stock' ? 'selected' : ''}>Hết hàng</option></select></span>
+            <div class="admin-product-variant-actions"><button type="button" class="btn-save" data-variant-save="${variant.id}">Lưu thay đổi</button><button type="button" class="btn-cancel" data-variant-cancel="${variant.id}">Hủy</button></div>
           </div>`;
         }
 
-        const stockBadge = Number(variant.stock || 0) === 0 ? `<span class="variant-badge is-empty">Háº¿t hÃ ng</span>` : Number(variant.stock || 0) <= 5 ? `<span class="variant-badge is-low">Sáº¯p háº¿t Â· ${Number(variant.stock)}</span>` : `${Number(variant.stock)}`;
-        return `<div class="admin-product-variant-row" data-variant-row="${variant.id}"><span>${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span>${escapeHtml(variant.salePrice === null ? "-" : formatCurrency(variant.salePrice))}</span><span>${stockBadge}</span><span>${escapeHtml(String(variant.sold || 0))}</span><span>${escapeHtml(statusLabel(variant.status))}</span><div class="admin-product-variant-actions"><button type="button" data-variant-edit="${variant.id}">Sá»­a</button><button type="button" class="is-danger" data-variant-delete="${variant.id}">XÃ³a</button></div></div>`;
+        const stockBadge = Number(variant.stock || 0) === 0 ? `<span class="variant-badge is-empty">Hết hàng</span>` : Number(variant.stock || 0) <= 5 ? `<span class="variant-badge is-low">Sắp hết · ${Number(variant.stock)}</span>` : `${Number(variant.stock)}`;
+        return `<div class="admin-product-variant-row" data-variant-row="${variant.id}"><span>${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span>${escapeHtml(variant.salePrice === null ? "-" : formatCurrency(variant.salePrice))}</span><span>${stockBadge}</span><span>${escapeHtml(String(variant.sold || 0))}</span><span>${escapeHtml(statusLabel(variant.status))}</span><div class="admin-product-variant-actions"><button type="button" data-variant-edit="${variant.id}">Sửa</button><button type="button" class="is-danger" data-variant-delete="${variant.id}">Xóa</button></div></div>`;
       }).join("")}</div>`;
     }
     table.querySelectorAll("[data-variant-edit]").forEach((button) => {
@@ -1409,14 +1409,14 @@ function bindProductVariantSection(modal, product, root = null) {
         inputsArr.forEach((el) => { const name = el.name; const val = el.type === 'number' ? (el.value === '' ? null : Number(el.value)) : el.value; inputs[name] = val; });
 
         // Validation
-        if (!String(inputs.sku || '').trim()) return toast.error('SKU khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
-        if (!String(inputs.color || '').trim()) return toast.error('MÃ u khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
-        if (!String(inputs.size || '').trim()) return toast.error('Size khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.');
-        if (inputs.price !== null && inputs.price < 0) return toast.error('GiÃ¡ pháº£i >= 0');
-        if (inputs.sale_price !== null && inputs.sale_price < 0) return toast.error('GiÃ¡ sale pháº£i >= 0');
-        if (inputs.sale_price !== null && inputs.price !== null && inputs.sale_price > inputs.price) return toast.error('GiÃ¡ sale khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n giÃ¡.');
-        if (inputs.stock !== null && (!Number.isInteger(inputs.stock) || inputs.stock < 0)) return toast.error('Tá»“n kho pháº£i lÃ  sá»‘ nguyÃªn >= 0');
-        if (inputs.color_code && !/^#[0-9a-f]{6}$/i.test(inputs.color_code)) return toast.error('MÃ£ mÃ u pháº£i cÃ³ Ä‘á»‹nh dáº¡ng HEX nhÆ° #FFFFFF');
+        if (!String(inputs.sku || '').trim()) return toast.error('SKU không được để trống.');
+        if (!String(inputs.color || '').trim()) return toast.error('Màu không được để trống.');
+        if (!String(inputs.size || '').trim()) return toast.error('Size không được để trống.');
+        if (inputs.price !== null && inputs.price < 0) return toast.error('Giá phải >= 0');
+        if (inputs.sale_price !== null && inputs.sale_price < 0) return toast.error('Giá sale phải >= 0');
+        if (inputs.sale_price !== null && inputs.price !== null && inputs.sale_price > inputs.price) return toast.error('Giá sale không được lớn hơn giá.');
+        if (inputs.stock !== null && (!Number.isInteger(inputs.stock) || inputs.stock < 0)) return toast.error('Tồn kho phải là số nguyên >= 0');
+        if (inputs.color_code && !/^#[0-9a-f]{6}$/i.test(inputs.color_code)) return toast.error('Mã màu phải có định dạng HEX như #FFFFFF');
 
         try {
           await productService.updateVariant(product.id, vid, {
@@ -1429,7 +1429,7 @@ function bindProductVariantSection(modal, product, root = null) {
             stock: inputs.stock,
             status: row.querySelector('[name="status"]').value
           }, silent());
-          toast.success('ÄÃ£ cáº­p nháº­t biáº¿n thá»ƒ');
+          toast.success('Đã cập nhật biến thể');
           inlineEditingId = null;
           await renderVariants({ force: true });
           if (root) renderRows(root);
@@ -1449,10 +1449,10 @@ function bindProductVariantSection(modal, product, root = null) {
     table.querySelectorAll("[data-variant-delete]").forEach((button) => {
       button.addEventListener("click", async () => {
         const variant = variants.find((item) => String(item.id) === String(button.dataset.variantDelete));
-        if (!confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a biáº¿n thá»ƒ nÃ y khÃ´ng?')) return;
+        if (!confirm('Bạn có chắc muốn xóa biến thể này không?')) return;
         try {
           await productService.deleteVariant(product.id, variant.id, silent());
-          toast.success('ÄÃ£ xÃ³a biáº¿n thá»ƒ');
+          toast.success('Đã xóa biến thể');
           await renderVariants({ force: true });
           if (root) renderRows(root);
         } catch (error) {
@@ -1500,7 +1500,7 @@ function bindProductVariantSection(modal, product, root = null) {
     editingVariantId = variant?.id || null;
     const suggestedSku = product?.sku ? `${product.sku}${variant?.color ? `-${String(variant.color).toUpperCase().replace(/\s+/g, "-")}` : ""}${variant?.size ? `-${String(variant.size).toUpperCase()}` : ""}` : "";
     editor.hidden = false;
-    editor.innerHTML = `<div class="admin-product-variant-editor-form"><div class="admin-product-variant-editor-grid">${field("SKU biáº¿n thá»ƒ", "variant_sku", variant?.sku || suggestedSku, "text", true)}${field("MÃ u sáº¯c", "variant_color", variant?.color || "", "text", true)}${field("MÃ£ mÃ u", "variant_color_code", variant?.colorCode || "", "text", false, 'placeholder="#000000"')}${field("KÃ­ch thÆ°á»›c", "variant_size", variant?.size || "", "text", true)}</div><div class="admin-product-variant-editor-grid">${field("GiÃ¡", "variant_price", variant?.price ?? "", "number", false, 'min="0" step="1000"')}${field("GiÃ¡ sale", "variant_sale_price", variant?.salePrice ?? "", "number", false, 'min="0" step="1000"')}${field("Tá»“n kho", "variant_stock", variant?.stock ?? "", "number", true, 'min="0" step="1"')}${field("Tráº¡ng thÃ¡i", "variant_status", variant?.status || "active", "text", false, 'placeholder="active"')}</div><div class="admin-product-variant-editor-actions"><button type="button" class="is-secondary" data-variant-editor-cancel>Há»§y</button><button type="submit" data-variant-editor-save>${variant ? "Cáº­p nháº­t" : "LÆ°u biáº¿n thá»ƒ"}</button></div><p class="admin-product-form-error" data-variant-editor-error></p></div>`;
+    editor.innerHTML = `<div class="admin-product-variant-editor-form"><div class="admin-product-variant-editor-grid">${field("SKU biến thể", "variant_sku", variant?.sku || suggestedSku, "text", true)}${field("Màu sắc", "variant_color", variant?.color || "", "text", true)}${field("Mã màu", "variant_color_code", variant?.colorCode || "", "text", false, 'placeholder="#000000"')}${field("Kích thước", "variant_size", variant?.size || "", "text", true)}</div><div class="admin-product-variant-editor-grid">${field("Giá", "variant_price", variant?.price ?? "", "number", false, 'min="0" step="1000"')}${field("Giá sale", "variant_sale_price", variant?.salePrice ?? "", "number", false, 'min="0" step="1000"')}${field("Tồn kho", "variant_stock", variant?.stock ?? "", "number", true, 'min="0" step="1"')}${field("Trạng thái", "variant_status", variant?.status || "active", "text", false, 'placeholder="active"')}</div><div class="admin-product-variant-editor-actions"><button type="button" class="is-secondary" data-variant-editor-cancel>Hủy</button><button type="submit" data-variant-editor-save>${variant ? "Cập nhật" : "Lưu biến thể"}</button></div><p class="admin-product-form-error" data-variant-editor-error></p></div>`;
     const form = editor.querySelector(".admin-product-variant-editor-form");
     const skuInput = form.querySelector('[name="variant_sku"]');
     const colorInput = form.querySelector('[name="variant_color"]');
@@ -1532,7 +1532,7 @@ function bindProductVariantSection(modal, product, root = null) {
       try {
         if (editingVariantId) await productService.updateVariant(product.id, editingVariantId, payload, silent());
         else await productService.createVariant(product.id, payload, silent());
-        toast.success(editingVariantId ? "ÄÃ£ cáº­p nháº­t biáº¿n thá»ƒ." : "ÄÃ£ thÃªm biáº¿n thá»ƒ.");
+        toast.success(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
         editor.hidden = true;
         editor.innerHTML = "";
         editingVariantId = null;
@@ -1588,25 +1588,25 @@ function normalizeVariantKey(value) {
 function categoryOptions(selectedId) { return state.categories.map(c => `<option value="${id(c.id)}" ${String(c.id) === String(selectedId || "") ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join(""); }
 function selected(current, value) { return (current || "active") === value ? "selected" : ""; }
 function detailRow(label, value) { return `<p class="admin-product-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value ?? "-")}</strong></p>`; }
-function renderPageError(error) { return `<section class="admin-product-page-error"><h1>KhÃ´ng thá»ƒ táº£i sáº£n pháº©m</h1><p>${escapeHtml(message(error))}</p><a href="#products" data-page="products">Vá» danh sÃ¡ch</a><button type="button" data-product-retry>Thá»­ láº¡i</button></section>`; }
-function stockBadge(stock) { const n = Number(stock || 0); return n === 0 ? '<span class="admin-stock-badge is-empty">Háº¿t hÃ ng Â· 0</span>' : n <= 5 ? `<span class="admin-stock-badge is-low">Sáº¯p háº¿t Â· ${n}</span>` : `<span class="admin-stock-badge">${n}</span>`; }
+function renderPageError(error) { return `<section class="admin-product-page-error"><h1>Không thể tải sản phẩm</h1><p>${escapeHtml(message(error))}</p><a href="#products" data-page="products">Về danh sách</a><button type="button" data-product-retry>Thử lại</button></section>`; }
+function stockBadge(stock) { const n = Number(stock || 0); return n === 0 ? '<span class="admin-stock-badge is-empty">Hết hàng · 0</span>' : n <= 5 ? `<span class="admin-stock-badge is-low">Sắp hết · ${n}</span>` : `<span class="admin-stock-badge">${n}</span>`; }
 function statusBadge(status) { return `<span class="admin-product-status is-${escapeHtml(status || "unknown")}">${escapeHtml(statusLabel(status))}</span>`; }
-function statusLabel(status) { return ({ active: "Äang bÃ¡n", inactive: "Táº¡m áº©n", out_of_stock: "Háº¿t hÃ ng" })[status] || status || "-"; }
+function statusLabel(status) { return ({ active: "Đang bán", inactive: "Tạm ẩn", out_of_stock: "Hết hàng" })[status] || status || "-"; }
 function resolveImageUrl(url) { if (!url) return PLACEHOLDER; const normalized = normalizeProductImageUrl(url); return globalThis.normalizeImageUrl?.(normalized) ?? normalized; }
 function bindImageFallbacks(root) { root.querySelectorAll("[data-product-image]").forEach(img => img.addEventListener("error", () => { img.src = PLACEHOLDER; }, { once: true })); }
 function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("button,input,select").forEach(el => { el.disabled = busy; }); }
-function setFormBusy(form, busy) { form.querySelectorAll("button,input,select,textarea").forEach(el => { el.disabled = busy; }); const submit = form.querySelector("[data-product-submit]"); if (submit) submit.innerHTML = busy ? '<i class="fa-solid fa-spinner fa-spin"></i> Äang lÆ°u...' : submit.dataset.idleLabel; }
+function setFormBusy(form, busy) { form.querySelectorAll("button,input,select,textarea").forEach(el => { el.disabled = busy; }); const submit = form.querySelector("[data-product-submit]"); if (submit) submit.innerHTML = busy ? '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...' : submit.dataset.idleLabel; }
 function silent() { return { showErrorToast: false }; }
 function hasProductPermission(permission) { return hasPermission(permission) || hasPermission(PERMISSIONS.PRODUCT_MANAGE); }
 function message(error) {
   if (error?.code === "OLD_PRODUCT_IMAGE_LOST" || error?.code === "OLD_UPLOAD_IMAGE_LOST") return OLD_UPLOAD_LOST_MESSAGE;
-  if (error?.code === "PRODUCT_IMAGE_URL_UNREACHABLE") return "áº¢nh sáº£n pháº©m hiá»‡n khÃ´ng truy cáº­p Ä‘Æ°á»£c. Vui lÃ²ng táº£i láº¡i áº£nh hoáº·c chá»n má»™t áº£nh há»£p lá»‡.";
-  if (error?.status === 401) return "PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.";
-  if (error?.status === 403) return "Báº¡n khÃ´ng cÃ³ quyá»n quáº£n lÃ½ sáº£n pháº©m.";
-  if (error?.status === 404) return "KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m.";
-  if (error?.status === 429) return "Báº¡n thao tÃ¡c quÃ¡ nhanh hoáº·c há»‡ thá»‘ng Ä‘ang gá»­i quÃ¡ nhiá»u yÃªu cáº§u. Vui lÃ²ng thá»­ láº¡i sau.";
-  if (error?.status >= 500) return "Lá»—i há»‡ thá»‘ng, vui lÃ²ng thá»­ láº¡i.";
-  return error?.message || "KhÃ´ng thá»ƒ xá»­ lÃ½ yÃªu cáº§u sáº£n pháº©m.";
+  if (error?.code === "PRODUCT_IMAGE_URL_UNREACHABLE") return "Ảnh sản phẩm hiện không truy cập được. Vui lòng tải lại ảnh hoặc chọn một ảnh hợp lệ.";
+  if (error?.status === 401) return "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.";
+  if (error?.status === 403) return "Bạn không có quyền quản lý sản phẩm.";
+  if (error?.status === 404) return "Không tìm thấy sản phẩm.";
+  if (error?.status === 429) return "Bạn thao tác quá nhanh hoặc hệ thống đang gửi quá nhiều yêu cầu. Vui lòng thử lại sau.";
+  if (error?.status >= 500) return "Lỗi hệ thống, vui lòng thử lại.";
+  return error?.message || "Không thể xử lý yêu cầu sản phẩm.";
 }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatDate(value) { const d = new Date(value); return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString("vi-VN"); }

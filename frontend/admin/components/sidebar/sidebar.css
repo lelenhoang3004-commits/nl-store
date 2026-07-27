@@ -133,6 +133,13 @@
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-badge[hidden] {
+  display: none !important;
 }
 
 .nav-item:hover,
@@ -155,6 +162,7 @@
 .nav-item:hover i {
   color: #ffffff;
 }
+
 .nav-item.is-active .nav-badge {
   background: rgba(37, 99, 235, 0.96);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
@@ -165,7 +173,6 @@ body:not(.theme-dark) .nav-item.is-active {
   background: rgba(37, 99, 235, 0.14);
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.05);
 }
-
 
 body.sidebar-collapsed .admin-sidebar {
   width: var(--sidebar-collapsed-width);
@@ -197,10 +204,6 @@ body.sidebar-collapsed .nav-badge {
   line-height: 1;
 }
 
-body.sidebar-collapsed .nav-badge[hidden] {
-  display: none;
-}
-
 body.sidebar-collapsed .sidebar-collapse-button {
   display: grid;
   width: 32px;
@@ -214,7 +217,6 @@ body.sidebar-collapsed .sidebar-collapse-button:hover {
 }
 
 body.sidebar-collapsed .nav-item {
-  position: relative;
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 0;
@@ -267,12 +269,7 @@ body.sidebar-collapsed .nav-item:hover {
     font-size: 0.72rem;
   }
 
-  body.sidebar-collapsed .nav-badge[hidden] {
-    display: none;
-  }
-
   body.sidebar-collapsed .nav-item {
-  position: relative;
     grid-template-columns: 22px minmax(0, 1fr) auto;
     justify-items: stretch;
     padding: 0 13px;
