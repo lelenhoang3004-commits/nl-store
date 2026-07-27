@@ -70,7 +70,7 @@ export class MomoProviderAdapter {
     const roundedAmount = Math.max(Math.round(Number(amount || 0)), 0);
     const orderInfo = config.orderInfoPrefix + " " + (orderCode || orderId);
     const extraData = Buffer.from(JSON.stringify({ orderId, orderCode, transactionCode })).toString("base64");
-    const requestType = "captureWallet";
+    const requestType = config.requestType;
     const rawSignature = ["accessKey=" + config.accessKey, "amount=" + roundedAmount, "extraData=" + extraData, "ipnUrl=" + config.ipnUrl, "orderId=" + momoOrderId, "orderInfo=" + orderInfo, "partnerCode=" + config.partnerCode, "redirectUrl=" + config.redirectUrl, "requestId=" + requestId, "requestType=" + requestType].join("&");
     const signature = crypto.createHmac("sha256", config.secretKey).update(rawSignature).digest("hex");
     const body = { partnerCode: config.partnerCode, partnerName: config.partnerName, storeId: config.storeId, requestId, amount: roundedAmount, orderId: momoOrderId, orderInfo, redirectUrl: config.redirectUrl, ipnUrl: config.ipnUrl, lang: "vi", requestType, autoCapture: true, extraData, signature };
@@ -141,13 +141,14 @@ function getMomoConfig() {
   const apiPrefix = String(process.env.API_PREFIX || "/api/v1").replace(/^\/?/, "/").replace(/\/+$/, "");
 
   return {
-    createEndpoint: process.env.MOMO_CREATE_ENDPOINT || (process.env.MOMO_BASE_URL || "https://test-payment.momo.vn") + "/v2/gateway/api/create",
+    createEndpoint: process.env.MOMO_ENDPOINT || process.env.MOMO_CREATE_ENDPOINT || (process.env.MOMO_BASE_URL || "https://test-payment.momo.vn") + "/v2/gateway/api/create",
     partnerCode: process.env.MOMO_PARTNER_CODE || "",
     accessKey: process.env.MOMO_ACCESS_KEY || "",
     secretKey: process.env.MOMO_SECRET_KEY || "",
     partnerName: process.env.MOMO_PARTNER_NAME || "N&L Store",
     storeId: process.env.MOMO_STORE_ID || "NLStore",
     orderInfoPrefix: process.env.MOMO_ORDER_INFO_PREFIX || "Thanh toan don hang N&L Store",
+    requestType: process.env.MOMO_REQUEST_TYPE || "captureWallet",
     redirectUrl: process.env.MOMO_REDIRECT_URL || clientOrigin + "/customer/#orders",
     ipnUrl: process.env.MOMO_IPN_URL || apiBaseUrl + apiPrefix + "/payments/momo/ipn",
     timeoutMs: Math.max(Number(process.env.MOMO_TIMEOUT_MS || 30000), 30000)

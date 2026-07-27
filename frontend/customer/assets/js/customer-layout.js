@@ -1946,19 +1946,22 @@ function getCheckoutSummary(items, voucherCode = "") {
   };
 }
 
-function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null) {
+function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null, payment = null) {
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = `
     <div class="customer-checkout-modal customer-payment-result-modal">
       <div class="customer-checkout-modal-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
-      <h3>&#272;&#7863;t h&agrave;ng th&agrave;nh c&ocirc;ng</h3>
+      <h3>&#272;&#7863;t h&agrave;ng th&agrave;nh c&ocirc;ng - Vui l&ograve;ng ho&agrave;n t&#7845;t thanh to&aacute;n</h3>
       <p>M&atilde; &#273;&#417;n h&agrave;ng c&#7911;a b&#7841;n l&agrave; <strong>${escapeHtml(orderCode || "")}</strong>.</p>
       <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} &middot; Ch&#7901; thanh to&aacute;n</p>
       ${renderPaymentGuideModal(paymentMethod, paymentGuide)}
       <div class="customer-checkout-modal-actions">
+        <button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}">L&#432;u m&atilde; QR</button>
+        <button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(payment?.id || paymentGuide?.paymentTransactionId || "")}">Ki&#7875;m tra tr&#7841;ng th&aacute;i</button>
+        ${paymentGuide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(paymentGuide.deeplink)}">M&#7903; &#7913;ng d&#7909;ng MoMo Test</a>` : ""}
+        ${paymentGuide?.payUrl ? `<a class="customer-button" href="${escapeHtml(paymentGuide.payUrl)}">Thanh to&aacute;n tr&ecirc;n MoMo</a>` : ""}
         <a class="customer-button secondary" href="#orders">Xem &#273;&#417;n h&agrave;ng</a>
-        <a class="customer-button" href="#home">Ti&#7871;p t&#7909;c mua s&#7855;m</a>
       </div>
     </div>
   `;
@@ -2003,13 +2006,13 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
     return `
       <section class="customer-payment-guide is-momo">
         <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n MoMo</div>
-        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" data-payment-qr-image src="${escapeHtml(guide.qrCodeUrl)}" alt="QR thanh toan MoMo">` : ""}
+        ${renderPaymentQrMarkup(guide, paymentUrl)}
         <div class="customer-payment-guide-grid">
           ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
           ${paymentGuideRow("M&atilde; giao d&#7883;ch", guide.transactionId || guide.requestId || "Dang cap nhat")}
         </div>
         ${paymentUrl ? `<a class="customer-button" href="${escapeHtml(paymentUrl)}" data-hosted-payment-url>Thanh to&aacute;n qua MoMo</a>` : `<div class="customer-payment-unavailable">${escapeHtml(guide.message || "Khong the tao phien thanh toan MoMo.")}</div>`}
-        <p class="customer-payment-guide-note">M&ocirc;i tr&#432;&#7901;ng th&#7917; nghi&#7879;m - Kh&ocirc;ng ph&aacute;t sinh ti&#7873;n th&#7853;t.</p>
+        <p class="customer-payment-guide-note"><strong>M&Ocirc;I TR&#431;&#7900;NG TH&#7916; NGHI&#7878;M</strong> - Kh&ocirc;ng ph&aacute;t sinh ti&#7873;n th&#7853;t.</p>
       </section>`;
   }
   if (method === "credit_card") {
@@ -2024,6 +2027,46 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
   return "";
 }
 
+function renderPaymentQrMarkup(guide = {}, fallbackUrl = "") {
+  const raw = String(guide.qrCodeUrl || guide.qrData || fallbackUrl || "").trim();
+  if (!raw) return "";
+  if (isImageQrSource(raw)) {
+    return '<img class="customer-payment-qr" data-payment-qr-image src="' + escapeHtml(normalizeQrImageSource(raw)) + '" alt="QR thanh toan MoMo">';
+  }
+  return '<canvas class="customer-payment-qr" width="220" height="220" data-payment-qr-canvas data-payment-qr-text="' + escapeHtml(raw) + '" aria-label="QR thanh toan MoMo"></canvas>';
+}
+
+function isImageQrSource(value = "") {
+  return /^(data:image\/|blob:|https?:\/\/)/i.test(value) || /^[A-Za-z0-9+/=]{120,}$/.test(value);
+}
+
+function normalizeQrImageSource(value = "") {
+  if (/^[A-Za-z0-9+/=]{120,}$/.test(value) && !/^data:/i.test(value)) {
+    return "data:image/png;base64," + value;
+  }
+  return value;
+}
+
+function renderDeferredPaymentQr(root) {
+  root.querySelectorAll("[data-payment-qr-canvas]").forEach((canvas) => {
+    const value = canvas.dataset.paymentQrText || "";
+    if (!value) return;
+    if (window.QRCode?.toCanvas) {
+      window.QRCode.toCanvas(canvas, value, { width: 220, margin: 2 }, () => {});
+      return;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#111827";
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("MoMo QR data", canvas.width / 2, 96);
+    ctx.fillText("Open MoMo link", canvas.width / 2, 116);
+    ctx.fillText("QR library unavailable", canvas.width / 2, 136);
+  });
+}
 function paymentGuideRow(label, value) {
   return `<div class="customer-payment-guide-row"><span>${label}</span><strong>${escapeHtml(value || "-")}</strong></div>`;
 }
@@ -2069,7 +2112,7 @@ async function savePaymentQr(root, orderCode = "ORDER") {
   if (qr instanceof HTMLCanvasElement) {
     href = qr.toDataURL("image/png");
   } else if (qr.src) {
-    href = qr.src;
+    href = await imageToPngDataUrl(qr);
   }
   if (!href) {
     showCustomerToast("Không thể lưu mã QR.", "error");
@@ -2082,6 +2125,25 @@ async function savePaymentQr(root, orderCode = "ORDER") {
   link.click();
   link.remove();
   showCustomerToast("Đã lưu mã QR", "success");
+}
+
+
+async function imageToPngDataUrl(image) {
+  if (!image?.src) return "";
+  if (image.src.startsWith("data:image/png")) return image.src;
+  const canvas = document.createElement("canvas");
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = reject;
+    img.src = image.src;
+  }).catch(() => null);
+  if (!img.naturalWidth) return image.src;
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext("2d")?.drawImage(img, 0, 0);
+  try { return canvas.toDataURL("image/png"); } catch { return image.src; }
 }
 
 function bindPaymentGuideActions(root) {
@@ -2564,7 +2626,7 @@ function initCheckoutForm(container, checkoutSummary) {
         layoutState.cart = createEmptyCart();
         renderHeader();
       }
-      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod, response?.paymentGuide || null);
+      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod, response?.paymentGuide || null, response?.payment || null);
       showCustomerToast("Đặt hàng thành công.", "success");
     } catch (error) {
       showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
@@ -2616,7 +2678,8 @@ async function openOrderPaymentModal(orderId, options = {}) {
     '<button class="customer-button secondary" type="button" data-save-payment-qr="' + escapeHtml(payment.orderCode || payment.orderId || "ORDER") + '">Lưu mã QR</button>',
     '<button class="customer-button secondary" type="button" data-payment-status-check="' + escapeHtml(payment.paymentTransactionId || "") + '">Kiểm tra trạng thái</button>',
     payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tạo lại mã QR</button>' : '',
-    (payment.paymentGuide?.payUrl || payment.paymentGuide?.deeplink) ? '<a class="customer-button" href="' + escapeHtml(payment.paymentGuide.payUrl || payment.paymentGuide.deeplink) + '">Mở MoMo</a>' : '',
+    payment.paymentGuide?.deeplink ? '<a class="customer-button secondary" href="' + escapeHtml(payment.paymentGuide.deeplink) + '">Mở ứng dụng MoMo Test</a>' : '',
+    payment.paymentGuide?.payUrl ? '<a class="customer-button" href="' + escapeHtml(payment.paymentGuide.payUrl) + '">Thanh toán trên MoMo</a>' : '',
     '<a class="customer-button secondary" href="#orders/' + encodeURIComponent(payment.orderId || orderId) + '">Xem đơn hàng</a>'
   ].filter(Boolean).join('');
 

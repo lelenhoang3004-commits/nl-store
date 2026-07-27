@@ -301,6 +301,40 @@ export class PaymentRepository extends BaseRepository {
     return rows[0] ? new PaymentTransaction(rows[0]) : null;
   }
 
+  async findByMomoIdentifiers({ momoOrderId, requestId }, connection = null) {
+    const [rows] = await this.execute(
+      `SELECT
+        pt.id,
+        pt.order_id,
+        o.order_code,
+        o.customer_name,
+        o.customer_email,
+        o.customer_phone,
+        pt.payment_method_id,
+        pt.transaction_code,
+        pt.provider,
+        pt.method,
+        pt.amount,
+        pt.currency,
+        pt.status,
+        pt.paid_at,
+        pt.metadata,
+        pt.created_at,
+        pt.updated_at
+      FROM payment_transactions pt
+      INNER JOIN orders o ON o.id = pt.order_id AND o.deleted_at IS NULL
+      WHERE pt.provider = 'momo'
+        AND JSON_UNQUOTE(JSON_EXTRACT(pt.metadata, '$.paymentGuide.momoOrderId')) = ?
+        AND JSON_UNQUOTE(JSON_EXTRACT(pt.metadata, '$.paymentGuide.requestId')) = ?
+      ORDER BY pt.created_at DESC, pt.id DESC
+      LIMIT 1`,
+      [momoOrderId, requestId],
+      connection
+    );
+
+    return rows[0] ? new PaymentTransaction(rows[0]) : null;
+  }
+
   async findOrderForCustomerPayment(orderId, customerId, connection = null, lockForUpdate = false) {
     const [rows] = await this.execute(
       `SELECT id, order_code, customer_id, payment_status, payment_method, grand_total, paid_amount, deleted_at

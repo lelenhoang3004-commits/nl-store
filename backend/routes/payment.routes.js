@@ -34,6 +34,11 @@ router.get(
   paymentController.methods
 );
 
+router.post(
+  "/momo/ipn",
+  paymentController.momoIpn
+);
+
 router.get(
   "/methods/:id",
   validateRequest(validatePaymentMethodIdRequest),

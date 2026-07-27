@@ -434,6 +434,52 @@ export class PaymentService extends BaseService {
     return adapter.createPaymentSession({ orderId: order.id, orderCode: order.order_code, amount: Number(order.grand_total || 0), transactionCode });
   }
 
+  async handleMomoIpn(payload = {}) {
+    const verification = verifyMomoIpnSignature(payload);
+    if (!verification.verified) {
+      throw new AppError("Invalid MoMo IPN signature.", 400, "INVALID_MOMO_SIGNATURE");
+    }
+
+    if (String(payload.partnerCode || "") !== String(process.env.MOMO_PARTNER_CODE || "")) {
+      throw new AppError("Invalid MoMo partner code.", 400, "INVALID_MOMO_PARTNER");
+    }
+
+    const transaction = await this.repository.findByMomoIdentifiers({
+      momoOrderId: payload.orderId,
+      requestId: payload.requestId
+    });
+    if (!transaction) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+
+    const tx = transaction.toJSON();
+    const expectedAmount = Math.round(Number(tx.amount || 0));
+    if (Number(payload.amount) !== expectedAmount) {
+      throw new AppError("Invalid MoMo amount.", 400, "MOMO_AMOUNT_MISMATCH");
+    }
+
+    const expectedGuide = tx.metadata?.paymentGuide || {};
+    if (String(expectedGuide.momoOrderId || "") !== String(payload.orderId || "") || String(expectedGuide.requestId || "") !== String(payload.requestId || "")) {
+      throw new AppError("Invalid MoMo order identifiers.", 400, "MOMO_ORDER_MISMATCH");
+    }
+
+    if (String(tx.status || "").toLowerCase() === PAYMENT_TRANSACTION_STATUS.PAID) {
+      return this.formatCustomerPaymentResponse(await this.repository.findOrderForPayment(tx.orderId), tx, tx.metadata?.paymentGuide || null);
+    }
+
+    const isSuccess = Number(payload.resultCode) === 0;
+    const nextStatus = isSuccess ? PAYMENT_TRANSACTION_STATUS.PAID : PAYMENT_TRANSACTION_STATUS.FAILED;
+    const nextMetadata = {
+      ...(tx.metadata || {}),
+      momoIpn: sanitizeMomoIpnForMetadata(payload),
+      momoIpnReceivedAt: new Date().toISOString()
+    };
+
+    const updated = await this.updatePaymentStatus(tx.id, nextStatus, null, {
+      metadata: nextMetadata,
+      note: isSuccess ? "MoMo IPN confirmed payment." : "MoMo IPN reported payment failure."
+    });
+    return this.formatCustomerPaymentResponse(await this.repository.findOrderForPayment(tx.orderId), updated, updated.metadata?.paymentGuide || null);
+  }
+
   async createTransaction(payload, currentUserId) {
     return this.createPayment({
       ...payload,
@@ -589,4 +635,35 @@ function sanitizePaymentGuideForMetadata(guide) {
 
 function sanitizePaymentGuideForClient(guide) {
   return sanitizePaymentGuideForMetadata(guide);
+}
+
+function verifyMomoIpnSignature(payload = {}) {
+  const secretKey = process.env.MOMO_SECRET_KEY || "";
+  if (!secretKey || !payload.signature) return { verified: false };
+  const rawSignature = [
+    "accessKey=" + (process.env.MOMO_ACCESS_KEY || ""),
+    "amount=" + String(payload.amount ?? ""),
+    "extraData=" + String(payload.extraData ?? ""),
+    "message=" + String(payload.message ?? ""),
+    "orderId=" + String(payload.orderId ?? ""),
+    "orderInfo=" + String(payload.orderInfo ?? ""),
+    "orderType=" + String(payload.orderType ?? ""),
+    "partnerCode=" + String(payload.partnerCode ?? ""),
+    "payType=" + String(payload.payType ?? ""),
+    "requestId=" + String(payload.requestId ?? ""),
+    "responseTime=" + String(payload.responseTime ?? ""),
+    "resultCode=" + String(payload.resultCode ?? ""),
+    "transId=" + String(payload.transId ?? "")
+  ].join("&");
+  const expected = crypto.createHmac("sha256", secretKey).update(rawSignature).digest("hex");
+  try {
+    return { verified: crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(payload.signature))) };
+  } catch {
+    return { verified: false };
+  }
+}
+
+function sanitizeMomoIpnForMetadata(payload = {}) {
+  const { signature, ...safePayload } = payload;
+  return safePayload;
 }
