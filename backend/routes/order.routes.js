@@ -39,6 +39,12 @@ router.post(
   orderController.retryCustomerPayment
 );
 
+router.post(
+  "/my/:id/payment-method",
+  validateRequest(validateOrderIdRequest),
+  orderController.changeCustomerPaymentMethod
+);
+
 router.get(
   "/my/:id",
   validateRequest(validateOrderIdRequest),

@@ -274,7 +274,7 @@ export class PaymentService extends BaseService {
       }, connection);
       await this.notificationService.notifyAdmin({
         type: "PAYMENT_UPDATED",
-        title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toan that bai" : normalizedStatus === PAYMENT_TRANSACTION_STATUS.PROCESSING ? "Khach da bao thanh toan" : "Thanh toan da xac nhan",
+        title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toán thất bại" : "Thanh toán đã xác nhận",
         message: `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`, 
         link: "#payments",
         relatedId: id,
@@ -315,7 +315,7 @@ export class PaymentService extends BaseService {
   async syncOrderPaymentStatus(transaction, status, connection, order = null) {
     const orderSummary = order || await this.repository.findOrderForPayment(transaction.orderId, connection);
     const normalizedStatus = normalizeTransactionStatus(status);
-    const paymentStatus = [PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING].includes(normalizedStatus)
+    const paymentStatus = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PENDING
       ? ORDER_PAYMENT_STATUS.UNPAID
       : normalizedStatus;
     const paidAmount = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
@@ -359,7 +359,7 @@ export class PaymentService extends BaseService {
           createdTransactionId = existingJson.id;
           return;
         }
-        if ([PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING].includes(String(existingJson.status || "").toLowerCase())) {
+        if (String(existingJson.status || "").toLowerCase() === PAYMENT_TRANSACTION_STATUS.PENDING) {
           await this.repository.updateStatus(existingJson.id, {
             status: PAYMENT_TRANSACTION_STATUS.FAILED,
             paidAt: existingJson.paidAt || null,
@@ -404,34 +404,78 @@ export class PaymentService extends BaseService {
     return this.formatCustomerPaymentResponse(order, tx, tx.metadata?.paymentGuide || null);
   }
 
+  async changeCustomerOrderPaymentMethod(orderId, customerId, paymentMethod, changedBy = null) {
+    const normalizedInput = String(paymentMethod || "").trim().toLowerCase();
+    const methodMap = { cod: "cod", momo: "momo", momo_personal_qr: "momo", bank_transfer: "bank_transfer", bank_personal_qr: "bank_transfer" };
+    const method = methodMap[normalizedInput];
+    if (!method) throw new AppError("Phương thức thanh toán không hợp lệ.", 422, "INVALID_PAYMENT_METHOD");
+    let activeTransactionId = null;
+
+    await withTransaction(async (connection) => {
+      const order = await this.repository.findOrderForCustomerPayment(orderId, customerId, connection, true);
+      if (!order) throw new AppError("Không tìm thấy đơn hàng.", 404, "ORDER_NOT_FOUND");
+      if (order.payment_status === ORDER_PAYMENT_STATUS.PAID) throw new AppError("Đơn hàng đã được thanh toán nên không thể đổi phương thức.", 409, "ORDER_ALREADY_PAID");
+      const existing = await this.repository.findByOrderIdForCustomer(orderId, customerId, connection);
+      if (existing) {
+        const existingJson = existing.toJSON();
+        if (existingJson.metadata?.customerReportedPaymentAt) throw new AppError("Giao dịch đang chờ cửa hàng xác nhận nên không thể đổi phương thức thanh toán.", 409, "PAYMENT_WAITING_CONFIRMATION");
+        if (String(existingJson.status || "").toLowerCase() === PAYMENT_TRANSACTION_STATUS.PAID) throw new AppError("Đơn hàng đã được thanh toán nên không thể đổi phương thức.", 409, "ORDER_ALREADY_PAID");
+        if ([PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.FAILED, PAYMENT_TRANSACTION_STATUS.CANCELLED].includes(String(existingJson.status || "").toLowerCase())) {
+          await this.repository.updateStatus(existingJson.id, { status: PAYMENT_TRANSACTION_STATUS.CANCELLED, paidAt: existingJson.paidAt || null, metadata: { ...(existingJson.metadata || {}), cancelledAt: new Date().toISOString(), cancelledReason: "Customer changed payment method." } }, connection);
+          await this.repository.createHistory({ transactionId: existingJson.id, status: PAYMENT_TRANSACTION_STATUS.CANCELLED, note: "Khách đổi phương thức thanh toán.", changedBy }, connection);
+        }
+      }
+      await this.repository.updateOrderPaymentStatus(order.id, { paymentStatus: ORDER_PAYMENT_STATUS.UNPAID, paymentMethod: method, paidAmount: 0 }, connection);
+      if (method === "cod") { activeTransactionId = null; return; }
+      const transactionCode = createPaymentTransactionCode();
+      const paymentGuide = await this.createPaymentGuide({ method, order: { ...order, payment_method: method }, transactionCode });
+      const paymentMethodRecord = await this.repository.findPaymentMethodByCode(method, connection);
+      activeTransactionId = await this.repository.createTransaction({ orderId: order.id, paymentMethodId: paymentMethodRecord?.id || null, transactionCode, provider: paymentGuide?.provider || method, method, amount: Number(order.grand_total || 0), currency: "VND", status: PAYMENT_TRANSACTION_STATUS.PENDING, paidAt: null, metadata: { source: "customer_payment_method_change", paymentGuide: sanitizePaymentGuideForMetadata(paymentGuide) } }, connection);
+      await this.repository.createHistory({ transactionId: activeTransactionId, status: PAYMENT_TRANSACTION_STATUS.PENDING, note: "Tạo giao dịch mới sau khi khách đổi phương thức thanh toán.", changedBy }, connection);
+    });
+    if (!activeTransactionId) { const order = await this.repository.findOrderForCustomerPayment(orderId, customerId); return this.formatCustomerPaymentResponse(order, null, null); }
+    const refreshed = await this.repository.findTransactionById(activeTransactionId);
+    const order = await this.repository.findOrderForCustomerPayment(orderId, customerId);
+    const tx = refreshed?.toJSON() || null;
+    return this.formatCustomerPaymentResponse(order, tx, tx?.metadata?.paymentGuide || null);
+  }
   async reportCustomerPayment(transactionId, customerId) {
     const transaction = await this.repository.findTransactionById(transactionId);
-    if (!transaction) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    if (!transaction) throw new AppError("Không tìm thấy giao dịch thanh toán.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
     const order = await this.repository.findOrderForCustomerPayment(transaction.orderId, customerId);
-    if (!order) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    if (!order) throw new AppError("Không tìm thấy giao dịch thanh toán.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
     const tx = transaction.toJSON();
     const guide = tx.metadata?.paymentGuide || {};
     const guideProvider = String(guide.provider || tx.provider || "").toUpperCase();
     const txMethod = String(tx.method || "").toLowerCase();
     const canCustomerReport = (txMethod === "momo" && guideProvider === "MOMO_PERSONAL_QR") || (txMethod === "bank_transfer" && guideProvider === "BANK_PERSONAL_QR");
-    if (!canCustomerReport) {
-      throw new AppError("This payment method cannot be reported by customer.", 422, "PAYMENT_REPORT_NOT_SUPPORTED");
-    }
+    if (!canCustomerReport) throw new AppError("Phương thức thanh toán này không hỗ trợ khách tự báo thanh toán.", 422, "PAYMENT_REPORT_NOT_SUPPORTED");
     const status = String(tx.status || "").toLowerCase();
-    if (status === PAYMENT_TRANSACTION_STATUS.PAID) throw new AppError("Order is already paid.", 409, "ORDER_ALREADY_PAID");
-    if (status === PAYMENT_TRANSACTION_STATUS.PROCESSING) {
-      return this.formatCustomerPaymentResponse(order, tx, guide);
-    }
-    const metadata = {
-      ...(tx.metadata || {}),
-      customerReportedPaymentAt: new Date().toISOString(),
-      customerReportedPaymentBy: customerId
-    };
-    const updated = await this.updatePaymentStatus(transactionId, PAYMENT_TRANSACTION_STATUS.PROCESSING, customerId, {
-      metadata,
-      note: guideProvider === "BANK_PERSONAL_QR" ? "Customer reported bank transfer. Waiting for admin confirmation." : "Customer reported MoMo personal QR payment. Waiting for admin confirmation."
+    if (status === PAYMENT_TRANSACTION_STATUS.PAID) throw new AppError("Đơn hàng đã được thanh toán.", 409, "ORDER_ALREADY_PAID");
+    if (tx.metadata?.customerReportedPaymentAt) return this.formatCustomerPaymentResponse(order, tx, guide);
+
+    let updated = null;
+    await withTransaction(async (connection) => {
+      const locked = await this.repository.findTransactionById(transactionId, connection);
+      if (!locked) throw new AppError("Không tìm thấy giao dịch thanh toán.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+      const lockedTx = locked.toJSON();
+      if (lockedTx.metadata?.customerReportedPaymentAt) { updated = lockedTx; return; }
+      const metadata = { ...(lockedTx.metadata || {}), customerReportedPaymentAt: new Date().toISOString(), customerReportedPaymentBy: customerId };
+      const refreshed = await this.repository.updateStatus(transactionId, { status: PAYMENT_TRANSACTION_STATUS.PENDING, paidAt: lockedTx.paidAt || null, metadata }, connection);
+      await this.repository.createHistory({ transactionId: Number(transactionId), status: PAYMENT_TRANSACTION_STATUS.PENDING, note: guideProvider === "BANK_PERSONAL_QR" ? "Khách đã báo đã chuyển khoản, đang chờ cửa hàng xác nhận." : "Khách đã báo đã thanh toán MoMo, đang chờ cửa hàng xác nhận.", changedBy: customerId }, connection);
+      await this.notificationService.notifyAdmin({
+        type: "PAYMENT_REPORTED",
+        title: "Khách đã báo thanh toán",
+        message: `Giao dịch ${lockedTx.transactionCode || transactionId} đang chờ cửa hàng xác nhận.`,
+        link: "#payments",
+        relatedId: transactionId,
+        eventKey: `payment-reported:${transactionId}`
+      }, connection);
+      updated = refreshed?.toJSON ? refreshed.toJSON() : refreshed;
     });
-    return this.formatCustomerPaymentResponse(order, updated, updated.metadata?.paymentGuide || guide);
+
+    const finalTx = updated || (await this.repository.findTransactionById(transactionId))?.toJSON();
+    return this.formatCustomerPaymentResponse(order, finalTx, finalTx?.metadata?.paymentGuide || guide);
   }
 
   formatCustomerPaymentResponse(order, transaction, paymentGuide) {
@@ -444,7 +488,9 @@ export class PaymentService extends BaseService {
       paymentMethod: order?.payment_method || transaction?.method || null,
       amount: Number(order?.grand_total ?? transaction?.amount ?? 0),
       currency: transaction?.currency || "VND",
-      transactionStatus: transaction?.status || null,
+      transactionStatus: transaction?.metadata?.customerReportedPaymentAt && String(transaction?.status || "").toLowerCase() === PAYMENT_TRANSACTION_STATUS.PENDING ? "processing" : transaction?.status || null,
+      actualTransactionStatus: transaction?.status || null,
+      customerReportedPaymentAt: transaction?.metadata?.customerReportedPaymentAt || null,
       paidAt: transaction?.paidAt || null,
       createdAt: transaction?.createdAt || null,
       updatedAt: transaction?.updatedAt || null,
@@ -460,7 +506,7 @@ export class PaymentService extends BaseService {
     const status = String(transaction?.status || "").toLowerCase();
     const expiresAt = transaction?.metadata?.paymentGuide?.expiresAt || null;
     const expiredByTime = expiresAt ? Date.now() > new Date(expiresAt).getTime() : false;
-    const reusableStatuses = [PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING];
+    const reusableStatuses = [PAYMENT_TRANSACTION_STATUS.PENDING];
     const terminalStatuses = [PAYMENT_TRANSACTION_STATUS.PAID, PAYMENT_TRANSACTION_STATUS.FAILED, PAYMENT_TRANSACTION_STATUS.CANCELLED, PAYMENT_TRANSACTION_STATUS.EXPIRED, PAYMENT_TRANSACTION_STATUS.REFUNDED];
     const isReusable = reusableStatuses.includes(status) && !expiredByTime;
     const isExpired = status === PAYMENT_TRANSACTION_STATUS.EXPIRED || (reusableStatuses.includes(status) && expiredByTime);
@@ -656,11 +702,12 @@ function normalizeTransactionStatus(value) {
     PAYMENT_TRANSACTION_STATUS.PENDING,
     PAYMENT_TRANSACTION_STATUS.PAID,
     PAYMENT_TRANSACTION_STATUS.FAILED,
+    PAYMENT_TRANSACTION_STATUS.CANCELLED,
     PAYMENT_TRANSACTION_STATUS.REFUNDED
   ];
 
   if (!supportedStatuses.includes(normalizedStatus)) {
-    throw new AppError("Payment status is invalid.", 422, "INVALID_PAYMENT_TRANSACTION_STATUS");
+    throw new AppError("Trạng thái thanh toán không hợp lệ.", 422, "INVALID_PAYMENT_TRANSACTION_STATUS");
   }
 
   return normalizedStatus;
@@ -708,3 +755,5 @@ function sanitizeMomoIpnForMetadata(payload = {}) {
   const { signature, ...safePayload } = payload;
   return safePayload;
 }
+
+

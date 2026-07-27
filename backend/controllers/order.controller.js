@@ -114,6 +114,18 @@ export class OrderController extends BaseController {
     return this.sendSuccess(response, { payment }, "Order payment retry prepared successfully.");
   });
 
+  changeCustomerPaymentMethod = asyncHandler(async (request, response) => {
+    const paymentMethod = request.body?.payment_method ?? request.body?.paymentMethod;
+    const payment = await this.paymentService.changeCustomerOrderPaymentMethod(
+      request.params.id,
+      request.user.id,
+      paymentMethod,
+      request.user.id
+    );
+
+    return this.sendSuccess(response, { payment }, "Payment method changed successfully.");
+  });
+
   destroy = asyncHandler(async (request, response) => {
     const order = await this.service.deleteOrder(request.params.id);
 

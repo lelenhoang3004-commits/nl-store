@@ -1,4 +1,4 @@
-﻿/* Customer storefront base layout, separated from Admin styles. */
+/* Customer storefront base layout, separated from Admin styles. */
 .customer-shell {
   min-height: 100vh;
   background: var(--color-background);
@@ -3415,5 +3415,133 @@
 
   .customer-payment-result-modal .customer-checkout-modal-actions {
     flex-wrap: wrap;
+  }
+}
+
+.customer-payment-result-modal {
+  position: relative;
+}
+
+.customer-payment-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.customer-payment-modal-close:hover,
+.customer-payment-modal-close:focus-visible {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.customer-payment-secondary-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.customer-payment-secondary-actions .customer-button.ghost {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  box-shadow: none;
+  font-size: 0.86rem;
+}
+
+.customer-payment-secondary-actions .customer-button.ghost:hover,
+.customer-payment-secondary-actions .customer-button.ghost:focus-visible {
+  background: #eff6ff;
+}
+
+.customer-payment-switch-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.customer-payment-switch-modal {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 20px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.customer-payment-switch-modal h3 {
+  margin: 0 42px 14px 0;
+  color: #0f172a;
+  font-size: 1.15rem;
+}
+
+.customer-payment-switch-options {
+  display: grid;
+  gap: 10px;
+}
+
+.customer-payment-switch-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.customer-payment-switch-options label:has(input:checked) {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.customer-payment-switch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.customer-payment-copy-row.is-payment-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 560px) {
+  .customer-payment-copy-row.is-payment-copy-grid,
+  .customer-payment-switch-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .customer-payment-result-modal .customer-checkout-modal-actions {
+    flex-direction: column;
   }
 }
