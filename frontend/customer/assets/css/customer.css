@@ -785,6 +785,12 @@
 }
 
 @media (max-width: 720px) {
+  .customer-payment-result-modal {
+    width: min(100%, calc(100vw - 20px));
+    max-height: 92vh;
+    overflow: auto;
+  }
+
   .customer-checkout-hero-top { flex-direction: column; }
   .customer-checkout-secure-badge { width: 100%; }
   .customer-checkout-steps {
@@ -970,7 +976,7 @@
 .customer-checkout-field select option {
   background: var(--color-card);
   color: var(--color-text);
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 /* Map Section */
@@ -3103,12 +3109,12 @@
 }
 
 .customer-payment-result-modal {
-  width: min(920px, 100%);
-  max-height: min(92vh, 860px);
-  overflow: auto;
+  width: min(960px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow: visible;
   text-align: left;
-  border-radius: 22px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  border-radius: 18px;
+  box-shadow: 0 22px 62px rgba(15, 23, 42, 0.2);
 }
 
 .customer-payment-result-modal > h3,
@@ -3120,8 +3126,8 @@
 }
 
 .customer-payment-guide {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: 12px;
+  padding: 14px;
   border: 1px solid #dce4ef;
   border-radius: 18px;
   background: #f8fafc;
@@ -3175,22 +3181,23 @@
 
 .customer-payment-guide.is-momo-personal,
 .customer-payment-guide.is-bank-personal {
-  padding: 14px;
+  padding: 12px;
   background: #ffffff;
+  border-radius: 18px;
 }
 
 .customer-payment-momo-layout,
 .customer-payment-bank-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(300px, 0.4fr) minmax(0, 0.6fr);
+  gap: 16px;
   align-items: stretch;
 }
 
 .customer-payment-qr-panel {
   display: grid;
   place-items: center;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background: #f8fafc;
@@ -3198,7 +3205,7 @@
 
 .customer-payment-qr-panel .customer-payment-qr {
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   height: auto;
   aspect-ratio: auto;
   object-fit: contain;
@@ -3210,8 +3217,8 @@
 .customer-payment-recipient-card {
   min-width: 0;
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 8px;
+  padding: 12px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
@@ -3280,6 +3287,7 @@
   min-height: 32px;
   padding: 0 10px;
   font-size: 0.78rem;
+  flex: 1 1 130px;
 }
 
 @media (max-width: 720px) {
@@ -3289,7 +3297,7 @@
   }
 
   .customer-payment-qr-panel .customer-payment-qr {
-    max-width: min(260px, 100%);
+    max-width: min(300px, 100%);
   }
 
   .customer-payment-recipient-list .customer-payment-guide-row {
@@ -3304,13 +3312,17 @@
 
 
 .customer-payment-qr-panel.is-bank-qr {
-  padding: 10px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   background: #ffffff;
 }
 
 .customer-payment-qr-panel.is-bank-qr .customer-payment-qr {
-  max-width: 320px;
-  border-radius: 14px;
+  width: min(360px, 100%);
+  max-width: 360px;
+  border: 0;
+  border-radius: 12px;
   box-shadow: none;
 }
 
@@ -3320,4 +3332,88 @@
   border-radius: 12px;
   background: #f1f5f9;
   color: #475569;
+}
+
+
+.customer-payment-qr-panel.is-momo-qr {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.customer-payment-qr-panel.is-momo-qr .customer-payment-qr {
+  width: min(320px, 100%);
+  max-width: 320px;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.customer-payment-guide.is-momo-personal .customer-payment-guide-note {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.customer-payment-copy-row.is-momo-copy {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.customer-payment-copy-row.is-momo-copy button {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+
+@media (max-width: 520px) {
+  .customer-payment-copy-row.is-momo-copy {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.customer-payment-result-modal.customer-checkout-modal {
+  padding: 18px;
+}
+
+.customer-payment-result-modal .customer-checkout-modal-icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+}
+
+.customer-payment-result-modal > h3 {
+  margin: 0 0 6px;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.22;
+}
+
+.customer-payment-result-modal > p {
+  margin: 3px 0;
+  line-height: 1.35;
+}
+
+.customer-payment-result-modal .customer-checkout-modal-actions {
+  margin-top: 12px;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.customer-payment-result-modal .customer-checkout-modal-actions .customer-button {
+  min-height: 38px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .customer-payment-result-modal.customer-checkout-modal {
+    padding: 14px;
+  }
+
+  .customer-payment-result-modal .customer-checkout-modal-actions {
+    flex-wrap: wrap;
+  }
 }

@@ -2009,16 +2009,16 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
               <strong>Ch&#7901; thanh to&aacute;n</strong>
             </div>
             <div class="customer-payment-recipient-list">
-              ${paymentGuideRow("Ng&acirc;n h&agrave;ng", guide.bank?.bankName || "N&L Store Bank")}
-              ${paymentGuideRow("Ch&#7911; t&agrave;i kho&#7843;n", guide.bank?.accountName || "N L STORE")}
-              ${paymentGuideRow("S&#7889; t&agrave;i kho&#7843;n", guide.bank?.accountNumber || "0000 *** 000")}
+              ${paymentGuideRow("Ng&acirc;n h&agrave;ng", guide.bank?.bankName || "MB Bank")}
+              ${paymentGuideRow("Ch&#7911; t&agrave;i kho&#7843;n", guide.bank?.accountName || "L&Ecirc; HO&Agrave;NG L&Ecirc;N")}
+              ${paymentGuideRow("S&#7889; t&agrave;i kho&#7843;n", guide.bank?.accountNumber || "02024443125")}
               ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount), "is-highlight")}
               ${paymentGuideRow("N&#7897;i dung", transferContent, "is-highlight")}
               ${paymentGuideRow("Tr&#7841;ng th&aacute;i", statusLabel)}
             </div>
             <p class="customer-payment-guide-note">Vui l&ograve;ng chuy&#7875;n &#273;&uacute;ng s&#7889; ti&#7873;n v&agrave; n&#7897;i dung. &#272;&#417;n h&agrave;ng ch&#7881; &#273;&#432;&#7907;c x&aacute;c nh&#7853;n sau khi c&#7917;a h&agrave;ng ki&#7875;m tra giao d&#7883;ch.</p>
             <div class="customer-payment-copy-row is-compact">
-              <button type="button" data-copy-payment="${escapeHtml(guide.bank?.accountNumber || "")}">Sao ch&eacute;p s&#7889; t&agrave;i kho&#7843;n</button>
+              <button type="button" data-copy-payment="${escapeHtml(guide.bank?.accountNumber || "02024443125")}">Sao ch&eacute;p s&#7889; t&agrave;i kho&#7843;n</button>
               <button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao ch&eacute;p s&#7889; ti&#7873;n</button>
               <button type="button" data-copy-payment="${escapeHtml(transferContent)}">Sao ch&eacute;p n&#7897;i dung</button>
             </div>
@@ -2036,7 +2036,7 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
       return `
         <section class="customer-payment-guide is-momo is-momo-personal">
           <div class="customer-payment-momo-layout">
-            <div class="customer-payment-qr-panel">
+            <div class="customer-payment-qr-panel is-momo-qr">
               ${renderPaymentQrMarkup(guide, paymentUrl)}
             </div>
             <div class="customer-payment-recipient-card">
@@ -2053,10 +2053,10 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
                 ${paymentGuideRow("Noi dung chuyen tien", transferContent, "is-highlight")}
                 ${paymentGuideRow("Trang thai", guide.status === "processing" ? "Dang cho cua hang xac nhan" : "Cho thanh toan")}
               </div>
-              <div class="customer-payment-copy-row is-compact">
+              <div class="customer-payment-copy-row is-compact is-momo-copy">
+                <button type="button" data-copy-payment="0793244405">Sao chep so dien thoai</button>
                 <button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao chep so tien</button>
                 <button type="button" data-copy-payment="${escapeHtml(transferContent)}">Sao chep noi dung</button>
-                <button type="button" data-copy-payment="0793244405">Sao chep so dien thoai</button>
               </div>
             </div>
           </div>

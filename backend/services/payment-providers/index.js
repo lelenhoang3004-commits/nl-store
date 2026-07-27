@@ -1,13 +1,14 @@
 import crypto from "node:crypto";
 
 const MOMO_PERSONAL_QR_IMAGE = "assets/images/payments/momo-personal-qr.png";
+const MOMO_PERSONAL_QR_CROP_IMAGE = "assets/images/payments/momo-personal-qr-crop.png";
 const BANK_PERSONAL_QR_IMAGE = "assets/images/payments/bank-personal-qr.png";
 
 const DEFAULT_BANK_CONFIG = Object.freeze({
-  bankName: "N&L Store Bank",
-  bankCode: "970436",
-  accountNumber: "0000000000",
-  accountName: "N L STORE",
+  bankName: "MB Bank",
+  bankCode: "MB",
+  accountNumber: "02024443125",
+  accountName: "LE HOANG LEN",
   qrTtlMinutes: 15
 });
 
@@ -70,8 +71,9 @@ export class MomoPersonalQrProviderAdapter {
       orderCode,
       amount: roundedAmount,
       currency: "VND",
-      qrCodeUrl: MOMO_PERSONAL_QR_IMAGE,
-      qrImage: MOMO_PERSONAL_QR_IMAGE,
+      qrCodeUrl: MOMO_PERSONAL_QR_CROP_IMAGE,
+      qrImage: MOMO_PERSONAL_QR_CROP_IMAGE,
+      originalQrImage: MOMO_PERSONAL_QR_IMAGE,
       transferContent,
       payUrl: "",
       deeplink: "",
