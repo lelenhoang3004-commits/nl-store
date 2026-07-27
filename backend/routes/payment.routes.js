@@ -127,6 +127,12 @@ router.get(
   paymentController.customerStatus
 );
 
+router.post(
+  "/transactions/:id/customer-report",
+  validateRequest(validatePaymentTransactionIdRequest),
+  paymentController.customerReport
+);
+
 router.patch(
   "/transactions/:id/status",
   authorizePermissions(AUTH_PERMISSIONS.PAYMENT_MANAGE),

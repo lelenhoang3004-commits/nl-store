@@ -14,10 +14,10 @@ import { validatePagination } from "./pagination.validator.js";
 import { validatePrice } from "./price.validator.js";
 
 const METHOD_TYPES = ["cod", "online", "bank_transfer"];
-const PROVIDERS = ["cod", "manual", "bank", "momo", "vnpay", "credit_card", "paypal", "stripe"];
-const TRANSACTION_STATUSES = ["pending", "paid", "success", "failed", "cancelled", "refunded"];
+const PROVIDERS = ["cod", "manual", "bank", "momo", "momo_personal_qr", "bank_personal_qr", "vnpay", "credit_card", "paypal", "stripe"];
+const TRANSACTION_STATUSES = ["pending", "processing", "paid", "success", "failed", "cancelled", "refunded"];
 const PAYMENT_METHODS = ["cod", "bank_transfer", "vnpay", "credit_card", "momo"];
-const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
+const PAYMENT_STATUSES = ["pending", "processing", "paid", "failed", "refunded"];
 const CODE_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,63}$/;
 
 export function validatePaymentMethodListRequest({ query }) {

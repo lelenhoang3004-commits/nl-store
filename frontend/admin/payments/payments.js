@@ -147,11 +147,19 @@ function renderActions(payment, modal = false) {
   const classes = modal ? "admin-payment-modal-actions" : "admin-payment-actions";
   return `<div class="${classes}">
     ${modal ? "" : `<button type="button" data-payment-detail="${numberId(payment.id)}">Chi tiết</button>`}
-    ${canManage && ["pending", "failed"].includes(status) ? actionButton(payment.id, "paid", "Xác nhận paid") : ""}
+    ${canManage && ["pending", "processing", "failed"].includes(status) ? actionButton(payment.id, "paid", (isPersonalMomoPayment(payment) || isPersonalBankPayment(payment)) ? "Xac nhan da nhan tien" : "Xac nhan paid") : ""}
     ${canManage && status === "pending" ? actionButton(payment.id, "failed", "Đánh dấu failed") : ""}
     ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "Hoàn tiền") : ""}
     ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem đơn hàng</a>` : ""}
   </div>`;
+}
+
+function isPersonalMomoPayment(payment) {
+  return String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase() === "MOMO_PERSONAL_QR";
+}
+
+function isPersonalBankPayment(payment) {
+  return String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase() === "BANK_PERSONAL_QR";
 }
 
 function actionButton(id, status, label) {
@@ -296,10 +304,10 @@ function statusBadge(status) {
 }
 
 function normalizeStatus(status) { return status === "success" ? "paid" : String(status || "").toLowerCase(); }
-function getPaymentStatusLabel(status) { return ({ pending: "Chờ thanh toán", paid: "Đã thanh toán", success: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", cancelled: "Đã hủy" })[status] || status || "-"; }
+function getPaymentStatusLabel(status) { return ({ pending: "Chờ thanh toán", paid: "Đã thanh toán", success: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", processing: "Dang cho xac nhan", cancelled: "Đã hủy" })[status] || status || "-"; }
 function getPaymentMethodLabel(method) {
   const value = String(method || "").toLowerCase();
-  return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản ngân hàng", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo" })[value] || method || "-";
+  return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản ngân hàng", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo QR ca nhan" })[value] || method || "-";
 }
 function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }

@@ -462,7 +462,7 @@ export class PaymentRepository extends BaseRepository {
 
   async findOrderForPayment(orderId, connection = null, lockForUpdate = false) {
     const [rows] = await this.execute(
-      `SELECT id, order_code, payment_status, payment_method, grand_total, paid_amount, deleted_at
+      `SELECT id, order_code, customer_id, payment_status, payment_method, grand_total, paid_amount, deleted_at
       FROM orders
       WHERE id = ? AND deleted_at IS NULL
       LIMIT 1${lockForUpdate ? " FOR UPDATE" : ""}`,

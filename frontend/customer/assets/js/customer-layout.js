@@ -1952,21 +1952,28 @@ function getCheckoutSummary(items, voucherCode = "") {
 }
 
 function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null, payment = null) {
+  const isPersonalMomo = isMomoPersonalGuide(paymentMethod, paymentGuide);
+  const isPersonalBank = isBankPersonalGuide(paymentMethod, paymentGuide);
+  const isReportablePayment = isCustomerReportableGuide(paymentMethod, paymentGuide);
+  const paymentTransactionId = payment?.id || paymentGuide?.paymentTransactionId || paymentGuide?.payment_transaction_id || paymentGuide?.transaction_id || "";
+  const transferContent = paymentGuide?.transferContent || paymentGuide?.transfer_content || `NL ${orderSafeCode(orderCode)}`;
+  const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(orderCode)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(orderCode)}.png` : `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
+  const personalActions = isReportablePayment
+    ? `${isPersonalBank ? `<button class="customer-button secondary" type="button" data-copy-payment="${escapeHtml(paymentGuide?.bank?.accountNumber || "")}">Sao chep so tai khoan</button>` : ""}<button class="customer-button secondary" type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(paymentGuide?.amount || 0))))}">Sao chep so tien</button><button class="customer-button secondary" type="button" data-copy-payment="${escapeHtml(transferContent)}">Sao chep noi dung</button><button class="customer-button" type="button" data-report-payment="${escapeHtml(paymentTransactionId)}">${isPersonalBank ? "Toi da chuyen khoan" : "Toi da thanh toan"}</button>`
+    : `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Kiem tra trang thai</button>${paymentGuide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(paymentGuide.deeplink)}">Mo ung dung MoMo Test</a>` : ""}${(paymentGuide?.payUrl || paymentGuide?.pay_url) ? `<a class="customer-button" href="${escapeHtml((paymentGuide.payUrl || paymentGuide.pay_url))}">Thanh toan tren MoMo</a>` : ""}`;
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = `
     <div class="customer-checkout-modal customer-payment-result-modal">
       <div class="customer-checkout-modal-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
-      <h3>&#272;&#7863;t h&agrave;ng th&agrave;nh c&ocirc;ng - Vui l&ograve;ng ho&agrave;n t&#7845;t thanh to&aacute;n</h3>
-      <p>M&atilde; &#273;&#417;n h&agrave;ng c&#7911;a b&#7841;n l&agrave; <strong>${escapeHtml(orderCode || "")}</strong>.</p>
-      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} &middot; Ch&#7901; thanh to&aacute;n</p>
+      <h3>Dat hang thanh cong - Vui long hoan tat thanh toan</h3>
+      <p>Ma don hang cua ban la <strong>${escapeHtml(orderCode || "")}</strong>.</p>
+      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} &middot; Cho thanh toan</p>
       ${renderPaymentGuideModal(paymentMethod, paymentGuide)}
       <div class="customer-checkout-modal-actions">
-        <button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}">L&#432;u m&atilde; QR</button>
-        <button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(payment?.id || paymentGuide?.paymentTransactionId || "")}">Ki&#7875;m tra tr&#7841;ng th&aacute;i</button>
-        ${paymentGuide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(paymentGuide.deeplink)}">M&#7903; &#7913;ng d&#7909;ng MoMo Test</a>` : ""}
-        ${(paymentGuide?.payUrl || paymentGuide?.pay_url) ? `<a class="customer-button" href="${escapeHtml((paymentGuide.payUrl || paymentGuide.pay_url))}">Thanh to&aacute;n tr&ecirc;n MoMo</a>` : ""}
-        <a class="customer-button secondary" href="#orders">Xem &#273;&#417;n h&agrave;ng</a>
+        <button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}" data-payment-qr-filename="${escapeHtml(saveFilename)}">Luu ma QR</button>
+        ${personalActions}
+        <a class="customer-button secondary" href="#orders">Xem don hang</a>
       </div>
     </div>
   `;
@@ -1974,6 +1981,7 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide
   bindPaymentGuideActions(overlay);
   overlay.addEventListener("click", (event) => {
     if (event.target === overlay) {
+      stopPaymentPolling();
       overlay.remove();
     }
   });
@@ -1986,38 +1994,43 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
   }
 
   if (method === "bank_transfer") {
+    const transferContent = guide.transferContent || guide.transfer_content || `NL ${orderSafeCode(guide.orderCode || guide.order_code)}`;
     return `
       <section class="customer-payment-guide is-bank">
-        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n</div>
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${guide.status === "processing" ? "Dang cho cua hang xac nhan" : "Cho thanh toan"}</div>
         ${guide.qrCodeUrl ? `<img class="customer-payment-qr" data-payment-qr-image src="${escapeHtml(guide.qrCodeUrl)}" alt="QR chuyen khoan ngan hang">` : ""}
         <div class="customer-payment-guide-grid">
-          ${paymentGuideRow("Ng&acirc;n h&agrave;ng", guide.bank?.bankName || "N&L Store Bank")}
-          ${paymentGuideRow("Ch&#7911; t&agrave;i kho&#7843;n", guide.bank?.accountName || "N L STORE")}
-          ${paymentGuideRow("S&#7889; t&agrave;i kho&#7843;n", guide.bank?.accountNumber || "Dang cap nhat")}
-          ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
-          ${paymentGuideRow("N&#7897;i dung", guide.transferContent || `NL ${orderSafeCode(guide.orderCode)}`)}
+          ${paymentGuideRow("Ngan hang", guide.bank?.bankName || "N&L Store Bank")}
+          ${paymentGuideRow("Chu tai khoan", guide.bank?.accountName || "N L STORE")}
+          ${paymentGuideRow("So tai khoan", guide.bank?.accountNumber || "Dang cap nhat")}
+          ${paymentGuideRow("So tien", formatCurrency(guide.amount))}
+          ${paymentGuideRow("Noi dung", transferContent)}
+          ${paymentGuideRow("Trang thai", guide.status === "processing" ? "Dang cho cua hang xac nhan" : "Cho thanh toan")}
         </div>
+        <ol class="customer-payment-guide-steps"><li>Mo ung dung ngan hang.</li><li>Quet ma QR.</li><li>Kiem tra dung tai khoan nhan.</li><li>Nhap dung so tien don hang neu QR khong tu dien.</li><li>Nhap dung noi dung chuyen khoan.</li><li>Hoan tat giao dich.</li></ol>
         <div class="customer-payment-copy-row">
-          <button type="button" data-copy-payment="${escapeHtml(guide.bank?.accountNumber || "")}">Sao ch&eacute;p s&#7889; t&agrave;i kho&#7843;n</button>
-          <button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao ch&eacute;p s&#7889; ti&#7873;n</button>
-          <button type="button" data-copy-payment="${escapeHtml(guide.transferContent || "")}">Sao ch&eacute;p n&#7897;i dung</button>
+          <button type="button" data-copy-payment="${escapeHtml(guide.bank?.accountNumber || "")}">Sao chep so tai khoan</button>
+          <button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao chep so tien</button>
+          <button type="button" data-copy-payment="${escapeHtml(transferContent)}">Sao chep noi dung chuyen khoan</button>
         </div>
-        <p class="customer-payment-guide-note">&#272;&#417;n h&agrave;ng s&#7869; &#273;&#432;&#7907;c x&#7917; l&yacute; sau khi c&#7917;a h&agrave;ng x&aacute;c nh&#7853;n kho&#7843;n chuy&#7875;n.</p>
+        <p class="customer-payment-guide-note">Dang cho cua hang xac nhan khoan chuyen. Khong tu dong danh dau da thanh toan.</p>
       </section>`;
   }
 
   if (method === "momo") {
+    const isPersonal = isMomoPersonalGuide(method, guide);
     const paymentUrl = guide.payUrl || guide.pay_url || guide.deeplink || "";
+    const transferContent = guide.transferContent || guide.transfer_content || `NL ${orderSafeCode(guide.orderCode || guide.order_code)}`;
     return `
       <section class="customer-payment-guide is-momo">
-        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n MoMo</div>
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${guide.status === "processing" ? "Dang cho cua hang xac nhan" : "Cho thanh toan"}</div>
         ${renderPaymentQrMarkup(guide, paymentUrl)}
         <div class="customer-payment-guide-grid">
-          ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
-          ${paymentGuideRow("M&atilde; giao d&#7883;ch", guide.transactionId || guide.requestId || "Dang cap nhat")}
+          ${paymentGuideRow("So tien", formatCurrency(guide.amount))}
+          ${paymentGuideRow("Noi dung", transferContent)}
+          ${paymentGuideRow("Trang thai", guide.status === "processing" ? "Dang cho cua hang xac nhan" : "Cho thanh toan")}
         </div>
-        ${paymentUrl ? `<a class="customer-button" href="${escapeHtml(paymentUrl)}" data-hosted-payment-url>Thanh to&aacute;n qua MoMo</a>` : `<div class="customer-payment-unavailable">${escapeHtml(guide.message || "Khong the tao phien thanh toan MoMo.")}</div>`}
-        <p class="customer-payment-guide-note"><strong>M&Ocirc;I TR&#431;&#7900;NG TH&#7916; NGHI&#7878;M</strong> - Kh&ocirc;ng ph&aacute;t sinh ti&#7873;n th&#7853;t.</p>
+        ${isPersonal ? `<div class="customer-payment-copy-row"><button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao chep so tien</button><button type="button" data-copy-payment="${escapeHtml(transferContent)}">Sao chep noi dung</button></div><p class="customer-payment-guide-note">Vui long chuyen dung so tien va noi dung NL + ma don. Don hang chi duoc danh dau da thanh toan sau khi cua hang xac nhan.</p>` : (paymentUrl ? `<a class="customer-button" href="${escapeHtml(paymentUrl)}" data-hosted-payment-url>Thanh toan qua MoMo</a>` : `<div class="customer-payment-unavailable">${escapeHtml(guide.message || "Khong the tao phien thanh toan MoMo.")}</div>`)}
       </section>`;
   }
   if (method === "credit_card") {
@@ -2042,7 +2055,7 @@ function renderPaymentQrMarkup(guide = {}, fallbackUrl = "") {
 }
 
 function isImageQrSource(value = "") {
-  return /^(data:image\/|blob:|https?:\/\/)/i.test(value) || /^[A-Za-z0-9+/=]{120,}$/.test(value);
+  return /^(data:image\/|blob:|https?:\/\/|\.?\/?assets\/|\/assets\/)/i.test(value) || /^[A-Za-z0-9+/=]{120,}$/.test(value);
 }
 
 function normalizeQrImageSource(value = "") {
@@ -2121,13 +2134,13 @@ function startPaymentPolling(transactionId, onUpdate) {
   tick();
   polling.timer = window.setInterval(tick, 5000);
 }
-async function savePaymentQr(root, orderCode = "ORDER") {
+async function savePaymentQr(root, orderCode = "ORDER", filenameOverride = "") {
   const qr = root?.querySelector?.("[data-payment-qr-image], canvas") || document.querySelector("[data-payment-qr-image], canvas");
   if (!qr) {
     showCustomerToast("Chưa có mã QR để lưu.", "error");
     return;
   }
-  const filename = `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
+  const filename = filenameOverride || `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
   let href = "";
   if (qr instanceof HTMLCanvasElement) {
     href = qr.toDataURL("image/png");
@@ -2171,7 +2184,21 @@ function bindPaymentGuideActions(root) {
   renderDeferredPaymentQr(root);
   const transactionId = root.querySelector("[data-payment-status-check]")?.dataset.paymentStatusCheck || "";
   if (transactionId) startPaymentPolling(transactionId);
-  root.querySelector("[data-save-payment-qr]")?.addEventListener("click", (event) => savePaymentQr(root, event.currentTarget.dataset.savePaymentQr || "ORDER"));
+  root.querySelector("[data-save-payment-qr]")?.addEventListener("click", (event) => savePaymentQr(root, event.currentTarget.dataset.savePaymentQr || "ORDER", event.currentTarget.dataset.paymentQrFilename || ""));
+  root.querySelector("[data-report-payment]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const id = button.dataset.reportPayment || "";
+    if (!id || button.disabled) return;
+    button.disabled = true;
+    try {
+      await customerApi(`/payments/transactions/${encodeURIComponent(id)}/customer-report`, { method: "POST" });
+      showCustomerToast("Dang cho cua hang xac nhan khoan chuyen.", "success");
+      button.textContent = "Dang cho xac nhan";
+    } catch (error) {
+      button.disabled = false;
+      showCustomerToast(error?.message || "Khong the ghi nhan bao thanh toan.", "error");
+    }
+  });
   root.querySelector("[data-payment-status-check]")?.addEventListener("click", async (event) => {
     const id = event.currentTarget.dataset.paymentStatusCheck || "";
     if (!id) return;
@@ -2195,6 +2222,18 @@ function bindPaymentGuideActions(root) {
 
 window.addEventListener("hashchange", stopPaymentPolling);
 window.addEventListener("beforeunload", stopPaymentPolling);
+
+function isMomoPersonalGuide(paymentMethod, guide = {}) {
+  return normalizePaymentMethodValue(paymentMethod) === "momo" && String(guide?.provider || guide?.paymentProvider || "").toUpperCase() === "MOMO_PERSONAL_QR";
+}
+
+function isBankPersonalGuide(paymentMethod, guide = {}) {
+  return normalizePaymentMethodValue(paymentMethod) === "bank_transfer" && String(guide?.provider || guide?.paymentProvider || "").toUpperCase() === "BANK_PERSONAL_QR";
+}
+
+function isCustomerReportableGuide(paymentMethod, guide = {}) {
+  return isMomoPersonalGuide(paymentMethod, guide) || isBankPersonalGuide(paymentMethod, guide);
+}
 
 function orderSafeCode(value) {
   return String(value || "ORDER").replace(/[^a-zA-Z0-9]/g, "").slice(-18).toUpperCase();
@@ -2701,29 +2740,37 @@ async function openOrderPaymentModal(orderId, options = {}) {
     const response = await customerApi(url, options.retry ? { method: "POST" } : undefined);
     payment = response?.data?.payment || null;
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể mở thanh toán cho đơn hàng.", "error");
+    showCustomerToast(error?.message || "Khong the mo thanh toan cho don hang.", "error");
     return;
   }
   if (!payment) {
-    showCustomerToast("Chưa có thông tin thanh toán cho đơn hàng.", "error");
+    showCustomerToast("Chua co thong tin thanh toan cho don hang.", "error");
     return;
   }
 
+  const isPersonalMomo = isMomoPersonalGuide(payment.paymentMethod, payment.paymentGuide);
+  const isPersonalBank = isBankPersonalGuide(payment.paymentMethod, payment.paymentGuide);
+  const isReportablePayment = isCustomerReportableGuide(payment.paymentMethod, payment.paymentGuide);
+  const transferContent = payment.paymentGuide?.transferContent || payment.paymentGuide?.transfer_content || `NL ${orderSafeCode(payment.orderCode || payment.orderId)}`;
+  const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(payment.orderCode || payment.orderId)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(payment.orderCode || payment.orderId)}.png` : `NL-Store-QR-${orderSafeCode(payment.orderCode || payment.orderId)}.png`;
   const actionHtml = [
-    '<button class="customer-button secondary" type="button" data-save-payment-qr="' + escapeHtml(payment.orderCode || payment.orderId || "ORDER") + '">Lưu mã QR</button>',
-    '<button class="customer-button secondary" type="button" data-payment-status-check="' + escapeHtml(payment.paymentTransactionId || "") + '">Kiểm tra trạng thái</button>',
-    payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tạo lại mã QR</button>' : '',
-    payment.paymentGuide?.deeplink ? '<a class="customer-button secondary" href="' + escapeHtml(payment.paymentGuide.deeplink) + '">Mở ứng dụng MoMo Test</a>' : '',
-    (payment.paymentGuide?.payUrl || payment.paymentGuide?.pay_url) ? '<a class="customer-button" href="' + escapeHtml(payment.paymentGuide.payUrl || payment.paymentGuide.pay_url) + '">Thanh toán trên MoMo</a>' : '',
-    '<a class="customer-button secondary" href="#orders/' + encodeURIComponent(payment.orderId || orderId) + '">Xem đơn hàng</a>'
+    '<button class="customer-button secondary" type="button" data-save-payment-qr="' + escapeHtml(payment.orderCode || payment.orderId || "ORDER") + '" data-payment-qr-filename="' + escapeHtml(saveFilename) + '">Luu ma QR</button>',
+    isPersonalBank ? '<button class="customer-button secondary" type="button" data-copy-payment="' + escapeHtml(payment.paymentGuide?.bank?.accountNumber || "") + '">Sao chep so tai khoan</button>' : '',
+    isReportablePayment ? '<button class="customer-button secondary" type="button" data-copy-payment="' + escapeHtml(String(Math.round(Number(payment.amount || 0)))) + '">Sao chep so tien</button>' : '<button class="customer-button secondary" type="button" data-payment-status-check="' + escapeHtml(payment.paymentTransactionId || "") + '">Kiem tra trang thai</button>',
+    isReportablePayment ? '<button class="customer-button secondary" type="button" data-copy-payment="' + escapeHtml(transferContent) + '">Sao chep noi dung</button>' : '',
+    isReportablePayment ? '<button class="customer-button" type="button" data-report-payment="' + escapeHtml(payment.paymentTransactionId || "") + '">' + (isPersonalBank ? "Toi da chuyen khoan" : "Toi da thanh toan") + '</button>' : '',
+    !isReportablePayment && payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tao lai ma QR</button>' : '',
+    !isReportablePayment && payment.paymentGuide?.deeplink ? '<a class="customer-button secondary" href="' + escapeHtml(payment.paymentGuide.deeplink) + '">Mo ung dung MoMo Test</a>' : '',
+    !isReportablePayment && (payment.paymentGuide?.payUrl || payment.paymentGuide?.pay_url) ? '<a class="customer-button" href="' + escapeHtml(payment.paymentGuide.payUrl || payment.paymentGuide.pay_url) + '">Thanh toan tren MoMo</a>' : '',
+    '<a class="customer-button secondary" href="#orders/' + encodeURIComponent(payment.orderId || orderId) + '">Xem don hang</a>'
   ].filter(Boolean).join('');
 
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = '<div class="customer-checkout-modal customer-payment-result-modal">'
     + '<div class="customer-checkout-modal-icon"><i class="fa-solid fa-qrcode" aria-hidden="true"></i></div>'
-    + '<h3>Đơn hàng chưa hoàn tất thanh toán</h3>'
-    + '<p>Mã đơn hàng <strong>' + escapeHtml(payment.orderCode || payment.orderId || "") + '</strong></p>'
+    + '<h3>Don hang chua hoan tat thanh toan</h3>'
+    + '<p>Ma don hang <strong>' + escapeHtml(payment.orderCode || payment.orderId || "") + '</strong></p>'
     + '<p>' + escapeHtml(getPaymentMethodLabel(payment.paymentMethod)) + ' &middot; ' + formatCurrency(payment.amount || 0) + ' &middot; ' + escapeHtml(payment.transactionStatus || payment.paymentStatus || "pending") + '</p>'
     + renderPaymentGuideModal(payment.paymentMethod, payment.paymentGuide)
     + '<div class="customer-checkout-modal-actions">' + actionHtml + '</div>'

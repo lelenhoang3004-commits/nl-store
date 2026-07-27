@@ -228,15 +228,20 @@ function renderPaymentSummary(order) {
 function renderPayment(payment, orderPaymentStatus) {
   const method = String(payment.method || "").toLowerCase();
   const guide = payment.metadata?.paymentGuide || {};
-  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && method === "bank_transfer" && payment.status !== "paid" && orderPaymentStatus !== "paid";
+  const providerCode = String(payment.provider || guide.provider || "").toUpperCase();
+  const isPersonalMomo = providerCode === "MOMO_PERSONAL_QR";
+  const isPersonalBank = providerCode === "BANK_PERSONAL_QR";
+  const isManualConfirmable = method === "bank_transfer" || isPersonalMomo || isPersonalBank;
+  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && isManualConfirmable && payment.status !== "paid" && orderPaymentStatus !== "paid";
   const extra = method === "bank_transfer"
-    ? `<p><span>Noi dung chuyen khoan</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
-    : method === "credit_card"
-      ? `<p><span>Card brand / last4</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
-      : "";
-  return `<div class="admin-order-payment"><p><span>M? giao d?ch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Ph??ng th?c</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>S? ti?n</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Tr?ng th?i</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ng?y thanh to?n</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "?"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xac nhan chuyen khoan</button>` : ""}</div>`;
+    ? `<p><span>Noi dung chuyen khoan</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p><p><span>Khach bao luc</span><strong>${escapeHtml(payment.metadata?.customerReportedPaymentAt || "?")}</strong></p>`
+    : isPersonalMomo
+      ? `<p><span>Noi dung MoMo</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
+      : method === "credit_card"
+        ? `<p><span>Card brand / last4</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
+        : "";
+  return `<div class="admin-order-payment"><p><span>Ma giao dich</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phuong thuc</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>So tien</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trang thai</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngay thanh toan</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "?"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">${isPersonalMomo || isPersonalBank ? "Xac nhan da nhan tien" : "Xac nhan chuyen khoan"}</button>` : ""}</div>`;
 }
-
 
 function initOrderDetail(root, orderId) {
   bindProductImageFallback(root);
@@ -336,7 +341,7 @@ function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", conf
 function paymentStatusLabel(status) { return ({ unpaid: "Chưa thanh toán", pending: "Chờ thanh toán", partial: "Thanh toán một phần", paid: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", cancelled: "Đã hủy" })[status] || status || "—"; }
 function paymentMethodLabel(method) {
   const value = String(method || "").toLowerCase();
-  return ({ cod: "COD", bank_transfer: "Chuyển khoản", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo" })[value] || method || "—";
+  return ({ cod: "COD", bank_transfer: "Chuyển khoản", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo QR ca nhan" })[value] || method || "—";
 }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }

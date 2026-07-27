@@ -97,6 +97,11 @@ export class PaymentController extends BaseController {
     return this.sendSuccess(response, { payment }, "Payment status retrieved successfully.");
   });
 
+  customerReport = asyncHandler(async (request, response) => {
+    const payment = await this.service.reportCustomerPayment(request.params.id, request.user.id);
+    return this.sendSuccess(response, { payment }, "Customer payment report recorded successfully.");
+  });
+
   transactionHistory = asyncHandler(async (request, response) => {
     const history = await this.service.getTransactionHistory(request.params.id);
     return this.sendSuccess(response, { history }, "Payment transaction history retrieved successfully.");

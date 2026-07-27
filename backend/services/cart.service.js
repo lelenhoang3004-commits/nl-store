@@ -224,14 +224,14 @@ export class CartService extends BaseService {
         transactionCode: paymentTransactionCode
       });
       if (paymentMethod === "momo" && !paymentGuide?.available) {
-        throw new AppError(paymentGuide?.message || "Không thể tạo phiên thanh toán MoMo Sandbox.", 502, "MOMO_PAYMENT_SESSION_FAILED");
+        throw new AppError(paymentGuide?.message || "Khong the tao huong dan thanh toan MoMo.", 502, "MOMO_PAYMENT_GUIDE_FAILED");
       }
 
       const paymentTransactionId = await this.repository.createPaymentTransaction({
         orderId: createdOrderId,
         paymentMethodId: normalizedPayload.paymentMethodId,
         transactionCode: paymentTransactionCode,
-        provider: normalizedPayload.paymentProvider,
+        provider: paymentGuide?.provider || normalizedPayload.paymentProvider,
         method: paymentMethod,
         amount: grandTotal,
         currency: "VND",

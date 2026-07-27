@@ -1,5 +1,8 @@
 import crypto from "node:crypto";
 
+const MOMO_PERSONAL_QR_IMAGE = "assets/images/payments/momo-personal-qr.png";
+const BANK_PERSONAL_QR_IMAGE = "assets/images/payments/bank-personal-qr.png";
+
 const DEFAULT_BANK_CONFIG = Object.freeze({
   bankName: "N&L Store Bank",
   bankCode: "970436",
@@ -12,16 +15,15 @@ export class BankTransferProviderAdapter {
   createPaymentSession({ orderId, orderCode, amount, transactionCode }) {
     const config = getBankTransferConfig();
     const transferContent = createTransferContent(orderCode || orderId);
-    const expiresAt = new Date(Date.now() + config.qrTtlMinutes * 60 * 1000).toISOString();
-    const qrCodeUrl = createVietQrUrl(config, amount, transferContent);
 
     return {
-      provider: "BANK_TRANSFER",
+      provider: "BANK_PERSONAL_QR",
       available: true,
       status: "PENDING",
       transactionId: transactionCode,
-      expiresAt,
-      qrCodeUrl,
+      expiresAt: null,
+      qrCodeUrl: BANK_PERSONAL_QR_IMAGE,
+      qrImage: BANK_PERSONAL_QR_IMAGE,
       bank: {
         bankName: config.bankName,
         bankCode: config.bankCode,
@@ -34,12 +36,12 @@ export class BankTransferProviderAdapter {
       orderId,
       orderCode,
       transferContent,
-      message: "Don hang se duoc xu ly sau khi cua hang xac nhan khoan chuyen."
+      message: "Vui long chuyen dung so tien va noi dung don hang."
     };
   }
 
   confirmPayment() {
-    return { status: "PENDING", message: "Bank transfer requires webhook or manual admin confirmation." };
+    return { status: "PENDING", message: "Bank transfer requires manual admin confirmation." };
   }
 
   getPaymentStatus() {
@@ -47,12 +49,41 @@ export class BankTransferProviderAdapter {
   }
 
   handleWebhook() {
-    return { verified: false, status: "PENDING", message: "Bank webhook adapter is not configured." };
+    return { verified: false, status: "PENDING", message: "Bank personal QR has no automatic webhook." };
   }
 
   refundPayment() {
     return { status: "PENDING", message: "Manual refund flow is required." };
   }
+}
+
+export class MomoPersonalQrProviderAdapter {
+  createPaymentSession({ orderId, orderCode, amount, transactionCode }) {
+    const roundedAmount = Math.max(Math.round(Number(amount || 0)), 0);
+    const transferContent = createTransferContent(orderCode || orderId);
+    return {
+      provider: "MOMO_PERSONAL_QR",
+      available: true,
+      status: "PENDING",
+      transactionId: transactionCode,
+      orderId,
+      orderCode,
+      amount: roundedAmount,
+      currency: "VND",
+      qrCodeUrl: MOMO_PERSONAL_QR_IMAGE,
+      qrImage: MOMO_PERSONAL_QR_IMAGE,
+      transferContent,
+      payUrl: "",
+      deeplink: "",
+      expiresAt: null,
+      message: "Vui long chuyen khoan MoMo dung so tien va noi dung don hang."
+    };
+  }
+
+  confirmPayment() { return { status: "PENDING" }; }
+  getPaymentStatus() { return { status: "PENDING" }; }
+  handleWebhook() { return { verified: false, status: "PENDING" }; }
+  refundPayment() { return { status: "PENDING" }; }
 }
 
 export class MomoProviderAdapter {
@@ -120,7 +151,7 @@ export class CreditCardProviderAdapter {
 export function createPaymentProviderAdapter(method) {
   const normalized = String(method || "").toLowerCase();
   if (normalized === "bank_transfer") return new BankTransferProviderAdapter();
-  if (normalized === "momo") return new MomoProviderAdapter();
+  if (normalized === "momo" || normalized === "momo_personal_qr") return new MomoPersonalQrProviderAdapter();
   if (normalized === "credit_card") return new CreditCardProviderAdapter();
   return null;
 }

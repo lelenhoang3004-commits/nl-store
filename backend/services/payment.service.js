@@ -274,12 +274,22 @@ export class PaymentService extends BaseService {
       }, connection);
       await this.notificationService.notifyAdmin({
         type: "PAYMENT_UPDATED",
-        title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toán thất bại" : "Thanh toán đã xác nhận",
+        title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toan that bai" : normalizedStatus === PAYMENT_TRANSACTION_STATUS.PROCESSING ? "Khach da bao thanh toan" : "Thanh toan da xac nhan",
         message: `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`, 
         link: "#payments",
         relatedId: id,
         eventKey: `payment-status:${id}:${normalizedStatus}`
       }, connection);
+      if (normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID) {
+        await this.notificationService.notifyCustomer(order.customer_id, {
+          type: "PAYMENT_CONFIRMED",
+          title: "Thanh toan da duoc xac nhan",
+          message: `Don hang ${order.order_code || transaction.orderId} da duoc xac nhan thanh toan.`,
+          link: "#orders",
+          relatedId: transaction.orderId,
+          eventKey: `payment-paid-customer:${transaction.orderId}:${id}`
+        }, connection);
+      }
     });
 
     return this.getPaymentById(id);
@@ -305,7 +315,7 @@ export class PaymentService extends BaseService {
   async syncOrderPaymentStatus(transaction, status, connection, order = null) {
     const orderSummary = order || await this.repository.findOrderForPayment(transaction.orderId, connection);
     const normalizedStatus = normalizeTransactionStatus(status);
-    const paymentStatus = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PENDING
+    const paymentStatus = [PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING].includes(normalizedStatus)
       ? ORDER_PAYMENT_STATUS.UNPAID
       : normalizedStatus;
     const paidAmount = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
@@ -367,7 +377,7 @@ export class PaymentService extends BaseService {
         orderId: order.id,
         paymentMethodId: paymentMethod?.id || null,
         transactionCode,
-        provider: method,
+        provider: paymentGuide?.provider || method,
         method,
         amount: Number(order.grand_total || 0),
         currency: "VND",
@@ -392,6 +402,36 @@ export class PaymentService extends BaseService {
     if (!order) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
     const tx = transaction.toJSON();
     return this.formatCustomerPaymentResponse(order, tx, tx.metadata?.paymentGuide || null);
+  }
+
+  async reportCustomerPayment(transactionId, customerId) {
+    const transaction = await this.repository.findTransactionById(transactionId);
+    if (!transaction) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    const order = await this.repository.findOrderForCustomerPayment(transaction.orderId, customerId);
+    if (!order) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    const tx = transaction.toJSON();
+    const guide = tx.metadata?.paymentGuide || {};
+    const guideProvider = String(guide.provider || tx.provider || "").toUpperCase();
+    const txMethod = String(tx.method || "").toLowerCase();
+    const canCustomerReport = (txMethod === "momo" && guideProvider === "MOMO_PERSONAL_QR") || (txMethod === "bank_transfer" && guideProvider === "BANK_PERSONAL_QR");
+    if (!canCustomerReport) {
+      throw new AppError("This payment method cannot be reported by customer.", 422, "PAYMENT_REPORT_NOT_SUPPORTED");
+    }
+    const status = String(tx.status || "").toLowerCase();
+    if (status === PAYMENT_TRANSACTION_STATUS.PAID) throw new AppError("Order is already paid.", 409, "ORDER_ALREADY_PAID");
+    if (status === PAYMENT_TRANSACTION_STATUS.PROCESSING) {
+      return this.formatCustomerPaymentResponse(order, tx, guide);
+    }
+    const metadata = {
+      ...(tx.metadata || {}),
+      customerReportedPaymentAt: new Date().toISOString(),
+      customerReportedPaymentBy: customerId
+    };
+    const updated = await this.updatePaymentStatus(transactionId, PAYMENT_TRANSACTION_STATUS.PROCESSING, customerId, {
+      metadata,
+      note: guideProvider === "BANK_PERSONAL_QR" ? "Customer reported bank transfer. Waiting for admin confirmation." : "Customer reported MoMo personal QR payment. Waiting for admin confirmation."
+    });
+    return this.formatCustomerPaymentResponse(order, updated, updated.metadata?.paymentGuide || guide);
   }
 
   formatCustomerPaymentResponse(order, transaction, paymentGuide) {
@@ -597,13 +637,14 @@ function createPaymentTransactionCode() {
 
 function normalizeSupportedMethod(value) {
   const method = String(value || "").trim().toLowerCase();
-  const supportedMethods = ["cod", "bank_transfer", "vnpay", "credit_card", "momo"];
+  const supportedMethods = ["cod", "bank_transfer", "vnpay", "credit_card", "momo", "momo_personal_qr"];
 
   if (!supportedMethods.includes(method)) {
     throw new AppError("Payment method is invalid.", 422, "INVALID_PAYMENT_METHOD");
   }
 
-  return method === "credit_card" ? "CREDIT_CARD" : method;
+  if (method === "credit_card") return "CREDIT_CARD";
+  return method === "momo_personal_qr" ? "momo" : method;
 }
 
 function normalizeTransactionStatus(value) {
