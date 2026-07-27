@@ -18,7 +18,7 @@ const PROVIDERS = ["cod", "manual", "bank", "momo", "vnpay", "credit_card", "pay
 const TRANSACTION_STATUSES = ["pending", "paid", "success", "failed", "cancelled", "refunded"];
 const PAYMENT_METHODS = ["cod", "bank_transfer", "vnpay", "credit_card", "momo"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
-const CODE_REGEX = /^[a-z0-9][a-z0-9_-]{1,63}$/;
+const CODE_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,63}$/;
 
 export function validatePaymentMethodListRequest({ query }) {
   const errors = [];
@@ -162,7 +162,7 @@ function validatePaymentMethodPayload(body = {}) {
   pushIfError(errors, validateRequired(body.name, "name", "body"));
 
   if (!isEmpty(body.code) && !CODE_REGEX.test(body.code)) {
-    errors.push(createValidationError("code", "code must contain lowercase letters, numbers, underscores, or hyphens.", "body", "INVALID_PAYMENT_METHOD_CODE"));
+    errors.push(createValidationError("code", "code must contain letters, numbers, underscores, or hyphens.", "body", "INVALID_PAYMENT_METHOD_CODE"));
   }
 
   if (!isEmpty(body.name) && String(body.name).length > 120) {

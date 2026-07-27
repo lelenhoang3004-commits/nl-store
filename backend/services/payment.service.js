@@ -21,6 +21,7 @@ const PAYMENT_PROVIDER = Object.freeze({
   MANUAL: "manual",
   BANK: "bank",
   MOMO: "momo",
+  CREDIT_CARD: "credit_card",
   VNPAY: "vnpay",
   PAYPAL: "paypal",
   STRIPE: "stripe"
@@ -228,6 +229,10 @@ export class PaymentService extends BaseService {
     const normalizedStatus = normalizeTransactionStatus(status);
     const currentTransaction = await this.getPaymentById(id);
 
+    if (normalizeTransactionStatus(currentTransaction.status) === normalizedStatus) {
+      return currentTransaction;
+    }
+
     await withTransaction(async (connection) => {
       const order = await this.repository.findOrderForPayment(currentTransaction.orderId, connection, true);
 
@@ -260,6 +265,12 @@ export class PaymentService extends BaseService {
         changedBy
       }, connection);
       await this.syncOrderPaymentStatus(transaction, normalizedStatus, connection, order);
+      await this.repository.createOrderHistory({
+        orderId: transaction.orderId,
+        status: normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID ? "confirmed" : order.status || "pending",
+        note: `Payment ${transaction.transactionCode || id} changed to ${normalizedStatus}.`,
+        changedBy
+      }, connection);
       await this.notificationService.notifyAdmin({
         type: "PAYMENT_UPDATED",
         title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toán thất bại" : "Thanh toán đã xác nhận",

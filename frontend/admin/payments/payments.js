@@ -230,6 +230,18 @@ function renderDetailModal(root, overlay, payment) {
   requestAnimationFrame(() => overlay.querySelector("[data-payment-modal-close]")?.focus({ preventScroll: true }));
 }
 
+function renderPaymentMetadataSummary(payment) {
+  const guide = payment?.metadata?.paymentGuide || {};
+  const method = String(payment?.method || "").toLowerCase();
+  if (method === "bank_transfer") {
+    return `${detailField("Noi dung chuyen khoan", guide.transferContent)}${detailField("Tai khoan nhan", guide.bank?.accountNumber)}${detailField("Chu tai khoan", guide.bank?.accountName)}`;
+  }
+  if (method === "credit_card") {
+    return `${detailField("Card brand", guide.cardBrand || payment?.metadata?.card_brand)}${detailField("Last4", guide.cardLast4 || payment?.metadata?.card_last4)}`;
+  }
+  return "";
+}
+
 function detailField(label, value, prominent = false) {
   return `<div class="admin-payment-info-item ${prominent ? "is-prominent" : ""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value === null || value === undefined || value === "" ? "-" : value)}</strong></div>`;
 }

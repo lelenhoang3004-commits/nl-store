@@ -226,9 +226,17 @@ function renderPaymentSummary(order) {
 }
 
 function renderPayment(payment, orderPaymentStatus) {
-  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && payment.status !== "paid" && orderPaymentStatus !== "paid";
-  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "—")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "—")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p><p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xác nhận đã thanh toán</button>` : ""}</div>`;
+  const method = String(payment.method || "").toLowerCase();
+  const guide = payment.metadata?.paymentGuide || {};
+  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && method === "bank_transfer" && payment.status !== "paid" && orderPaymentStatus !== "paid";
+  const extra = method === "bank_transfer"
+    ? `<p><span>Noi dung chuyen khoan</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
+    : method === "credit_card"
+      ? `<p><span>Card brand / last4</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
+      : "";
+  return `<div class="admin-order-payment"><p><span>M? giao d?ch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Ph??ng th?c</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>S? ti?n</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Tr?ng th?i</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ng?y thanh to?n</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "?"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xac nhan chuyen khoan</button>` : ""}</div>`;
 }
+
 
 function initOrderDetail(root, orderId) {
   bindProductImageFallback(root);

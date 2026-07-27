@@ -346,6 +346,16 @@ export class PaymentRepository extends BaseRepository {
     return this.addHistory(payload.transactionId, payload, connection);
   }
 
+  async createOrderHistory(payload, connection = null) {
+    await this.execute(
+      `INSERT INTO order_histories
+        (order_id, status, note, changed_by)
+      VALUES (?, ?, ?, ?)`,
+      [payload.orderId, payload.status, payload.note, payload.changedBy],
+      connection
+    );
+  }
+
   async findHistoriesByTransactionId(transactionId) {
     const [rows] = await this.execute(
       `SELECT id, transaction_id, status, note, changed_by, created_at

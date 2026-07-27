@@ -1946,27 +1946,100 @@ function getCheckoutSummary(items, voucherCode = "") {
   };
 }
 
-function showCheckoutSuccessModal(orderCode, paymentMethod = "cod") {
+function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null) {
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = `
-    <div class="customer-checkout-modal">
-      <div class="customer-checkout-modal-icon">✓</div>
-      <h3>Đặt hàng thành công</h3>
-      <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
-      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · Chờ thanh toán</p>
+    <div class="customer-checkout-modal customer-payment-result-modal">
+      <div class="customer-checkout-modal-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
+      <h3>&#272;&#7863;t h&agrave;ng th&agrave;nh c&ocirc;ng</h3>
+      <p>M&atilde; &#273;&#417;n h&agrave;ng c&#7911;a b&#7841;n l&agrave; <strong>${escapeHtml(orderCode || "")}</strong>.</p>
+      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} &middot; Ch&#7901; thanh to&aacute;n</p>
+      ${renderPaymentGuideModal(paymentMethod, paymentGuide)}
       <div class="customer-checkout-modal-actions">
-        <a class="customer-button secondary" href="#orders">Xem đơn hàng</a>
-        <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
+        <a class="customer-button secondary" href="#orders">Xem &#273;&#417;n h&agrave;ng</a>
+        <a class="customer-button" href="#home">Ti&#7871;p t&#7909;c mua s&#7855;m</a>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+  bindPaymentGuideActions(overlay);
   overlay.addEventListener("click", (event) => {
     if (event.target === overlay) {
       overlay.remove();
     }
   });
+}
+
+function renderPaymentGuideModal(paymentMethod, guide = null) {
+  const method = normalizePaymentMethodValue(paymentMethod);
+  if (!guide || method === "cod") {
+    return `<div class="customer-payment-guide-note">&#272;&#417;n h&agrave;ng s&#7869; &#273;&#432;&#7907;c x&#7917; l&yacute; sau khi c&#7917;a h&agrave;ng x&aacute;c nh&#7853;n th&ocirc;ng tin.</div>`;
+  }
+
+  if (method === "bank_transfer") {
+    return `
+      <section class="customer-payment-guide is-bank">
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n</div>
+        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" src="${escapeHtml(guide.qrCodeUrl)}" alt="QR chuyen khoan ngan hang">` : ""}
+        <div class="customer-payment-guide-grid">
+          ${paymentGuideRow("Ng&acirc;n h&agrave;ng", guide.bank?.bankName || "N&L Store Bank")}
+          ${paymentGuideRow("Ch&#7911; t&agrave;i kho&#7843;n", guide.bank?.accountName || "N L STORE")}
+          ${paymentGuideRow("S&#7889; t&agrave;i kho&#7843;n", guide.bank?.accountNumber || "Dang cap nhat")}
+          ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
+          ${paymentGuideRow("N&#7897;i dung", guide.transferContent || `NL ${orderSafeCode(guide.orderCode)}`)}
+        </div>
+        <div class="customer-payment-copy-row">
+          <button type="button" data-copy-payment="${escapeHtml(guide.bank?.accountNumber || "")}">Sao ch&eacute;p s&#7889; t&agrave;i kho&#7843;n</button>
+          <button type="button" data-copy-payment="${escapeHtml(String(Math.round(Number(guide.amount || 0))))}">Sao ch&eacute;p s&#7889; ti&#7873;n</button>
+          <button type="button" data-copy-payment="${escapeHtml(guide.transferContent || "")}">Sao ch&eacute;p n&#7897;i dung</button>
+        </div>
+        <p class="customer-payment-guide-note">&#272;&#417;n h&agrave;ng s&#7869; &#273;&#432;&#7907;c x&#7917; l&yacute; sau khi c&#7917;a h&agrave;ng x&aacute;c nh&#7853;n kho&#7843;n chuy&#7875;n.</p>
+      </section>`;
+  }
+
+  if (method === "momo") {
+    return `
+      <section class="customer-payment-guide is-momo">
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n</div>
+        <div class="customer-payment-unavailable">${escapeHtml(guide.message || "Thanh toan MoMo dang duoc cau hinh.")}</div>
+        <ol><li>M&#7903; &#7913;ng d&#7909;ng MoMo</li><li>Qu&eacute;t m&atilde; QR</li><li>Ki&#7875;m tra s&#7889; ti&#7873;n</li><li>X&aacute;c nh&#7853;n thanh to&aacute;n</li></ol>
+      </section>`;
+  }
+
+  if (method === "credit_card") {
+    return `
+      <section class="customer-payment-guide is-card">
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-credit-card" aria-hidden="true"></i> Ch&#432;a kh&#7843; d&#7909;ng</div>
+        <div class="customer-payment-card-brands"><span>VISA</span><span>Mastercard</span><span>3D Secure</span></div>
+        <div class="customer-payment-unavailable">${escapeHtml(guide.message || "Thanh toan the dang duoc hoan thien.")}</div>
+      </section>`;
+  }
+
+  return "";
+}
+
+function paymentGuideRow(label, value) {
+  return `<div class="customer-payment-guide-row"><span>${label}</span><strong>${escapeHtml(value || "-")}</strong></div>`;
+}
+
+function bindPaymentGuideActions(root) {
+  root.querySelectorAll("[data-copy-payment]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const value = button.dataset.copyPayment || "";
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        button.textContent = "Da sao chep";
+      } catch {
+        showCustomerToast("Khong the sao chep tu dong.", "error");
+      }
+    });
+  });
+}
+
+function orderSafeCode(value) {
+  return String(value || "ORDER").replace(/[^a-zA-Z0-9]/g, "").slice(-18).toUpperCase();
 }
 
 function validateCheckoutForm(form) {
@@ -2168,6 +2241,7 @@ async function renderCheckoutPage() {
                   </div>
                 </label>
               </div>
+              ${renderCheckoutPaymentDetails(checkoutSummary)}
             </form>
           </div>
 
@@ -2225,6 +2299,44 @@ async function renderCheckoutPage() {
   }
 }
 
+function renderCheckoutPaymentDetails(summary) {
+  const total = formatCurrency(summary?.grandTotal || 0);
+  return `
+    <div class="customer-payment-detail-panels" data-payment-detail-panels>
+      <section class="customer-payment-detail-panel is-active" data-payment-detail="cod">
+        <p>Thanh to&aacute;n khi nh&aacute;n h&agrave;ng. Cua hang se xac nhan don truoc khi giao.</p>
+      </section>
+      <section class="customer-payment-detail-panel" data-payment-detail="bank_transfer" hidden>
+        <div class="customer-payment-detail-head"><strong>Chuyen khoan ngan hang bang QR</strong><span>15 phut</span></div>
+        <div class="customer-payment-preview-grid">
+          <div class="customer-payment-qr-placeholder"><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>QR se duoc tao sau khi dat hang</span></div>
+          <div class="customer-payment-preview-copy">
+            <p><span>So tien</span><strong>${total}</strong></p>
+            <p><span>Noi dung goi y</span><strong>NL + ma don hang</strong></p>
+            <small>Khong danh dau da thanh toan chi vi ban bam da chuyen khoan.</small>
+          </div>
+        </div>
+      </section>
+      <section class="customer-payment-detail-panel" data-payment-detail="credit_card" hidden>
+        <div class="customer-payment-detail-head"><strong>Thanh toan bang the tin dung</strong><span>Hosted fields</span></div>
+        <div class="customer-card-hosted-shell" aria-disabled="true">
+          <div class="customer-payment-card-brands"><span>VISA</span><span>Mastercard</span><span>3D Secure</span></div>
+          <div class="customer-hosted-field is-disabled">So the - truong bao mat cua provider</div>
+          <div class="customer-hosted-field-row"><div class="customer-hosted-field is-disabled">Ngay het han</div><div class="customer-hosted-field is-disabled">Ma bao mat</div></div>
+          <button type="button" disabled>Thanh toan ${total}</button>
+          <small>Thanh toan the dang duoc hoan thien. N&L Store khong thu thap so the, CVC, PIN hoac OTP.</small>
+        </div>
+      </section>
+      <section class="customer-payment-detail-panel" data-payment-detail="momo" hidden>
+        <div class="customer-payment-detail-head"><strong>MoMo QR</strong><span>Dang cau hinh</span></div>
+        <div class="customer-payment-preview-grid">
+          <div class="customer-payment-qr-placeholder is-momo"><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>QR MoMo se duoc tao boi backend</span></div>
+          <ol><li>Mo ung dung MoMo</li><li>Quet ma QR</li><li>Kiem tra so tien</li><li>Xac nhan thanh toan</li></ol>
+        </div>
+      </section>
+    </div>`;
+}
+
 function initCheckoutForm(container, checkoutSummary) {
   const form = container.querySelector("[data-checkout-form]");
   const submitButton = container.querySelector("[data-checkout-submit]");
@@ -2273,13 +2385,25 @@ function initCheckoutForm(container, checkoutSummary) {
   refreshWardOptions();
 
   // Payment method selection
+  const syncPaymentDetails = () => {
+    const selected = normalizePaymentMethodValue(form?.querySelector("input[name='paymentMethod']:checked")?.value || "cod");
+    container.querySelectorAll("[data-payment-detail]").forEach((panel) => {
+      const isActive = panel.dataset.paymentDetail === selected;
+      panel.hidden = !isActive;
+      panel.classList.toggle("is-active", isActive);
+    });
+  };
+
   paymentCards.forEach((card) => {
     card.addEventListener("click", () => {
       paymentCards.forEach((item) => item.classList.remove("is-active"));
       card.classList.add("is-active");
-      card.querySelector("input")?.click();
+      const input = card.querySelector("input");
+      if (input) input.checked = true;
+      syncPaymentDetails();
     });
   });
+  syncPaymentDetails();
 
   // Province selection - update wards and map
   provinceSelect?.addEventListener("change", () => {

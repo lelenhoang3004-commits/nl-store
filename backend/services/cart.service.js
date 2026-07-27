@@ -10,6 +10,7 @@ import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { withTransaction } from "../utils/database.util.js";
 import crypto from "node:crypto";
+import { createPaymentProviderAdapter } from "./payment-providers/index.js";
 
 export class CartService extends BaseService {
   constructor(repository = new CartRepository(), variantRepository = new ProductVariantRepository(), voucherService = new VoucherService(), notificationService = new NotificationService()) {
@@ -137,6 +138,8 @@ export class CartService extends BaseService {
     const normalizedPayload = this.normalizeCheckoutPayload(payload);
     const isBuyNow = normalizedPayload.checkoutMode === "buy_now";
     let createdOrderId = null;
+    let createdPaymentTransactionId = null;
+    let createdPaymentGuide = null;
 
     await withTransaction(async (connection) => {
       let selectedItems;
@@ -172,9 +175,10 @@ export class CartService extends BaseService {
       // Checkout never trusts a client-provided paid flag. Gateway placeholders and COD
       // always start pending and can only be paid through the payment status API.
       const isPaid = false;
+      const orderCode = createOrderCode();
 
       createdOrderId = await this.repository.createOrder({
-        orderCode: createOrderCode(),
+        orderCode,
         customerId: userId,
         customerName: normalizedPayload.customerName,
         customerEmail: normalizedPayload.customerEmail,
@@ -211,10 +215,19 @@ export class CartService extends BaseService {
         changedBy: userId
       }, connection);
 
+      const paymentTransactionCode = createPaymentTransactionCode();
+      const paymentGuide = createCheckoutPaymentGuide({
+        method: paymentMethod,
+        orderId: createdOrderId,
+        orderCode,
+        amount: grandTotal,
+        transactionCode: paymentTransactionCode
+      });
+
       const paymentTransactionId = await this.repository.createPaymentTransaction({
         orderId: createdOrderId,
         paymentMethodId: normalizedPayload.paymentMethodId,
-        transactionCode: createPaymentTransactionCode(),
+        transactionCode: paymentTransactionCode,
         provider: normalizedPayload.paymentProvider,
         method: paymentMethod,
         amount: grandTotal,
@@ -224,9 +237,12 @@ export class CartService extends BaseService {
         metadata: {
           source: isBuyNow ? "customer_buy_now_checkout" : "customer_cart_checkout",
           voucherCode: voucherResult?.code || normalizedPayload.voucherCode,
-          discountAmount: discountTotal
+          discountAmount: discountTotal,
+          paymentGuide: sanitizePaymentGuideForMetadata(paymentGuide)
         }
       }, connection);
+      createdPaymentTransactionId = paymentTransactionId;
+      createdPaymentGuide = paymentGuide;
 
       await this.repository.addPaymentHistory(paymentTransactionId, {
         status: isPaid ? "paid" : "pending",
@@ -280,9 +296,24 @@ export class CartService extends BaseService {
       this.repository.findOrderById(createdOrderId),
       this.getCart(userId)
     ]);
+    const orderPayload = order.toJSON();
+    if (createdPaymentGuide) {
+      createdPaymentGuide.orderCode = orderPayload.orderCode || createdPaymentGuide.orderCode;
+      if (createdPaymentGuide.transferContent) {
+        createdPaymentGuide.transferContent = createTransferContent(orderPayload.orderCode || createdOrderId);
+      }
+    }
 
     return {
-      order: order.toJSON(),
+      order: orderPayload,
+      payment: {
+        id: createdPaymentTransactionId,
+        method: orderPayload.paymentMethod,
+        status: "pending",
+        amount: orderPayload.grandTotal,
+        currency: "VND"
+      },
+      paymentGuide: sanitizePaymentGuideForClient(createdPaymentGuide),
       cart
     };
   }
@@ -534,6 +565,41 @@ function isSameProductImage(allowedImageUrl, selectedImageUrl) {
   } catch {
     return false;
   }
+}
+
+function createCheckoutPaymentGuide({ method, orderId, orderCode, amount, transactionCode }) {
+  const adapter = createPaymentProviderAdapter(method);
+  if (!adapter) {
+    return {
+      provider: String(method || "cod").toUpperCase(),
+      available: true,
+      status: "PENDING",
+      transactionId: transactionCode,
+      orderId,
+      orderCode,
+      amount: Number(amount || 0),
+      currency: "VND",
+      message: "Don hang da duoc tao va dang cho xu ly."
+    };
+  }
+
+  return adapter.createPaymentSession({ orderId, orderCode, amount, transactionCode });
+}
+
+function sanitizePaymentGuideForMetadata(guide) {
+  if (!guide) return null;
+  const { rawAccountNumber, ...safeGuide } = guide;
+  return safeGuide;
+}
+
+function sanitizePaymentGuideForClient(guide) {
+  if (!guide) return null;
+  return sanitizePaymentGuideForMetadata(guide);
+}
+
+function createTransferContent(orderCode) {
+  const cleanCode = String(orderCode || "ORDER").replace(/[^a-zA-Z0-9]/g, "").slice(-18).toUpperCase();
+  return `NL ${cleanCode}`;
 }
 
 function normalizePaymentMethodCode(value) {
