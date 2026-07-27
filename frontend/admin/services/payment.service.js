@@ -1,12 +1,12 @@
-﻿import { BaseService } from "./base.service.js";
+import { BaseService } from "./base.service.js";
 
 class PaymentService extends BaseService {
   constructor() {
     super("/admin/payments");
   }
 
-  updateStatus(id, status, options = {}) {
-    return this.client.patch(this.path(id, "status"), { status }, options);
+  updateStatus(id, status, options = {}, payload = {}) {
+    return this.client.patch(this.path(id, "status"), { status, ...payload }, options);
   }
 
   getByOrder(orderId, options = {}) {

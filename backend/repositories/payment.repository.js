@@ -198,7 +198,7 @@ export class PaymentRepository extends BaseRepository {
     return Number(rows[0]?.total || 0);
   }
 
-  async findTransactionById(id, connection = null) {
+  async findTransactionById(id, connection = null, lockForUpdate = false) {
     const [rows] = await this.execute(
       `SELECT
         pt.id,
@@ -221,7 +221,7 @@ export class PaymentRepository extends BaseRepository {
       FROM payment_transactions pt
       LEFT JOIN orders o ON o.id = pt.order_id AND o.deleted_at IS NULL
       WHERE pt.id = ?
-      LIMIT 1`,
+      LIMIT 1${lockForUpdate ? " FOR UPDATE" : ""}`,
       [id],
       connection
     );
@@ -233,8 +233,8 @@ export class PaymentRepository extends BaseRepository {
     return this.findTransactions(options);
   }
 
-  async findById(id, connection = null) {
-    return this.findTransactionById(id, connection);
+  async findById(id, connection = null, lockForUpdate = false) {
+    return this.findTransactionById(id, connection, lockForUpdate);
   }
 
   async findByOrderId(orderId, connection = null) {

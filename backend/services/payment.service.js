@@ -230,61 +230,83 @@ export class PaymentService extends BaseService {
     const normalizedStatus = normalizeTransactionStatus(status);
     const currentTransaction = await this.getPaymentById(id);
 
-    if (normalizeTransactionStatus(currentTransaction.status) === normalizedStatus) {
-      return currentTransaction;
-    }
-
     await withTransaction(async (connection) => {
       const order = await this.repository.findOrderForPayment(currentTransaction.orderId, connection, true);
 
       if (!order) {
-        throw new AppError("Order was not found.", 404, "PAYMENT_ORDER_NOT_FOUND");
+        throw new AppError("Không tìm thấy đơn hàng.", 404, "PAYMENT_ORDER_NOT_FOUND");
       }
 
-      const transaction = await this.repository.findById(id, connection);
+      const transaction = await this.repository.findById(id, connection, true);
       if (!transaction) {
-        throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+        throw new AppError("Không tìm thấy giao dịch thanh toán.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+      }
+
+      const currentStatus = normalizeTransactionStatus(transaction.status);
+      if (currentStatus === PAYMENT_TRANSACTION_STATUS.PAID && normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID) {
+        throw new AppError("Giao dịch này đã được xác nhận thanh toán trước đó.", 409, "PAYMENT_ALREADY_PAID");
+      }
+
+      if (currentStatus === normalizedStatus) {
+        return;
       }
 
       if (order.payment_status === ORDER_PAYMENT_STATUS.PAID && normalizedStatus !== PAYMENT_TRANSACTION_STATUS.REFUNDED) {
-        throw new AppError("Paid orders can only be moved to refunded status.", 409, "ORDER_ALREADY_PAID");
+        throw new AppError("Đơn hàng đã được thanh toán nên không thể xác nhận lại.", 409, "ORDER_ALREADY_PAID");
       }
 
       const paidAt = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
         ? new Date()
         : transaction.paidAt;
+      const metadata = {
+        ...(transaction.metadata || {}),
+        ...(options.metadata || {})
+      };
+
+      if (normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID) {
+        metadata.confirmedBy = changedBy || null;
+        metadata.confirmedAt = paidAt.toISOString();
+        metadata.confirmedSource = options.confirmedSource || "admin_manual";
+      }
 
       await this.repository.updateStatus(id, {
         status: normalizedStatus,
         paidAt,
-        metadata: options.metadata || transaction.metadata
+        metadata
       }, connection);
       await this.repository.createHistory({
         transactionId: Number(id),
         status: normalizedStatus,
-        note: options.note || `Payment status changed to ${normalizedStatus}.`,
+        note: options.note || (normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID ? "Admin xác nhận cửa hàng đã nhận tiền." : `Payment status changed to ${normalizedStatus}.`),
         changedBy
       }, connection);
       await this.syncOrderPaymentStatus(transaction, normalizedStatus, connection, order);
       await this.repository.createOrderHistory({
         orderId: transaction.orderId,
-        status: normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID ? "confirmed" : order.status || "pending",
-        note: `Payment ${transaction.transactionCode || id} changed to ${normalizedStatus}.`,
+        status: order.status || "pending",
+        note: normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
+          ? `Thanh toán ${transaction.transactionCode || id} đã được admin xác nhận.`
+          : `Payment ${transaction.transactionCode || id} changed to ${normalizedStatus}.`,
         changedBy
       }, connection);
       await this.notificationService.notifyAdmin({
         type: "PAYMENT_UPDATED",
         title: normalizedStatus === PAYMENT_TRANSACTION_STATUS.FAILED ? "Thanh toán thất bại" : "Thanh toán đã xác nhận",
-        message: `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`, 
+        message: normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
+          ? `Giao dịch ${transaction.transactionCode || id} đã được xác nhận đã nhận tiền.`
+          : `Giao dịch ${transaction.transactionCode || id} chuyển sang ${normalizedStatus}.`,
         link: "#payments",
         relatedId: id,
         eventKey: `payment-status:${id}:${normalizedStatus}`
       }, connection);
       if (normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID) {
+        const provider = String(transaction.provider || transaction.metadata?.paymentGuide?.provider || "").toUpperCase();
+        const method = String(transaction.method || "").toLowerCase();
+        const paymentLabel = method === "momo" || provider === "MOMO" || provider === "MOMO_PERSONAL_QR" ? "MoMo" : "chuyển khoản";
         await this.notificationService.notifyCustomer(order.customer_id, {
           type: "PAYMENT_CONFIRMED",
-          title: "Thanh toan da duoc xac nhan",
-          message: `Don hang ${order.order_code || transaction.orderId} da duoc xac nhan thanh toan.`,
+          title: "Thanh toán đã được xác nhận",
+          message: `Thanh toán ${paymentLabel} của đơn hàng ${order.order_code || transaction.orderId} đã được xác nhận.`,
           link: "#orders",
           relatedId: transaction.orderId,
           eventKey: `payment-paid-customer:${transaction.orderId}:${id}`
@@ -294,7 +316,6 @@ export class PaymentService extends BaseService {
 
     return this.getPaymentById(id);
   }
-
   validateAmount(order, amount) {
     const normalizedAmount = Number(amount);
     const grandTotal = Number(order?.grand_total ?? order?.grandTotal ?? 0);

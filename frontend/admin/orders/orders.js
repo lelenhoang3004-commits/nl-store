@@ -231,20 +231,26 @@ function renderPayment(payment, orderPaymentStatus) {
   const method = String(payment.method || "").toLowerCase();
   const guide = payment.metadata?.paymentGuide || {};
   const providerCode = String(payment.provider || guide.provider || "").toUpperCase();
-  const isPersonalMomo = providerCode === "MOMO_PERSONAL_QR";
+  const isPersonalMomo = isMomoPayment(payment);
   const isPersonalBank = providerCode === "BANK_PERSONAL_QR";
   const isManualConfirmable = method === "bank_transfer" || isPersonalMomo || isPersonalBank;
-  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && isManualConfirmable && payment.status !== "paid" && orderPaymentStatus !== "paid";
+  const status = normalizePaymentStatus(payment.status);
+  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && isManualConfirmable && ["pending", "processing"].includes(status) && normalizePaymentStatus(orderPaymentStatus) !== "paid";
   const extra = method === "bank_transfer"
-    ? `<p><span>Noi dung chuyen khoan</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p><p><span>Khach bao luc</span><strong>${escapeHtml(payment.metadata?.customerReportedPaymentAt || "?")}</strong></p>`
+    ? `<p><span>Nội dung chuyển khoản</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p><p><span>Khách báo lúc</span><strong>${escapeHtml(payment.metadata?.customerReportedPaymentAt || "?")}</strong></p>`
     : isPersonalMomo
-      ? `<p><span>Noi dung MoMo</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
+      ? `<p><span>Nội dung MoMo</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
       : method === "credit_card"
         ? `<p><span>Card brand / last4</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
         : "";
-  return `<div class="admin-order-payment"><p><span>Ma giao dich</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phuong thuc</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>So tien</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trang thai</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngay thanh toan</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "?"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">${isPersonalMomo || isPersonalBank ? "Xac nhan da nhan tien" : "Xac nhan chuyen khoan"}</button>` : ""}</div>`;
+  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xác nhận đã nhận tiền</button>` : ""}</div>`;
 }
 
+function isMomoPayment(payment) {
+  const provider = String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase();
+  const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase();
+  return method === "momo" || provider === "MOMO" || provider === "MOMO_PERSONAL_QR";
+}
 function initOrderDetail(root, orderId) {
   bindProductImageFallback(root);
   root.querySelector("[data-order-status-form]")?.addEventListener("submit", async (event) => {
@@ -265,19 +271,63 @@ function initOrderDetail(root, orderId) {
 
   root.querySelector("[data-detail-cancel]")?.addEventListener("click", () => openCancelModal(orderId, () => refreshOrderDetail(root, orderId)));
   root.querySelectorAll("[data-confirm-payment]").forEach((button) => button.addEventListener("click", async () => {
+    const payment = detailState?.payments?.find((item) => String(item.id) === String(button.dataset.confirmPayment));
+    const confirmed = await openOrderPaymentConfirmDialog(payment, detailState?.order || {});
+    if (!confirmed) return;
     button.disabled = true;
     try {
-      await apiClient.patch(`/payments/${button.dataset.confirmPayment}/status`, { status: "paid" }, silentErrors());
-      toast.success("Đã xác nhận thanh toán.");
+      await apiClient.patch(`/payments/${button.dataset.confirmPayment}/status`, {
+        status: "paid",
+        note: isMomoPayment(payment) ? "Admin xác nhận thanh toán MoMo QR cá nhân." : "Admin xác nhận cửa hàng đã nhận tiền chuyển khoản.",
+        confirmedSource: isMomoPayment(payment) ? "admin_momo_personal_qr" : "admin_manual_transfer"
+      }, silentErrors());
+      toast.success("Đã xác nhận đã nhận tiền.");
       await refreshOrderDetail(root, orderId);
       refreshAdminSidebarCounts();
     } catch (error) {
       toast.error(getErrorMessage(error));
       button.disabled = false;
     }
-  }));
+  }))
 }
 
+function openOrderPaymentConfirmDialog(payment = {}, order = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "admin-order-modal is-visible";
+    overlay.dataset.orderPaymentConfirmModal = "";
+    overlay.innerHTML = `
+      <section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="order-payment-confirm-title" tabindex="-1">
+        <header><div><p class="admin-orders-eyebrow">Payment Confirmation</p><h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2></div><button type="button" data-payment-confirm-cancel aria-label="Đóng">×</button></header>
+        <div class="admin-order-payment-confirm-body">
+          <p>Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p>
+          <div class="admin-order-info-grid">
+            <p><span>Mã đơn hàng</span><strong>${escapeHtml(order.orderCode || payment.orderCode || "—")}</strong></p>
+            <p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "—")}</strong></p>
+            <p><span>Khách hàng</span><strong>${escapeHtml(order.customerName || payment.customerName || "—")}</strong></p>
+            <p><span>Số tiền</span><strong>${formatCurrency(payment.amount || order.grandTotal)}</strong></p>
+            <p><span>Phương thức</span><strong>MoMo</strong></p>
+          </div>
+        </div>
+        <footer><button type="button" data-payment-confirm-cancel>Hủy</button><button type="button" class="admin-order-danger" data-payment-confirm-ok>Xác nhận đã nhận tiền</button></footer>
+      </section>`;
+    document.body.appendChild(overlay);
+    document.body.classList.add("modal-open");
+    const close = (value) => {
+      overlay.remove();
+      document.body.classList.remove("modal-open");
+      resolve(value);
+    };
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.closest("[data-payment-confirm-cancel]")) close(false);
+    });
+    overlay.querySelector("[data-payment-confirm-ok]")?.addEventListener("click", (event) => {
+      event.currentTarget.disabled = true;
+      close(true);
+    });
+    overlay.querySelector("[data-payment-confirm-cancel]")?.focus({ preventScroll: true });
+  });
+}
 async function refreshOrderDetail(root, orderId) {
   setBusy(root, true);
   try {

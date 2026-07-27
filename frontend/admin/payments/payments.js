@@ -67,7 +67,7 @@ function bindEvents(root) {
     const detailButton = event.target.closest("[data-payment-detail]");
     if (detailButton && !state.busy) { await openDetailModal(root, detailButton.dataset.paymentDetail); return; }
     const statusButton = event.target.closest("[data-payment-status]");
-    if (statusButton && !state.busy) await updateStatus(root, statusButton.dataset.paymentId, statusButton.dataset.paymentStatus);
+    if (statusButton && !state.busy) await handleStatusAction(root, statusButton.dataset.paymentId, statusButton.dataset.paymentStatus);
   });
 }
 
@@ -112,15 +112,17 @@ function renderActions(payment, modal = false) {
   const classes = modal ? "admin-payment-modal-actions" : "admin-payment-actions";
   return `<div class="${classes}">
     ${modal ? "" : `<button type="button" data-payment-detail="${numberId(payment.id)}">Chi ti\u1ebft</button>`}
-    ${canManage && ["pending", "processing", "failed"].includes(status) ? actionButton(payment.id, "paid", (isPersonalMomoPayment(payment) || isPersonalBankPayment(payment)) ? "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n" : "X\u00e1c nh\u1eadn \u0111\u00e3 thanh to\u00e1n") : ""}
+    ${canManage && canConfirmManualPayment(payment) ? actionButton(payment.id, "paid", "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n") : ""}
     ${canManage && status === "pending" ? actionButton(payment.id, "failed", "\u0110\u00e1nh d\u1ea5u th\u1ea5t b\u1ea1i") : ""}
     ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "Ho\u00e0n ti\u1ec1n") : ""}
     ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem \u0111\u01a1n h\u00e0ng</a>` : ""}
   </div>`;
 }
 
-function isPersonalMomoPayment(payment) { return String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase() === "MOMO_PERSONAL_QR"; }
+function isMomoPayment(payment) { const provider = String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase(); const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase(); return method === "momo" || provider === "MOMO" || provider === "MOMO_PERSONAL_QR"; }
 function isPersonalBankPayment(payment) { return String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase() === "BANK_PERSONAL_QR"; }
+function isManualConfirmablePayment(payment) { const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase(); return method === "bank_transfer" || isPersonalBankPayment(payment) || isMomoPayment(payment); }
+function canConfirmManualPayment(payment) { const status = normalizePaymentStatus(payment?.status); return isManualConfirmablePayment(payment) && ["pending", "processing"].includes(status); }
 function resolvePaymentMethod(payment) { return payment?.method || payment?.paymentMethod || payment?.metadata?.paymentGuide?.provider || payment?.provider || ""; }
 function actionButton(id, status, label) { return `<button type="button" data-payment-id="${numberId(id)}" data-payment-status="${status}">${label}</button>`; }
 
@@ -184,25 +186,110 @@ function renderDetailModal(root, overlay, payment) {
       </div>
     </div>
     <footer class="admin-payment-modal-footer">${renderActions(payment, true)}</footer>`;
-  overlay.querySelectorAll("[data-payment-status]").forEach((button) => button.addEventListener("click", async () => { await updateStatus(root, button.dataset.paymentId, button.dataset.paymentStatus, true); }));
+  overlay.querySelectorAll("[data-payment-status]").forEach((button) => button.addEventListener("click", async () => { await handleStatusAction(root, button.dataset.paymentId, button.dataset.paymentStatus, true); }));
   requestAnimationFrame(() => overlay.querySelector("[data-payment-modal-close]")?.focus({ preventScroll: true }));
 }
 
 function detailField(label, value, prominent = false) { return `<div class="admin-payment-info-item ${prominent ? "is-prominent" : ""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value === null || value === undefined || value === "" ? "-" : value)}</strong></div>`; }
 
-async function updateStatus(root, id, status, fromModal = false) {
-  const messages = { paid: "X\u00e1c nh\u1eadn giao d\u1ecbch \u0111\u00e3 \u0111\u01b0\u1ee3c thanh to\u00e1n?", failed: "\u0110\u00e1nh d\u1ea5u giao d\u1ecbch thanh to\u00e1n th\u1ea5t b\u1ea1i?", refunded: "X\u00e1c nh\u1eadn ho\u00e0n ti\u1ec1n cho giao d\u1ecbch n\u00e0y?" };
-  if (!window.confirm(messages[status] || "X\u00e1c nh\u1eadn c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i?")) return;
+async function handleStatusAction(root, id, status, fromModal = false) {
+  if (status === "paid") {
+    const payment = await getPaymentForAction(id);
+    if (!payment || !canConfirmManualPayment(payment)) {
+      toast.error("Giao dịch này không đủ điều kiện xác nhận đã nhận tiền.");
+      return;
+    }
+    const confirmed = await openPaymentConfirmDialog(payment);
+    if (!confirmed) return;
+    await updateStatus(root, id, status, fromModal, {
+      note: isMomoPayment(payment)
+        ? "Admin xác nhận thanh toán MoMo QR cá nhân."
+        : "Admin xác nhận cửa hàng đã nhận tiền chuyển khoản.",
+      confirmedSource: isMomoPayment(payment) ? "admin_momo_personal_qr" : "admin_manual_transfer"
+    });
+    return;
+  }
+
+  const messages = {
+    failed: "Đánh dấu giao dịch thanh toán thất bại?",
+    refunded: "Xác nhận hoàn tiền cho giao dịch này?"
+  };
+  if (!window.confirm(messages[status] || "Xác nhận cập nhật trạng thái?")) return;
+  await updateStatus(root, id, status, fromModal);
+}
+
+async function getPaymentForAction(id) {
+  const normalizedId = String(numberId(id));
+  const localPayment = state.payments.find((payment) => String(payment.id) === normalizedId);
+  if (localPayment) return localPayment;
+  if (activeModal?.dataset.paymentId && String(activeModal.dataset.paymentId) === normalizedId) {
+    const response = await paymentService.getById(id, silentErrors());
+    return response.data?.payment || null;
+  }
+  const response = await paymentService.getById(id, silentErrors());
+  return response.data?.payment || null;
+}
+
+function openPaymentConfirmDialog(payment) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "admin-payment-modal is-confirm";
+    overlay.dataset.paymentConfirmModal = "";
+    overlay.innerHTML = `
+      <section class="admin-payment-modal-dialog admin-payment-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-confirm-title" tabindex="-1">
+        <header class="admin-payment-modal-header">
+          <div><h2 id="payment-confirm-title">Xác nhận thanh toán MoMo?</h2><p>Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p></div>
+          <button type="button" data-payment-confirm-cancel aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </header>
+        <div class="admin-payment-modal-body">
+          <section class="admin-payment-section">
+            <div class="admin-payment-info-grid is-compact">
+              ${detailField("Mã đơn hàng", payment.orderCode || (payment.orderId ? `#${payment.orderId}` : "-"), true)}
+              ${detailField("Mã giao dịch", payment.transactionCode || "-", true)}
+              ${detailField("Khách hàng", payment.customerName || payment.customerEmail || payment.customerPhone || "-")}
+              ${detailField("Số tiền", formatCurrency(payment.amount, payment.currency), true)}
+              ${detailField("Phương thức", "MoMo")}
+            </div>
+          </section>
+        </div>
+        <footer class="admin-payment-modal-footer admin-payment-modal-actions">
+          <button type="button" data-payment-confirm-cancel>Hủy</button>
+          <button type="button" data-payment-confirm-ok>Xác nhận đã nhận tiền</button>
+        </footer>
+      </section>`;
+    document.body.appendChild(overlay);
+    document.body.classList.add("modal-open");
+    const cleanup = activateModalUX(overlay, { onClose: () => close(false) });
+    const close = (value) => {
+      cleanup?.();
+      overlay.remove();
+      if (!activeModal) document.body.classList.remove("modal-open");
+      resolve(value);
+    };
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.closest("[data-payment-confirm-cancel]")) close(false);
+    });
+    overlay.querySelector("[data-payment-confirm-ok]")?.addEventListener("click", (event) => {
+      event.currentTarget.disabled = true;
+      close(true);
+    });
+    requestAnimationFrame(() => {
+      overlay.classList.add("is-visible");
+      overlay.querySelector("[data-payment-confirm-cancel]")?.focus({ preventScroll: true });
+    });
+  });
+}
+
+async function updateStatus(root, id, status, fromModal = false, payload = {}) {
   setBusy(root, true); setModalBusy(true);
   try {
-    await paymentService.updateStatus(id, status, silentErrors());
-    toast.success(`\u0110\u00e3 c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i: ${formatPaymentStatus(status)}.`);
+    await paymentService.updateStatus(id, status, silentErrors(), payload);
+    toast.success(status === "paid" ? "Đã xác nhận đã nhận tiền." : `Đã cập nhật trạng thái: ${formatPaymentStatus(status)}.`);
     await fetchPayments(); renderRows(root); refreshAdminSidebarCounts();
     if (fromModal && activeModal) { const response = await paymentService.getById(id, silentErrors()); if (activeModal) renderDetailModal(root, activeModal, response.data?.payment); }
   } catch (error) { toast.error(getErrorMessage(error)); }
   finally { setBusy(root, false); setModalBusy(false); }
 }
-
 function closeDetailModal() { modalUxCleanup?.(); modalUxCleanup = null; activeModal?.remove(); activeModal = null; document.body.classList.remove("modal-open"); }
 function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("button, input, select").forEach((element) => { element.disabled = busy; }); }
 function setModalBusy(busy) { activeModal?.querySelectorAll?.("button").forEach((element) => { element.disabled = busy; }); }
