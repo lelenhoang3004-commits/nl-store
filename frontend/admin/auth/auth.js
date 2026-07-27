@@ -268,7 +268,7 @@ function createAuthPage({ title, description, body }) {
       <article class="auth-card">
         <header class="auth-header">
           <div class="auth-logo" aria-hidden="true">
-            <i class="fa-solid fa-bag-shopping"></i>
+            <img src="../assets/images/nl-store-logo.png" alt="">
           </div>
           <h1 id="auth-title">${title}</h1>
           <p>${authCopy.systemName}</p>

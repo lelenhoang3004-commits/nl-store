@@ -60,7 +60,7 @@ export function createSidebar(activePage = "dashboard") {
   return `
     <div class="sidebar-brand">
       <div class="brand-mark" aria-hidden="true">
-        <i class="fa-solid fa-bag-shopping"></i>
+        <img src="../assets/images/nl-store-logo.png" alt="">
       </div>
       <div class="brand-copy">
         <strong>N&amp;L Store</strong>

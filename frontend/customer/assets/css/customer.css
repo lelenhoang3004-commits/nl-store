@@ -3659,3 +3659,17 @@
     text-align: left;
   }
 }
+.auth-logo-mark img,
+.login-hero-brand img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  object-fit: contain;
+}
+
+.login-hero-brand img {
+  max-width: 76px;
+  max-height: 76px;
+  margin: 0 auto;
+}

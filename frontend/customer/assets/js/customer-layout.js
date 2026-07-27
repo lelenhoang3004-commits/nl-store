@@ -1146,7 +1146,7 @@ function renderLoginPage() {
       <img src="assets/images/login-fashion-photo-placeholder.svg" alt="Thời trang cao cấp N&L Store">
       <div class="login-banner-overlay"></div>
       <div class="login-hero-content">
-        <div class="login-hero-brand">N&amp;L STORE</div>
+        <div class="login-hero-brand"><img src="../assets/images/nl-store-logo.png" alt="N&amp;L Store"></div>
         <div class="nl-login-slogan" data-no-text-split="true" aria-label="Khẳng định gu thời thượng – Kiến tạo dấu ấn riêng">
           <div class="nl-login-slogan__white">KH&#7858;NG &#272;&#7882;NH GU TH&#7900;I TH&#431;&#7906;NG</div>
           <div class="nl-login-slogan__gold">KI&#7870;N T&#7840;O D&#7844;U &#7844;N RI&#202;NG</div>
@@ -1161,7 +1161,7 @@ function renderLoginPage() {
     </aside>
     <div class="auth-login-content">
       <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
-      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L STORE</span><h1><span>Chào mừng bạn</span><span>quay lại</span></h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
+      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L STORE</span><h1><span>Chào mừng bạn</span><span>quay lại</span></h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
       <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>
         <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
         <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
@@ -1201,7 +1201,7 @@ function renderForgotPasswordPage() {
   let forgotRequestPending = false;
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card">
     <a class="auth-back" href="#login"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại đăng nhập</span></a>
-    <div class="auth-heading auth-login-heading"><div class="auth-logo-mark">N&amp;L</div><span class="auth-kicker">N&amp;L SHOP</span><h1>Quên mật khẩu</h1><p>Nhập email tài khoản để nhận mã xác thực đặt lại mật khẩu.</p></div>
+    <div class="auth-heading auth-login-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L SHOP</span><h1>Quên mật khẩu</h1><p>Nhập email tài khoản để nhận mã xác thực đặt lại mật khẩu.</p></div>
     <form data-forgot-form class="auth-form auth-login-form"><div data-auth-message hidden></div>
       <div data-forgot-email-step>
         <label class="auth-field"><span>Email</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></div><small data-field-error="email"></small></label>

@@ -13,7 +13,7 @@ export function createHeader(activeLabel = "Dashboard") {
       </button>
       <a class="header-logo" href="#dashboard" data-page="dashboard" aria-label="N&amp;L Store Admin">
         <span class="header-logo-mark">
-          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+          <img src="../assets/images/nl-store-logo.png" alt="">
         </span>
         <span class="header-logo-copy">
           <strong>N&amp;L Store</strong>
