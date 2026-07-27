@@ -1,4 +1,4 @@
-﻿import { filterMenuByPermission } from "../../permissions/access-control.js";
+import { filterMenuByPermission } from "../../permissions/access-control.js";
 import { PERMISSIONS } from "../../permissions/permissions.js";
 import { getCurrentUser } from "../../permissions/user-session.js";
 import { sidebarCountsService } from "../../services/sidebar-counts.service.js";
@@ -42,7 +42,7 @@ export const adminMenuItems = [
   { page: "orders", icon: "fa-box-open", label: "Quản lý đơn hàng", badgeKey: "orders", permissions: [PERMISSIONS.ORDER_VIEW] },
   { page: "payments", icon: "fa-credit-card", label: "Quản lý thanh toán", badgeKey: "payments", permissions: [PERMISSIONS.PAYMENT_VIEW] },
   { page: "vouchers", icon: "fa-ticket", label: "Quản lý mã giảm giá", permissions: [PERMISSIONS.VOUCHER_VIEW] },
-  { page: "emails", icon: "fa-envelope-open-text", label: "Đăng ký Email", badgeKey: "emails", permissions: [PERMISSIONS.EMAIL_VIEW, PERMISSIONS.NEWSLETTER_VIEW] },
+  { page: "emails", icon: "fa-envelope-open-text", label: "Đăng ký Email", badgeKey: "emails", permissions: [PERMISSIONS.EMAIL_VIEW] },
   { page: "statistics", icon: "fa-chart-pie", label: "Thống kê", permissions: [PERMISSIONS.STATISTIC_VIEW] },
   { page: "settings", icon: "fa-gear", label: "Cài đặt", permissions: [PERMISSIONS.SETTING_VIEW] }
 ];

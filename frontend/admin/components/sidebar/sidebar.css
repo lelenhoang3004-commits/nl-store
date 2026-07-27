@@ -87,6 +87,7 @@
 }
 
 .nav-item {
+  position: relative;
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
@@ -180,8 +181,23 @@ body.sidebar-collapsed .sidebar-brand {
 }
 
 body.sidebar-collapsed .brand-copy,
-body.sidebar-collapsed .nav-label,
+body.sidebar-collapsed .nav-label {
+  display: none;
+}
+
 body.sidebar-collapsed .nav-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+body.sidebar-collapsed .nav-badge[hidden] {
   display: none;
 }
 
@@ -198,6 +214,7 @@ body.sidebar-collapsed .sidebar-collapse-button:hover {
 }
 
 body.sidebar-collapsed .nav-item {
+  position: relative;
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 0;
@@ -237,12 +254,25 @@ body.sidebar-collapsed .nav-item:hover {
   }
 
   body.sidebar-collapsed .brand-copy,
-  body.sidebar-collapsed .nav-label,
-  body.sidebar-collapsed .nav-badge {
+  body.sidebar-collapsed .nav-label {
     display: block;
   }
 
+  body.sidebar-collapsed .nav-badge {
+    position: static;
+    display: inline-grid;
+    min-width: 25px;
+    height: 22px;
+    padding: 0 7px;
+    font-size: 0.72rem;
+  }
+
+  body.sidebar-collapsed .nav-badge[hidden] {
+    display: none;
+  }
+
   body.sidebar-collapsed .nav-item {
+  position: relative;
     grid-template-columns: 22px minmax(0, 1fr) auto;
     justify-items: stretch;
     padding: 0 13px;
