@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Newsletter subscriber model.
  * It maps newsletter subscriber rows to API-safe objects.
  */
@@ -15,6 +15,7 @@ export class NewsletterSubscriber extends BaseModel {
     this.unsubscribeToken = attributes.unsubscribeToken || attributes.unsubscribe_token || null;
     this.subscribedAt = attributes.subscribedAt || attributes.subscribed_at || null;
     this.unsubscribedAt = attributes.unsubscribedAt || attributes.unsubscribed_at || null;
+    this.reviewedAt = attributes.reviewedAt || attributes.reviewed_at || null;
     this.createdAt = attributes.createdAt || attributes.created_at || null;
     this.updatedAt = attributes.updatedAt || attributes.updated_at || null;
   }
@@ -29,8 +30,10 @@ export class NewsletterSubscriber extends BaseModel {
       unsubscribeToken: this.unsubscribeToken,
       subscribedAt: this.subscribedAt,
       unsubscribedAt: this.unsubscribedAt,
+      reviewedAt: this.reviewedAt,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
   }
 }
+

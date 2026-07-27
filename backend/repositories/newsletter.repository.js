@@ -1,4 +1,4 @@
-import { BaseRepository } from "./base.repository.js";
+﻿import { BaseRepository } from "./base.repository.js";
 import { NewsletterSubscriber } from "../models/newsletter.model.js";
 import { logger } from "../utils/logger.util.js";
 import { normalizeSqlParams, sanitizePagination } from "../utils/sql-query.util.js";
@@ -34,8 +34,10 @@ export class NewsletterRepository extends BaseRepository {
       status ENUM('subscribed','unsubscribed') NOT NULL DEFAULT 'subscribed',
       subscribed_at DATETIME NULL,
       unsubscribed_at DATETIME NULL,
+      reviewed_at DATETIME NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_newsletter_status (status),
+      INDEX idx_newsletter_reviewed_at (reviewed_at),
       INDEX idx_newsletter_email (email)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
   }
@@ -127,6 +129,15 @@ export class NewsletterRepository extends BaseRepository {
     return this.updateStatus(id, "unsubscribed");
   }
 
+  async markAllReviewed() {
+    await this.ensureSchema();
+    const [result] = await this.execute(
+      `UPDATE newsletter_subscribers
+      SET reviewed_at = NOW()
+      WHERE status = 'subscribed' AND reviewed_at IS NULL`
+    );
+    return Number(result.affectedRows || 0);
+  }
   async delete(id) {
     await this.ensureSchema();
     const [result] = await this.execute(`DELETE FROM newsletter_subscribers WHERE id = ?`, [id]);
@@ -147,3 +158,6 @@ export class NewsletterRepository extends BaseRepository {
     return { whereSql: `WHERE ${conditions.join(" AND ")}`, params };
   }
 }
+
+
+

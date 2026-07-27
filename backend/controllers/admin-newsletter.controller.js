@@ -23,8 +23,13 @@ export class AdminNewsletterController extends BaseController {
     return this.sendSuccess(response, { subscriber }, "Newsletter subscriber status updated successfully.");
   });
 
+  markReviewed = asyncHandler(async (_request, response) => {
+    const result = await this.service.markSubscribersReviewed();
+    return this.sendSuccess(response, result, "Newsletter subscribers marked as reviewed.");
+  });
   destroy = asyncHandler(async (request, response) => {
     const subscriber = await this.service.deleteSubscriber(request.params.id);
     return this.sendSuccess(response, { subscriber }, "Newsletter subscriber deleted successfully.");
   });
 }
+

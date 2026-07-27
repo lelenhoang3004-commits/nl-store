@@ -1,9 +1,10 @@
-import { toast } from "../components/toast/toast.js";
+﻿import { toast } from "../components/toast/toast.js";
 import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { paymentService } from "../services/payment.service.js";
+import { refreshAdminSidebarCounts } from "../components/sidebar/sidebar.js";
 
 const DEFAULT_QUERY = Object.freeze({ page: 1, limit: 10, sortBy: "createdAt", sortOrder: "desc" });
 let state = { payments: [], pagination: null, query: { ...DEFAULT_QUERY }, error: null, busy: false };
@@ -114,14 +115,14 @@ function renderRows(root) {
   if (!body) return;
 
   if (state.error) {
-    body.innerHTML = `<tr><td colspan="11"><div class="admin-payment-error"><span>${escapeHtml(getErrorMessage(state.error))}</span><button type="button" data-payment-retry>Thử lại</button></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="11"><div class="admin-payment-error"><span>${escapeHtml(getErrorMessage(state.error))}</span><button type="button" data-payment-retry>Thá»­ láº¡i</button></div></td></tr>`;
     renderPagination(root);
     return;
   }
 
   body.innerHTML = state.payments.length
     ? state.payments.map(renderPaymentRow).join("")
-    : '<tr><td colspan="11" class="admin-payment-empty">Không có giao dịch thanh toán phù hợp.</td></tr>';
+    : '<tr><td colspan="11" class="admin-payment-empty">KhÃ´ng cÃ³ giao dá»‹ch thanh toÃ¡n phÃ¹ há»£p.</td></tr>';
   renderPagination(root);
 }
 
@@ -146,11 +147,11 @@ function renderActions(payment, modal = false) {
   const status = normalizeStatus(payment.status);
   const classes = modal ? "admin-payment-modal-actions" : "admin-payment-actions";
   return `<div class="${classes}">
-    ${modal ? "" : `<button type="button" data-payment-detail="${numberId(payment.id)}">Chi tiết</button>`}
+    ${modal ? "" : `<button type="button" data-payment-detail="${numberId(payment.id)}">Chi tiáº¿t</button>`}
     ${canManage && ["pending", "processing", "failed"].includes(status) ? actionButton(payment.id, "paid", (isPersonalMomoPayment(payment) || isPersonalBankPayment(payment)) ? "Xac nhan da nhan tien" : "Xac nhan paid") : ""}
-    ${canManage && status === "pending" ? actionButton(payment.id, "failed", "Đánh dấu failed") : ""}
-    ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "Hoàn tiền") : ""}
-    ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem đơn hàng</a>` : ""}
+    ${canManage && status === "pending" ? actionButton(payment.id, "failed", "ÄÃ¡nh dáº¥u failed") : ""}
+    ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "HoÃ n tiá»n") : ""}
+    ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem Ä‘Æ¡n hÃ ng</a>` : ""}
   </div>`;
 }
 
@@ -178,7 +179,7 @@ function renderPagination(root) {
   const totalPages = Math.max(Number(pagination.totalPages || 0), 1);
   const previous = pagination.hasPreviousPage ?? page > 1;
   const next = pagination.hasNextPage ?? page < totalPages;
-  target.innerHTML = `<span>Trang ${page}/${totalPages} · ${Number(pagination.totalItems || 0)} giao dịch</span><div><button type="button" data-payment-page="${page - 1}" ${previous ? "" : "disabled"}>Trước</button><button type="button" data-payment-page="${page + 1}" ${next ? "" : "disabled"}>Sau</button></div>`;
+  target.innerHTML = `<span>Trang ${page}/${totalPages} Â· ${Number(pagination.totalItems || 0)} giao dá»‹ch</span><div><button type="button" data-payment-page="${page - 1}" ${previous ? "" : "disabled"}>TrÆ°á»›c</button><button type="button" data-payment-page="${page + 1}" ${next ? "" : "disabled"}>Sau</button></div>`;
 }
 
 async function openDetailModal(root, id) {
@@ -186,7 +187,7 @@ async function openDetailModal(root, id) {
   const overlay = document.createElement("div");
   overlay.className = "admin-payment-modal";
   overlay.dataset.paymentModal = "";
-  overlay.innerHTML = '<section class="admin-payment-modal-dialog" role="dialog" aria-modal="true" aria-label="Đang tải chi tiết thanh toán" tabindex="-1"><div class="admin-payment-modal-loading">Đang tải chi tiết giao dịch...</div></section>';
+  overlay.innerHTML = '<section class="admin-payment-modal-dialog" role="dialog" aria-modal="true" aria-label="Äang táº£i chi tiáº¿t thanh toÃ¡n" tabindex="-1"><div class="admin-payment-modal-loading">Äang táº£i chi tiáº¿t giao dá»‹ch...</div></section>';
   document.body.appendChild(overlay);
   document.body.classList.add("modal-open");
   activeModal = overlay;
@@ -202,7 +203,7 @@ async function openDetailModal(root, id) {
     renderDetailModal(root, overlay, response.data?.payment);
   } catch (error) {
     if (activeModal !== overlay) return;
-    overlay.querySelector(".admin-payment-modal-dialog").innerHTML = `<header><h2>Chi tiết giao dịch</h2><button type="button" data-payment-modal-close aria-label="Đóng">×</button></header><div class="admin-payment-modal-error"><p>${escapeHtml(getErrorMessage(error))}</p><button type="button" data-payment-modal-retry="${numberId(id)}">Thử lại</button></div>`;
+    overlay.querySelector(".admin-payment-modal-dialog").innerHTML = `<header><h2>Chi tiáº¿t giao dá»‹ch</h2><button type="button" data-payment-modal-close aria-label="ÄÃ³ng">Ã—</button></header><div class="admin-payment-modal-error"><p>${escapeHtml(getErrorMessage(error))}</p><button type="button" data-payment-modal-retry="${numberId(id)}">Thá»­ láº¡i</button></div>`;
     overlay.querySelector("[data-payment-modal-retry]")?.addEventListener("click", () => openDetailModal(root, id));
     toast.error(getErrorMessage(error));
   }
@@ -215,19 +216,19 @@ function renderDetailModal(root, overlay, payment) {
   dialog.setAttribute("aria-labelledby", "payment-modal-title");
   dialog.removeAttribute("aria-label");
   dialog.innerHTML = `
-    <header class="admin-payment-modal-header"><div><h2 id="payment-modal-title" tabindex="-1">Chi tiết thanh toán</h2><p>Thông tin giao dịch và đơn hàng liên quan</p></div><button type="button" data-payment-modal-close aria-label="Đóng modal chi tiết thanh toán"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
+    <header class="admin-payment-modal-header"><div><h2 id="payment-modal-title" tabindex="-1">Chi tiáº¿t thanh toÃ¡n</h2><p>ThÃ´ng tin giao dá»‹ch vÃ  Ä‘Æ¡n hÃ ng liÃªn quan</p></div><button type="button" data-payment-modal-close aria-label="ÄÃ³ng modal chi tiáº¿t thanh toÃ¡n"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
     <div class="admin-payment-modal-body">
-      <section class="admin-payment-section admin-payment-transaction-section"><div class="admin-payment-section-title"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><h3>Thông tin giao dịch</h3></div><div class="admin-payment-info-grid">
-        ${detailField("Payment ID", payment.id)}${detailField("Mã giao dịch", payment.transactionCode, true)}
-        ${detailField("Provider", payment.provider)}${detailField("Phương thức", getPaymentMethodLabel(payment.method))}
-        <div class="admin-payment-info-item"><span>Trạng thái thanh toán</span>${statusBadge(payment.status)}</div>
-        ${detailField("Số tiền", formatCurrency(payment.amount, payment.currency), true)}${detailField("Tiền tệ", payment.currency)}
-        ${detailField("Ngày thanh toán", formatDate(payment.paidAt))}${detailField("Ngày tạo", formatDate(payment.createdAt))}${detailField("Ngày cập nhật", formatDate(payment.updatedAt))}
+      <section class="admin-payment-section admin-payment-transaction-section"><div class="admin-payment-section-title"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><h3>ThÃ´ng tin giao dá»‹ch</h3></div><div class="admin-payment-info-grid">
+        ${detailField("Payment ID", payment.id)}${detailField("MÃ£ giao dá»‹ch", payment.transactionCode, true)}
+        ${detailField("Provider", payment.provider)}${detailField("PhÆ°Æ¡ng thá»©c", getPaymentMethodLabel(payment.method))}
+        <div class="admin-payment-info-item"><span>Tráº¡ng thÃ¡i thanh toÃ¡n</span>${statusBadge(payment.status)}</div>
+        ${detailField("Sá»‘ tiá»n", formatCurrency(payment.amount, payment.currency), true)}${detailField("Tiá»n tá»‡", payment.currency)}
+        ${detailField("NgÃ y thanh toÃ¡n", formatDate(payment.paidAt))}${detailField("NgÃ y táº¡o", formatDate(payment.createdAt))}${detailField("NgÃ y cáº­p nháº­t", formatDate(payment.updatedAt))}
       </div></section>
       <div class="admin-payment-side-sections">
-        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><h3>Thông tin đơn hàng</h3></div><div class="admin-payment-info-grid is-compact">${detailField("Order ID", payment.orderId)}${detailField("Mã đơn hàng", payment.orderCode, true)}${detailField("Trạng thái đơn hàng", payment.orderStatus)}${detailField("Tổng tiền đơn", payment.orderTotal == null ? "-" : formatCurrency(payment.orderTotal, payment.currency))}</div>${payment.orderId ? `<a class="admin-payment-order-link" href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Xem đơn hàng</a>` : ""}</section>
-        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-user" aria-hidden="true"></i><h3>Thông tin khách hàng</h3></div><div class="admin-payment-info-grid is-compact">${detailField("Họ tên", payment.customerName, true)}${detailField("Email", payment.customerEmail)}${detailField("Số điện thoại", payment.customerPhone)}</div></section>
-        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-code" aria-hidden="true"></i><h3>Metadata / Ghi chú</h3></div><div class="admin-payment-metadata">${payment.metadata ? `<pre>${escapeHtml(formatMetadata(payment.metadata))}</pre>` : "<p>Không có dữ liệu bổ sung</p>"}</div></section>
+        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><h3>ThÃ´ng tin Ä‘Æ¡n hÃ ng</h3></div><div class="admin-payment-info-grid is-compact">${detailField("Order ID", payment.orderId)}${detailField("MÃ£ Ä‘Æ¡n hÃ ng", payment.orderCode, true)}${detailField("Tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng", payment.orderStatus)}${detailField("Tá»•ng tiá»n Ä‘Æ¡n", payment.orderTotal == null ? "-" : formatCurrency(payment.orderTotal, payment.currency))}</div>${payment.orderId ? `<a class="admin-payment-order-link" href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> Xem Ä‘Æ¡n hÃ ng</a>` : ""}</section>
+        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-user" aria-hidden="true"></i><h3>ThÃ´ng tin khÃ¡ch hÃ ng</h3></div><div class="admin-payment-info-grid is-compact">${detailField("Há» tÃªn", payment.customerName, true)}${detailField("Email", payment.customerEmail)}${detailField("Sá»‘ Ä‘iá»‡n thoáº¡i", payment.customerPhone)}</div></section>
+        <section class="admin-payment-section"><div class="admin-payment-section-title"><i class="fa-solid fa-code" aria-hidden="true"></i><h3>Metadata / Ghi chÃº</h3></div><div class="admin-payment-metadata">${payment.metadata ? `<pre>${escapeHtml(formatMetadata(payment.metadata))}</pre>` : "<p>KhÃ´ng cÃ³ dá»¯ liá»‡u bá»• sung</p>"}</div></section>
       </div>
     </div>
     <footer class="admin-payment-modal-footer">${renderActions(payment, true)}</footer>`;
@@ -256,19 +257,20 @@ function detailField(label, value, prominent = false) {
 
 async function updateStatus(root, id, status, fromModal = false) {
   const messages = {
-    paid: "Xác nhận giao dịch đã được thanh toán?",
-    failed: "Đánh dấu giao dịch thanh toán thất bại?",
-    refunded: "Xác nhận hoàn tiền cho giao dịch này?"
+    paid: "XÃ¡c nháº­n giao dá»‹ch Ä‘Ã£ Ä‘Æ°á»£c thanh toÃ¡n?",
+    failed: "ÄÃ¡nh dáº¥u giao dá»‹ch thanh toÃ¡n tháº¥t báº¡i?",
+    refunded: "XÃ¡c nháº­n hoÃ n tiá»n cho giao dá»‹ch nÃ y?"
   };
-  if (!window.confirm(messages[status] || "Xác nhận cập nhật trạng thái?")) return;
+  if (!window.confirm(messages[status] || "XÃ¡c nháº­n cáº­p nháº­t tráº¡ng thÃ¡i?")) return;
 
   setBusy(root, true);
   setModalBusy(true);
   try {
     await paymentService.updateStatus(id, status, silentErrors());
-    toast.success(`Đã cập nhật trạng thái: ${getPaymentStatusLabel(status)}.`);
+    toast.success(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i: ${getPaymentStatusLabel(status)}.`);
     await fetchPayments();
     renderRows(root);
+    refreshAdminSidebarCounts();
     if (fromModal && activeModal) {
       const response = await paymentService.getById(id, silentErrors());
       if (activeModal) renderDetailModal(root, activeModal, response.data?.payment);
@@ -304,10 +306,10 @@ function statusBadge(status) {
 }
 
 function normalizeStatus(status) { return status === "success" ? "paid" : String(status || "").toLowerCase(); }
-function getPaymentStatusLabel(status) { return ({ pending: "Chờ thanh toán", paid: "Đã thanh toán", success: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", processing: "Dang cho xac nhan", cancelled: "Đã hủy" })[status] || status || "-"; }
+function getPaymentStatusLabel(status) { return ({ pending: "Chá» thanh toÃ¡n", paid: "ÄÃ£ thanh toÃ¡n", success: "ÄÃ£ thanh toÃ¡n", failed: "Thanh toÃ¡n tháº¥t báº¡i", refunded: "ÄÃ£ hoÃ n tiá»n", processing: "Dang cho xac nhan", cancelled: "ÄÃ£ há»§y" })[status] || status || "-"; }
 function getPaymentMethodLabel(method) {
   const value = String(method || "").toLowerCase();
-  return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản ngân hàng", credit_card: "Thẻ tín dụng", vnpay: "VNPay", momo: "MoMo QR ca nhan" })[value] || method || "-";
+  return ({ cod: "Thanh toÃ¡n khi nháº­n hÃ ng", bank_transfer: "Chuyá»ƒn khoáº£n ngÃ¢n hÃ ng", credit_card: "Tháº» tÃ­n dá»¥ng", vnpay: "VNPay", momo: "MoMo QR ca nhan" })[value] || method || "-";
 }
 function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }
@@ -315,10 +317,12 @@ function formatMetadata(value) { if (!value) return "-"; try { return JSON.strin
 function numberId(value) { const id = Number(value); return Number.isSafeInteger(id) && id > 0 ? id : ""; }
 function silentErrors() { return { showErrorToast: false }; }
 function getErrorMessage(error) {
-  if (error?.status === 401) return "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.";
-  if (error?.status === 403) return "Bạn không có quyền truy cập quản lý thanh toán.";
-  if (error?.status === 404) return "Không tìm thấy giao dịch thanh toán.";
-  if (error?.status >= 500) return "Lỗi hệ thống, vui lòng thử lại.";
-  return error?.message || "Không thể xử lý yêu cầu thanh toán, vui lòng thử lại.";
+  if (error?.status === 401) return "PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.";
+  if (error?.status === 403) return "Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p quáº£n lÃ½ thanh toÃ¡n.";
+  if (error?.status === 404) return "KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch thanh toÃ¡n.";
+  if (error?.status >= 500) return "Lá»—i há»‡ thá»‘ng, vui lÃ²ng thá»­ láº¡i.";
+  return error?.message || "KhÃ´ng thá»ƒ xá»­ lÃ½ yÃªu cáº§u thanh toÃ¡n, vui lÃ²ng thá»­ láº¡i.";
 }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
+

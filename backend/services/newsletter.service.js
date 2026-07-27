@@ -106,6 +106,9 @@ export class NewsletterService extends BaseService {
     return subscriber.toJSON();
   }
 
+  async markSubscribersReviewed() {
+    return { reviewedCount: await this.repository.markAllReviewed() };
+  }
   async deleteSubscriber(id) {
     await this.getSubscriberById(id);
     const deleted = await this.repository.delete(id);
@@ -128,6 +131,7 @@ function normalizeEmail(email) {
 }
 
 export { NEWSLETTER_STATUS };
+
 
 
 

@@ -19,10 +19,13 @@ const remove = authorize({ roles, permissions: [AUTH_PERMISSIONS.NEWSLETTER_MANA
 
 router.use(authenticate);
 router.get("/", view, validateRequest(validateNewsletterListRequest), controller.index);
+router.patch("/subscribers/mark-reviewed", view, controller.markReviewed);
 router.get("/:id", view, validateRequest(validateNewsletterIdRequest), controller.show);
 router.patch("/:id/status", update, validateRequest(validateNewsletterStatusRequest), controller.updateStatus);
 router.delete("/:id", remove, validateRequest(validateNewsletterIdRequest), controller.destroy);
 
 export default router;
+
+
 
 

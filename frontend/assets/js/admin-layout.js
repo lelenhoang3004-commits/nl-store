@@ -1,8 +1,8 @@
-import { confirmPresets } from "../../admin/components/confirm/confirm.js";
+﻿import { confirmPresets } from "../../admin/components/confirm/confirm.js";
 import { createFooter } from "../../admin/components/footer/footer.js";
 import { createHeader, updateBreadcrumb } from "../../admin/components/header/header.js";
 import { initNotificationCenter } from "../../admin/components/notification-center/notification-center.js";
-import { createSidebar, setActiveSidebarItem } from "../../admin/components/sidebar/sidebar.js";
+import { createSidebar, setActiveSidebarItem, stopAdminSidebarCounts } from "../../admin/components/sidebar/sidebar.js";
 import { closeThemeManager, initThemeManager, isThemeManagerElement, toggleThemeManager } from "../../admin/components/theme/theme-manager.js";
 import { toast } from "../../admin/components/toast/toast.js";
 import { globalErrorManager } from "../../admin/errors/index.js";
@@ -22,14 +22,14 @@ let authRedirectInProgress = false;
 
 const sessionManagerCallbacks = {
   onSessionExpired(reason) {
-    toast.warning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn.");
+    toast.warning(reason === "idle-timeout" ? "Báº¡n Ä‘Ã£ khÃ´ng thao tÃ¡c trong má»™t thá»i gian." : "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n.");
     window.location.hash = "session-expired";
   },
   onTokenRefreshed() {
     window.dispatchEvent(new CustomEvent("fashion-admin-token-refreshed"));
   },
   onLoggedOutInAnotherTab() {
-    toast.info("Phiên đăng nhập đã được đăng xuất ở tab khác.");
+    toast.info("PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng xuáº¥t á»Ÿ tab khÃ¡c.");
     window.location.hash = "login";
   }
 };
@@ -101,11 +101,12 @@ function bindLayoutEvents() {
   window.addEventListener("fashion-admin-auth-changed", (event) => {
     if (event.detail?.reason === "login") authRedirectInProgress = false;
     renderPersistentLayout();
+    if (event.detail?.reason !== "login") stopAdminSidebarCounts();
     startSessionManager(sessionManagerCallbacks);
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    toast.error("Bạn không có quyền truy cập.");
+    toast.error("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -114,8 +115,9 @@ function bindLayoutEvents() {
 function handleUnauthorizedApiResponse() {
   if (authRedirectInProgress || window.location.hash === "#login") return;
   authRedirectInProgress = true;
+  stopAdminSidebarCounts();
   logoutAdminAccount("api-unauthorized");
-  toast.warning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+  toast.warning("PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.");
   window.location.hash = "#login";
 }
 
@@ -180,8 +182,9 @@ async function handleLogout() {
   const confirmed = await confirmPresets.logout();
 
   if (confirmed) {
+    stopAdminSidebarCounts();
     logoutAdminAccount("logout");
-    toast.info("Đã đăng xuất khỏi trang quản trị.");
+    toast.info("ÄÃ£ Ä‘Äƒng xuáº¥t khá»i trang quáº£n trá»‹.");
     window.location.hash = "login";
   }
 }
@@ -202,7 +205,7 @@ function toggleSidebarCollapse() {
 function updateSidebarCollapseButton(isCollapsed) {
   const button = document.querySelector("[data-sidebar-collapse]");
   if (!button) return;
-  const label = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
+  const label = isCollapsed ? "Má»Ÿ rá»™ng sidebar" : "Thu gá»n sidebar";
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.setAttribute("aria-expanded", String(!isCollapsed));
@@ -253,3 +256,5 @@ if (document.readyState === "loading") {
 } else {
   bootstrapAdminLayout();
 }
+
+
