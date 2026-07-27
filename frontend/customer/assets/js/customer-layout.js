@@ -105,6 +105,11 @@ const layoutState = {
     shown: false,
     showTimer: null,
     hideTimer: null
+  },
+  paymentPolling: {
+    timer: null,
+    transactionId: null,
+    inFlight: false
   }
 };
 
@@ -2071,19 +2076,32 @@ function paymentGuideRow(label, value) {
   return `<div class="customer-payment-guide-row"><span>${label}</span><strong>${escapeHtml(value || "-")}</strong></div>`;
 }
 
-function stopPaymentPolling() {
-  if (layoutState.paymentPolling.timer) {
-    window.clearInterval(layoutState.paymentPolling.timer);
+function ensurePaymentPollingState() {
+  if (!layoutState.paymentPolling) {
+    layoutState.paymentPolling = { timer: null, transactionId: null, inFlight: false };
   }
-  layoutState.paymentPolling.timer = null;
-  layoutState.paymentPolling.transactionId = null;
+  return layoutState.paymentPolling;
+}
+
+function stopPaymentPolling() {
+  const polling = ensurePaymentPollingState();
+  if (polling.timer) {
+    window.clearInterval(polling.timer);
+  }
+  polling.timer = null;
+  polling.transactionId = null;
+  polling.inFlight = false;
 }
 
 function startPaymentPolling(transactionId, onUpdate) {
   stopPaymentPolling();
   if (!transactionId) return;
-  layoutState.paymentPolling.transactionId = transactionId;
+  const polling = ensurePaymentPollingState();
+  polling.transactionId = transactionId;
   const tick = async () => {
+    const current = ensurePaymentPollingState();
+    if (current.inFlight || current.transactionId !== transactionId) return;
+    current.inFlight = true;
     try {
       const response = await customerApi(`/payments/transactions/${encodeURIComponent(transactionId)}/status`);
       const payment = response?.data?.payment || null;
@@ -2091,16 +2109,18 @@ function startPaymentPolling(transactionId, onUpdate) {
       const status = String(payment?.transactionStatus || payment?.paymentStatus || "").toLowerCase();
       if (["paid", "success", "failed", "cancelled", "expired", "refunded"].includes(status)) {
         stopPaymentPolling();
-        if (status === "paid" || status === "success") showCustomerToast("Thanh toán đã được xác nhận.", "success");
+        if (status === "paid" || status === "success") showCustomerToast("Thanh to�n d� du?c x�c nh?n.", "success");
       }
     } catch (error) {
       console.debug("[payment-polling] status check failed", error?.message);
+    } finally {
+      const latest = ensurePaymentPollingState();
+      if (latest.transactionId === transactionId) latest.inFlight = false;
     }
   };
   tick();
-  layoutState.paymentPolling.timer = window.setInterval(tick, 5000);
+  polling.timer = window.setInterval(tick, 5000);
 }
-
 async function savePaymentQr(root, orderCode = "ORDER") {
   const qr = root?.querySelector?.("[data-payment-qr-image], canvas") || document.querySelector("[data-payment-qr-image], canvas");
   if (!qr) {
@@ -2147,6 +2167,7 @@ async function imageToPngDataUrl(image) {
 }
 
 function bindPaymentGuideActions(root) {
+  if (!root) return;
   renderDeferredPaymentQr(root);
   const transactionId = root.querySelector("[data-payment-status-check]")?.dataset.paymentStatusCheck || "";
   if (transactionId) startPaymentPolling(transactionId);
@@ -2171,6 +2192,9 @@ function bindPaymentGuideActions(root) {
     });
   });
 }
+
+window.addEventListener("hashchange", stopPaymentPolling);
+window.addEventListener("beforeunload", stopPaymentPolling);
 
 function orderSafeCode(value) {
   return String(value || "ORDER").replace(/[^a-zA-Z0-9]/g, "").slice(-18).toUpperCase();
@@ -2462,10 +2486,10 @@ function renderCheckoutPaymentDetails(summary) {
         </div>
       </section>
       <section class="customer-payment-detail-panel" data-payment-detail="momo" hidden>
-        <div class="customer-payment-detail-head"><strong>MoMo QR</strong><span>Dang cau hinh</span></div>
+        <div class="customer-payment-detail-head"><strong>MoMo QR</strong><span>Sandbox</span></div>
         <div class="customer-payment-preview-grid">
-          <div class="customer-payment-qr-placeholder is-momo"><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>QR MoMo se duoc tao boi backend</span></div>
-          <ol><li>Mo ung dung MoMo</li><li>Quet ma QR</li><li>Kiem tra so tien</li><li>Xac nhan thanh toan</li></ol>
+          <div class="customer-payment-qr-placeholder is-momo"><i class="fa-solid fa-wallet" aria-hidden="true"></i><span>Ma QR se hien sau khi don hang duoc tao thanh cong</span></div>
+          <ol><li>Mo ung dung MoMo Test</li><li>Quet ma QR Sandbox</li><li>Kiem tra so tien</li><li>Xac nhan thanh toan</li></ol>
         </div>
       </section>
     </div>`;

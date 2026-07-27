@@ -58,16 +58,16 @@ export class BankTransferProviderAdapter {
 export class MomoProviderAdapter {
   async createPaymentSession({ orderId, orderCode, amount, transactionCode }) {
     const config = getMomoConfig();
-    const configured = Boolean(config.partnerCode && config.accessKey && config.secretKey);
+    const configured = isMomoSandboxReady(config);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const roundedAmount = Math.max(Math.round(Number(amount || 0)), 0);
 
-    if (!configured) {
-      return { provider: "MOMO", available: false, status: "PENDING", transactionId: transactionCode, expiresAt, orderId, orderCode, amount: Number(amount || 0), currency: "VND", qrCodeUrl: "", deeplink: "", payUrl: "", message: "Thanh toan MoMo chua co day du sandbox keys. Don hang chua duoc xac nhan thanh toan." };
+    if (!configured.ready) {
+      return { provider: "MOMO", available: false, status: "PENDING", transactionId: transactionCode, expiresAt, orderId, orderCode, amount: roundedAmount, currency: "VND", qrCodeUrl: "", deeplink: "", payUrl: "", resultCode: null, message: configured.message };
     }
 
     const requestId = transactionCode + "-" + Date.now();
     const momoOrderId = String(orderCode || orderId).replace(/[^a-zA-Z0-9]/g, "").slice(-32) + "-" + Date.now();
-    const roundedAmount = Math.max(Math.round(Number(amount || 0)), 0);
     const orderInfo = config.orderInfoPrefix + " " + (orderCode || orderId);
     const extraData = Buffer.from(JSON.stringify({ orderId, orderCode, transactionCode })).toString("base64");
     const requestType = config.requestType;
@@ -78,9 +78,9 @@ export class MomoProviderAdapter {
     try {
       const response = await postJson(config.createEndpoint, body, config.timeoutMs);
       const success = Number(response.resultCode) === 0 && Boolean(response.payUrl || response.deeplink || response.qrCodeUrl);
-      return { provider: "MOMO", available: success, status: "PENDING", transactionId: response.transId || transactionCode, requestId, momoOrderId, expiresAt, orderId, orderCode, amount: roundedAmount, currency: "VND", qrCodeUrl: response.qrCodeUrl || "", deeplink: response.deeplink || "", payUrl: response.payUrl || "", resultCode: response.resultCode, message: response.message || (success ? "MoMo sandbox payment session created." : "MoMo sandbox did not return a payment URL.") };
+      return { provider: "MOMO", available: success, status: "PENDING", transactionId: transactionCode, providerTransactionId: response.transId || null, requestId, momoOrderId, momo_order_id: momoOrderId, expiresAt, orderId, orderCode, amount: roundedAmount, currency: "VND", qrCodeUrl: response.qrCodeUrl || "", deeplink: response.deeplink || "", payUrl: response.payUrl || "", resultCode: response.resultCode, message: response.message || (success ? "MoMo sandbox payment session created." : "MoMo sandbox did not return a payment URL.") };
     } catch (error) {
-      return { provider: "MOMO", available: false, status: "PENDING", transactionId: transactionCode, requestId, momoOrderId, expiresAt, orderId, orderCode, amount: roundedAmount, currency: "VND", qrCodeUrl: "", deeplink: "", payUrl: "", message: error?.message || "Unable to create MoMo sandbox payment session." };
+      return { provider: "MOMO", available: false, status: "PENDING", transactionId: transactionCode, requestId, momoOrderId, momo_order_id: momoOrderId, expiresAt, orderId, orderCode, amount: roundedAmount, currency: "VND", qrCodeUrl: "", deeplink: "", payUrl: "", resultCode: null, message: error?.message || "Unable to create MoMo sandbox payment session." };
     }
   }
 
@@ -135,12 +135,27 @@ function getBankTransferConfig() {
   };
 }
 
+function isMomoSandboxReady(config) {
+  if (String(config.env || "").toLowerCase() !== "sandbox") {
+    return { ready: false, message: "MoMo Sandbox is disabled. Set MOMO_ENV=sandbox to create real MoMo test payments." };
+  }
+  const required = [config.createEndpoint, config.partnerCode, config.accessKey, config.secretKey, config.requestType, config.redirectUrl, config.ipnUrl];
+  if (required.some((value) => !String(value || "").trim())) {
+    return { ready: false, message: "MoMo Sandbox is missing required environment variables." };
+  }
+  if (config.requestType !== "captureWallet") {
+    return { ready: false, message: "MoMo Sandbox requires MOMO_REQUEST_TYPE=captureWallet." };
+  }
+  return { ready: true, message: "MoMo Sandbox is ready." };
+}
+
 function getMomoConfig() {
   const clientOrigin = String(process.env.CLIENT_ORIGIN || "http://127.0.0.1:5500").replace(/\/+$/, "");
   const apiBaseUrl = String(process.env.API_BASE_URL || process.env.PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
   const apiPrefix = String(process.env.API_PREFIX || "/api/v1").replace(/^\/?/, "/").replace(/\/+$/, "");
 
   return {
+    env: process.env.MOMO_ENV || "",
     createEndpoint: process.env.MOMO_ENDPOINT || process.env.MOMO_CREATE_ENDPOINT || (process.env.MOMO_BASE_URL || "https://test-payment.momo.vn") + "/v2/gateway/api/create",
     partnerCode: process.env.MOMO_PARTNER_CODE || "",
     accessKey: process.env.MOMO_ACCESS_KEY || "",
