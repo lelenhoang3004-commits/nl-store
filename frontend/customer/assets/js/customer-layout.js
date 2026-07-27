@@ -114,6 +114,7 @@ const layoutState = {
 };
 
 const PROFILE_BANKS = ["Vietcombank", "BIDV", "VietinBank", "Techcombank", "MB Bank", "ACB", "Sacombank", "VPBank", "TPBank", "Agribank"];
+const CREDIT_CARD_PAYMENT_MODE = Object.freeze({ DEMO: "CREDIT_CARD_DEMO", HOSTED: "CREDIT_CARD_HOSTED" });
 
 const protectedRoutes = new Set(["checkout", "orders", "profile", "cart", "wishlist"]);
 const homeSectionRoutes = new Set(["flash-sale", "featured-product", "new-arrival", "best-seller", "categories", "jewelry", "brands", "reviews", "newsletter", "promotion", "collections", "story", "products"]);
@@ -1971,6 +1972,10 @@ function getPaymentStatusLabel(status = "pending") {
   return "Chờ thanh toán";
 }
 
+function isCreditCardPaymentMethod(paymentMethod) {
+  return normalizePaymentMethodValue(paymentMethod) === "credit_card";
+}
+
 function canChangePaymentMethod(payment = {}, guide = {}) {
   const status = getPaymentGuideStatus(payment, guide);
   const paid = String(payment?.paymentStatus || "").toLowerCase() === "paid" || String(payment?.actualTransactionStatus || payment?.transactionStatus || "").toLowerCase() === "paid";
@@ -1979,15 +1984,18 @@ function canChangePaymentMethod(payment = {}, guide = {}) {
 
 function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null, payment = null) {
   const guide = paymentGuide || {};
+  const isCreditCardDemo = isCreditCardPaymentMethod(paymentMethod);
   const orderId = getPaymentGuideOrderId(guide, payment);
   const isPersonalMomo = isMomoPersonalGuide(paymentMethod, guide);
   const isPersonalBank = isBankPersonalGuide(paymentMethod, guide);
   const isReportablePayment = isCustomerReportableGuide(paymentMethod, guide);
   const canSaveQr = isPersonalMomo || isPersonalBank;
   const paymentTransactionId = payment?.id || payment?.paymentTransactionId || guide?.paymentTransactionId || guide?.payment_transaction_id || guide?.transaction_id || "";
-  const statusLabel = getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
+  const statusLabel = isCreditCardDemo ? "Chưa thanh toán – Chế độ mô phỏng" : getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
   const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(orderCode)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(orderCode)}.png` : `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
-  const personalActions = isReportablePayment
+  const personalActions = isCreditCardDemo
+    ? `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Kiểm tra trạng thái</button>`
+    : isReportablePayment
     ? `<button class="customer-button" type="button" data-report-payment="${escapeHtml(paymentTransactionId)}">${isPersonalBank ? "Tôi đã chuyển khoản" : "Tôi đã thanh toán"}</button>`
     : `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Kiểm tra trạng thái</button>${guide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(guide.deeplink)}">Mở MoMo</a>` : ""}${(guide?.payUrl || guide?.pay_url) ? `<a class="customer-button" href="${escapeHtml((guide.payUrl || guide.pay_url))}">Thanh toán trên MoMo</a>` : ""}`;
   const overlay = document.createElement("div");
@@ -1995,7 +2003,7 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide
   overlay.innerHTML = `
     <div class="customer-checkout-modal customer-payment-result-modal" role="dialog" aria-modal="true">
       <button class="customer-payment-modal-close" type="button" aria-label="Đóng cửa sổ thanh toán" data-payment-modal-close>&times;</button>
-      <div class="customer-checkout-modal-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
+      <div class="customer-checkout-modal-icon"><i class="fa-solid ${isCreditCardDemo ? "fa-credit-card" : "fa-check"}" aria-hidden="true"></i></div>
       <h3>Đặt hàng thành công – Vui lòng hoàn tất thanh toán</h3>
       <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
       <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · ${escapeHtml(statusLabel)}</p>
@@ -2103,10 +2111,24 @@ function renderPaymentGuideModal(paymentMethod, guide = null, context = {}) {
   }
   if (method === "credit_card") {
     return `
-      <section class="customer-payment-guide is-card">
-        <div class="customer-payment-status-pill"><i class="fa-regular fa-credit-card" aria-hidden="true"></i> Chưa khả dụng</div>
+      <section class="customer-payment-guide is-card is-credit-card-demo" data-credit-card-demo data-card-mode="${CREDIT_CARD_PAYMENT_MODE.DEMO}">
+        <div class="customer-payment-recipient-head">
+          <span>Thanh toán thẻ tín dụng</span>
+          <strong>MÔ PHỎNG – KHÔNG PHÁT SINH GIAO DỊCH THẬT</strong>
+        </div>
         <div class="customer-payment-card-brands"><span>VISA</span><span>Mastercard</span><span>3D Secure</span></div>
-        <div class="customer-payment-unavailable">${escapeHtml(guide.message || "Thanh toán thẻ đang được hoàn thiện.")}</div>
+        <p class="customer-payment-guide-note">Không nhập thông tin thẻ ngân hàng thật. Dữ liệu chỉ được dùng để mô phỏng giao diện và không được gửi đến máy chủ.</p>
+        <form class="customer-card-demo-form" data-credit-card-demo-form autocomplete="off" novalidate>
+          <label>Tên chủ thẻ<input name="cardholder" type="text" autocomplete="off" maxlength="80" placeholder="NGUYEN VAN A"></label>
+          <label>Số thẻ<input name="cardNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="23" placeholder="4111 1111 1111 1111" data-card-number-demo></label>
+          <div class="customer-card-demo-row">
+            <label>Ngày hết hạn MM/YY<input name="expiry" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="MM/YY" data-card-expiry-demo></label>
+            <label>CVV<span class="customer-card-cvv-field"><input name="cvv" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="•••" data-card-cvv-demo><button type="button" data-toggle-card-cvv aria-label="Hiện hoặc ẩn CVV"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></span></label>
+          </div>
+          <label class="customer-card-demo-confirm"><input name="confirmDemo" type="checkbox"> <span>Tôi xác nhận đang sử dụng dữ liệu thẻ thử nghiệm.</span></label>
+          <div class="customer-card-demo-message" data-card-demo-message aria-live="polite"></div>
+          <button class="customer-button" type="submit">Xác nhận thanh toán thẻ</button>
+        </form>
       </section>`;
   }
 
@@ -2247,6 +2269,7 @@ async function imageToPngDataUrl(image) {
 }
 
 function closePaymentOverlay(root, orderId = "") {
+  clearCreditCardDemoData(root);
   stopPaymentPolling();
   root?.remove?.();
   if (orderId) {
@@ -2269,6 +2292,110 @@ function bindPaymentModalClose(root, orderId = "") {
   });
 }
 
+function clearCreditCardDemoData(root = document) {
+  root?.querySelectorAll?.('[data-credit-card-demo-form] input').forEach((input) => {
+    if (input.type === 'checkbox') input.checked = false;
+    else input.value = '';
+    if (input.name === 'cvv') input.type = 'password';
+  });
+  root?.querySelectorAll?.('[data-card-demo-message]').forEach((message) => {
+    message.textContent = '';
+    delete message.dataset.state;
+  });
+  root?.querySelectorAll?.('[data-toggle-card-cvv] i').forEach((icon) => {
+    icon.classList.remove('fa-eye-slash');
+  });
+}
+
+function getCardDigits(value = '') {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function passesLuhnCheck(digits = '') {
+  let sum = 0;
+  let shouldDouble = false;
+  for (let index = digits.length - 1; index >= 0; index -= 1) {
+    let digit = Number(digits[index]);
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+  return digits.length > 0 && sum % 10 === 0;
+}
+
+function validateCreditCardDemoForm(form) {
+  const cardholder = String(form.cardholder?.value || '').trim();
+  let cardNumber = getCardDigits(form.cardNumber?.value || '');
+  let expiry = String(form.expiry?.value || '').trim();
+  let cvv = getCardDigits(form.cvv?.value || '');
+
+  if (!cardholder) return 'Vui lòng nhập tên chủ thẻ thử nghiệm.';
+  if (!/^\d{13,19}$/.test(cardNumber)) return 'Số thẻ thử nghiệm phải gồm 13–19 chữ số.';
+  if (!passesLuhnCheck(cardNumber)) return 'Số thẻ thử nghiệm không đúng định dạng kiểm tra.';
+  if (!/^\d{2}\/\d{2}$/.test(expiry)) return 'Ngày hết hạn phải có định dạng MM/YY.';
+  const [monthText, yearText] = expiry.split('/');
+  const month = Number(monthText);
+  const year = 2000 + Number(yearText);
+  if (month < 1 || month > 12) return 'Tháng hết hạn phải từ 01 đến 12.';
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const expiryMonthStart = new Date(year, month - 1, 1).getTime();
+  if (expiryMonthStart < currentMonthStart) return 'Ngày hết hạn không được nhỏ hơn tháng hiện tại.';
+  if (!/^\d{3,4}$/.test(cvv)) return 'CVV thử nghiệm phải gồm 3–4 chữ số.';
+  if (!form.confirmDemo?.checked) return 'Vui lòng xác nhận bạn đang sử dụng dữ liệu thẻ thử nghiệm.';
+
+  cardNumber = '';
+  expiry = '';
+  cvv = '';
+  return '';
+}
+
+function bindCreditCardDemoForm(root) {
+  const form = root?.querySelector?.('[data-credit-card-demo-form]');
+  if (!form) return;
+  const message = form.querySelector('[data-card-demo-message]');
+  const setMessage = (text, type = 'error') => {
+    if (!message) return;
+    message.textContent = text;
+    message.dataset.state = type;
+  };
+
+  form.cardNumber?.addEventListener('input', () => {
+    const digits = getCardDigits(form.cardNumber.value).slice(0, 19);
+    form.cardNumber.value = digits.replace(/(.{4})/g, '$1 ').trim();
+  });
+
+  form.expiry?.addEventListener('input', () => {
+    const digits = getCardDigits(form.expiry.value).slice(0, 4);
+    form.expiry.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  });
+
+  form.cvv?.addEventListener('input', () => {
+    form.cvv.value = getCardDigits(form.cvv.value).slice(0, 4);
+  });
+
+  form.querySelector('[data-toggle-card-cvv]')?.addEventListener('click', (event) => {
+    const input = form.cvv;
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    event.currentTarget.querySelector('i')?.classList.toggle('fa-eye-slash', input.type === 'text');
+  });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const error = validateCreditCardDemoForm(form);
+    if (error) {
+      setMessage(error, 'error');
+      return;
+    }
+    clearCreditCardDemoData(root);
+    setMessage('Đã hoàn tất mô phỏng nhập thông tin thẻ. Chưa có giao dịch thanh toán thật được thực hiện.', 'success');
+    showCustomerToast('Đã hoàn tất mô phỏng nhập thông tin thẻ. Chưa có giao dịch thanh toán thật được thực hiện.', 'success');
+  });
+}
 function normalizePaymentActionError(error) {
   const message = String(error?.message || "").trim();
   if (!message || /Payment status is invalid/i.test(message)) return "Không thể ghi nhận báo thanh toán. Vui lòng thử lại.";
@@ -2278,6 +2405,7 @@ function normalizePaymentActionError(error) {
 function bindPaymentGuideActions(root) {
   if (!root) return;
   renderDeferredPaymentQr(root);
+  bindCreditCardDemoForm(root);
   const transactionId = root.querySelector("[data-payment-status-check]")?.dataset.paymentStatusCheck || "";
   if (transactionId) startPaymentPolling(transactionId);
   root.querySelector("[data-save-payment-qr]")?.addEventListener("click", (event) => savePaymentQr(root, event.currentTarget.dataset.savePaymentQr || "ORDER", event.currentTarget.dataset.paymentQrFilename || ""));
@@ -2321,7 +2449,10 @@ function bindPaymentGuideActions(root) {
   });
 }
 
-window.addEventListener("hashchange", stopPaymentPolling);
+window.addEventListener("hashchange", () => {
+  clearCreditCardDemoData(document);
+  stopPaymentPolling();
+});
 window.addEventListener("beforeunload", stopPaymentPolling);
 
 function isMomoPersonalGuide(paymentMethod, guide = {}) {
@@ -2849,19 +2980,20 @@ async function openOrderPaymentModal(orderId, options = {}) {
   }
 
   const guide = payment.paymentGuide || {};
+  const isCreditCardDemo = isCreditCardPaymentMethod(payment.paymentMethod);
   const isPersonalMomo = isMomoPersonalGuide(payment.paymentMethod, guide);
   const isPersonalBank = isBankPersonalGuide(payment.paymentMethod, guide);
   const isReportablePayment = isCustomerReportableGuide(payment.paymentMethod, guide);
   const canSaveQr = isPersonalMomo || isPersonalBank;
-  const statusLabel = getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
+  const statusLabel = isCreditCardDemo ? "Chưa thanh toán – Chế độ mô phỏng" : getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
   const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(payment.orderCode || payment.orderId)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(payment.orderCode || payment.orderId)}.png` : `NL-Store-QR-${orderSafeCode(payment.orderCode || payment.orderId)}.png`;
   const actionHtml = [
     canSaveQr ? '<button class="customer-button secondary" type="button" data-save-payment-qr="' + escapeHtml(payment.orderCode || payment.orderId || "ORDER") + '" data-payment-qr-filename="' + escapeHtml(saveFilename) + '">Lưu mã QR</button>' : '',
     !isReportablePayment ? '<button class="customer-button secondary" type="button" data-payment-status-check="' + escapeHtml(payment.paymentTransactionId || "") + '">Kiểm tra trạng thái</button>' : '',
     isReportablePayment ? '<button class="customer-button" type="button" data-report-payment="' + escapeHtml(payment.paymentTransactionId || "") + '">' + (isPersonalBank ? "Tôi đã chuyển khoản" : "Tôi đã thanh toán") + '</button>' : '',
-    !isReportablePayment && payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tạo lại mã QR</button>' : '',
-    !isReportablePayment && guide?.deeplink ? '<a class="customer-button secondary" href="' + escapeHtml(guide.deeplink) + '">Mở MoMo</a>' : '',
-    !isReportablePayment && (guide?.payUrl || guide?.pay_url) ? '<a class="customer-button" href="' + escapeHtml(guide.payUrl || guide.pay_url) + '">Thanh toán trên MoMo</a>' : '',
+    !isCreditCardDemo && !isReportablePayment && payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tạo lại mã QR</button>' : '',
+    !isCreditCardDemo && !isReportablePayment && guide?.deeplink ? '<a class="customer-button secondary" href="' + escapeHtml(guide.deeplink) + '">Mở MoMo</a>' : '',
+    !isCreditCardDemo && !isReportablePayment && (guide?.payUrl || guide?.pay_url) ? '<a class="customer-button" href="' + escapeHtml(guide.payUrl || guide.pay_url) + '">Thanh toán trên MoMo</a>' : '',
     '<a class="customer-button secondary" href="#orders/' + encodeURIComponent(payment.orderId || orderId) + '">Xem đơn hàng</a>'
   ].filter(Boolean).join('');
 
@@ -2869,7 +3001,7 @@ async function openOrderPaymentModal(orderId, options = {}) {
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.innerHTML = '<div class="customer-checkout-modal customer-payment-result-modal" role="dialog" aria-modal="true">'
     + '<button class="customer-payment-modal-close" type="button" aria-label="Đóng cửa sổ thanh toán" data-payment-modal-close>&times;</button>'
-    + '<div class="customer-checkout-modal-icon"><i class="fa-solid fa-qrcode" aria-hidden="true"></i></div>'
+    + '<div class="customer-checkout-modal-icon"><i class="fa-solid ' + (isCreditCardDemo ? 'fa-credit-card' : 'fa-qrcode') + '" aria-hidden="true"></i></div>'
     + '<h3>Đơn hàng chưa hoàn tất thanh toán</h3>'
     + '<p>Mã đơn hàng của bạn là <strong>' + escapeHtml(payment.orderCode || payment.orderId || "") + '</strong>.</p>'
     + '<p>' + escapeHtml(getPaymentMethodLabel(payment.paymentMethod)) + ' · ' + escapeHtml(statusLabel) + '</p>'
@@ -4246,3 +4378,4 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
