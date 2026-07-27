@@ -34,6 +34,11 @@ router.get(
   paymentController.methods
 );
 
+router.post(
+  "/momo/ipn",
+  paymentController.momoIpn
+);
+
 router.get(
   "/methods/:id",
   validateRequest(validatePaymentMethodIdRequest),
@@ -114,6 +119,12 @@ router.get(
   authorizePermissions(AUTH_PERMISSIONS.PAYMENT_VIEW),
   validateRequest(validatePaymentTransactionIdRequest),
   paymentController.showTransaction
+);
+
+router.get(
+  "/transactions/:id/status",
+  validateRequest(validatePaymentTransactionIdRequest),
+  paymentController.customerStatus
 );
 
 router.patch(

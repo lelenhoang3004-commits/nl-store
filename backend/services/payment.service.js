@@ -9,6 +9,7 @@ import { AppError } from "../utils/app-error.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { withTransaction } from "../utils/database.util.js";
 import { NotificationService } from "./notification.service.js";
+import { createPaymentProviderAdapter } from "./payment-providers/index.js";
 
 const PAYMENT_METHOD_TYPE = Object.freeze({
   COD: "cod",
@@ -318,6 +319,167 @@ export class PaymentService extends BaseService {
     }, connection);
   }
 
+  async getCustomerOrderPayment(orderId, customerId) {
+    const order = await this.repository.findOrderForCustomerPayment(orderId, customerId);
+    if (!order) throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+
+    const transaction = await this.repository.findByOrderIdForCustomer(orderId, customerId);
+    if (!transaction) {
+      return this.formatCustomerPaymentResponse(order, null, null);
+    }
+
+    const tx = transaction.toJSON();
+    const paymentGuide = tx.metadata?.paymentGuide || null;
+    return this.formatCustomerPaymentResponse(order, tx, paymentGuide);
+  }
+
+  async retryCustomerOrderPayment(orderId, customerId, changedBy = null) {
+    let createdTransactionId = null;
+
+    await withTransaction(async (connection) => {
+      const order = await this.repository.findOrderForCustomerPayment(orderId, customerId, connection, true);
+      if (!order) throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+      if (order.payment_status === ORDER_PAYMENT_STATUS.PAID) throw new AppError("Order is already paid.", 409, "ORDER_ALREADY_PAID");
+
+      const existing = await this.repository.findByOrderIdForCustomer(orderId, customerId, connection);
+      if (existing) {
+        const existingJson = existing.toJSON();
+        const state = this.resolveTransactionClientState(existingJson);
+        if (state.isReusable) {
+          createdTransactionId = existingJson.id;
+          return;
+        }
+        if ([PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING].includes(String(existingJson.status || "").toLowerCase())) {
+          await this.repository.updateStatus(existingJson.id, {
+            status: PAYMENT_TRANSACTION_STATUS.FAILED,
+            paidAt: existingJson.paidAt || null,
+            metadata: { ...(existingJson.metadata || {}), expiredAt: new Date().toISOString(), expiredReason: "Customer requested a new QR." }
+          }, connection);
+          await this.repository.createHistory({ transactionId: existingJson.id, status: PAYMENT_TRANSACTION_STATUS.FAILED, note: "Payment QR expired before retry.", changedBy }, connection);
+        }
+      }
+
+      const method = normalizeSupportedMethod(order.payment_method || existing?.method || "bank_transfer");
+      const transactionCode = createPaymentTransactionCode();
+      const paymentGuide = await this.createPaymentGuide({ method, order, transactionCode });
+      const paymentMethod = await this.repository.findPaymentMethodByCode(method, connection);
+      createdTransactionId = await this.repository.createTransaction({
+        orderId: order.id,
+        paymentMethodId: paymentMethod?.id || null,
+        transactionCode,
+        provider: method,
+        method,
+        amount: Number(order.grand_total || 0),
+        currency: "VND",
+        status: PAYMENT_TRANSACTION_STATUS.PENDING,
+        paidAt: null,
+        metadata: { source: "customer_order_payment_retry", paymentGuide: sanitizePaymentGuideForMetadata(paymentGuide) }
+      }, connection);
+      await this.repository.createHistory({ transactionId: createdTransactionId, status: PAYMENT_TRANSACTION_STATUS.PENDING, note: "Payment transaction retried for existing order.", changedBy }, connection);
+      await this.repository.updateOrderPaymentStatus(order.id, { paymentStatus: ORDER_PAYMENT_STATUS.UNPAID, paymentMethod: method, paidAmount: 0 }, connection);
+    });
+
+    const refreshed = await this.repository.findTransactionById(createdTransactionId);
+    const order = await this.repository.findOrderForCustomerPayment(orderId, customerId);
+    const tx = refreshed?.toJSON() || null;
+    return this.formatCustomerPaymentResponse(order, tx, tx?.metadata?.paymentGuide || null);
+  }
+
+  async getCustomerTransactionStatus(transactionId, customerId) {
+    const transaction = await this.repository.findTransactionById(transactionId);
+    if (!transaction) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    const order = await this.repository.findOrderForCustomerPayment(transaction.orderId, customerId);
+    if (!order) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+    const tx = transaction.toJSON();
+    return this.formatCustomerPaymentResponse(order, tx, tx.metadata?.paymentGuide || null);
+  }
+
+  formatCustomerPaymentResponse(order, transaction, paymentGuide) {
+    const state = this.resolveTransactionClientState(transaction);
+    return {
+      orderId: order?.id || transaction?.orderId || null,
+      orderCode: order?.order_code || transaction?.orderCode || null,
+      paymentStatus: order?.payment_status || "unpaid",
+      paymentTransactionId: transaction?.id || null,
+      paymentMethod: order?.payment_method || transaction?.method || null,
+      amount: Number(order?.grand_total ?? transaction?.amount ?? 0),
+      currency: transaction?.currency || "VND",
+      transactionStatus: transaction?.status || null,
+      paidAt: transaction?.paidAt || null,
+      createdAt: transaction?.createdAt || null,
+      updatedAt: transaction?.updatedAt || null,
+      expiresAt: paymentGuide?.expiresAt || null,
+      isExpired: state.isExpired,
+      canRetry: state.canRetry,
+      canReuse: state.isReusable,
+      paymentGuide: sanitizePaymentGuideForClient(paymentGuide)
+    };
+  }
+
+  resolveTransactionClientState(transaction) {
+    const status = String(transaction?.status || "").toLowerCase();
+    const expiresAt = transaction?.metadata?.paymentGuide?.expiresAt || null;
+    const expiredByTime = expiresAt ? Date.now() > new Date(expiresAt).getTime() : false;
+    const reusableStatuses = [PAYMENT_TRANSACTION_STATUS.PENDING, PAYMENT_TRANSACTION_STATUS.PROCESSING];
+    const terminalStatuses = [PAYMENT_TRANSACTION_STATUS.PAID, PAYMENT_TRANSACTION_STATUS.FAILED, PAYMENT_TRANSACTION_STATUS.CANCELLED, PAYMENT_TRANSACTION_STATUS.EXPIRED, PAYMENT_TRANSACTION_STATUS.REFUNDED];
+    const isReusable = reusableStatuses.includes(status) && !expiredByTime;
+    const isExpired = status === PAYMENT_TRANSACTION_STATUS.EXPIRED || (reusableStatuses.includes(status) && expiredByTime);
+    const canRetry = isExpired || [PAYMENT_TRANSACTION_STATUS.FAILED, PAYMENT_TRANSACTION_STATUS.CANCELLED].includes(status);
+    return { isReusable, isExpired, canRetry, isTerminal: terminalStatuses.includes(status) || isExpired };
+  }
+
+  async createPaymentGuide({ method, order, transactionCode }) {
+    const adapter = createPaymentProviderAdapter(method);
+    if (!adapter) return null;
+    return adapter.createPaymentSession({ orderId: order.id, orderCode: order.order_code, amount: Number(order.grand_total || 0), transactionCode });
+  }
+
+  async handleMomoIpn(payload = {}) {
+    const verification = verifyMomoIpnSignature(payload);
+    if (!verification.verified) {
+      throw new AppError("Invalid MoMo IPN signature.", 400, "INVALID_MOMO_SIGNATURE");
+    }
+
+    if (String(payload.partnerCode || "") !== String(process.env.MOMO_PARTNER_CODE || "")) {
+      throw new AppError("Invalid MoMo partner code.", 400, "INVALID_MOMO_PARTNER");
+    }
+
+    const transaction = await this.repository.findByMomoIdentifiers({
+      momoOrderId: payload.orderId,
+      requestId: payload.requestId
+    });
+    if (!transaction) throw new AppError("Payment transaction was not found.", 404, "PAYMENT_TRANSACTION_NOT_FOUND");
+
+    const tx = transaction.toJSON();
+    const expectedAmount = Math.round(Number(tx.amount || 0));
+    if (Number(payload.amount) !== expectedAmount) {
+      throw new AppError("Invalid MoMo amount.", 400, "MOMO_AMOUNT_MISMATCH");
+    }
+
+    const expectedGuide = tx.metadata?.paymentGuide || {};
+    if (String(expectedGuide.momoOrderId || "") !== String(payload.orderId || "") || String(expectedGuide.requestId || "") !== String(payload.requestId || "")) {
+      throw new AppError("Invalid MoMo order identifiers.", 400, "MOMO_ORDER_MISMATCH");
+    }
+
+    if (String(tx.status || "").toLowerCase() === PAYMENT_TRANSACTION_STATUS.PAID) {
+      return this.formatCustomerPaymentResponse(await this.repository.findOrderForPayment(tx.orderId), tx, tx.metadata?.paymentGuide || null);
+    }
+
+    const isSuccess = Number(payload.resultCode) === 0;
+    const nextStatus = isSuccess ? PAYMENT_TRANSACTION_STATUS.PAID : PAYMENT_TRANSACTION_STATUS.FAILED;
+    const nextMetadata = {
+      ...(tx.metadata || {}),
+      momoIpn: sanitizeMomoIpnForMetadata(payload),
+      momoIpnReceivedAt: new Date().toISOString()
+    };
+
+    const updated = await this.updatePaymentStatus(tx.id, nextStatus, null, {
+      metadata: nextMetadata,
+      note: isSuccess ? "MoMo IPN confirmed payment." : "MoMo IPN reported payment failure."
+    });
+    return this.formatCustomerPaymentResponse(await this.repository.findOrderForPayment(tx.orderId), updated, updated.metadata?.paymentGuide || null);
+  }
+
   async createTransaction(payload, currentUserId) {
     return this.createPayment({
       ...payload,
@@ -464,3 +626,44 @@ function normalizeTransactionStatus(value) {
 }
 
 export { ORDER_PAYMENT_STATUS, PAYMENT_METHOD_TYPE, PAYMENT_PROVIDER, PAYMENT_TRANSACTION_STATUS };
+
+function sanitizePaymentGuideForMetadata(guide) {
+  if (!guide) return null;
+  const { rawAccountNumber, signature, secretKey, accessKey, ...safeGuide } = guide;
+  return safeGuide;
+}
+
+function sanitizePaymentGuideForClient(guide) {
+  return sanitizePaymentGuideForMetadata(guide);
+}
+
+function verifyMomoIpnSignature(payload = {}) {
+  const secretKey = process.env.MOMO_SECRET_KEY || "";
+  if (!secretKey || !payload.signature) return { verified: false };
+  const rawSignature = [
+    "accessKey=" + (process.env.MOMO_ACCESS_KEY || ""),
+    "amount=" + String(payload.amount ?? ""),
+    "extraData=" + String(payload.extraData ?? ""),
+    "message=" + String(payload.message ?? ""),
+    "orderId=" + String(payload.orderId ?? ""),
+    "orderInfo=" + String(payload.orderInfo ?? ""),
+    "orderType=" + String(payload.orderType ?? ""),
+    "partnerCode=" + String(payload.partnerCode ?? ""),
+    "payType=" + String(payload.payType ?? ""),
+    "requestId=" + String(payload.requestId ?? ""),
+    "responseTime=" + String(payload.responseTime ?? ""),
+    "resultCode=" + String(payload.resultCode ?? ""),
+    "transId=" + String(payload.transId ?? "")
+  ].join("&");
+  const expected = crypto.createHmac("sha256", secretKey).update(rawSignature).digest("hex");
+  try {
+    return { verified: crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(payload.signature))) };
+  } catch {
+    return { verified: false };
+  }
+}
+
+function sanitizeMomoIpnForMetadata(payload = {}) {
+  const { signature, ...safePayload } = payload;
+  return safePayload;
+}

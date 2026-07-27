@@ -42,6 +42,11 @@ export class PaymentController extends BaseController {
     return this.sendSuccess(response, { payment }, "Payment status updated successfully.");
   });
 
+  momoIpn = asyncHandler(async (request, response) => {
+    const payment = await this.service.handleMomoIpn(request.body || {});
+    return this.sendSuccess(response, { payment }, "MoMo IPN processed successfully.");
+  });
+
   methods = asyncHandler(async (request, response) => {
     const result = await this.service.getMethods(request.query);
     return this.sendSuccess(response, { methods: result.methods }, "Payment methods retrieved successfully.", 200, result.meta);
@@ -85,6 +90,11 @@ export class PaymentController extends BaseController {
   updateTransactionStatus = asyncHandler(async (request, response) => {
     const transaction = await this.service.updateTransactionStatus(request.params.id, request.body, request.user.id);
     return this.sendSuccess(response, { transaction }, "Payment transaction status updated successfully.");
+  });
+
+  customerStatus = asyncHandler(async (request, response) => {
+    const payment = await this.service.getCustomerTransactionStatus(request.params.id, request.user.id);
+    return this.sendSuccess(response, { payment }, "Payment status retrieved successfully.");
   });
 
   transactionHistory = asyncHandler(async (request, response) => {
