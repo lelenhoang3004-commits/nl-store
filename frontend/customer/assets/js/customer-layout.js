@@ -2000,9 +2000,6 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide
       <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
       <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · ${escapeHtml(statusLabel)}</p>
       ${renderPaymentGuideModal(paymentMethod, guide, { payment, orderCode })}
-      <div class="customer-payment-secondary-actions">
-        <button class="customer-button ghost" type="button" data-change-payment-method="${escapeHtml(orderId)}" data-change-payment-blocked="${canChangePaymentMethod(payment, guide) ? "0" : "1"}">← Chọn phương thức thanh toán khác</button>
-      </div>
       <div class="customer-checkout-modal-actions">
         ${canSaveQr ? `<button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}" data-payment-qr-filename="${escapeHtml(saveFilename)}">Lưu mã QR</button>` : ""}
         ${personalActions}
@@ -2018,7 +2015,7 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide
 function renderPaymentGuideModal(paymentMethod, guide = null, context = {}) {
   const method = normalizePaymentMethodValue(paymentMethod);
   if (!guide || method === "cod") {
-    return `<div class="customer-payment-guide-note">Đơn hàng sẽ được xử lý sau khi cửa hàng xác nhận thông tin.</div>`;
+    return `<div class="customer-payment-guide-note is-cod-note">Đơn hàng sẽ được xử lý sau khi cửa hàng xác nhận thông tin.</div>`;
   }
 
   if (method === "bank_transfer") {
@@ -2284,14 +2281,6 @@ function bindPaymentGuideActions(root) {
   const transactionId = root.querySelector("[data-payment-status-check]")?.dataset.paymentStatusCheck || "";
   if (transactionId) startPaymentPolling(transactionId);
   root.querySelector("[data-save-payment-qr]")?.addEventListener("click", (event) => savePaymentQr(root, event.currentTarget.dataset.savePaymentQr || "ORDER", event.currentTarget.dataset.paymentQrFilename || ""));
-  root.querySelector("[data-change-payment-method]")?.addEventListener("click", (event) => {
-    const button = event.currentTarget;
-    if (button.dataset.changePaymentBlocked === "1") {
-      showCustomerToast("Giao dịch đang chờ cửa hàng xác nhận nên không thể đổi phương thức thanh toán.", "error");
-      return;
-    }
-    openPaymentMethodSwitchModal(button.dataset.changePaymentMethod || "", root);
-  });
   root.querySelector("[data-report-payment]")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
     const id = button.dataset.reportPayment || "";
@@ -2329,54 +2318,6 @@ function bindPaymentGuideActions(root) {
         showCustomerToast("Không thể sao chép tự động.", "error");
       }
     });
-  });
-}
-
-async function openPaymentMethodSwitchModal(orderId, paymentOverlay) {
-  if (!orderId) {
-    showCustomerToast("Không tìm thấy đơn hàng để đổi phương thức thanh toán.", "error");
-    return;
-  }
-  const chooser = document.createElement("div");
-  chooser.className = "customer-payment-switch-backdrop";
-  chooser.innerHTML = `
-    <div class="customer-payment-switch-modal" role="dialog" aria-modal="true">
-      <button class="customer-payment-modal-close" type="button" aria-label="Đóng cửa sổ thanh toán" data-switch-close>&times;</button>
-      <h3>Chọn phương thức thanh toán khác</h3>
-      <div class="customer-payment-switch-options">
-        <label><input type="radio" name="payment-switch-method" value="cod"> <span>COD</span></label>
-        <label><input type="radio" name="payment-switch-method" value="bank_personal_qr" checked> <span>Chuyển khoản ngân hàng</span></label>
-        <label><input type="radio" name="payment-switch-method" value="momo_personal_qr"> <span>MoMo</span></label>
-      </div>
-      <div class="customer-payment-switch-actions">
-        <button class="customer-button secondary" type="button" data-switch-close>Hủy</button>
-        <button class="customer-button" type="button" data-switch-confirm>Xác nhận</button>
-      </div>
-    </div>`;
-  document.body.appendChild(chooser);
-  const close = () => chooser.remove();
-  chooser.querySelectorAll("[data-switch-close]").forEach((button) => button.addEventListener("click", close));
-  chooser.addEventListener("click", (event) => { if (event.target === chooser) close(); });
-  chooser.querySelector("[data-switch-confirm]")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    const selected = chooser.querySelector('input[name="payment-switch-method"]:checked')?.value || "";
-    if (!selected || button.disabled) return;
-    button.disabled = true;
-    try {
-      await customerApi(`/orders/my/${encodeURIComponent(orderId)}/payment-method`, { method: "POST", body: { payment_method: selected } });
-      close();
-      stopPaymentPolling();
-      paymentOverlay?.remove?.();
-      if (selected === "cod") {
-        showCustomerToast("Đã đổi sang thanh toán khi nhận hàng.", "success");
-        window.location.hash = `#orders/${encodeURIComponent(orderId)}`;
-        return;
-      }
-      await openOrderPaymentModal(orderId);
-    } catch (error) {
-      button.disabled = false;
-      showCustomerToast(normalizePaymentActionError(error), "error");
-    }
   });
 }
 
@@ -2933,7 +2874,6 @@ async function openOrderPaymentModal(orderId, options = {}) {
     + '<p>Mã đơn hàng của bạn là <strong>' + escapeHtml(payment.orderCode || payment.orderId || "") + '</strong>.</p>'
     + '<p>' + escapeHtml(getPaymentMethodLabel(payment.paymentMethod)) + ' · ' + escapeHtml(statusLabel) + '</p>'
     + renderPaymentGuideModal(payment.paymentMethod, guide, { payment, orderCode: payment.orderCode || payment.orderId || "" })
-    + '<div class="customer-payment-secondary-actions"><button class="customer-button ghost" type="button" data-change-payment-method="' + escapeHtml(payment.orderId || orderId) + '" data-change-payment-blocked="' + (canChangePaymentMethod(payment, guide) ? '0' : '1') + '">← Chọn phương thức thanh toán khác</button></div>'
     + '<div class="customer-checkout-modal-actions">' + actionHtml + '</div>'
     + '</div>';
   document.body.appendChild(overlay);

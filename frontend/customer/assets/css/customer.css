@@ -3450,26 +3450,6 @@
   outline: none;
 }
 
-.customer-payment-secondary-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-.customer-payment-secondary-actions .customer-button.ghost {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 0;
-  background: transparent;
-  color: #2563eb;
-  box-shadow: none;
-  font-size: 0.86rem;
-}
-
-.customer-payment-secondary-actions .customer-button.ghost:hover,
-.customer-payment-secondary-actions .customer-button.ghost:focus-visible {
-  background: #eff6ff;
-}
 
 .customer-payment-switch-backdrop {
   position: fixed;
@@ -3544,4 +3524,12 @@
   .customer-payment-result-modal .customer-checkout-modal-actions {
     flex-direction: column;
   }
+}
+
+
+.customer-payment-guide-note.is-cod-note {
+  text-align: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
 }
