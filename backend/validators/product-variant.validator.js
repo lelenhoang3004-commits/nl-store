@@ -11,6 +11,17 @@ export function validateCreateVariantRequest({ params, body }) {
   return mergeValidationResults([validateVariantListRequest({ params }), validatePayload(body, true)]);
 }
 
+
+export function validateBulkCreateVariantRequest({ params, body }) {
+  const errors = [];
+  const variants = Array.isArray(body?.variants) ? body.variants : [];
+  if (!variants.length) errors.push(error("variants", "variants is required."));
+  if (variants.length > 200) errors.push(error("variants", "variants is too large."));
+  variants.forEach((variant, index) => {
+    errors.push(...(validatePayload(variant || {}, true, { requireSku: false }).errors || []).map((item) => ({ ...item, field: `variants.${index}.${item.field}` })));
+  });
+  return mergeValidationResults([validateVariantListRequest({ params }), createValidationResult(errors)]);
+}
 export function validateUpdateVariantRequest({ params, body }) {
   return mergeValidationResults([validateVariantListRequest({ params }), validateId(params.variantId, { required: true, field: "variantId", location: "params" }), validatePayload(body, false)]);
 }
@@ -39,9 +50,10 @@ export function validateDeleteAllVariantsRequest({ params }) {
   return validateVariantListRequest({ params });
 }
 
-function validatePayload(body, required) {
+function validatePayload(body, required, options = {}) {
   const errors = [];
-  if (required && isEmpty(body.sku)) errors.push(error("sku", "sku is required."));
+  const requireSku = options.requireSku !== false;
+  if (required && requireSku && isEmpty(body.sku)) errors.push(error("sku", "sku is required."));
   if (!isEmpty(body.sku) && (String(body.sku).length > 120 || !/^[A-Z0-9][A-Z0-9._-]+$/i.test(String(body.sku)))) errors.push(error("sku", "sku is invalid."));
   if (required && isEmpty(body.size)) errors.push(error("size", "size is required."));
   if (required && isEmpty(body.color)) errors.push(error("color", "color is required."));

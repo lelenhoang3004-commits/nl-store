@@ -25,21 +25,110 @@ export class ProductVariantService {
   async createVariant(productId, payload) {
     await this.ensureProduct(productId);
     const normalized = this.normalize(productId, payload);
-    await this.ensureUniqueSku(normalized.sku);
-    await this.ensureUniqueCombination(productId, normalized.color, normalized.size);
 
-    try {
-      const variant = await this.repository.create(normalized);
-      await this.repository.syncProductInventory(productId);
+    const result = await databaseClient.withTransaction(async (connection) => {
+      return this.createOrRestoreVariant(normalized, { connection, single: true });
+    });
+    await this.repository.syncProductInventory(productId);
+
+    if (result.action === "existing") {
+      throw new AppError("Variant already exists for this product.", 409, "VARIANT_ALREADY_EXISTS", { id: result.variant?.id, color: normalized.color, size: normalized.size });
+    }
+
+    if (result.action === "created") {
       await this.notificationService.notifyWishlistCustomers(productId, {
         type: "WISHLIST_NEW_VARIANT",
         title: "Sản phẩm yêu thích có mẫu mới",
         message: "Một sản phẩm trong danh sách yêu thích của bạn vừa có mẫu mới.",
         link: `#product-detail/${productId}`,
         relatedId: productId,
-        eventKey: `wishlist-new-variant:${productId}:${variant.id}`
+        eventKey: `wishlist-new-variant:${productId}:${result.variant.id}`
       });
-      return variant.toJSON();
+    }
+
+    return result;
+  }
+
+  async bulkCreateVariants(productId, payload = {}) {
+    const product = await this.ensureProduct(productId);
+    const variants = Array.isArray(payload.variants) ? payload.variants : [];
+    if (!variants.length) throw new AppError("Variant list is required.", 400, "VARIANT_BULK_REQUIRED");
+    if (variants.length > 200) throw new AppError("Variant list is too large.", 400, "VARIANT_BULK_TOO_LARGE");
+
+    const seen = new Set();
+    const normalizedItems = [];
+    const duplicateItems = [];
+    variants.forEach((item, index) => {
+      const normalized = this.normalize(productId, { ...item, sku: item?.sku || createVariantSku(product.sku, item?.color, item?.size) });
+      const key = variantCombinationKey(normalized.color, normalized.size);
+      if (seen.has(key)) {
+        duplicateItems.push({ index, action: "duplicate_payload", color: normalized.color, size: normalized.size });
+        return;
+      }
+      seen.add(key);
+      normalizedItems.push({ index, normalized });
+    });
+
+    const result = await databaseClient.withTransaction(async (connection) => {
+      const items = [...duplicateItems];
+      let createdCount = 0;
+      let restoredCount = 0;
+      let existingCount = 0;
+      let failedCount = 0;
+
+      for (const item of normalizedItems) {
+        try {
+          const processed = await this.createOrRestoreVariant(item.normalized, { connection, single: false });
+          items.push({ index: item.index, action: processed.action, variant: processed.variant });
+          if (processed.action === "created") createdCount += 1;
+          else if (processed.action === "restored") restoredCount += 1;
+          else if (processed.action === "existing") existingCount += 1;
+          else if (processed.action === "failed") failedCount += 1;
+        } catch (error) {
+          failedCount += 1;
+          items.push({ index: item.index, action: "failed", message: error?.message || "Không thể tạo biến thể." });
+        }
+      }
+
+      await this.repository.syncProductInventory(productId, connection);
+      return {
+        success: true,
+        created_count: createdCount,
+        restored_count: restoredCount,
+        existing_count: existingCount + duplicateItems.length,
+        failed_count: failedCount,
+        items: items.sort((a, b) => a.index - b.index)
+      };
+    });
+
+    return result;
+  }
+
+  async createOrRestoreVariant(normalized, { connection = null, single = false } = {}) {
+    const existingCombination = await this.repository.findAnyByProductColorSize?.(normalized.productId, normalized.color, normalized.size, null, connection) || null;
+    if (existingCombination && !existingCombination.deleted_at) {
+      return { action: "existing", variant: new ProductVariantLike(existingCombination).toJSON() };
+    }
+
+    const skuOwner = await this.repository.findAnyBySku?.(normalized.sku, existingCombination?.id || null, connection) || null;
+    if (skuOwner && !skuOwner.deleted_at) {
+      if (single) throw new AppError("Variant SKU already exists.", 409, "VARIANT_SKU_EXISTS");
+      return { action: "failed", message: "SKU đang được dùng bởi biến thể khác." };
+    }
+
+    if (existingCombination?.deleted_at) {
+      const restored = await this.repository.restore(existingCombination.id, { ...normalized, sold: Number(existingCombination.sold || normalized.sold || 0) }, connection);
+      return { action: "restored", variant: restored.toJSON() };
+    }
+
+    if (skuOwner?.deleted_at) {
+      const restored = await this.repository.restore(skuOwner.id, { ...normalized, sold: Number(skuOwner.sold || normalized.sold || 0) }, connection);
+      return { action: "restored", variant: restored.toJSON() };
+    }
+
+    try {
+      const created = await this.repository.create(normalized, connection);
+      return { action: "created", variant: created.toJSON() };
     } catch (error) {
       throw this.mapDuplicateVariantError(error, normalized);
     }
@@ -172,5 +261,43 @@ export class ProductVariantService {
   }
 }
 
+
+class ProductVariantLike {
+  constructor(row = {}) {
+    this.row = row;
+  }
+  toJSON() {
+    return {
+      id: Number(this.row.id),
+      productId: Number(this.row.product_id || this.row.productId),
+      sku: this.row.sku,
+      size: this.row.size || null,
+      color: this.row.color || null,
+      colorCode: this.row.color_code || this.row.colorCode || null,
+      price: this.row.price === null ? null : Number(this.row.price),
+      salePrice: (this.row.sale_price ?? this.row.salePrice) === null ? null : Number(this.row.sale_price ?? this.row.salePrice),
+      stock: Number(this.row.stock || 0),
+      sold: Number(this.row.sold || 0),
+      status: this.row.status || "active",
+      createdAt: this.row.created_at || this.row.createdAt || null,
+      updatedAt: this.row.updated_at || this.row.updatedAt || null
+    };
+  }
+}
+
+
+function createVariantSku(baseSku, color, size) {
+  const base = String(baseSku || "SP").trim().toUpperCase().replace(/[^A-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "SP";
+  const colorPart = skuPart(color);
+  const sizePart = skuPart(size);
+  return [base, colorPart, sizePart].filter(Boolean).join("-").slice(0, 120);
+}
+
+function skuPart(value) {
+  return String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/Đ/g, "D").replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function variantCombinationKey(color, size) {
+  return `${String(color || "").trim().toLowerCase()}::${String(size || "").trim().toLowerCase()}`;
+}
 function nullableString(value) { return value === undefined || value === null || value === "" ? null : String(value).trim(); }
 function nullableNumber(value) { return value === undefined || value === null || value === "" ? null : Number(value); }

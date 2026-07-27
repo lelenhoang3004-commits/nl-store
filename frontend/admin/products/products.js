@@ -457,20 +457,52 @@ function openVariantModal(root, product) {
           <button type="button" class="is-danger" data-delete-all-submit disabled>Xóa tất cả biến thể</button>
         </footer>
       </section>`;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     document.body.appendChild(overlay);
+    document.body.classList.add("variant-delete-all-open");
     requestAnimationFrame(() => overlay.classList.add("is-visible"));
 
+    const dialog = overlay.querySelector(".variant-delete-all-dialog");
     const input = overlay.querySelector("[data-delete-all-confirm-input]");
     const submitButton = overlay.querySelector("[data-delete-all-submit]");
     const cancelButton = overlay.querySelector("[data-delete-all-cancel]");
     const errorNode = overlay.querySelector("[data-delete-all-error]");
-    const close = () => { overlay.remove(); };
+    const getFocusable = () => Array.from(overlay.querySelectorAll("button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex='-1'])"));
+    const close = () => {
+      document.removeEventListener("keydown", onConfirmKeydown, true);
+      document.body.classList.remove("variant-delete-all-open");
+      overlay.remove();
+      previouslyFocused?.focus?.();
+    };
+    const onConfirmKeydown = (event) => {
+      if (!document.body.contains(overlay)) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!deleteAllInFlight) close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
 
     input?.addEventListener("input", () => {
       submitButton.disabled = input.value.trim() !== "XOA TAT CA" || deleteAllInFlight;
     });
     cancelButton?.addEventListener("click", close);
-    overlay.addEventListener("click", (event) => { if (event.target === overlay && !deleteAllInFlight) close(); });
+    overlay.addEventListener("click", (event) => { event.stopPropagation(); if (event.target === overlay && !deleteAllInFlight) close(); });
+    dialog?.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("keydown", onConfirmKeydown, true);
     input?.focus();
 
     submitButton?.addEventListener("click", async () => {
@@ -1167,6 +1199,7 @@ function bindProductVariantSection(modal, product, root = null) {
 
     createButton?.addEventListener("click", async () => {
       bulkCreateErrorTarget.textContent = "";
+      if (createButton.disabled) return;
       if (!selectedColors.length) {
         bulkCreateErrorTarget.textContent = "Vui lòng chọn ít nhất một màu.";
         return;
@@ -1179,53 +1212,62 @@ function bindProductVariantSection(modal, product, root = null) {
       const salePrice = product?.salePrice ?? product?.sale_price ?? null;
       const stock = 0;
       const status = "active";
-      const createdVariants = [];
-      const skippedVariants = [];
-      const existingKeys = new Set((product?.existingVariants || []).map((variant) => `${normalizeVariantKey(variant.color)}::${normalizeVariantKey(variant.size)}`));
-      const existingSkus = new Set((product?.existingVariants || []).map((variant) => String(variant.sku || "").trim().toUpperCase()));
+      const variantsPayload = [];
+      const seenPayloadKeys = new Set();
 
       for (const color of selectedColors) {
         const colorOption = colorOptions.find((item) => item.value === color || item.name === color) || { name: color, value: color, colorCode: "#cccccc" };
         for (const size of selectedSizes) {
-          const fingerprint = `${normalizeVariantKey(colorOption.name || color)}::${normalizeVariantKey(size)}`;
-          if (existingKeys.has(fingerprint)) {
-            skippedVariants.push(`${colorOption.name || color}/${size}`);
-            continue;
-          }
-          const nextSku = createVariantSku(product?.sku, colorOption.name || color, size);
-          if (existingSkus.has(nextSku)) {
-            skippedVariants.push(`${colorOption.name || color}/${size}`);
-            continue;
-          }
-          try {
-            const payload = {
-              sku: nextSku,
-              size,
-              color: colorOption.name || color,
-              colorCode: colorOption.colorCode || "",
-              price,
-              salePrice,
-              stock,
-              status
-            };
-            await productService.createVariant(product.id, payload, silent());
-            createdVariants.push(payload);
-            existingKeys.add(fingerprint);
-            existingSkus.add(nextSku);
-          } catch (error) {
-            skippedVariants.push(`${colorOption.name || color}/${size}`);
-          }
+          const variantColor = colorOption.name || color;
+          const fingerprint = `${normalizeVariantKey(variantColor)}::${normalizeVariantKey(size)}`;
+          if (seenPayloadKeys.has(fingerprint)) continue;
+          seenPayloadKeys.add(fingerprint);
+          variantsPayload.push({
+            sku: createVariantSku(product?.sku, variantColor, size),
+            size,
+            color: variantColor,
+            colorCode: colorOption.colorCode || "",
+            price,
+            salePrice,
+            stock,
+            status
+          });
         }
       }
 
-      if (!createdVariants.length && skippedVariants.length) {
-        bulkCreateErrorTarget.textContent = `Không tạo mới biến thể nào. Thất bại/bỏ qua ${skippedVariants.length} biến thể vì đã tồn tại hoặc API không thành công.`;
-        toast.error(bulkCreateErrorTarget.textContent);
-      } else {
-        toast.success(skippedVariants.length ? `Tạo biến thể thành công: ${createdVariants.length} tạo mới, ${skippedVariants.length} thất bại/bỏ qua.` : "Tạo biến thể thành công");
+      if (!variantsPayload.length) {
+        bulkCreateErrorTarget.textContent = "Không có biến thể nào cần tạo.";
+        return;
       }
-      await renderVariants({ force: true });
-      if (root) renderRows(root);
+
+      const originalText = createButton.textContent;
+      createButton.disabled = true;
+      createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tạo ${variantsPayload.length} biến thể...`;
+      bulkCreateErrorTarget.textContent = `Đang tạo ${variantsPayload.length} biến thể...`;
+
+      try {
+        const response = await productService.createVariantsBulk(product.id, variantsPayload, silent());
+        const result = response?.data || response || {};
+        const created = Number(result.created_count || 0);
+        const restored = Number(result.restored_count || 0);
+        const existing = Number(result.existing_count || 0);
+        const failed = Number(result.failed_count || 0);
+        const processed = created + restored + existing;
+        const summary = failed
+          ? `Đã xử lý ${processed}/${variantsPayload.length} biến thể. Có ${failed} biến thể không thể tạo.`
+          : `Đã tạo ${created} biến thể, khôi phục ${restored} biến thể và bỏ qua ${existing} biến thể đang tồn tại.`;
+        bulkCreateErrorTarget.textContent = summary;
+        if (failed) toast.error(summary); else toast.success(summary);
+        await renderVariants({ force: true });
+        if (root) renderRows(root);
+      } catch (error) {
+        const errorMessage = message(error);
+        bulkCreateErrorTarget.textContent = errorMessage;
+        toast.error(errorMessage);
+      } finally {
+        createButton.disabled = false;
+        createButton.textContent = originalText;
+      }
     });
 
     bulkStockApply?.addEventListener("click", async () => {

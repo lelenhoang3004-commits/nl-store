@@ -13,7 +13,7 @@ import {
   validateCreateAdminProductRequest,
   validateUpdateAdminProductRequest
 } from "../validators/admin-product.validator.js";
-import { validateCreateVariantRequest, validateDeleteAllVariantsRequest, validateDeleteVariantRequest, validateStatusUpdateVariantRequest, validateStockUpdateVariantRequest, validateUpdateVariantRequest, validateVariantListRequest } from "../validators/product-variant.validator.js";
+import { validateBulkCreateVariantRequest, validateCreateVariantRequest, validateDeleteAllVariantsRequest, validateDeleteVariantRequest, validateStatusUpdateVariantRequest, validateStockUpdateVariantRequest, validateUpdateVariantRequest, validateVariantListRequest } from "../validators/product-variant.validator.js";
 
 const router = Router();
 const controller = new AdminProductController();
@@ -27,6 +27,7 @@ const bulkRemove = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_MAN
 
 router.use(authenticate);
 router.get("/:productId/variants", view, validateRequest(validateVariantListRequest), variantController.list);
+router.post("/:productId/variants/bulk", create, validateRequest(validateBulkCreateVariantRequest), variantController.bulkCreate);
 router.post("/:productId/variants", create, validateRequest(validateCreateVariantRequest), variantController.create);
 router.patch("/:productId/variants/:variantId", update, validateRequest(validateUpdateVariantRequest), variantController.update);
 router.patch("/:productId/variants/:variantId/stock", update, validateRequest(validateStockUpdateVariantRequest), variantController.updateStock);

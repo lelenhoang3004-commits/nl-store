@@ -11,6 +11,7 @@ class ProductService extends BaseService {
   deleteProduct(id, options = {}) { return this.remove(id, options); }
   getVariants(id, options = {}) { return this.client.get(this.path(id, "variants"), options); }
   createVariant(id, payload, options = {}) { return this.client.post(this.path(id, "variants"), payload, options); }
+  createVariantsBulk(id, variants, options = {}) { return this.client.post(this.path(id, "variants", "bulk"), { variants }, options); }
   updateVariant(id, variantId, payload, options = {}) { return this.client.patch(this.path(id, "variants", variantId), payload, options); }
   updateVariantStock(id, variantId, payload, options = {}) { return this.client.patch(this.path(id, "variants", variantId, "stock"), payload, options); }
   updateVariantStatus(id, variantId, status, options = {}) { return this.client.patch(this.path(id, "variants", variantId, "status"), { status }, options); }

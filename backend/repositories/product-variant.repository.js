@@ -106,16 +106,43 @@ export class ProductVariantRepository extends BaseRepository {
     return rows[0] ? new ProductVariant(rows[0]) : null;
   }
 
-  async create(payload) {
+
+  async findAnyBySku(sku, excludedId = null, connection = null) {
     await this.ensureSchema();
-    const [result] = await this.client.getPool().execute(`INSERT INTO product_variants (product_id, sku, size, color, color_code, price, sale_price, stock, sold, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, this.params(payload));
-    return this.findById(result.insertId);
+    const executor = connection || this.client.getPool();
+    const params = [sku];
+    if (excludedId) params.push(excludedId);
+    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE sku = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
+    return rows[0] || null;
   }
 
-  async update(id, payload) {
+  async findAnyByProductColorSize(productId, color, size, excludedId = null, connection = null) {
     await this.ensureSchema();
-    await this.client.getPool().execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, price=?, sale_price=?, stock=?, sold=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL`, [...this.params(payload), id]);
-    return this.findById(id);
+    const executor = connection || this.client.getPool();
+    const params = [productId, String(color || "").trim().toLowerCase(), String(size || "").trim().toLowerCase()];
+    if (excludedId) params.push(excludedId);
+    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE product_id = ? AND LOWER(TRIM(color)) = ? AND LOWER(TRIM(size)) = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
+    return rows[0] || null;
+  }
+
+  async restore(id, payload, connection = null) {
+    await this.ensureSchema();
+    const executor = connection || this.client.getPool();
+    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, price=?, sale_price=?, stock=?, sold=?, status=?, deleted_at=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=?`, [...this.params(payload), id]);
+    return this.findById(id, { connection });
+  }
+  async create(payload, connection = null) {
+    await this.ensureSchema();
+    const executor = connection || this.client.getPool();
+    const [result] = await executor.execute(`INSERT INTO product_variants (product_id, sku, size, color, color_code, price, sale_price, stock, sold, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, this.params(payload));
+    return this.findById(result.insertId, { connection });
+  }
+
+  async update(id, payload, connection = null) {
+    await this.ensureSchema();
+    const executor = connection || this.client.getPool();
+    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, price=?, sale_price=?, stock=?, sold=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL`, [...this.params(payload), id]);
+    return this.findById(id, { connection });
   }
 
   async updateStock(id, payload) {
