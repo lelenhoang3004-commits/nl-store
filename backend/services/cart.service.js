@@ -216,7 +216,7 @@ export class CartService extends BaseService {
       }, connection);
 
       const paymentTransactionCode = createPaymentTransactionCode();
-      const paymentGuide = createCheckoutPaymentGuide({
+      const paymentGuide = await createCheckoutPaymentGuide({
         method: paymentMethod,
         orderId: createdOrderId,
         orderCode,
@@ -567,7 +567,7 @@ function isSameProductImage(allowedImageUrl, selectedImageUrl) {
   }
 }
 
-function createCheckoutPaymentGuide({ method, orderId, orderCode, amount, transactionCode }) {
+async function createCheckoutPaymentGuide({ method, orderId, orderCode, amount, transactionCode }) {
   const adapter = createPaymentProviderAdapter(method);
   if (!adapter) {
     return {

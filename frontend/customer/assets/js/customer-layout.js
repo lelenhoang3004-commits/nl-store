@@ -1999,14 +1999,19 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
   }
 
   if (method === "momo") {
+    const paymentUrl = guide.payUrl || guide.deeplink || "";
     return `
       <section class="customer-payment-guide is-momo">
-        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n</div>
-        <div class="customer-payment-unavailable">${escapeHtml(guide.message || "Thanh toan MoMo dang duoc cau hinh.")}</div>
-        <ol><li>M&#7903; &#7913;ng d&#7909;ng MoMo</li><li>Qu&eacute;t m&atilde; QR</li><li>Ki&#7875;m tra s&#7889; ti&#7873;n</li><li>X&aacute;c nh&#7853;n thanh to&aacute;n</li></ol>
+        <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n MoMo</div>
+        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" src="${escapeHtml(guide.qrCodeUrl)}" alt="QR thanh toan MoMo">` : ""}
+        <div class="customer-payment-guide-grid">
+          ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
+          ${paymentGuideRow("M&atilde; giao d&#7883;ch", guide.transactionId || guide.requestId || "Dang cap nhat")}
+        </div>
+        ${paymentUrl ? `<a class="customer-button" href="${escapeHtml(paymentUrl)}" data-hosted-payment-url>Thanh to&aacute;n qua MoMo</a>` : `<div class="customer-payment-unavailable">${escapeHtml(guide.message || "Khong the tao phien thanh toan MoMo.")}</div>`}
+        <p class="customer-payment-guide-note">B&#7841;n s&#7869; &#273;&#432;&#7907;c chuy&#7875;n sang m&ocirc;i tr&#432;&#7901;ng sandbox MoMo &#273;&#7875; ho&agrave;n t&#7845;t thanh to&aacute;n.</p>
       </section>`;
   }
-
   if (method === "credit_card") {
     return `
       <section class="customer-payment-guide is-card">
@@ -2021,6 +2026,14 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
 
 function paymentGuideRow(label, value) {
   return `<div class="customer-payment-guide-row"><span>${label}</span><strong>${escapeHtml(value || "-")}</strong></div>`;
+}
+
+function redirectToHostedPayment(guide) {
+  const url = guide?.payUrl || guide?.deeplink || "";
+  if (!url) return;
+  window.setTimeout(() => {
+    window.location.href = url;
+  }, 900);
 }
 
 function bindPaymentGuideActions(root) {
@@ -2503,7 +2516,8 @@ function initCheckoutForm(container, checkoutSummary) {
         layoutState.cart = createEmptyCart();
         renderHeader();
       }
-      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod);
+      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod, response?.paymentGuide || null);
+      redirectToHostedPayment(response?.paymentGuide);
       showCustomerToast("Đặt hàng thành công.", "success");
     } catch (error) {
       showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
