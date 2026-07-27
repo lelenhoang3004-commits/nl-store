@@ -223,6 +223,9 @@ export class CartService extends BaseService {
         amount: grandTotal,
         transactionCode: paymentTransactionCode
       });
+      if (paymentMethod === "momo" && !paymentGuide?.available) {
+        throw new AppError(paymentGuide?.message || "Không thể tạo phiên thanh toán MoMo Sandbox.", 502, "MOMO_PAYMENT_SESSION_FAILED");
+      }
 
       const paymentTransactionId = await this.repository.createPaymentTransaction({
         orderId: createdOrderId,
@@ -313,7 +316,8 @@ export class CartService extends BaseService {
         amount: orderPayload.grandTotal,
         currency: "VND"
       },
-      paymentGuide: sanitizePaymentGuideForClient(createdPaymentGuide),
+      paymentGuide: sanitizePaymentGuideForClient(createdPaymentGuide, createdPaymentTransactionId),
+      payment_guide: sanitizePaymentGuideForClient(createdPaymentGuide, createdPaymentTransactionId),
       cart
     };
   }
@@ -592,9 +596,22 @@ function sanitizePaymentGuideForMetadata(guide) {
   return safeGuide;
 }
 
-function sanitizePaymentGuideForClient(guide) {
+function sanitizePaymentGuideForClient(guide, paymentTransactionId = null) {
   if (!guide) return null;
-  return sanitizePaymentGuideForMetadata(guide);
+  const safeGuide = sanitizePaymentGuideForMetadata(guide);
+  return {
+    ...safeGuide,
+    paymentTransactionId,
+    payment_transaction_id: paymentTransactionId,
+    transaction_id: paymentTransactionId,
+    order_id: safeGuide.orderId || null,
+    order_code: safeGuide.orderCode || null,
+    qr_code_content: safeGuide.qrCodeUrl && !/^(data:image\/|blob:|https?:\/\/)/i.test(String(safeGuide.qrCodeUrl)) ? safeGuide.qrCodeUrl : "",
+    qr_image: safeGuide.qrCodeUrl && /^(data:image\/|blob:|https?:\/\/)/i.test(String(safeGuide.qrCodeUrl)) ? safeGuide.qrCodeUrl : "",
+    pay_url: safeGuide.payUrl || "",
+    expires_at: safeGuide.expiresAt || null,
+    status: String(safeGuide.status || "PENDING").toLowerCase()
+  };
 }
 
 function createTransferContent(orderCode) {
