@@ -269,6 +269,51 @@ export class PaymentRepository extends BaseRepository {
     return rows[0] ? new PaymentTransaction(rows[0]) : null;
   }
 
+  async findByOrderIdForCustomer(orderId, customerId, connection = null) {
+    const [rows] = await this.execute(
+      `SELECT
+        pt.id,
+        pt.order_id,
+        o.order_code,
+        o.customer_name,
+        o.customer_email,
+        o.customer_phone,
+        pt.payment_method_id,
+        pt.transaction_code,
+        pt.provider,
+        pt.method,
+        pt.amount,
+        pt.currency,
+        pt.status,
+        pt.paid_at,
+        pt.metadata,
+        pt.created_at,
+        pt.updated_at
+      FROM payment_transactions pt
+      INNER JOIN orders o ON o.id = pt.order_id AND o.deleted_at IS NULL
+      WHERE pt.order_id = ? AND o.customer_id = ?
+      ORDER BY pt.created_at DESC, pt.id DESC
+      LIMIT 1`,
+      [orderId, customerId],
+      connection
+    );
+
+    return rows[0] ? new PaymentTransaction(rows[0]) : null;
+  }
+
+  async findOrderForCustomerPayment(orderId, customerId, connection = null, lockForUpdate = false) {
+    const [rows] = await this.execute(
+      `SELECT id, order_code, customer_id, payment_status, payment_method, grand_total, paid_amount, deleted_at
+      FROM orders
+      WHERE id = ? AND customer_id = ? AND deleted_at IS NULL
+      LIMIT 1${lockForUpdate ? " FOR UPDATE" : ""}`,
+      [orderId, customerId],
+      connection
+    );
+
+    return rows[0] || null;
+  }
+
   async createTransaction(payload, connection = null) {
     const startedAt = Date.now();
     const [result] = await this.execute(

@@ -28,6 +28,18 @@ router.get(
 );
 
 router.get(
+  "/my/:id/payment",
+  validateRequest(validateOrderIdRequest),
+  orderController.customerPayment
+);
+
+router.post(
+  "/my/:id/payment/retry",
+  validateRequest(validateOrderIdRequest),
+  orderController.retryCustomerPayment
+);
+
+router.get(
   "/my/:id",
   validateRequest(validateOrderIdRequest),
   orderController.showMyOrder

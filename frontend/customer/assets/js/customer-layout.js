@@ -1981,7 +1981,7 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
     return `
       <section class="customer-payment-guide is-bank">
         <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n</div>
-        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" src="${escapeHtml(guide.qrCodeUrl)}" alt="QR chuyen khoan ngan hang">` : ""}
+        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" data-payment-qr-image src="${escapeHtml(guide.qrCodeUrl)}" alt="QR chuyen khoan ngan hang">` : ""}
         <div class="customer-payment-guide-grid">
           ${paymentGuideRow("Ng&acirc;n h&agrave;ng", guide.bank?.bankName || "N&L Store Bank")}
           ${paymentGuideRow("Ch&#7911; t&agrave;i kho&#7843;n", guide.bank?.accountName || "N L STORE")}
@@ -2003,13 +2003,13 @@ function renderPaymentGuideModal(paymentMethod, guide = null) {
     return `
       <section class="customer-payment-guide is-momo">
         <div class="customer-payment-status-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> &#272;ang ch&#7901; thanh to&aacute;n MoMo</div>
-        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" src="${escapeHtml(guide.qrCodeUrl)}" alt="QR thanh toan MoMo">` : ""}
+        ${guide.qrCodeUrl ? `<img class="customer-payment-qr" data-payment-qr-image src="${escapeHtml(guide.qrCodeUrl)}" alt="QR thanh toan MoMo">` : ""}
         <div class="customer-payment-guide-grid">
           ${paymentGuideRow("S&#7889; ti&#7873;n", formatCurrency(guide.amount))}
           ${paymentGuideRow("M&atilde; giao d&#7883;ch", guide.transactionId || guide.requestId || "Dang cap nhat")}
         </div>
         ${paymentUrl ? `<a class="customer-button" href="${escapeHtml(paymentUrl)}" data-hosted-payment-url>Thanh to&aacute;n qua MoMo</a>` : `<div class="customer-payment-unavailable">${escapeHtml(guide.message || "Khong the tao phien thanh toan MoMo.")}</div>`}
-        <p class="customer-payment-guide-note">B&#7841;n s&#7869; &#273;&#432;&#7907;c chuy&#7875;n sang m&ocirc;i tr&#432;&#7901;ng sandbox MoMo &#273;&#7875; ho&agrave;n t&#7845;t thanh to&aacute;n.</p>
+        <p class="customer-payment-guide-note">M&ocirc;i tr&#432;&#7901;ng th&#7917; nghi&#7879;m - Kh&ocirc;ng ph&aacute;t sinh ti&#7873;n th&#7853;t.</p>
       </section>`;
   }
   if (method === "credit_card") {
@@ -2028,12 +2028,60 @@ function paymentGuideRow(label, value) {
   return `<div class="customer-payment-guide-row"><span>${label}</span><strong>${escapeHtml(value || "-")}</strong></div>`;
 }
 
-function redirectToHostedPayment(guide) {
-  const url = guide?.payUrl || guide?.deeplink || "";
-  if (!url) return;
-  window.setTimeout(() => {
-    window.location.href = url;
-  }, 900);
+function stopPaymentPolling() {
+  if (layoutState.paymentPolling.timer) {
+    window.clearInterval(layoutState.paymentPolling.timer);
+  }
+  layoutState.paymentPolling.timer = null;
+  layoutState.paymentPolling.transactionId = null;
+}
+
+function startPaymentPolling(transactionId, onUpdate) {
+  stopPaymentPolling();
+  if (!transactionId) return;
+  layoutState.paymentPolling.transactionId = transactionId;
+  const tick = async () => {
+    try {
+      const response = await customerApi(`/payments/transactions/${encodeURIComponent(transactionId)}/status`);
+      const payment = response?.data?.payment || null;
+      onUpdate?.(payment);
+      const status = String(payment?.transactionStatus || payment?.paymentStatus || "").toLowerCase();
+      if (["paid", "success", "failed", "cancelled", "expired", "refunded"].includes(status)) {
+        stopPaymentPolling();
+        if (status === "paid" || status === "success") showCustomerToast("Thanh toán đã được xác nhận.", "success");
+      }
+    } catch (error) {
+      console.debug("[payment-polling] status check failed", error?.message);
+    }
+  };
+  tick();
+  layoutState.paymentPolling.timer = window.setInterval(tick, 5000);
+}
+
+async function savePaymentQr(root, orderCode = "ORDER") {
+  const qr = root?.querySelector?.("[data-payment-qr-image], canvas") || document.querySelector("[data-payment-qr-image], canvas");
+  if (!qr) {
+    showCustomerToast("Chưa có mã QR để lưu.", "error");
+    return;
+  }
+  const filename = `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
+  let href = "";
+  if (qr instanceof HTMLCanvasElement) {
+    href = qr.toDataURL("image/png");
+  } else if (qr.src) {
+    href = qr.src;
+  }
+  if (!href) {
+    showCustomerToast("Không thể lưu mã QR.", "error");
+    return;
+  }
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  showCustomerToast("Đã lưu mã QR", "success");
 }
 
 function bindPaymentGuideActions(root) {
@@ -2290,7 +2338,7 @@ async function renderCheckoutPage() {
               <span>Tổng thanh toán</span>
               <strong>${formatCurrency(checkoutSummary.grandTotal)}</strong>
             </div>
-            <button class="customer-button customer-checkout-submit" type="submit" data-checkout-submit form="checkout-form" disabled>Đặt hàng</button>
+            <button class="customer-button customer-checkout-submit" type="submit" data-checkout-submit form="checkout-form" disabled>Đặt hàng và thanh toán</button>
           </aside>
         </div>
       </div>
@@ -2517,7 +2565,6 @@ function initCheckoutForm(container, checkoutSummary) {
         renderHeader();
       }
       showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod, response?.paymentGuide || null);
-      redirectToHostedPayment(response?.paymentGuide);
       showCustomerToast("Đặt hàng thành công.", "success");
     } catch (error) {
       showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
@@ -2535,6 +2582,65 @@ function initCheckoutForm(container, checkoutSummary) {
   form?.addEventListener("input", () => {
     if (submitButton) {
       submitButton.disabled = false;
+    }
+  });
+}
+
+function isPaymentActionable(status) {
+  return ["pending", "unpaid", "processing", "expired", "failed"].includes(String(status || "").toLowerCase());
+}
+
+function bindOrderPaymentButtons(root) {
+  root.querySelectorAll("[data-order-payment-open]").forEach((button) => {
+    button.addEventListener("click", () => openOrderPaymentModal(button.dataset.orderPaymentOpen));
+  });
+}
+
+async function openOrderPaymentModal(orderId, options = {}) {
+  if (!orderId) return;
+  let payment;
+  try {
+    const url = "/orders/my/" + encodeURIComponent(orderId) + (options.retry ? "/payment/retry" : "/payment");
+    const response = await customerApi(url, options.retry ? { method: "POST" } : undefined);
+    payment = response?.data?.payment || null;
+  } catch (error) {
+    showCustomerToast(error?.message || "Không thể mở thanh toán cho đơn hàng.", "error");
+    return;
+  }
+  if (!payment) {
+    showCustomerToast("Chưa có thông tin thanh toán cho đơn hàng.", "error");
+    return;
+  }
+
+  const actionHtml = [
+    '<button class="customer-button secondary" type="button" data-save-payment-qr="' + escapeHtml(payment.orderCode || payment.orderId || "ORDER") + '">Lưu mã QR</button>',
+    '<button class="customer-button secondary" type="button" data-payment-status-check="' + escapeHtml(payment.paymentTransactionId || "") + '">Kiểm tra trạng thái</button>',
+    payment.canRetry ? '<button class="customer-button secondary" type="button" data-payment-retry-order="' + escapeHtml(payment.orderId || orderId) + '">Tạo lại mã QR</button>' : '',
+    (payment.paymentGuide?.payUrl || payment.paymentGuide?.deeplink) ? '<a class="customer-button" href="' + escapeHtml(payment.paymentGuide.payUrl || payment.paymentGuide.deeplink) + '">Mở MoMo</a>' : '',
+    '<a class="customer-button secondary" href="#orders/' + encodeURIComponent(payment.orderId || orderId) + '">Xem đơn hàng</a>'
+  ].filter(Boolean).join('');
+
+  const overlay = document.createElement("div");
+  overlay.className = "customer-checkout-modal-backdrop";
+  overlay.innerHTML = '<div class="customer-checkout-modal customer-payment-result-modal">'
+    + '<div class="customer-checkout-modal-icon"><i class="fa-solid fa-qrcode" aria-hidden="true"></i></div>'
+    + '<h3>Đơn hàng chưa hoàn tất thanh toán</h3>'
+    + '<p>Mã đơn hàng <strong>' + escapeHtml(payment.orderCode || payment.orderId || "") + '</strong></p>'
+    + '<p>' + escapeHtml(getPaymentMethodLabel(payment.paymentMethod)) + ' &middot; ' + formatCurrency(payment.amount || 0) + ' &middot; ' + escapeHtml(payment.transactionStatus || payment.paymentStatus || "pending") + '</p>'
+    + renderPaymentGuideModal(payment.paymentMethod, payment.paymentGuide)
+    + '<div class="customer-checkout-modal-actions">' + actionHtml + '</div>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  bindPaymentGuideActions(overlay);
+  overlay.querySelector("[data-payment-retry-order]")?.addEventListener("click", async (event) => {
+    stopPaymentPolling();
+    overlay.remove();
+    await openOrderPaymentModal(event.currentTarget.dataset.paymentRetryOrder, { retry: true });
+  });
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      stopPaymentPolling();
+      overlay.remove();
     }
   });
 }

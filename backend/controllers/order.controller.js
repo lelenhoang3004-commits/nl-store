@@ -4,12 +4,14 @@
  */
 import { BaseController } from "./base.controller.js";
 import { OrderService } from "../services/order.service.js";
+import { PaymentService } from "../services/payment.service.js";
 import { asyncHandler } from "../utils/async-handler.util.js";
 
 export class OrderController extends BaseController {
   constructor(service = new OrderService()) {
     super();
     this.service = service;
+    this.paymentService = new PaymentService();
   }
 
   index = asyncHandler(async (request, response) => {
@@ -100,6 +102,16 @@ export class OrderController extends BaseController {
     return this.sendSuccess(response, {
       order
     }, "Order transaction recorded successfully.", 201);
+  });
+
+  customerPayment = asyncHandler(async (request, response) => {
+    const payment = await this.paymentService.getCustomerOrderPayment(request.params.id, request.user.id);
+    return this.sendSuccess(response, { payment }, "Order payment retrieved successfully.");
+  });
+
+  retryCustomerPayment = asyncHandler(async (request, response) => {
+    const payment = await this.paymentService.retryCustomerOrderPayment(request.params.id, request.user.id, request.user.id);
+    return this.sendSuccess(response, { payment }, "Order payment retry prepared successfully.");
   });
 
   destroy = asyncHandler(async (request, response) => {

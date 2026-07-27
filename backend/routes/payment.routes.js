@@ -116,6 +116,12 @@ router.get(
   paymentController.showTransaction
 );
 
+router.get(
+  "/transactions/:id/status",
+  validateRequest(validatePaymentTransactionIdRequest),
+  paymentController.customerStatus
+);
+
 router.patch(
   "/transactions/:id/status",
   authorizePermissions(AUTH_PERMISSIONS.PAYMENT_MANAGE),
