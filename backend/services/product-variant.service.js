@@ -2,6 +2,7 @@ import { ProductVariantRepository } from "../repositories/product-variant.reposi
 import { ProductRepository } from "../repositories/product.repository.js";
 import { NotificationService } from "./notification.service.js";
 import { AppError } from "../utils/app-error.util.js";
+import { databaseClient } from "../utils/database.util.js";
 
 const STATUSES = ["active", "inactive", "out_of_stock"];
 
@@ -109,6 +110,32 @@ export class ProductVariantService {
     if (!await this.repository.softDelete(variantId)) throw new AppError("Variant could not be deleted.", 409, "VARIANT_DELETE_FAILED");
     await this.repository.syncProductInventory(productId);
     return { id: Number(variantId), deleted: true };
+  }
+
+  async deleteAllVariants(productId) {
+    await this.ensureProduct(productId);
+    const normalizedProductId = Number(productId);
+
+    return databaseClient.withTransaction(async (connection) => {
+      const variants = await this.repository.findByProductId(normalizedProductId, { connection, forUpdate: true });
+      if (!variants.length) throw new AppError("Sản phẩm không có biến thể để xóa.", 404, "PRODUCT_VARIANTS_EMPTY");
+
+      const variantIds = variants.map((variant) => variant.id);
+      const orderReferenceCount = await this.repository.countOrderReferencesByVariantIds(variantIds, connection);
+      const removedCartItems = await this.repository.deleteCartItemsByVariantIds(variantIds, connection);
+      const deletedCount = await this.repository.softDeleteByProductId(normalizedProductId, connection);
+      if (deletedCount !== variants.length) throw new AppError("Không thể xóa toàn bộ biến thể. Vui lòng thử lại.", 409, "VARIANT_BULK_DELETE_FAILED");
+
+      await this.repository.syncProductInventory(normalizedProductId, connection);
+      return {
+        success: true,
+        deleted_count: deletedCount,
+        deletedCount,
+        orderReferenceCount,
+        removedCartItems,
+        message: "Đã xóa tất cả biến thể."
+      };
+    });
   }
 
   normalize(productId, payload, current = {}) {

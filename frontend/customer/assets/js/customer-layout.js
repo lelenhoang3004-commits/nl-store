@@ -1985,6 +1985,7 @@ function canChangePaymentMethod(payment = {}, guide = {}) {
 function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null, payment = null) {
   const guide = paymentGuide || {};
   const isCreditCardDemo = isCreditCardPaymentMethod(paymentMethod);
+  const isCodPayment = normalizePaymentMethodValue(paymentMethod) === "cod";
   const orderId = getPaymentGuideOrderId(guide, payment);
   const isPersonalMomo = isMomoPersonalGuide(paymentMethod, guide);
   const isPersonalBank = isBankPersonalGuide(paymentMethod, guide);
@@ -2004,9 +2005,9 @@ function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide
     <div class="customer-checkout-modal customer-payment-result-modal" role="dialog" aria-modal="true">
       <button class="customer-payment-modal-close" type="button" aria-label="Đóng cửa sổ thanh toán" data-payment-modal-close>&times;</button>
       <div class="customer-checkout-modal-icon"><i class="fa-solid ${isCreditCardDemo ? "fa-credit-card" : "fa-check"}" aria-hidden="true"></i></div>
-      <h3>Đặt hàng thành công – Vui lòng hoàn tất thanh toán</h3>
+      <h3>${isCodPayment ? "Đặt hàng thành công – Thanh toán khi nhận hàng" : "Đặt hàng thành công – Vui lòng hoàn tất thanh toán"}</h3>
       <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
-      <p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · ${escapeHtml(statusLabel)}</p>
+      ${isCodPayment ? "" : `<p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · ${escapeHtml(statusLabel)}</p>`}
       ${renderPaymentGuideModal(paymentMethod, guide, { payment, orderCode })}
       <div class="customer-checkout-modal-actions">
         ${canSaveQr ? `<button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}" data-payment-qr-filename="${escapeHtml(saveFilename)}">Lưu mã QR</button>` : ""}

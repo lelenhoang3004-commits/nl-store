@@ -51,10 +51,10 @@ export class ProductVariantRepository extends BaseRepository {
     }
   }
 
-  async findByProductId(productId, { customerOnly = false, connection = null } = {}) {
+  async findByProductId(productId, { customerOnly = false, connection = null, forUpdate = false } = {}) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
-    const [rows] = await executor.execute(`${SELECT} WHERE product_id = ? AND deleted_at IS NULL ${customerOnly ? "AND status = 'active'" : ""} ORDER BY color, size, id`, [productId]);
+    const [rows] = await executor.execute(`${SELECT} WHERE product_id = ? AND deleted_at IS NULL ${customerOnly ? "AND status = 'active'" : ""} ORDER BY color, size, id ${forUpdate ? "FOR UPDATE" : ""}`, [productId]);
     return rows.map((row) => new ProductVariant(row));
   }
 
@@ -138,6 +138,31 @@ export class ProductVariantRepository extends BaseRepository {
     return result.affectedRows > 0;
   }
 
+
+  async countOrderReferencesByVariantIds(variantIds, connection = null) {
+    await this.ensureSchema();
+    if (!variantIds.length) return 0;
+    const executor = connection || this.client.getPool();
+    const placeholders = variantIds.map(() => "?").join(",");
+    const [rows] = await executor.execute(`SELECT COUNT(*) AS total FROM order_details WHERE variant_id IN (${placeholders})`, variantIds.map(String));
+    return Number(rows[0]?.total || 0);
+  }
+
+  async deleteCartItemsByVariantIds(variantIds, connection = null) {
+    await this.ensureSchema();
+    if (!variantIds.length) return 0;
+    const executor = connection || this.client.getPool();
+    const placeholders = variantIds.map(() => "?").join(",");
+    const [result] = await executor.execute(`DELETE FROM cart_items WHERE variant_id IN (${placeholders})`, variantIds.map(String));
+    return Number(result.affectedRows || 0);
+  }
+
+  async softDeleteByProductId(productId, connection = null) {
+    await this.ensureSchema();
+    const executor = connection || this.client.getPool();
+    const [result] = await executor.execute(`UPDATE product_variants SET deleted_at=CURRENT_TIMESTAMP, status='inactive', stock=0, updated_at=CURRENT_TIMESTAMP WHERE product_id=? AND deleted_at IS NULL`, [productId]);
+    return Number(result.affectedRows || 0);
+  }
   async updateInventory(id, quantity, connection) {
     await this.ensureSchema();
     const [result] = await connection.execute(`UPDATE product_variants SET stock=stock-?, sold=sold+?, status=CASE WHEN stock-? <= 0 THEN 'out_of_stock' ELSE status END, updated_at=CURRENT_TIMESTAMP WHERE id=? AND stock>=? AND deleted_at IS NULL`, [quantity, quantity, quantity, id, quantity]);

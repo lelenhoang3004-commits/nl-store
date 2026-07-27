@@ -13,7 +13,7 @@ import {
   validateCreateAdminProductRequest,
   validateUpdateAdminProductRequest
 } from "../validators/admin-product.validator.js";
-import { validateCreateVariantRequest, validateDeleteVariantRequest, validateStatusUpdateVariantRequest, validateStockUpdateVariantRequest, validateUpdateVariantRequest, validateVariantListRequest } from "../validators/product-variant.validator.js";
+import { validateCreateVariantRequest, validateDeleteAllVariantsRequest, validateDeleteVariantRequest, validateStatusUpdateVariantRequest, validateStockUpdateVariantRequest, validateUpdateVariantRequest, validateVariantListRequest } from "../validators/product-variant.validator.js";
 
 const router = Router();
 const controller = new AdminProductController();
@@ -23,6 +23,7 @@ const view = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_VIEW] });
 const create = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_MANAGE, AUTH_PERMISSIONS.PRODUCT_CREATE], permissionMode: "any" });
 const update = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_MANAGE, AUTH_PERMISSIONS.PRODUCT_UPDATE], permissionMode: "any" });
 const remove = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_MANAGE, AUTH_PERMISSIONS.PRODUCT_DELETE], permissionMode: "any" });
+const bulkRemove = authorize({ roles, permissions: [AUTH_PERMISSIONS.PRODUCT_MANAGE] });
 
 router.use(authenticate);
 router.get("/:productId/variants", view, validateRequest(validateVariantListRequest), variantController.list);
@@ -30,6 +31,7 @@ router.post("/:productId/variants", create, validateRequest(validateCreateVarian
 router.patch("/:productId/variants/:variantId", update, validateRequest(validateUpdateVariantRequest), variantController.update);
 router.patch("/:productId/variants/:variantId/stock", update, validateRequest(validateStockUpdateVariantRequest), variantController.updateStock);
 router.patch("/:productId/variants/:variantId/status", update, validateRequest(validateStatusUpdateVariantRequest), variantController.updateStatus);
+router.delete("/:productId/variants", bulkRemove, validateRequest(validateDeleteAllVariantsRequest), variantController.removeAll);
 router.delete("/:productId/variants/:variantId", remove, validateRequest(validateDeleteVariantRequest), variantController.remove);
 router.get("/", view, validateRequest(validateAdminProductListRequest), controller.list);
 router.get("/:id", view, validateRequest(validateAdminProductIdRequest), controller.getById);

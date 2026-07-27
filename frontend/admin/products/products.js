@@ -324,7 +324,7 @@ function openVariantModal(root, product) {
         <section class="variant-tab-panel is-active" data-variant-panel="list">
           <div class="variant-panel-toolbar">
             <div><strong>Danh sách biến thể</strong><span>Quản lý SKU, màu, size, giá và tồn kho hiện tại.</span></div>
-            <button type="button" data-variant-add>+ Thêm biến thể</button>
+            <div class="variant-panel-actions"><button type="button" data-variant-add>+ Thêm biến thể</button><button type="button" class="is-danger" data-variant-delete-all hidden><i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa tất cả biến thể</button></div>
           </div>
           <div class="admin-product-variant-list" data-variant-list></div>
         </section>
@@ -383,8 +383,10 @@ function openVariantModal(root, product) {
   const bulkPriceError = modal.querySelector("[data-bulk-price-error]");
   const bulkPriceSaleToggle = modal.querySelector("[data-bulk-price-sale-toggle]");
   const bulkVariantSalePrice = modal.querySelector("[name='bulkVariantSalePrice']");
+  const deleteAllButton = modal.querySelector("[data-variant-delete-all]");
   let editingVariantId = null;
   let variantsCache = [];
+  let deleteAllInFlight = false;
 
   const setActiveTab = (tab) => {
     modal.querySelectorAll("[data-variant-tab]").forEach((button) => button.classList.toggle("is-active", button.dataset.variantTab === tab));
@@ -405,9 +407,10 @@ function openVariantModal(root, product) {
       syncProductVariantState(state, { id: product.id, variantCount: variants.length, variants });
       if (root) renderRows(root);
       renderBulkTools(variants);
+      if (deleteAllButton) deleteAllButton.hidden = variants.length === 0;
 
       if (!variants.length) {
-        listTarget.innerHTML = '<div class="admin-product-variant-empty-state">Chưa có biến thể nào cho sản phẩm này.</div>';
+        listTarget.innerHTML = '<div class="admin-product-variant-empty-state">Sản phẩm chưa có biến thể.</div>';
         return;
       }
 
@@ -427,6 +430,82 @@ function openVariantModal(root, product) {
     }
   };
 
+
+  function openDeleteAllVariantsModal() {
+    if (document.querySelector(".variant-delete-all-overlay")) return;
+    if (!variantsCache.length) {
+      toast.error("Sản phẩm không có biến thể để xóa.");
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "variant-delete-all-overlay";
+    overlay.innerHTML = `
+      <section class="variant-delete-all-dialog" role="dialog" aria-modal="true" aria-labelledby="variant-delete-all-title">
+        <header>
+          <div class="variant-delete-all-icon"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></div>
+          <div><h2 id="variant-delete-all-title">Xóa tất cả biến thể?</h2><p>Hành động này sẽ xóa toàn bộ biến thể của sản phẩm hiện tại và không thể hoàn tác.</p></div>
+        </header>
+        <div class="variant-delete-all-summary">
+          <p><span>Tên sản phẩm</span><strong>${escapeHtml(product?.name || "-")}</strong></p>
+          <p><span>Tổng số biến thể sẽ bị xóa</span><strong>${variantsCache.length}</strong></p>
+        </div>
+        <label class="variant-delete-all-confirm"><span>Nhập XOA TAT CA để xác nhận</span><input type="text" data-delete-all-confirm-input autocomplete="off" spellcheck="false"></label>
+        <p class="admin-product-form-error" data-delete-all-error></p>
+        <footer>
+          <button type="button" class="is-secondary" data-delete-all-cancel>Hủy</button>
+          <button type="button" class="is-danger" data-delete-all-submit disabled>Xóa tất cả biến thể</button>
+        </footer>
+      </section>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("is-visible"));
+
+    const input = overlay.querySelector("[data-delete-all-confirm-input]");
+    const submitButton = overlay.querySelector("[data-delete-all-submit]");
+    const cancelButton = overlay.querySelector("[data-delete-all-cancel]");
+    const errorNode = overlay.querySelector("[data-delete-all-error]");
+    const close = () => { overlay.remove(); };
+
+    input?.addEventListener("input", () => {
+      submitButton.disabled = input.value.trim() !== "XOA TAT CA" || deleteAllInFlight;
+    });
+    cancelButton?.addEventListener("click", close);
+    overlay.addEventListener("click", (event) => { if (event.target === overlay && !deleteAllInFlight) close(); });
+    input?.focus();
+
+    submitButton?.addEventListener("click", async () => {
+      if (deleteAllInFlight || input.value.trim() !== "XOA TAT CA") return;
+      deleteAllInFlight = true;
+      submitButton.disabled = true;
+      cancelButton.disabled = true;
+      if (deleteAllButton) {
+        deleteAllButton.disabled = true;
+        deleteAllButton.textContent = "Đang xóa...";
+      }
+      submitButton.textContent = "Đang xóa...";
+      errorNode.textContent = "";
+      try {
+        await productService.deleteAllVariants(product.id, silent());
+        close();
+        toast.success("Đã xóa tất cả biến thể của sản phẩm.");
+        await renderVariants();
+        setActiveTab("list");
+      } catch (error) {
+        const errorMessage = message(error);
+        errorNode.textContent = errorMessage;
+        toast.error(errorMessage);
+      } finally {
+        deleteAllInFlight = false;
+        submitButton.textContent = "Xóa tất cả biến thể";
+        cancelButton.disabled = false;
+        if (deleteAllButton) {
+          deleteAllButton.disabled = false;
+          deleteAllButton.innerHTML = '<i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa tất cả biến thể';
+        }
+        submitButton.disabled = input.value.trim() !== "XOA TAT CA";
+      }
+    });
+  }
   function renderVariantRow(variant) {
     const stock = Number(variant.stock || 0);
     const stockBadge = stock === 0 ? `<span class="variant-badge is-empty">Hết hàng</span>` : stock <= 5 ? `<span class="variant-badge is-low">Sắp hết · ${stock}</span>` : `<span class="variant-badge is-ok">Còn hàng · ${stock}</span>`;
@@ -644,6 +723,7 @@ function openVariantModal(root, product) {
 
   modal.querySelectorAll("[data-variant-tab]").forEach((button) => button.addEventListener("click", () => setActiveTab(button.dataset.variantTab)));
   modal.querySelector("[data-variant-add]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("form"); });
+  deleteAllButton?.addEventListener("click", openDeleteAllVariantsModal);
   modal.querySelector("[data-variant-cancel]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("list"); });
   modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply, button)));
 

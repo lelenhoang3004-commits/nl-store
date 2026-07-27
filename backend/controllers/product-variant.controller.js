@@ -10,4 +10,13 @@ export class ProductVariantController extends BaseController {
   updateStock = asyncHandler(async (req, res) => this.sendSuccess(res, { variant: await this.service.updateVariantStock(req.params.productId ?? req.params.id, req.params.variantId, req.body) }, "Product variant stock updated successfully."));
   updateStatus = asyncHandler(async (req, res) => this.sendSuccess(res, { variant: await this.service.updateVariantStatus(req.params.productId ?? req.params.id, req.params.variantId, req.body?.status) }, "Product variant status updated successfully."));
   remove = asyncHandler(async (req, res) => this.sendSuccess(res, { variant: await this.service.deleteVariant(req.params.productId ?? req.params.id, req.params.variantId) }, "Product variant deleted successfully."));
+  removeAll = asyncHandler(async (req, res) => {
+    const result = await this.service.deleteAllVariants(req.params.productId ?? req.params.id);
+    return res.json({
+      success: true,
+      deleted_count: result.deleted_count,
+      message: result.message || "Đã xóa tất cả biến thể.",
+      data: result
+    });
+  });
 }

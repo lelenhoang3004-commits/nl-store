@@ -15,6 +15,7 @@ class ProductService extends BaseService {
   updateVariantStock(id, variantId, payload, options = {}) { return this.client.patch(this.path(id, "variants", variantId, "stock"), payload, options); }
   updateVariantStatus(id, variantId, status, options = {}) { return this.client.patch(this.path(id, "variants", variantId, "status"), { status }, options); }
   deleteVariant(id, variantId, options = {}) { return this.client.delete(this.path(id, "variants", variantId), options); }
+  deleteAllVariants(id, options = {}) { return this.client.delete(this.path(id, "variants"), options); }
 }
 
 export const productService = new ProductService();

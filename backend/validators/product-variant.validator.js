@@ -35,6 +35,10 @@ export function validateDeleteVariantRequest({ params }) {
   return mergeValidationResults([validateVariantListRequest({ params }), validateId(params.variantId, { required: true, field: "variantId", location: "params" })]);
 }
 
+export function validateDeleteAllVariantsRequest({ params }) {
+  return validateVariantListRequest({ params });
+}
+
 function validatePayload(body, required) {
   const errors = [];
   if (required && isEmpty(body.sku)) errors.push(error("sku", "sku is required."));
