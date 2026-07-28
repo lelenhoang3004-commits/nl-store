@@ -215,6 +215,7 @@ function normalizePath(value) {
   return String(value ?? "")
     .replace(/^#/, "")
     .replace(/^\//, "")
+    .split("?")[0]
     .trim();
 }
 

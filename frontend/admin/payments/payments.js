@@ -14,6 +14,7 @@ let modalUxCleanup = null;
 
 export async function createPaymentsPage() {
   const template = await loadTemplate(new URL("./index.html", import.meta.url));
+  state.query = readQueryFromUrl();
   try { await fetchPayments(); } catch (error) { state.error = error; }
   return template;
 }
@@ -33,6 +34,49 @@ async function fetchPayments() {
   state.error = null;
 }
 
+function readQueryFromUrl() {
+  const params = getPaymentsUrlSearchParams();
+  return {
+    ...DEFAULT_QUERY,
+    search: String(params.get("search") || "").trim(),
+    status: String(params.get("status") || ""),
+    method: String(params.get("method") || ""),
+    provider: String(params.get("provider") || ""),
+    page: positiveInteger(params.get("page"), DEFAULT_QUERY.page),
+    limit: positiveInteger(params.get("limit"), DEFAULT_QUERY.limit)
+  };
+}
+
+function syncPaymentsQueryToUrl() {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams();
+  ["search", "status", "method", "provider"].forEach((name) => {
+    const value = String(state.query[name] || "").trim();
+    if (value) params.set(name, value);
+  });
+  params.set("page", String(positiveInteger(state.query.page, DEFAULT_QUERY.page)));
+  params.set("limit", String(positiveInteger(state.query.limit, DEFAULT_QUERY.limit)));
+  const routePath = getPaymentsRoutePath();
+  const query = params.toString();
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${routePath}${query ? `?${query}` : ""}`);
+}
+
+function getPaymentsUrlSearchParams() {
+  if (typeof window === "undefined") return new URLSearchParams();
+  const hash = String(window.location.hash || "").replace(/^#/, "");
+  const queryIndex = hash.indexOf("?");
+  return new URLSearchParams(queryIndex >= 0 ? hash.slice(queryIndex + 1) : "");
+}
+
+function getPaymentsRoutePath() {
+  if (typeof window === "undefined") return "payments";
+  return String(window.location.hash || "#payments").replace(/^#/, "").split("?")[0] || "payments";
+}
+
+function positiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
 function hydrateFilters(root) {
   const form = root.querySelector("[data-payment-filters]");
   if (!form) return;
@@ -48,6 +92,7 @@ function bindEvents(root) {
     if (state.busy) return;
     const data = new FormData(form);
     state.query = { ...state.query, page: 1, search: String(data.get("search") || "").trim(), status: String(data.get("status") || ""), method: String(data.get("method") || ""), provider: String(data.get("provider") || "") };
+    syncPaymentsQueryToUrl();
     await reloadList(root);
   });
 
@@ -55,6 +100,7 @@ function bindEvents(root) {
     if (state.busy) return;
     form?.reset();
     state.query = { ...DEFAULT_QUERY };
+    syncPaymentsQueryToUrl();
     await reloadList(root);
   });
 
@@ -62,7 +108,7 @@ function bindEvents(root) {
 
   root.addEventListener("click", async (event) => {
     const pageButton = event.target.closest("[data-payment-page]");
-    if (pageButton && !pageButton.disabled && !state.busy) { state.query.page = Number(pageButton.dataset.paymentPage); await reloadList(root); return; }
+    if (pageButton && !pageButton.disabled && !state.busy) { state.query.page = Number(pageButton.dataset.paymentPage) || 1; syncPaymentsQueryToUrl(); await reloadList(root); return; }
     if (event.target.closest("[data-payment-retry]")) { await reloadList(root); return; }
     const detailButton = event.target.closest("[data-payment-detail]");
     if (detailButton && !state.busy) { await openDetailModal(root, detailButton.dataset.paymentDetail); return; }
@@ -86,7 +132,7 @@ function renderRows(root) {
     renderPagination(root);
     return;
   }
-  body.innerHTML = state.payments.length ? state.payments.map(renderPaymentRow).join("") : '<tr><td colspan="11" class="admin-payment-empty">Kh\u00f4ng c\u00f3 giao d\u1ecbch thanh to\u00e1n ph\u00f9 h\u1ee3p.</td></tr>';
+  body.innerHTML = state.payments.length ? state.payments.map(renderPaymentRow).join("") : '<tr><td colspan="11" class="admin-payment-empty">Kh\u00f4ng t\u00ecm th\u1ea5y giao d\u1ecbch ph\u00f9 h\u1ee3p</td></tr>';
   renderPagination(root);
 }
 

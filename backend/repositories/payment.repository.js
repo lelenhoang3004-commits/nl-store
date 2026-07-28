@@ -552,36 +552,48 @@ export class PaymentRepository extends BaseRepository {
         pt.transaction_code LIKE ?
         OR o.order_code LIKE ?
         OR o.customer_name LIKE ?
+        OR o.customer_email LIKE ?
         OR o.customer_phone LIKE ?
-        OR pt.provider LIKE ?
-        OR pt.method LIKE ?
       )`);
       const keyword = `%${options.search.keyword}%`;
-      params.push(keyword, keyword, keyword, keyword, keyword, keyword);
+      params.push(keyword, keyword, keyword, keyword, keyword);
     }
 
-    ["orderId", "paymentMethodId", "provider", "method", "status"].forEach((field) => {
+    ["orderId", "paymentMethodId"].forEach((field) => {
       if (options.filter[field]) {
-        const column = field === "orderId"
-          ? "pt.order_id"
-          : field === "paymentMethodId"
-            ? "pt.payment_method_id"
-            : `pt.${field}`;
-        conditions.push(`${column} = ?`);
+        conditions.push(`${field === "orderId" ? "pt.order_id" : "pt.payment_method_id"} = ?`);
         params.push(options.filter[field]);
       }
     });
+
+    ["provider", "method"].forEach((field) => {
+      if (options.filter[field]) {
+        conditions.push(`LOWER(pt.${field}) = LOWER(?)`);
+        params.push(options.filter[field]);
+      }
+    });
+
+    if (options.filter.status) {
+      const statuses = getTransactionStatusAliases(options.filter.status);
+      conditions.push(`LOWER(pt.status) IN (${statuses.map(() => "?").join(", ")})`);
+      params.push(...statuses);
+    }
 
     return {
       whereSql: `WHERE ${conditions.join(" AND ")}`,
       params
     };
   }
-
   execute(sql, params = [], connection = null) {
     const safeParams = normalizeSqlParams(params);
     return connection
       ? connection.execute(sql, safeParams)
       : this.client.getPool().execute(sql, safeParams);
   }
+}
+function getTransactionStatusAliases(status) {
+  const normalized = String(status || "").trim().toLowerCase();
+  if (normalized === "paid") return ["paid", "success", "completed"];
+  if (normalized === "cancelled") return ["cancelled", "canceled"];
+  return [normalized];
 }
