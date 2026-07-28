@@ -189,6 +189,189 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .admin-order-modal footer button { padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font-weight: 700; cursor: pointer; }
 .admin-order-modal footer .admin-order-danger { color: #fff; }
 
+
+.admin-order-payment-confirm-modal {
+  padding: 16px;
+}
+
+.admin-order-payment-confirm-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: 20px;
+  background: var(--color-surface);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22), 0 8px 26px rgba(15, 23, 42, .12);
+}
+
+.admin-order-payment-confirm-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: start !important;
+  gap: 16px !important;
+  padding: 26px 26px 18px !important;
+  border-bottom: 0 !important;
+}
+
+.admin-order-payment-confirm-header h2 {
+  margin: 12px 0 0 !important;
+  color: var(--color-text);
+  font-size: clamp(1.35rem, 2.8vw, 1.62rem);
+  line-height: 1.2;
+}
+
+.admin-order-payment-confirm-close {
+  display: inline-grid;
+  place-items: center;
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-text) 8%) !important;
+  color: var(--color-text) !important;
+  font-size: 1.22rem !important;
+  line-height: 1 !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .08);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.admin-order-payment-confirm-close:hover,
+.admin-order-payment-confirm-close:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border)) !important;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .14);
+  outline: none;
+}
+
+.admin-order-payment-confirm-body {
+  display: grid;
+  gap: 18px;
+  padding: 0 26px 22px;
+}
+
+.admin-order-payment-confirm-message {
+  margin: 0;
+  color: var(--color-text);
+  font-size: .98rem;
+  line-height: 1.55;
+}
+
+.admin-order-payment-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-primary) 4%);
+}
+
+.admin-order-payment-confirm-item {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-surface) 94%, white 6%);
+}
+
+.admin-order-payment-confirm-item span {
+  color: var(--color-muted);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.admin-order-payment-confirm-item strong {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: .98rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.admin-order-payment-confirm-item.is-amount strong {
+  color: #be185d;
+  font-size: 1.08rem;
+}
+
+.admin-order-payment-method-badge {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #a50064;
+  color: #fff !important;
+  font-size: .82rem !important;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none !important;
+}
+
+.admin-order-payment-confirm-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  padding: 0 26px 26px !important;
+}
+
+.admin-order-payment-confirm-actions button {
+  min-height: 42px;
+  padding: 10px 16px !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+}
+
+.admin-order-payment-confirm-secondary {
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+.admin-order-payment-confirm-primary {
+  border: 1px solid #a50064 !important;
+  background: linear-gradient(135deg, #c2187a, #8f0f63) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px rgba(165, 0, 100, .22);
+}
+
+.admin-order-payment-confirm-secondary:hover,
+.admin-order-payment-confirm-secondary:focus-visible,
+.admin-order-payment-confirm-primary:hover,
+.admin-order-payment-confirm-primary:focus-visible {
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.admin-order-payment-confirm-actions button:disabled {
+  transform: none;
+  cursor: wait;
+  opacity: .72;
+}
+
+
+body.theme-dark .admin-order-payment-confirm-grid {
+  background: color-mix(in srgb, var(--color-surface) 82%, #a50064 8%);
+}
+
+body.theme-dark .admin-order-payment-confirm-item {
+  background: color-mix(in srgb, var(--color-surface) 90%, white 4%);
+  border-color: color-mix(in srgb, var(--color-border) 82%, white 8%);
+}
+
+body.theme-dark .admin-order-payment-confirm-close {
+  background: color-mix(in srgb, var(--color-surface) 86%, white 6%) !important;
+}
+
 @media (max-width: 1100px) {
   .admin-order-filters { grid-template-columns: repeat(2, 1fr); }
   .admin-order-detail-grid { grid-template-columns: 1fr; }
@@ -204,4 +387,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .admin-order-item img { width: 64px; height: 64px; }
   .admin-order-item > strong { grid-column: 2; }
   .admin-order-inline-error { align-items: stretch; flex-direction: column; text-align: center; }
+
+  .admin-order-payment-confirm-dialog { width: min(600px, calc(100vw - 32px)); border-radius: 18px; }
+  .admin-order-payment-confirm-header { grid-template-columns: minmax(0, 1fr) 38px; padding: 22px 20px 14px !important; }
+  .admin-order-payment-confirm-body { padding: 0 20px 18px; }
+  .admin-order-payment-confirm-grid { grid-template-columns: 1fr; padding: 12px; }
+  .admin-order-payment-confirm-actions { align-items: stretch; flex-direction: column-reverse; padding: 0 20px 22px !important; }
+  .admin-order-payment-confirm-actions button { width: 100%; }
 }

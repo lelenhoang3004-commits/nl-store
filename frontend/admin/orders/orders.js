@@ -272,10 +272,8 @@ function initOrderDetail(root, orderId) {
   root.querySelector("[data-detail-cancel]")?.addEventListener("click", () => openCancelModal(orderId, () => refreshOrderDetail(root, orderId)));
   root.querySelectorAll("[data-confirm-payment]").forEach((button) => button.addEventListener("click", async () => {
     const payment = detailState?.payments?.find((item) => String(item.id) === String(button.dataset.confirmPayment));
-    const confirmed = await openOrderPaymentConfirmDialog(payment, detailState?.order || {});
-    if (!confirmed) return;
     button.disabled = true;
-    try {
+    const confirmed = await openOrderPaymentConfirmDialog(payment, detailState?.order || {}, async () => {
       await apiClient.patch(`/payments/${button.dataset.confirmPayment}/status`, {
         status: "paid",
         note: isMomoPayment(payment) ? "Admin xác nhận thanh toán MoMo QR cá nhân." : "Admin xác nhận cửa hàng đã nhận tiền chuyển khoản.",
@@ -284,50 +282,81 @@ function initOrderDetail(root, orderId) {
       toast.success("Đã xác nhận đã nhận tiền.");
       await refreshOrderDetail(root, orderId);
       refreshAdminSidebarCounts();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
+    });
+    if (!confirmed) {
       button.disabled = false;
     }
   }))
+
 }
 
-function openOrderPaymentConfirmDialog(payment = {}, order = {}) {
+function openOrderPaymentConfirmDialog(payment = {}, order = {}, onConfirm = null) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
-    overlay.className = "admin-order-modal is-visible";
+    overlay.className = "admin-order-modal admin-order-payment-confirm-modal is-visible";
     overlay.dataset.orderPaymentConfirmModal = "";
     overlay.innerHTML = `
-      <section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="order-payment-confirm-title" tabindex="-1">
-        <header><div><p class="admin-orders-eyebrow">Xác nhận thanh toán</p><h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2></div><button type="button" data-payment-confirm-cancel aria-label="Đóng">×</button></header>
+      <section class="admin-order-modal-dialog admin-order-payment-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="order-payment-confirm-title" tabindex="-1">
+        <header class="admin-order-payment-confirm-header">
+          <div>
+            <p class="admin-orders-eyebrow">XÁC NHẬN THANH TOÁN</p>
+            <h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2>
+          </div>
+          <button class="admin-order-payment-confirm-close" type="button" data-payment-confirm-cancel aria-label="Đóng">×</button>
+        </header>
         <div class="admin-order-payment-confirm-body">
-          <p>Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p>
-          <div class="admin-order-info-grid">
-            <p><span>Mã đơn hàng</span><strong>${escapeHtml(order.orderCode || payment.orderCode || "—")}</strong></p>
-            <p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "—")}</strong></p>
-            <p><span>Khách hàng</span><strong>${escapeHtml(order.customerName || payment.customerName || "—")}</strong></p>
-            <p><span>Số tiền</span><strong>${formatCurrency(payment.amount || order.grandTotal)}</strong></p>
-            <p><span>Phương thức</span><strong>MoMo</strong></p>
+          <p class="admin-order-payment-confirm-message">Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p>
+          <div class="admin-order-payment-confirm-grid">
+            ${paymentConfirmField("Mã đơn hàng", order.orderCode || payment.orderCode || "—")}
+            ${paymentConfirmField("Mã giao dịch", payment.transactionCode || "—")}
+            ${paymentConfirmField("Khách hàng", [order.customerName || payment.customerName || "—", order.customerCode || order.customer_code || payment.customerCode || payment.customer_code || ""].filter(Boolean).join("\n"))}
+            ${paymentConfirmField("Số tiền", formatCurrency(payment.amount || order.grandTotal), "is-amount")}
+            ${paymentConfirmField("Phương thức", '<span class="admin-order-payment-method-badge">MoMo</span>', "is-method", true)}
           </div>
         </div>
-        <footer><button type="button" data-payment-confirm-cancel>Hủy</button><button type="button" class="admin-order-danger" data-payment-confirm-ok>Xác nhận đã nhận tiền</button></footer>
+        <footer class="admin-order-payment-confirm-actions">
+          <button class="admin-order-payment-confirm-secondary" type="button" data-payment-confirm-cancel>Hủy</button>
+          <button class="admin-order-payment-confirm-primary" type="button" data-payment-confirm-ok>Xác nhận đã nhận tiền</button>
+        </footer>
       </section>`;
     document.body.appendChild(overlay);
     document.body.classList.add("modal-open");
+
+    const buttons = Array.from(overlay.querySelectorAll("button"));
+    const confirmButton = overlay.querySelector("[data-payment-confirm-ok]");
     const close = (value) => {
       overlay.remove();
       document.body.classList.remove("modal-open");
       resolve(value);
     };
+    const setLoading = (loading) => {
+      buttons.forEach((button) => { button.disabled = loading; });
+      if (confirmButton) confirmButton.textContent = loading ? "Đang xác nhận..." : "Xác nhận đã nhận tiền";
+    };
+
     overlay.addEventListener("click", (event) => {
+      if (confirmButton?.disabled) return;
       if (event.target === overlay || event.target.closest("[data-payment-confirm-cancel]")) close(false);
     });
-    overlay.querySelector("[data-payment-confirm-ok]")?.addEventListener("click", (event) => {
-      event.currentTarget.disabled = true;
-      close(true);
+    confirmButton?.addEventListener("click", async () => {
+      setLoading(true);
+      try {
+        await onConfirm?.();
+        close(true);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+        setLoading(false);
+      }
     });
     overlay.querySelector("[data-payment-confirm-cancel]")?.focus({ preventScroll: true });
   });
 }
+
+function paymentConfirmField(label, value, className = "", isHtml = false) {
+  const content = isHtml ? value : escapeHtml(value || "—").replaceAll("\n", "<br>");
+  return `<div class="admin-order-payment-confirm-item ${className}"><span>${escapeHtml(label)}</span><strong>${content}</strong></div>`;
+}
+
 async function refreshOrderDetail(root, orderId) {
   setBusy(root, true);
   try {
