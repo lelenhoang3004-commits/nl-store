@@ -30,7 +30,7 @@ export function createCustomerHeader(user = null, cart = null, wishlistCount = 0
   return `
     <div class="customer-header-inner customer-container">
       <a class="store-logo" href="#home" aria-label="Trang chủ N&amp;L Store">
-        <span class="store-logo-mark"><img src="../assets/images/nl-store-logo.png" alt=""></span>
+        <span class="store-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt=""></span>
         <span>
           <strong>N&amp;L Store</strong>
           <small>Thời trang hiện đại</small>

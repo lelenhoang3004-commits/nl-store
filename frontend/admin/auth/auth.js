@@ -173,7 +173,7 @@ export function createLockScreenPage() {
     description: "Xác thực lại tài khoản quản trị để tiếp tục.",
     body: `
       <form class="auth-form" data-validate-form data-auth-form="lock">
-        <div class="auth-logo" aria-hidden="true"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="auth-logo" aria-hidden="true"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt=""></div>
         <strong style="text-align:center;color:var(--color-text);">Tài khoản quản trị</strong>
         <div class="validation-summary" data-validation-summary></div>
         ${createField("Password", "password", "password", "••••••••", "required|min:6")}
@@ -268,7 +268,7 @@ function createAuthPage({ title, description, body }) {
       <article class="auth-card">
         <header class="auth-header">
           <div class="auth-logo" aria-hidden="true">
-            <img src="../assets/images/nl-store-logo.png" alt="">
+            <img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="">
           </div>
           <h1 id="auth-title">${title}</h1>
           <p>${authCopy.systemName}</p>

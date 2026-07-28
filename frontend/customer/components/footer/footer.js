@@ -20,7 +20,7 @@ export function createCustomerFooter() {
     <div class="customer-container footer-grid">
       <section class="footer-brand">
         <a class="store-logo" href="#home" aria-label="Trang chủ N&amp;L Store">
-          <span class="store-logo-mark"><img src="../assets/images/nl-store-logo.png" alt=""></span>
+          <span class="store-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt=""></span>
           <span>
             <strong>N&amp;L Store</strong>
             <small>Phong cách hiện đại</small>

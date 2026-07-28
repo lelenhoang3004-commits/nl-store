@@ -3664,7 +3664,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: inherit;
+  border-radius: 0;
   object-fit: contain;
 }
 
@@ -3672,4 +3672,57 @@
   max-width: 76px;
   max-height: 76px;
   margin: 0 auto;
+}
+
+/* N&L Store logo image: keep the source artwork intact without extra frames. */
+.auth-logo-mark,
+.auth-login-content .auth-logo-mark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+
+.login-hero-brand {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-logo-mark img,
+.login-hero-brand img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+@media (max-width: 560px) {
+  .auth-logo-mark,
+  .auth-login-content .auth-logo-mark {
+    width: 58px;
+    height: 58px;
+  }
+
+  .login-hero-brand {
+    width: 62px;
+    height: 62px;
+  }
 }
