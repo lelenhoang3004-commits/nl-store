@@ -4,7 +4,7 @@ import { API_CONFIG } from "../services/api/api.config.js";
 import { dashboardService } from "../services/dashboard.service.js";
 
 const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
-const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='53%25' text-anchor='middle' fill='%2364748b' font-size='12'%3ENo image%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='53%25' text-anchor='middle' fill='%2364748b' font-size='12'%3EKh%C3%B4ng%20c%C3%B3%20%E1%BA%A3nh%3C/text%3E%3C/svg%3E";
 const STATUS_ORDER = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled"];
 const PAYMENT_METHODS = ["cod", "bank_transfer", "credit_card", "vnpay", "momo"];
 

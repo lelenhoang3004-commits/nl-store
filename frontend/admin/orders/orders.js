@@ -6,7 +6,7 @@ import { apiClient } from "../services/api/index.js";
 import { API_CONFIG } from "../services/api/api.config.js";
 import { orderService } from "../services/order.service.js";
 import { refreshAdminSidebarCounts } from "../components/sidebar/sidebar.js";
-import { formatPaymentMethod, formatPaymentStatus, normalizePaymentStatus } from "../utils/payment-formatters.js";
+import { formatOrderStatus, formatPaymentMethod, formatPaymentStatus, normalizeOrderStatus, normalizePaymentStatus } from "../utils/payment-formatters.js";
 
 const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='52%25' text-anchor='middle' fill='%2364748b' font-size='13'%3EKhông có ảnh%3C/text%3E%3C/svg%3E";
@@ -241,9 +241,9 @@ function renderPayment(payment, orderPaymentStatus) {
     : isPersonalMomo
       ? `<p><span>Nội dung MoMo</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p>`
       : method === "credit_card"
-        ? `<p><span>Card brand / last4</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
+        ? `<p><span>Thương hiệu thẻ / 4 số cuối</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
         : "";
-  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Provider</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xác nhận đã nhận tiền</button>` : ""}</div>`;
+  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Nhà cung cấp</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xác nhận đã nhận tiền</button>` : ""}</div>`;
 }
 
 function isMomoPayment(payment) {
@@ -298,7 +298,7 @@ function openOrderPaymentConfirmDialog(payment = {}, order = {}) {
     overlay.dataset.orderPaymentConfirmModal = "";
     overlay.innerHTML = `
       <section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="order-payment-confirm-title" tabindex="-1">
-        <header><div><p class="admin-orders-eyebrow">Payment Confirmation</p><h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2></div><button type="button" data-payment-confirm-cancel aria-label="Đóng">×</button></header>
+        <header><div><p class="admin-orders-eyebrow">Xác nhận thanh toán</p><h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2></div><button type="button" data-payment-confirm-cancel aria-label="Đóng">×</button></header>
         <div class="admin-order-payment-confirm-body">
           <p>Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p>
           <div class="admin-order-info-grid">
@@ -350,7 +350,7 @@ function openCancelModal(orderId, onSuccess) {
   const overlay = document.createElement("div");
   overlay.className = "admin-order-modal";
   overlay.dataset.orderCancelModal = "";
-  overlay.innerHTML = `<section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title"><header><div><p class="admin-orders-eyebrow">Order Management</p><h2 id="cancel-order-title">Hủy đơn hàng</h2></div><button type="button" aria-label="Đóng" data-cancel-close>×</button></header><form data-cancel-form><label><span>Lý do hủy</span><textarea name="reason" maxlength="500" required placeholder="Nhập lý do hủy đơn...">Khách yêu cầu hủy</textarea></label><small>Tối đa 500 ký tự. Tồn kho sẽ được backend hoàn lại trong transaction.</small><footer><button type="button" data-cancel-close>Đóng</button><button type="submit" class="admin-order-danger">Xác nhận hủy</button></footer></form></section>`;
+  overlay.innerHTML = `<section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title"><header><div><p class="admin-orders-eyebrow">Quản lý đơn hàng</p><h2 id="cancel-order-title">Hủy đơn hàng</h2></div><button type="button" aria-label="Đóng" data-cancel-close>×</button></header><form data-cancel-form><label><span>Lý do hủy</span><textarea name="reason" maxlength="500" required placeholder="Nhập lý do hủy đơn...">Khách yêu cầu hủy</textarea></label><small>Tối đa 500 ký tự. Tồn kho sẽ được backend hoàn lại trong transaction.</small><footer><button type="button" data-cancel-close>Đóng</button><button type="submit" class="admin-order-danger">Xác nhận hủy</button></footer></form></section>`;
   document.body.appendChild(overlay);
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => overlay.classList.add("is-visible"));
@@ -391,7 +391,7 @@ function getErrorMessage(error) {
 function silentErrors() { return { showErrorToast: false }; }
 function setBusy(root, busy) { root?.querySelectorAll?.("button, select, textarea, input").forEach((element) => { element.disabled = busy; }); }
 function canCancel(order) { return ["pending", "confirmed"].includes(order.status); }
-function badge(label, status) { const className = normalizePaymentStatus(status) || String(status || "neutral").toLowerCase(); return `<span class="admin-order-badge is-${escapeHtml(className)}">${escapeHtml(label)}</span>`; }
+function badge(label, status) { const className = normalizePaymentStatus(status) || normalizeOrderStatus(status) || String(status || "neutral").toLowerCase(); return `<span class="admin-order-badge is-${escapeHtml(className)}">${escapeHtml(label)}</span>`; }
 function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", confirmed: "Đã xác nhận", processing: "Đang xử lý", shipping: "Đang giao", completed: "Hoàn thành", cancelled: "Đã hủy", refunded: "Đã hoàn tiền" })[status] || status || "—"; }
 function paymentStatusLabel(status) { return formatPaymentStatus(status); }
 function paymentMethodLabel(method) { return formatPaymentMethod(method); }

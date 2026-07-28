@@ -8,22 +8,63 @@ const PAYMENT_METHOD_LABELS = Object.freeze({
   credit_card_demo: "Thanh to\u00e1n b\u1eb1ng th\u1ebb t\u00edn d\u1ee5ng"
 });
 
-const PAYMENT_STATUS_LABELS = Object.freeze({
-  pending: "Ch\u1edd thanh to\u00e1n",
-  unpaid: "Ch\u1edd thanh to\u00e1n",
-  customer_reported: "Kh\u00e1ch \u0111\u00e3 b\u00e1o thanh to\u00e1n",
-  waiting_confirmation: "\u0110ang ch\u1edd x\u00e1c nh\u1eadn",
-  processing: "\u0110ang x\u1eed l\u00fd",
-  paid: "\u0110\u00e3 thanh to\u00e1n",
-  success: "\u0110\u00e3 thanh to\u00e1n",
-  completed: "\u0110\u00e3 thanh to\u00e1n",
-  failed: "Thanh to\u00e1n th\u1ea5t b\u1ea1i",
-  cancelled: "\u0110\u00e3 h\u1ee7y",
-  canceled: "\u0110\u00e3 h\u1ee7y",
-  expired: "\u0110\u00e3 h\u1ebft h\u1ea1n",
-  refunded: "\u0110\u00e3 ho\u00e0n ti\u1ec1n",
-  partial: "Thanh to\u00e1n m\u1ed9t ph\u1ea7n"
+const ORDER_STATUS_LABELS = Object.freeze({
+  pending: "Chờ xác nhận",
+  confirmed: "Đã xác nhận",
+  processing: "Đang xử lý",
+  shipping: "Đang giao hàng",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
+  canceled: "Đã hủy",
+  refunded: "Đã hoàn tiền"
 });
+
+const PAYMENT_STATUS_LABELS = Object.freeze({
+  pending: "Chờ thanh toán",
+  unpaid: "Chờ thanh toán",
+  customer_reported: "Khách đã báo thanh toán",
+  waiting_confirmation: "Đang chờ xác nhận",
+  processing: "Đang xử lý",
+  paid: "Đã thanh toán",
+  success: "Đã thanh toán",
+  completed: "Đã thanh toán",
+  failed: "Thanh toán thất bại",
+  cancelled: "Đã hủy",
+  canceled: "Đã hủy",
+  expired: "Đã hết hạn",
+  refunded: "Đã hoàn tiền",
+  partial: "Thanh toán một phần"
+});
+
+const ROLE_LABELS = Object.freeze({
+  admin: "Quản trị viên",
+  staff: "Nhân viên",
+  customer: "Khách hàng",
+  user: "Người dùng"
+});
+
+const PRODUCT_STATUS_LABELS = Object.freeze({
+  active: "Đang bán",
+  inactive: "Tạm ngừng bán",
+  draft: "Bản nháp",
+  archived: "Đã lưu trữ",
+  deleted: "Đã xóa",
+  out_of_stock: "Hết hàng"
+});
+
+const VOUCHER_STATUS_LABELS = Object.freeze({
+  active: "Đang hoạt động",
+  inactive: "Tạm khóa",
+  scheduled: "Chưa bắt đầu",
+  expired: "Hết hạn",
+  soldout: "Hết lượt",
+  used_up: "Hết lượt"
+});
+
+export function formatOrderStatus(status = "") {
+  const key = normalizeCode(status);
+  return ORDER_STATUS_LABELS[key] || String(status || "-");
+}
 
 export function formatPaymentMethod(method = "") {
   const key = normalizeCode(method);
@@ -41,6 +82,31 @@ export function normalizePaymentStatus(status = "") {
   if (key === "canceled") return "cancelled";
   if (key === "waiting_confirmation" || key === "customer_reported") return "processing";
   return key;
+}
+
+export function normalizeOrderStatus(status = "") {
+  const key = normalizeCode(status);
+  if (key === "canceled") return "cancelled";
+  return key;
+}
+
+export function formatRole(role = "") {
+  const key = normalizeCode(role);
+  return ROLE_LABELS[key] || String(role || "-");
+}
+
+export function formatProductStatus(status = "") {
+  const key = normalizeCode(status);
+  return PRODUCT_STATUS_LABELS[key] || String(status || "-");
+}
+
+export function formatVariantStatus(status = "") {
+  return formatProductStatus(status);
+}
+
+export function formatVoucherStatus(status = "") {
+  const key = normalizeCode(status);
+  return VOUCHER_STATUS_LABELS[key] || String(status || "-");
 }
 
 function normalizeCode(value = "") {

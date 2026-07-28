@@ -7,6 +7,7 @@ import { createHomePage, initHomePage } from "../../home/home.js";
 import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
+import { formatOrderStatus, formatPaymentMethod, formatPaymentStatus } from "../../../admin/utils/payment-formatters.js";
 
 // Minimal, robust layout manager for customer site
 // Prevent Live Server / dev-server injected websocket reloads from forcing a full page reload.
@@ -141,56 +142,49 @@ let appInitialized = false;
 
 function normalizeOrderStatus(status = "") {
   const value = String(status || "").toLowerCase();
-  const map = {
-    pending: { label: "Đang chờ xác nhận", variant: "warning" },
-    confirmed: { label: "Đã xác nhận", variant: "info" },
-    processing: { label: "Đang chuẩn bị", variant: "primary" },
-    shipped: { label: "Đang giao hàng", variant: "accent" },
-    delivered: { label: "Đã giao hàng", variant: "success" },
-    cancelled: { label: "Đã hủy", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
+  const variants = {
+    pending: "warning",
+    confirmed: "info",
+    processing: "primary",
+    shipping: "accent",
+    shipped: "accent",
+    completed: "success",
+    delivered: "success",
+    cancelled: "danger",
+    canceled: "danger",
+    refunded: "neutral"
   };
 
-  return map[value] || { label: status || "Đang xử lý", variant: "neutral" };
+  return { label: formatOrderStatus(value || status) || "Đang xử lý", variant: variants[value] || "neutral" };
 }
 
 function normalizePaymentStatus(status = "") {
   const value = String(status || "").toLowerCase();
-  const map = {
-    unpaid: { label: "Chưa thanh toán", variant: "warning" },
-    partial: { label: "Thanh toán một phần", variant: "info" },
-    paid: { label: "Đã thanh toán", variant: "success" },
-    failed: { label: "Thanh toán lỗi", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
+  const variants = {
+    pending: "warning",
+    unpaid: "warning",
+    partial: "info",
+    processing: "primary",
+    customer_reported: "primary",
+    waiting_confirmation: "primary",
+    paid: "success",
+    success: "success",
+    completed: "success",
+    failed: "danger",
+    cancelled: "danger",
+    canceled: "danger",
+    refunded: "neutral"
   };
 
-  return map[value] || { label: status || "Chưa cập nhật", variant: "neutral" };
+  return { label: formatPaymentStatus(value || status) || "Chưa cập nhật", variant: variants[value] || "neutral" };
 }
 
 function normalizePaymentTransactionStatus(status = "") {
-  const value = String(status || "").toLowerCase();
-  const map = {
-    pending: { label: "Chờ thanh toán", variant: "warning" },
-    paid: { label: "Đã thanh toán", variant: "success" },
-    success: { label: "Đã thanh toán", variant: "success" },
-    failed: { label: "Thanh toán thất bại", variant: "danger" },
-    refunded: { label: "Đã hoàn tiền", variant: "neutral" }
-  };
-
-  return map[value] || { label: status || "Chưa cập nhật", variant: "neutral" };
+  return normalizePaymentStatus(status);
 }
 
 function getPaymentMethodLabel(method = "") {
-  const value = String(method || "").toLowerCase();
-  const labels = {
-    cod: "Thanh toán khi nhận hàng",
-    bank_transfer: "Chuyển khoản ngân hàng",
-    credit_card: "Thẻ tín dụng",
-    vnpay: "VNPay",
-    momo: "MoMo"
-  };
-
-  return labels[value] || method || "Chưa cập nhật";
+  return formatPaymentMethod(method) || "Chưa cập nhật";
 }
 
 function createStatusBadge(label, variant) {

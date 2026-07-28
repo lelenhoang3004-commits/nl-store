@@ -22,14 +22,14 @@ let authRedirectInProgress = false;
 
 const sessionManagerCallbacks = {
   onSessionExpired(reason) {
-    toast.warning(reason === "idle-timeout" ? "Báº¡n Ä‘Ã£ khÃ´ng thao tÃ¡c trong má»™t thá»i gian." : "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n.");
+    toast.warning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn.");
     window.location.hash = "session-expired";
   },
   onTokenRefreshed() {
     window.dispatchEvent(new CustomEvent("fashion-admin-token-refreshed"));
   },
   onLoggedOutInAnotherTab() {
-    toast.info("PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng xuáº¥t á»Ÿ tab khÃ¡c.");
+    toast.info("Phiên đăng nhập đã được đăng xuất ở tab khác.");
     window.location.hash = "login";
   }
 };
@@ -106,7 +106,7 @@ function bindLayoutEvents() {
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    toast.error("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
+    toast.error("Bạn không có quyền truy cập.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -117,7 +117,7 @@ function handleUnauthorizedApiResponse() {
   authRedirectInProgress = true;
   stopAdminSidebarCounts();
   logoutAdminAccount("api-unauthorized");
-  toast.warning("PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.");
+  toast.warning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
   window.location.hash = "#login";
 }
 
@@ -184,7 +184,7 @@ async function handleLogout() {
   if (confirmed) {
     stopAdminSidebarCounts();
     logoutAdminAccount("logout");
-    toast.info("ÄÃ£ Ä‘Äƒng xuáº¥t khá»i trang quáº£n trá»‹.");
+    toast.info("Đã đăng xuất khỏi trang quản trị.");
     window.location.hash = "login";
   }
 }
@@ -205,7 +205,7 @@ function toggleSidebarCollapse() {
 function updateSidebarCollapseButton(isCollapsed) {
   const button = document.querySelector("[data-sidebar-collapse]");
   if (!button) return;
-  const label = isCollapsed ? "Má»Ÿ rá»™ng sidebar" : "Thu gá»n sidebar";
+  const label = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.setAttribute("aria-expanded", String(!isCollapsed));
