@@ -1,5 +1,5 @@
 ﻿import { createProductGrid, initProductGrid } from "../components/product-grid/product-grid.js";
-import { createHeroComponent, initHeroComponent } from "../components/hero/hero.js";
+import { createHeroComponent, initHeroComponent } from "../components/hero/hero.js?v=20260730-hero-refresh";
 import { createFlashSaleSection, initFlashSaleSection } from "../components/flash-sale/flash-sale.js";
 import { createFeaturedProductsSection, initFeaturedProductsSection } from "../components/featured-products/featured-products.js";
 import { createNewArrivalSection, initNewArrivalSection } from "../components/new-arrival/new-arrival.js";
