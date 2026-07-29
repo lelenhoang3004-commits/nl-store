@@ -1140,7 +1140,7 @@ function renderLoginPage() {
       <img src="assets/images/login-fashion-photo-placeholder.svg" alt="Thời trang cao cấp N&L Store">
       <div class="login-banner-overlay"></div>
       <div class="login-hero-content">
-        <div class="login-hero-brand"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="N&amp;L Store"></div>
+        <div class="login-hero-brand" aria-label="N&amp;L Store"><span class="login-hero-brand-main">N&amp;L</span><span class="login-hero-brand-sub">STORE</span></div>
         <div class="nl-login-slogan" data-no-text-split="true" aria-label="Khẳng định gu thời thượng – Kiến tạo dấu ấn riêng">
           <div class="nl-login-slogan__white">KH&#7858;NG &#272;&#7882;NH GU TH&#7900;I TH&#431;&#7906;NG</div>
           <div class="nl-login-slogan__gold">KI&#7870;N T&#7840;O D&#7844;U &#7844;N RI&#202;NG</div>
