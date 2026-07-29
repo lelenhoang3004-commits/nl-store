@@ -23,8 +23,9 @@ const settingsSections = [
     description: "Cấu hình cửa hàng thời trang.",
     fields: [
       { name: "storeName", label: "Tên cửa hàng", type: "text", value: "N&L Store" },
-      { name: "hotline", label: "Hotline", type: "tel", value: "0900 123 456" },
-      { name: "address", label: "Địa chỉ", type: "textarea", value: "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" },
+      { name: "hotline", label: "Hotline", type: "tel", value: "+84 793244405" },
+      { name: "address", label: "Địa chỉ", type: "textarea", value: "128 Đường 3/2, Phường Ninh Kiều, TP. Cần Thơ" },
+      { name: "contactEmail", label: "Email liên hệ", type: "email", value: "contactwork.ad@gmail.com" },
       { name: "orderPrefix", label: "Tiền tố đơn hàng", type: "text", value: "FS" }
     ]
   },

@@ -28,9 +28,9 @@ export function createCustomerFooter() {
         </a>
         <p>Thời trang hiện đại cho công việc, cuộc sống và những ngày cần một diện mạo thật gọn gàng.</p>
         <ul class="footer-contact-list">
-          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i> 128 Nguyễn Huệ, Quận 1, TP. HCM</li>
-          <li><i class="fa-solid fa-phone" aria-hidden="true"></i> +84 28 1234 5678</li>
-          <li><i class="fa-solid fa-envelope" aria-hidden="true"></i> hello@fashionstore.com</li>
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i> 128 Đường 3/2, Phường Ninh Kiều, TP. Cần Thơ</li>
+          <li><i class="fa-solid fa-phone" aria-hidden="true"></i> <a href="tel:+84793244405">+84 793244405</a></li>
+          <li><i class="fa-solid fa-envelope" aria-hidden="true"></i> <a href="mailto:contactwork.ad@gmail.com">contactwork.ad@gmail.com</a></li>
         </ul>
         <div class="footer-socials" aria-label="Mạng xã hội">
           <a href="#facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></a>
