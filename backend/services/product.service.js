@@ -187,8 +187,16 @@ export class ProductService extends BaseService {
   async expandCategoryFilter(options) {
     const categoryId = Number(options.filter.categoryId);
     if (!Number.isInteger(categoryId) || categoryId < 1) return;
-    const descendantIds = await this.categoryRepository.findDescendantIds(categoryId);
+    const [category, descendantIds] = await Promise.all([
+      this.categoryRepository.findById(categoryId, { isCustomer: true }),
+      this.categoryRepository.findDescendantIds(categoryId)
+    ]);
+    if (!category) return;
     options.filter.categoryIds = [categoryId, ...descendantIds];
+    options.filter.categoryMatch = {
+      name: category.name,
+      slug: category.slug
+    };
   }
 }
 

@@ -94,6 +94,30 @@ function createAccentFoldSql(column) {
   }, `LOWER(COALESCE(${column}, ''))`);
 }
 
+function normalizeCategoryMatchValue(value = "") {
+  return String(value || "").replace(/^#+/, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function createCategoryMatchFilter(category = {}) {
+  const values = [...new Set([category.name, category.slug].map(normalizeCategoryMatchValue).filter(Boolean))];
+  if (!values.length) return { sql: "", params: [] };
+
+  const normalizedTagsSql = "LOWER(TRIM(REPLACE(COALESCE(p.tags, ''), '#', '')))";
+  const clauses = [];
+  const params = [];
+
+  values.forEach((value) => {
+    clauses.push("LOWER(COALESCE(p.name, '')) LIKE ?");
+    params.push(`%${value}%`);
+    clauses.push(`${normalizedTagsSql} LIKE ?`);
+    params.push(`%${value}%`);
+  });
+
+  return {
+    sql: `(${clauses.join(" OR ")})`,
+    params
+  };
+}
 export class ProductRepository extends BaseRepository {
   async findAll(options) {
     const startedAt = Date.now();
@@ -471,11 +495,14 @@ export class ProductRepository extends BaseRepository {
     }
 
     if (Array.isArray(options.filter.categoryIds) && options.filter.categoryIds.length) {
-      conditions.push(`p.category_id IN (${options.filter.categoryIds.map(() => "?").join(", ")})`);
-      params.push(...options.filter.categoryIds);
+      const directCategorySql = `p.category_id IN (${options.filter.categoryIds.map(() => "?").join(", ")})`;
+      const categoryMatch = createCategoryMatchFilter(options.filter.categoryMatch);
+      conditions.push(categoryMatch.sql ? `(${directCategorySql} OR ${categoryMatch.sql})` : directCategorySql);
+      params.push(...options.filter.categoryIds, ...categoryMatch.params);
     } else if (options.filter.categoryId) {
-      conditions.push("p.category_id = ?");
-      params.push(options.filter.categoryId);
+      const categoryMatch = createCategoryMatchFilter(options.filter.categoryMatch);
+      conditions.push(categoryMatch.sql ? `(p.category_id = ? OR ${categoryMatch.sql})` : "p.category_id = ?");
+      params.push(options.filter.categoryId, ...categoryMatch.params);
     }
 
     if (options.filter.brand) {
