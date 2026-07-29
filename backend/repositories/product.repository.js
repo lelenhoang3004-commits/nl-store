@@ -452,14 +452,16 @@ export class ProductRepository extends BaseRepository {
 
     if (options.search.enabled) {
       const keywords = options.search.keyword.split("|").map((item) => item.trim()).filter(Boolean).slice(0, 12);
-      const searchableColumns = ["p.name", "p.slug", "p.brand", "p.tags", "p.short_description", "p.description", "c.name", "c.slug"];
+      const searchableColumns = ["p.name", "p.slug", "p.sku", "p.brand", "p.tags", "p.short_description", "p.description", "c.name", "c.slug"];
       const accentFoldColumns = searchableColumns.map(createAccentFoldSql);
-      conditions.push(`(${keywords.map(() => `(${searchableColumns.map((column) => `LOWER(COALESCE(${column}, '')) LIKE LOWER(?)`).join(" OR ")} OR ${accentFoldColumns.map((column) => `${column} LIKE ?`).join(" OR ")})`).join(" OR ")})`);
+      const variantSkuClause = "EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND pv.deleted_at IS NULL AND LOWER(COALESCE(pv.sku, '')) LIKE LOWER(?))";
+      conditions.push(`(${keywords.map(() => `(${searchableColumns.map((column) => `LOWER(COALESCE(${column}, '')) LIKE LOWER(?)`).join(" OR ")} OR ${accentFoldColumns.map((column) => `${column} LIKE ?`).join(" OR ")} OR ${variantSkuClause})`).join(" OR ")})`);
       keywords.forEach((keyword) => {
         const trimmedKeyword = String(keyword).trim();
         const normalizedKeyword = normalizeVietnameseSearchText(trimmedKeyword);
         searchableColumns.forEach(() => params.push(`%${trimmedKeyword}%`));
         accentFoldColumns.forEach(() => params.push(`%${normalizedKeyword}%`));
+        params.push(`%${trimmedKeyword}%`);
       });
     }
 

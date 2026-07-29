@@ -25,6 +25,7 @@ export class AdminProductService {
   async listProducts(query = {}) {
     const options = parseQueryOptions(query, QUERY_OPTIONS);
     await this.expandCategoryFilter(options);
+    await this.variantRepository.ensureSchema?.();
     const [products, totalItems] = await Promise.all([
       this.repository.findAll(options),
       this.repository.countAll(options)
