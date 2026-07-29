@@ -147,6 +147,34 @@
   font-size: 0.78rem;
 }
 
+.footer-contact-list a {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  transition: color 180ms ease, text-decoration-color 180ms ease, outline-color 180ms ease;
+}
+
+.footer-contact-list a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-color: rgba(37, 99, 235, 0.38);
+  text-underline-offset: 3px;
+}
+
+.footer-contact-list a:focus {
+  outline: none;
+}
+
+.footer-contact-list a:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 3px;
+}
+
 .footer-socials {
   display: flex;
   flex-wrap: wrap;
