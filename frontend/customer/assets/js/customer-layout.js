@@ -1,4 +1,4 @@
-import { createCustomerFooter } from "../../components/footer/footer.js";
+import { createCustomerFooter } from "../../components/footer/footer.js?v=20260729-contact-update";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
 import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
