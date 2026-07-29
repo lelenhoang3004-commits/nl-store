@@ -153,3 +153,259 @@
   .top-product-info strong { font-size: .92rem; }
   .top-product-info span, .top-product-info small { font-size: .78rem; }
 }
+/* Light mode dashboard refinement: scoped to dashboard only, dark mode keeps the base styles above. */
+body:not(.theme-dark) .dashboard-page {
+  --dashboard-light-bg: #F4F7FB;
+  --dashboard-light-card: #FFFFFF;
+  --dashboard-light-border: #DCE4F0;
+  --dashboard-light-text: #0F172A;
+  --dashboard-light-muted: #64748B;
+  --dashboard-light-primary: #2563EB;
+  --dashboard-light-primary-soft: #EFF6FF;
+  --dashboard-light-row: #F8FAFC;
+  --dashboard-light-track: #E8EEF6;
+  --dashboard-light-shadow: 0 10px 26px rgba(15, 23, 42, .055);
+  --dashboard-light-shadow-hover: 0 14px 32px rgba(15, 23, 42, .075);
+  color: var(--dashboard-light-text);
+}
+
+body:not(.theme-dark) .admin-main:has(.dashboard-page) {
+  background: var(--dashboard-light-bg);
+}
+
+body:not(.theme-dark) .dashboard-period,
+body:not(.theme-dark) .stat-card,
+body:not(.theme-dark) .dashboard-card,
+body:not(.theme-dark) .dashboard-secondary > article {
+  border: 1px solid var(--dashboard-light-border);
+  background: var(--dashboard-light-card);
+  box-shadow: var(--dashboard-light-shadow);
+}
+
+body:not(.theme-dark) .stat-card,
+body:not(.theme-dark) .dashboard-secondary > article {
+  min-height: 104px;
+  border-radius: 16px;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+body:not(.theme-dark) .stat-card:hover,
+body:not(.theme-dark) .dashboard-secondary > article:hover,
+body:not(.theme-dark) .dashboard-card:hover {
+  border-color: #CBD8E8;
+  box-shadow: var(--dashboard-light-shadow-hover);
+  transform: translateY(-1px);
+}
+
+body:not(.theme-dark) .dashboard-card {
+  border-radius: 16px;
+}
+
+body:not(.theme-dark) .dashboard-heading h1,
+body:not(.theme-dark) .stat-value,
+body:not(.theme-dark) .dashboard-secondary strong,
+body:not(.theme-dark) .card-header h2,
+body:not(.theme-dark) .status-row strong,
+body:not(.theme-dark) .payment-row strong,
+body:not(.theme-dark) .payment-row b,
+body:not(.theme-dark) .top-product-info strong,
+body:not(.theme-dark) .top-product-revenue strong,
+body:not(.theme-dark) .revenue-summary strong {
+  color: var(--dashboard-light-text);
+}
+
+body:not(.theme-dark) .dashboard-heading p,
+body:not(.theme-dark) .stat-label,
+body:not(.theme-dark) .dashboard-secondary span:not(.secondary-icon),
+body:not(.theme-dark) .card-header p,
+body:not(.theme-dark) .revenue-summary span,
+body:not(.theme-dark) .revenue-column > strong,
+body:not(.theme-dark) .revenue-column small,
+body:not(.theme-dark) .status-label,
+body:not(.theme-dark) .payment-name,
+body:not(.theme-dark) .top-product-info span,
+body:not(.theme-dark) .top-product-info small,
+body:not(.theme-dark) .top-product-progress small,
+body:not(.theme-dark) .top-product-revenue span,
+body:not(.theme-dark) .dashboard-empty {
+  color: var(--dashboard-light-muted);
+}
+
+body:not(.theme-dark) .dashboard-eyebrow,
+body:not(.theme-dark) .card-header > a,
+body:not(.theme-dark) .orders-table a,
+body:not(.theme-dark) .top-products-link,
+body:not(.theme-dark) .top-product-info small b {
+  color: var(--dashboard-light-primary);
+}
+
+body:not(.theme-dark) .stat-icon,
+body:not(.theme-dark) .secondary-icon,
+body:not(.theme-dark) .revenue-summary i {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--dashboard-light-primary-soft);
+  color: var(--dashboard-light-primary);
+  box-shadow: none;
+}
+
+body:not(.theme-dark) .secondary-icon {
+  width: 40px;
+  height: 40px;
+}
+
+body:not(.theme-dark) .stat-value {
+  font-size: 1.18rem;
+  font-weight: 760;
+}
+
+body:not(.theme-dark) .dashboard-period {
+  min-height: 42px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .045);
+}
+
+body:not(.theme-dark) .revenue-summary {
+  gap: 12px;
+}
+
+body:not(.theme-dark) .revenue-summary article {
+  padding: 13px 46px 13px 14px;
+  border: 1px solid var(--dashboard-light-border);
+  border-radius: 13px;
+  background: #FFFFFF;
+}
+
+body:not(.theme-dark) .revenue-summary strong {
+  font-size: 1.04rem;
+  font-weight: 760;
+}
+
+body:not(.theme-dark) .revenue-bars-inner {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD8E8 transparent;
+}
+
+body:not(.theme-dark) .revenue-bars-inner::-webkit-scrollbar {
+  height: 6px;
+}
+
+body:not(.theme-dark) .revenue-bars-inner::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #CBD8E8;
+}
+
+body:not(.theme-dark) .revenue-bars-inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body:not(.theme-dark) .revenue-track {
+  background: #EEF3F9;
+  box-shadow: inset 0 0 0 1px #E5ECF5;
+}
+
+body:not(.theme-dark) .revenue-track span {
+  background: linear-gradient(180deg, #5FA8F8 0%, var(--dashboard-light-primary) 100%);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, .16);
+}
+
+body:not(.theme-dark) .revenue-track span[style="height:2%"] {
+  background: #DDE7F2;
+  box-shadow: none;
+}
+
+body:not(.theme-dark) .status-row,
+body:not(.theme-dark) .payment-row,
+body:not(.theme-dark) .top-product-row {
+  border: 1px solid #E3EAF3;
+  background: var(--dashboard-light-row);
+  box-shadow: none;
+}
+
+body:not(.theme-dark) .status-row,
+body:not(.theme-dark) .payment-row {
+  border-radius: 12px;
+}
+
+body:not(.theme-dark) .dashboard-progress,
+body:not(.theme-dark) .top-product-progress span {
+  background: var(--dashboard-light-track);
+}
+
+body:not(.theme-dark) .dashboard-progress i,
+body:not(.theme-dark) .top-product-progress i {
+  background: linear-gradient(90deg, var(--dashboard-light-primary), #60A5FA);
+}
+
+body:not(.theme-dark) .status-row.is-pending .status-icon { background: #EFF6FF; color: #2563EB; }
+body:not(.theme-dark) .status-row.is-confirmed .status-icon { background: #FFFBEB; color: #D97706; }
+body:not(.theme-dark) .status-row.is-processing .status-icon { background: #F5F3FF; color: #7C3AED; }
+body:not(.theme-dark) .status-row.is-shipping .status-icon { background: #ECFEFF; color: #0891B2; }
+body:not(.theme-dark) .status-row.is-completed .status-icon { background: #F0FDF4; color: #16A34A; }
+body:not(.theme-dark) .status-row.is-cancelled .status-icon { background: #FFF1F2; color: #E11D48; }
+
+body:not(.theme-dark) .payment-row.is-cash .payment-icon { background: #F0FDF4; color: #16A34A; }
+body:not(.theme-dark) .payment-row.is-bank .payment-icon { background: #EFF6FF; color: #2563EB; }
+body:not(.theme-dark) .payment-row.is-momo .payment-icon { background: #FDF2F8; color: #DB2777; }
+body:not(.theme-dark) .payment-row.is-card .payment-icon { background: #F5F3FF; color: #7C3AED; }
+body:not(.theme-dark) .payment-row.is-other .payment-icon { background: #F8FAFC; color: #64748B; }
+
+body:not(.theme-dark) .status-row.is-completed .dashboard-progress i { background: linear-gradient(90deg, #22C55E, #86EFAC); }
+body:not(.theme-dark) .status-row.is-cancelled .dashboard-progress i { background: linear-gradient(90deg, #EF4444, #FDA4AF); }
+
+body:not(.theme-dark) .status-total,
+body:not(.theme-dark) .payment-total,
+body:not(.theme-dark) .top-products-link {
+  border-top-color: var(--dashboard-light-border);
+}
+
+body:not(.theme-dark) .top-product-row {
+  border-radius: 15px;
+  background: #FFFFFF;
+}
+
+body:not(.theme-dark) .top-product-row.is-gold {
+  border-color: #DCE4F0;
+  background: linear-gradient(90deg, #FFFFFF 0%, #F8FAFC 100%);
+  box-shadow: inset 3px 0 0 #F6C453;
+}
+
+body:not(.theme-dark) .top-product-rank {
+  background: #EFF6FF;
+  color: var(--dashboard-light-primary);
+  box-shadow: none;
+}
+
+body:not(.theme-dark) .top-product-row.is-gold .top-product-rank {
+  background: linear-gradient(135deg, #FFF7D6, #F8D66D);
+  color: #854D0E;
+}
+
+body:not(.theme-dark) .top-product-row.is-silver .top-product-rank {
+  background: linear-gradient(135deg, #F8FAFC, #E2E8F0);
+  color: #475569;
+}
+
+body:not(.theme-dark) .top-product-row.is-bronze .top-product-rank {
+  background: linear-gradient(135deg, #FFF1E5, #FDBA74);
+  color: #9A3412;
+}
+
+body:not(.theme-dark) .top-product-image {
+  background: #EEF2F7;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+body:not(.theme-dark) .top-product-revenue strong {
+  font-weight: 760;
+}
+
+body:not(.theme-dark) .orders-table th,
+body:not(.theme-dark) .orders-table td {
+  border-bottom-color: var(--dashboard-light-border);
+}
+
+body:not(.theme-dark) .orders-table tbody tr:hover {
+  background: #F8FAFC;
+}
