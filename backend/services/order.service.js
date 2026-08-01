@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { OrderRepository } from "../repositories/order.repository.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
+import { logger } from "../utils/logger.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { withTransaction } from "../utils/database.util.js";
 
@@ -187,43 +188,58 @@ export class OrderService extends BaseService {
 
   async cancelCustomerOrder(id, customerId, payload = {}) {
     const reason = normalizeOptionalString(payload.reason) || "Order cancelled by customer.";
-    await withTransaction(async (connection) => {
-      const order = await this.repository.findByIdForUpdate(id, connection);
-      if (!order) {
-        throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
-      }
-      if (String(order.customerId) !== String(customerId)) {
-        throw new AppError("You are not allowed to cancel this order.", 403, "ORDER_FORBIDDEN");
-      }
-      if (String(order.paymentStatus || "").toLowerCase() === PAYMENT_STATUS.PAID || Number(order.paidAmount || 0) > 0) {
-        throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
-      }
-      const transactions = await this.repository.findTransactionsByOrderId(id, connection);
-      const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success"].includes(String(transaction.status || "").toLowerCase()));
-      if (hasSuccessfulPayment) {
-        throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
-      }
-      if (order.status !== ORDER_STATUS.PENDING) {
-        throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
-          currentStatus: order.status
-        });
-      }
+    let currentStatus = null;
+    try {
+      await withTransaction(async (connection) => {
+        const order = await this.repository.findByIdForUpdate(id, connection);
+        currentStatus = order?.status || null;
+        if (!order) {
+          throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+        }
+        if (String(order.customerId) !== String(customerId)) {
+          throw new AppError("You are not allowed to cancel this order.", 403, "ORDER_FORBIDDEN");
+        }
+        if (String(order.paymentStatus || "").toLowerCase() === PAYMENT_STATUS.PAID || Number(order.paidAmount || 0) > 0) {
+          throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
+        }
+        const transactions = await this.repository.findTransactionsByOrderId(id, connection);
+        const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success"].includes(String(transaction.status || "").toLowerCase()));
+        if (hasSuccessfulPayment) {
+          throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
+        }
+        if (order.status !== ORDER_STATUS.PENDING) {
+          throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
+            currentStatus: order.status
+          });
+        }
 
-      const items = await this.repository.findDetailsByOrderId(id, connection);
-      await this.repository.restoreInventory(items, connection);
-      const cancelled = await this.repository.cancelOrder(id, { paymentStatus: PAYMENT_STATUS.FAILED }, connection);
-      if (!cancelled) {
-        throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
-          currentStatus: order.status
-        });
-      }
-      await this.repository.cancelOpenPaymentTransactions(id, connection);
-      await this.repository.addHistory(id, {
-        status: ORDER_STATUS.CANCELLED,
-        note: reason,
-        changedBy: customerId
-      }, connection);
-    });
+        const items = await this.repository.findDetailsByOrderId(id, connection);
+        await this.repository.restoreInventory(items, connection);
+        const cancelled = await this.repository.cancelOrder(id, { paymentStatus: PAYMENT_STATUS.FAILED }, connection);
+        if (!cancelled) {
+          throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
+            currentStatus: order.status
+          });
+        }
+        await this.repository.cancelOpenPaymentTransactions(id, connection);
+        await this.repository.addHistory(id, {
+          status: ORDER_STATUS.CANCELLED,
+          note: reason,
+          changedBy: customerId
+        }, connection);
+      });
+    } catch (error) {
+      logger.error("Customer order cancellation failed.", {
+        message: error?.message,
+        stack: error?.stack,
+        code: error?.code,
+        sqlMessage: error?.sqlMessage,
+        orderId: id,
+        userId: customerId,
+        currentStatus
+      });
+      throw error;
+    }
 
     return this.getCustomerOrderById(id, customerId);
   }
