@@ -16,6 +16,10 @@
   box-shadow: var(--shadow-soft);
 }
 
+.premium-section[id] {
+  scroll-margin-top: var(--customer-section-scroll-margin, 110px);
+}
+
 .section-heading {
   display: flex;
   align-items: end;

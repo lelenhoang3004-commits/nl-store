@@ -148,6 +148,38 @@ function scrollCustomerPageToTop(smooth = true) {
   });
 }
 
+function getCustomerHeaderOffset() {
+  const header = document.querySelector('.customer-header, header');
+  const headerHeight = header ? header.getBoundingClientRect().height : 0;
+  return headerHeight + 20;
+}
+
+function scrollToCustomerSection(sectionId, smooth = true) {
+  const target = document.getElementById(sectionId);
+
+  if (!target) {
+    console.warn(`[customer-layout] Section not found: ${sectionId}`);
+    return false;
+  }
+
+  const targetTop = window.scrollY + target.getBoundingClientRect().top - getCustomerHeaderOffset();
+  window.scrollTo({
+    top: Math.max(0, targetTop),
+    left: 0,
+    behavior: smooth ? 'smooth' : 'auto'
+  });
+
+  return true;
+}
+
+function scheduleCustomerSectionScroll(sectionId, smooth = true) {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      scrollToCustomerSection(sectionId, smooth);
+    });
+  });
+}
+
 function normalizeOrderStatus(status = "") {
   const value = String(status || "").toLowerCase();
   const variants = {
@@ -561,6 +593,12 @@ function navigateToRoute(route, replace = false) {
       return;
     }
 
+    if (homeSectionRoutes.has(targetRoute)) {
+      syncCustomerNavigationActive(targetRoute);
+      scheduleCustomerSectionScroll(targetRoute, true);
+      return;
+    }
+
     renderRoute();
     return;
   }
@@ -725,13 +763,12 @@ function renderHomeRoute(sectionId = "") {
 
   Promise.resolve(initResult).finally(() => {
     syncWishlistToggleButtons();
-    window.requestAnimationFrame(() => {
-      if (sectionId) {
-        const target = document.getElementById(sectionId);
-        target?.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
+    if (sectionId) {
+      scheduleCustomerSectionScroll(sectionId, true);
+      return;
+    }
 
+    window.requestAnimationFrame(() => {
       scrollCustomerPageToTop(true);
     });
   });
