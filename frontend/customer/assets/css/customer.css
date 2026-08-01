@@ -2658,6 +2658,25 @@
   gap: 18px;
 }
 
+.auth-pending-checkout-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(35, 78, 143, .16);
+  border-radius: 12px;
+  background: #EEF4FC;
+  color: #17233C;
+  font-size: .92rem;
+  line-height: 1.45;
+}
+
+.auth-pending-checkout-note i {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #E2A84A;
+}
+
 .auth-login-content .auth-field {
   gap: 8px;
   color: #17233C;

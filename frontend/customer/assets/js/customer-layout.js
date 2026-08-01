@@ -634,6 +634,13 @@ function renderRoute() {
 
     if ((protectedRoutes.has(nextRoute) || isOrdersRoute) && !customerAuth.isAuthenticated()) {
       layoutState.pendingRoute = nextRoute;
+      if (nextRoute === "checkout" && !getPendingCheckout()) {
+        savePendingCheckout({
+          action: "CART_CHECKOUT",
+          sourceRoute: window.location.hash || "#cart",
+          returnRoute: "#checkout"
+        });
+      }
       if (window.location.hash.toLowerCase() !== '#login') {
         navigateToRoute('login');
       }
@@ -1167,12 +1174,13 @@ async function handleOAuthMessage(event) {
       user: event.data.user || null,
       provider
     }, true);
+    await Promise.all([refreshCart(), refreshWishlist()]);
+    renderHeader();
+    if (await continuePendingCheckoutAfterLogin()) return;
     layoutState.pendingRoute = "";
     window.history.replaceState(null, "", "index.html#home");
     currentRoute = "";
     renderRoute();
-    await Promise.all([refreshCart(), refreshWishlist()]);
-    renderHeader();
     showCustomerToast("Đăng nhập thành công", "success");
   } catch (error) {
     console.debug(`[auth] ${providerLabel} popup login failed`, error?.message || error);
@@ -1187,6 +1195,10 @@ async function handleOAuthMessage(event) {
   }
 }
 function renderLoginPage() {
+  const pendingCheckout = getPendingCheckout();
+  const pendingCheckoutNotice = pendingCheckout
+    ? `<div class="auth-pending-checkout-note" role="status"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span>Vui lòng đăng nhập để tiếp tục thanh toán. Lựa chọn của bạn đã được giữ lại.</span></div>`
+    : "";
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page"><div class="customer-container"><article class="auth-card auth-login-card auth-luxury-card">
     <aside class="auth-luxury-panel login-banner-panel" aria-label="N&L Store">
       <img src="assets/images/login-fashion-photo-placeholder.svg" alt="Thời trang cao cấp N&L Store">
@@ -1208,7 +1220,7 @@ function renderLoginPage() {
     <div class="auth-login-content">
       <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
       <div class="auth-heading auth-login-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L STORE</span><h1><span>Chào mừng bạn</span><span>quay lại</span></h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
-      <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>
+      <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>${pendingCheckoutNotice}
         <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
         <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
         <div class="auth-row"><label class="auth-check"><input type="checkbox" name="remember"><span>Ghi nhớ đăng nhập</span></label><a href="#forgot-password">Quên mật khẩu?</a></div>
@@ -1223,7 +1235,7 @@ function renderLoginPage() {
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]"); clearLoginFieldErrors(form);
     if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span>Đang đăng nhập...</span>";
-    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
+    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); await Promise.all([refreshCart(), refreshWishlist()]); renderHeader(); if (await continuePendingCheckoutAfterLogin()) return; showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
     catch(error){ showLoginError(form,error); }
     finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
   });
@@ -1414,7 +1426,7 @@ function renderPhoneLoginPage() {
     </form></article></div></section>`;
   const form=layoutState.main.querySelector("[data-phone-form]"),send=form.querySelector("[data-send-otp]"),fields=form.querySelector("[data-otp-fields]"); let timer;
   send.addEventListener("click",async()=>{send.disabled=true;try{const result=await customerAuth.sendPhoneOtp(form.phone.value);fields.hidden=false;fields.querySelector("[name=otp]").required=true;const passwordField=fields.querySelector("[data-new-password]"),confirmField=fields.querySelector("[data-confirm-password]");passwordField.hidden=!result.requiresPassword;confirmField.hidden=!result.requiresPassword;passwordField.querySelector("input").required=Boolean(result.requiresPassword);confirmField.querySelector("input").required=Boolean(result.requiresPassword);let left=result.resendAfter||60;const counter=fields.querySelector("[data-countdown]");counter.textContent=left;clearInterval(timer);timer=setInterval(()=>{left-=1;counter.textContent=Math.max(left,0);if(left<=0){clearInterval(timer);send.disabled=false;send.textContent="Gửi lại mã OTP";}},1000);showCustomerMessage(form,"Mã OTP đã được gửi.","success");}catch(error){showCustomerMessage(form,error?.message||"Không thể gửi OTP.");send.disabled=false;}});
-  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});showCustomerToast("Đăng nhập thành công.","success");navigateToRoute(layoutState.pendingRoute||"home");}catch(error){showCustomerMessage(form,error?.message||"Xác thực OTP thất bại.");}finally{button.disabled=false;}});
+  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});await Promise.all([refreshCart(), refreshWishlist()]);renderHeader();if(await continuePendingCheckoutAfterLogin())return;showCustomerToast("Đăng nhập thành công.","success");const redirect=layoutState.pendingRoute||"home";layoutState.pendingRoute="";navigateToRoute(redirect);}catch(error){showCustomerMessage(form,error?.message||"Xác thực OTP thất bại.");}finally{button.disabled=false;}});
 }
 
 async function renderAuthCallbackPage() {
@@ -1437,12 +1449,12 @@ async function renderAuthCallbackPage() {
 
   try {
     await customerAuth.completeExternalLogin({ accessToken: callback.token, user: callback.user, provider: callback.provider }, true);
-    window.history.replaceState(null, "", "index.html#home");
-    currentRoute = "";
-    renderHeader();
-    renderRoute();
     await Promise.all([refreshCart(), refreshWishlist()]);
     renderHeader();
+    if (await continuePendingCheckoutAfterLogin()) return;
+    window.history.replaceState(null, "", "index.html#home");
+    currentRoute = "";
+    renderRoute();
     showCustomerToast("Đăng nhập thành công", "success");
   } catch (callbackError) {
     console.debug("[auth] OAuth callback failed", callbackError?.message || callbackError);
@@ -1843,6 +1855,17 @@ function bindCartPageEvents() {
       return;
     }
     clearBuyNowCheckout();
+    if (!customerAuth.isAuthenticated()) {
+      savePendingCheckout({
+        action: "CART_CHECKOUT",
+        sourceRoute: "#cart",
+        returnRoute: "#checkout"
+      });
+      layoutState.pendingRoute = "checkout";
+      showCustomerToast("Vui lòng đăng nhập để tiếp tục thanh toán. Giỏ hàng của bạn đã được giữ lại.", "success");
+      navigateToRoute("login");
+      return;
+    }
     navigateToRoute('checkout');
   });
 }
@@ -2588,9 +2611,32 @@ async function renderCheckoutPage() {
   try {
     const buyNowCheckout = readBuyNowCheckout();
     const isBuyNow = buyNowCheckout?.mode === "buy_now" && buyNowCheckout.items.length > 0;
+    let buyNowItems = buyNowCheckout?.items || [];
     let items;
     if (isBuyNow) {
-      items = buyNowCheckout.items.map(mapBuyNowItemForCheckout);
+      const originalItem = buyNowCheckout.items[0] || {};
+      const productId = originalItem.product_id ?? originalItem.productId;
+      try {
+        const validatedItem = await createValidatedBuyNowItemFromPending({
+          ...createPendingCheckoutFromBuyNowItem(originalItem),
+          productId,
+          variantId: originalItem.variant_id ?? originalItem.variantId,
+          quantity: originalItem.quantity,
+          sourceRoute: productId ? `#product-detail/${encodeURIComponent(productId)}` : "#home"
+        });
+        const oldPrice = Number(originalItem.unit_price ?? originalItem.sale_price ?? originalItem.price ?? 0);
+        if (oldPrice && Number(validatedItem.unit_price || 0) !== oldPrice) {
+          showCustomerToast("Giá sản phẩm đã được cập nhật theo dữ liệu mới nhất.", "success");
+        }
+        buyNowItems = [validatedItem];
+        sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify({ mode: "buy_now", items: buyNowItems, created_at: Date.now() }));
+        items = buyNowItems.map(mapBuyNowItemForCheckout);
+      } catch (error) {
+        clearBuyNowCheckout();
+        showCustomerToast(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.", "error");
+        navigateToRoute(productId ? `product-detail/${encodeURIComponent(productId)}` : "home");
+        return;
+      }
     } else {
       const cart = await customerCart.load();
       layoutState.cart = cart;
@@ -2598,7 +2644,7 @@ async function renderCheckoutPage() {
     }
     const checkoutSummary = getCheckoutSummary(items, layoutState.cartVoucher.code);
     checkoutSummary.checkoutMode = isBuyNow ? "buy_now" : "cart";
-    checkoutSummary.buyNowItems = isBuyNow ? buyNowCheckout.items : [];
+    checkoutSummary.buyNowItems = isBuyNow ? buyNowItems : [];
 
     if (!checkoutSummary.items.length) {
       layoutState.main.innerHTML = renderPageShell("Thanh toán", renderCheckoutEmptyState());
@@ -4107,20 +4153,166 @@ function createProductCardBuyNowItem(product, button) {
   };
 }
 
+const PENDING_CHECKOUT_KEY = "pending_checkout_intent";
+const BUY_NOW_CHECKOUT_KEY = "buy_now_checkout";
+const PENDING_CHECKOUT_TTL_MS = 30 * 60 * 1000;
+
+function savePendingCheckout(data = {}) {
+  try {
+    const payload = { version: 1, ...data, createdAt: Date.now() };
+    sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify(payload));
+    return payload;
+  } catch (error) {
+    console.debug("[checkout] Unable to save pending checkout", error?.message || error);
+    return null;
+  }
+}
+
+function getPendingCheckout() {
+  try {
+    const payload = JSON.parse(sessionStorage.getItem(PENDING_CHECKOUT_KEY) || "null");
+    if (!payload || payload.version !== 1 || !payload.action) return null;
+    if (isPendingCheckoutExpired(payload)) {
+      clearPendingCheckout();
+      return null;
+    }
+    return payload;
+  } catch {
+    clearPendingCheckout();
+    return null;
+  }
+}
+
+function clearPendingCheckout() {
+  try { sessionStorage.removeItem(PENDING_CHECKOUT_KEY); } catch {}
+}
+
+function isPendingCheckoutExpired(data = {}) {
+  const createdAt = Number(data.createdAt || data.created_at || 0);
+  return !createdAt || Date.now() - createdAt > PENDING_CHECKOUT_TTL_MS;
+}
+
+function createPendingCheckoutFromBuyNowItem(item = {}) {
+  return {
+    action: "BUY_NOW",
+    productId: Number(item.product_id ?? item.productId ?? 0),
+    variantId: item.variant_id ?? item.variantId ?? null,
+    colorName: item.color || null,
+    sizeName: item.size || null,
+    quantity: Number(item.quantity || 1),
+    selectedImageUrl: item.selected_image_url || item.product_image_url || item.productImageUrl || null,
+    sourceRoute: window.location.hash || "#home",
+    returnRoute: "#checkout?mode=buy-now"
+  };
+}
+
 function startBuyNowCheckout(item) {
   try {
+    if (!customerAuth.isAuthenticated()) {
+      savePendingCheckout(createPendingCheckoutFromBuyNowItem(item));
+      layoutState.pendingRoute = "checkout?mode=buy-now";
+      showCustomerToast("Vui lòng đăng nhập để tiếp tục thanh toán. Lựa chọn của bạn đã được lưu.", "success");
+      navigateToRoute("login");
+      return;
+    }
+
     const payload = { mode: "buy_now", items: [item], created_at: Date.now() };
-    sessionStorage.setItem("buy_now_checkout", JSON.stringify(payload));
+    sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify(payload));
     navigateToRoute("checkout?mode=buy-now");
   } catch {
     showCustomerToast("Không thể khởi tạo thanh toán ngay. Vui lòng thử lại.", "error");
   }
 }
 
+async function continuePendingCheckoutAfterLogin() {
+  const pending = getPendingCheckout();
+  if (!pending) return false;
+
+  if (pending.action === "CART_CHECKOUT") {
+    clearPendingCheckout();
+    clearBuyNowCheckout();
+    navigateToRoute("checkout");
+    return true;
+  }
+
+  if (pending.action !== "BUY_NOW") {
+    clearPendingCheckout();
+    return false;
+  }
+
+  try {
+    const item = await createValidatedBuyNowItemFromPending(pending);
+    sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify({ mode: "buy_now", items: [item], created_at: Date.now() }));
+    clearPendingCheckout();
+    showCustomerToast("Đã khôi phục sản phẩm bạn vừa chọn.", "success");
+    navigateToRoute("checkout?mode=buy-now");
+    return true;
+  } catch (error) {
+    const sourceRoute = pending.sourceRoute || "#home";
+    clearPendingCheckout();
+    clearBuyNowCheckout();
+    showCustomerToast(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.", "error");
+    navigateToRoute(String(sourceRoute).replace(/^#/, "") || "home");
+    return true;
+  }
+}
+
+async function createValidatedBuyNowItemFromPending(pending = {}) {
+  const productId = Number(pending.productId || pending.product_id || 0);
+  const quantity = Number(pending.quantity || 0);
+  if (!productId || !Number.isInteger(quantity) || quantity < 1) {
+    throw new Error("Phiên mua hàng đã hết hạn. Vui lòng chọn lại sản phẩm.");
+  }
+
+  const response = await customerApi(`/products/${encodeURIComponent(productId)}`, { auth: false });
+  const product = response?.data?.product || response?.product || response?.data;
+  if (!product) throw new Error("Sản phẩm không còn khả dụng.");
+  const productStatus = String(product.status || "active").toLowerCase();
+  if (!["active", "published", "available"].includes(productStatus)) {
+    throw new Error("Sản phẩm đã ngừng bán. Vui lòng chọn sản phẩm khác.");
+  }
+
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variantId = pending.variantId ?? pending.variant_id ?? null;
+  let variant = null;
+  if (variants.length) {
+    variant = variants.find((item) => String(item.id) === String(variantId)) || null;
+    if (!variant) throw new Error("Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.");
+    if (String(variant.status || "active").toLowerCase() !== "active") throw new Error("Biến thể bạn chọn vừa hết hàng. Vui lòng chọn sản phẩm khác.");
+  }
+
+  const stock = Number(variant?.stock ?? product.stock ?? 0);
+  if (stock <= 0) throw new Error("Biến thể bạn chọn vừa hết hàng. Vui lòng chọn sản phẩm khác.");
+  if (quantity > stock) throw new Error(`Chỉ còn ${stock} sản phẩm trong kho. Vui lòng điều chỉnh lại số lượng.`);
+
+  const unitPrice = variant
+    ? Number(variant.salePrice ?? variant.sale_price ?? variant.price ?? product.salePrice ?? product.sale_price ?? product.price ?? 0)
+    : Number(product.salePrice ?? product.sale_price ?? product.finalPrice ?? product.final_price ?? product.price ?? 0);
+  const imageUrl = resolveProductImageUrl(pending.selectedImageUrl || pending.selected_image_url || product.thumbnailUrl || product.thumbnail_url || product.imageUrl || product.image_url || "");
+
+  return {
+    product_id: Number(product.id ?? productId),
+    variant_id: variant?.id || null,
+    variant_key: variant ? `${productId}|${variant.id}|${variant.size}|${variant.color}` : `${productId}|base`,
+    product_name: product.name || "Sản phẩm",
+    product_sku: variant?.sku || product.sku || null,
+    quantity,
+    unit_price: unitPrice,
+    size: variant?.size || pending.sizeName || pending.size || null,
+    color: variant?.color || pending.colorName || pending.color || null,
+    product_image_url: imageUrl,
+    selected_image_url: !variant ? imageUrl : null
+  };
+}
+
 function readBuyNowCheckout() {
   try {
-    const payload = JSON.parse(sessionStorage.getItem("buy_now_checkout") || "null");
+    const payload = JSON.parse(sessionStorage.getItem(BUY_NOW_CHECKOUT_KEY) || "null");
     if (payload?.mode !== "buy_now" || !Array.isArray(payload.items) || payload.items.length !== 1) return null;
+    if (isPendingCheckoutExpired({ createdAt: payload.created_at })) {
+      clearBuyNowCheckout();
+      return null;
+    }
     return payload;
   } catch {
     clearBuyNowCheckout();
@@ -4129,7 +4321,7 @@ function readBuyNowCheckout() {
 }
 
 function clearBuyNowCheckout() {
-  try { sessionStorage.removeItem("buy_now_checkout"); } catch {}
+  try { sessionStorage.removeItem(BUY_NOW_CHECKOUT_KEY); } catch {}
 }
 
 function mapBuyNowItemForCheckout(item = {}) {
