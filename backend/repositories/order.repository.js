@@ -258,14 +258,31 @@ export class OrderRepository extends BaseRepository {
   }
 
   async cancelOpenPaymentTransactions(orderId, connection = null) {
-    await this.execute(
-      `UPDATE payment_transactions
-      SET status = 'cancelled',
-        updated_at = CURRENT_TIMESTAMP
-      WHERE order_id = ? AND status IN ('pending', 'processing')`,
-      [orderId],
-      connection
-    );
+    try {
+      await this.execute(
+        `UPDATE payment_transactions
+        SET status = 'cancelled',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE order_id = ? AND status IN ('pending', 'processing')`,
+        [orderId],
+        connection
+      );
+    } catch (error) {
+      if (error?.code !== "ER_BAD_FIELD_ERROR") throw error;
+      logger.warn("Payment transaction updated_at column is unavailable; cancelling without timestamp update.", {
+        repository: "OrderRepository",
+        operation: "cancelOpenPaymentTransactions",
+        orderId,
+        sqlMessage: error.sqlMessage || error.message
+      });
+      await this.execute(
+        `UPDATE payment_transactions
+        SET status = 'cancelled'
+        WHERE order_id = ? AND status IN ('pending', 'processing')`,
+        [orderId],
+        connection
+      );
+    }
   }
 
   async restoreInventory(items, connection = null) {
@@ -366,29 +383,52 @@ export class OrderRepository extends BaseRepository {
   }
 
   async findDetailsByOrderId(orderId, connection = null) {
-    const [rows] = await this.execute(
-      `SELECT
+    const baseSelect = `
         id,
         order_id,
         product_id,
         product_name,
         product_sku,
         product_image_url,
-        variant_id,
-        size,
-        color,
         quantity,
         unit_price,
         discount_amount,
-        total_price
-      FROM order_details
-      WHERE order_id = ?
-      ORDER BY id ASC`,
-      [orderId],
-      connection
-    );
+        total_price`;
+    const variantSelect = `,
+        variant_id,
+        size,
+        color`;
 
-    return rows.map((row) => new OrderDetail(row));
+    try {
+      const [rows] = await this.execute(
+        `SELECT${baseSelect}${variantSelect}
+        FROM order_details
+        WHERE order_id = ?
+        ORDER BY id ASC`,
+        [orderId],
+        connection
+      );
+
+      return rows.map((row) => new OrderDetail(row));
+    } catch (error) {
+      if (error?.code !== "ER_BAD_FIELD_ERROR") throw error;
+      logger.warn("Order detail variant columns are unavailable; falling back to base order detail columns.", {
+        repository: "OrderRepository",
+        operation: "findDetailsByOrderId",
+        orderId,
+        sqlMessage: error.sqlMessage || error.message
+      });
+      const [rows] = await this.execute(
+        `SELECT${baseSelect}
+        FROM order_details
+        WHERE order_id = ?
+        ORDER BY id ASC`,
+        [orderId],
+        connection
+      );
+
+      return rows.map((row) => new OrderDetail(row));
+    }
   }
 
   async findHistoryByOrderId(orderId, connection = null) {

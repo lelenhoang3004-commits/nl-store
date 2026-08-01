@@ -193,7 +193,7 @@ export class OrderService extends BaseService {
         throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
       }
       if (String(order.customerId) !== String(customerId)) {
-        throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+        throw new AppError("You are not allowed to cancel this order.", 403, "ORDER_FORBIDDEN");
       }
       if (String(order.paymentStatus || "").toLowerCase() === PAYMENT_STATUS.PAID || Number(order.paidAmount || 0) > 0) {
         throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");

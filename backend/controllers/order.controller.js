@@ -62,7 +62,7 @@ export class OrderController extends BaseController {
 
     return this.sendSuccess(response, {
       order
-    }, "Order cancelled successfully.");
+    }, "H?y don hàng thành công");
   });
   storeMyOrder = asyncHandler(async (request, response) => {
     const order = await this.service.createOrder(request.body, request.user.id);
