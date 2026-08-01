@@ -202,10 +202,11 @@ export class OrderService extends BaseService {
   normalizeOrderPayload(payload, options = {}) {
     const items = payload.items.map((item) => normalizeOrderItem(item));
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const discountTotal = Number(payload.discountTotal || 0);
-    const shippingFee = Number(payload.shippingFee || 0);
-    const taxTotal = Number(payload.taxTotal || 0);
-    const grandTotal = Math.max(subtotal - discountTotal + shippingFee + taxTotal, 0);
+    const discountTotal = Math.min(Math.max(Math.round(Number(payload.discountTotal || 0)), 0), subtotal);
+    const shippingFee = Math.max(Math.round(Number(payload.shippingFee || 0)), 0);
+    const subtotalAfterDiscount = Math.max(subtotal - discountTotal, 0);
+    const taxTotal = Math.round(subtotalAfterDiscount - subtotalAfterDiscount / 1.1);
+    const grandTotal = subtotalAfterDiscount + shippingFee;
 
     return {
       orderCode: payload.orderCode || createOrderCode(),

@@ -516,9 +516,9 @@ export function calculateCheckoutTotals({ subtotal = 0, discountTotal = 0 } = {}
   const normalizedSubtotal = Math.max(Math.round(Number(subtotal || 0)), 0);
   const normalizedDiscount = Math.min(Math.max(Math.round(Number(discountTotal || 0)), 0), normalizedSubtotal);
   const eligibleAmount = Math.max(normalizedSubtotal - normalizedDiscount, 0);
-  const taxTotal = Math.round(eligibleAmount * 0.1);
+  const taxTotal = Math.round(eligibleAmount - eligibleAmount / 1.1);
   const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
-  const grandTotal = eligibleAmount + taxTotal + shippingFee;
+  const grandTotal = eligibleAmount + shippingFee;
 
   return {
     subtotal: normalizedSubtotal,

@@ -1608,11 +1608,7 @@ async function renderCartPage() {
     const selectedSubtotal = selectedItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
     const voucherSummary = getCartVoucherSummary(selectedSubtotal);
     const discountAmount = Math.min(Number(voucherSummary.discountAmount || 0), selectedSubtotal);
-    const eligibleAmount = Math.max(selectedSubtotal - discountAmount, 0);
-    const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
-    const vatAmount = Math.round(eligibleAmount * 0.1);
-    const grandTotal = eligibleAmount + shippingFee + vatAmount;
-    const freeShippingRemaining = eligibleAmount > 0 && eligibleAmount < 500000 ? 500000 - eligibleAmount : 0;
+    const { eligibleAmount, shippingFee, vatAmount, grandTotal, freeShippingRemaining } = calculateCheckoutTotals(selectedSubtotal, discountAmount);
     const selectedCount = selectedItems.length;
 
     layoutState.main.innerHTML = renderPageShell("Giỏ hàng", `
@@ -1682,7 +1678,7 @@ async function renderCartPage() {
             <div class="customer-cart-summary-lines">
               <div><span>Tạm tính</span><strong>${formatCurrency(selectedSubtotal)}</strong></div>
               <div><span>Giảm giá</span><strong>${formatCurrency(discountAmount)}</strong></div>
-              <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(vatAmount)}</strong></div>
+              <div><span>Thu&#7871; VAT (10%)</span><strong>&#272;&#227; g&#7891;m ${formatCurrency(vatAmount)}</strong></div>
               <div><span>Phí vận chuyển</span><strong>${formatShippingFee(shippingFee)}</strong></div>
               ${freeShippingRemaining > 0 ? `<div class="customer-checkout-free-shipping-hint"><span>Mua thêm ${formatCurrency(freeShippingRemaining)} để được miễn phí vận chuyển</span></div>` : ""}
             </div>
@@ -1997,16 +1993,24 @@ function renderCheckoutEmptyState() {
   `;
 }
 
+function calculateCheckoutTotals(subtotalIncludingVat = 0, discountAmount = 0) {
+  const selectedSubtotal = Math.max(Math.round(Number(subtotalIncludingVat || 0)), 0);
+  const normalizedDiscount = Math.min(Math.max(Math.round(Number(discountAmount || 0)), 0), selectedSubtotal);
+  const eligibleAmount = Math.max(selectedSubtotal - normalizedDiscount, 0);
+  const vatAmount = Math.round(eligibleAmount - eligibleAmount / 1.1);
+  const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
+  const grandTotal = eligibleAmount + shippingFee;
+  const freeShippingRemaining = eligibleAmount > 0 && eligibleAmount < 500000 ? 500000 - eligibleAmount : 0;
+
+  return { eligibleAmount, shippingFee, vatAmount, grandTotal, freeShippingRemaining };
+}
+
 function getCheckoutSummary(items, voucherCode = "") {
   const selectedItems = Array.isArray(items) ? items.filter((item) => item.isSelected) : [];
   const selectedSubtotal = selectedItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
   const voucherSummary = getCartVoucherSummary(selectedSubtotal);
   const discountAmount = Math.min(Number(voucherSummary.discountAmount || 0), selectedSubtotal);
-    const eligibleAmount = Math.max(selectedSubtotal - discountAmount, 0);
-    const shippingFee = eligibleAmount > 0 && eligibleAmount >= 500000 ? 0 : eligibleAmount > 0 ? 30000 : 0;
-    const vatAmount = Math.round(eligibleAmount * 0.1);
-    const grandTotal = eligibleAmount + shippingFee + vatAmount;
-    const freeShippingRemaining = eligibleAmount > 0 && eligibleAmount < 500000 ? 500000 - eligibleAmount : 0;
+    const { eligibleAmount, shippingFee, vatAmount, grandTotal, freeShippingRemaining } = calculateCheckoutTotals(selectedSubtotal, discountAmount);
 
   return {
     items: selectedItems,
@@ -2770,7 +2774,7 @@ async function renderCheckoutPage() {
             <div class="customer-checkout-summary-lines">
               <div><span>Tạm tính</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
               <div><span>Giảm giá</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
-              <div><span>Thuế VAT (10%)</span><strong>${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
+              <div><span>Thu&#7871; VAT (10%)</span><strong>&#272;&#227; g&#7891;m ${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
               <div><span>Phí vận chuyển</span><strong>${formatShippingFee(checkoutSummary.shippingFee)}</strong></div>
               ${checkoutSummary.freeShippingRemaining > 0 ? `<div class="customer-checkout-free-shipping-hint"><span>Mua thêm ${formatCurrency(checkoutSummary.freeShippingRemaining)} để được miễn phí vận chuyển</span></div>` : ""}
             </div>
@@ -3302,7 +3306,7 @@ async function renderOrderDetailPage(orderId) {
                 <div class="customer-order-summary-row"><span>Tạm tính</span><strong>${formatCurrency(order.subtotal || 0)}</strong></div>
                 <div class="customer-order-summary-row"><span>Giảm giá</span><strong>${formatCurrency(order.discountTotal || 0)}</strong></div>
                 <div class="customer-order-summary-row"><span>Phí vận chuyển</span><strong>${formatCurrency(order.shippingFee || 0)}</strong></div>
-                <div class="customer-order-summary-row"><span>Thuế</span><strong>${formatCurrency(order.taxTotal || 0)}</strong></div>
+                <div class="customer-order-summary-row"><span>Thu&#7871; VAT (10%)</span><strong>&#272;&#227; g&#7891;m ${formatCurrency(order.taxTotal || 0)}</strong></div>
                 <div class="customer-order-summary-row"><span>Phương thức thanh toán</span><strong>${escapeHtml(getPaymentMethodLabel(order.paymentMethod || transaction?.method))}</strong></div>
                 <div class="customer-order-summary-row"><span>Trạng thái thanh toán</span><strong>${createStatusBadge(paymentStatus.label, paymentStatus.variant)}</strong></div>
                 <div class="customer-order-summary-row customer-order-summary-total"><span>Tổng thanh toán</span><strong>${formatCurrency(order.grandTotal || 0)}</strong></div>
