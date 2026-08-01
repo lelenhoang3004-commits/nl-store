@@ -47,7 +47,8 @@ export function createProductCard(product) {
   const priceText = formatCurrency(item.price);
   const comparePriceText = item.comparePrice ? formatCurrency(item.comparePrice) : "";
   const badgeClass = `product-badge ${getBadgeClass(item.badge)}`;
-  const stockLabel = item.inStock ? "Còn hàng" : "Hết hàng";
+  const stockState = getStockState(item);
+  const stockLabel = stockState.label;
   const fallbackImage = escapeHtml(globalThis.FASHION_IMAGE_PLACEHOLDER || "");
 
   return `
@@ -74,7 +75,7 @@ export function createProductCard(product) {
       <div class="product-card-content">
         <div class="product-card-meta">
           <span class="ds-tag">${escapeHtml(item.category)}</span>
-          <span class="product-stock ${item.inStock ? "in-stock" : "out-of-stock"}">${stockLabel}</span>
+          <span class="product-stock ${stockState.className}">${stockLabel}</span>
         </div>
         <h3><a href="#product-detail/${item.id}">${escapeHtml(item.name)}</a></h3>
         <div class="product-rating" aria-label="Đánh giá ${item.rating} trên 5">
@@ -157,6 +158,17 @@ function renderStars(rating) {
   return "&#9733;".repeat(full) + "&#9734;".repeat(5 - full);
 }
 
+
+function getStockState(item) {
+  const stock = Number(item.stock || 0);
+  if (!item.inStock || stock <= 0) {
+    return { className: "out-of-stock", label: "H\u1ebft h\u00e0ng" };
+  }
+  if (stock <= 5) {
+    return { className: "low-stock", label: "S\u1eafp h\u1ebft" };
+  }
+  return { className: "in-stock", label: "C\u00f2n h\u00e0ng" };
+}
 function getBadgeClass(badge) {
   switch (String(badge || "").toUpperCase()) {
     case "HOT":
