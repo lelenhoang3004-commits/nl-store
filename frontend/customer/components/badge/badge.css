@@ -4,7 +4,7 @@
   padding: 4px 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.2;
   border-radius: 6px;
   background: var(--badge-bg, var(--color-accent, #111827));
   color: var(--badge-color, #fff);

@@ -1,5 +1,14 @@
 /* Customer design system tokens and shared UI primitives. */
 :root {
+  --customer-font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
+  --customer-font-regular: 400;
+  --customer-font-medium: 500;
+  --customer-font-semibold: 600;
+  --customer-font-bold: 700;
+  --customer-font-extrabold: 800;
+  --customer-line-height-body: 1.65;
+  --customer-line-height-heading: 1.22;
+  --customer-line-height-compact: 1.35;
   --customer-home-max-width: 1600px;
   --customer-page-max-width: 1320px;
   --customer-compact-max-width: 1180px;
@@ -10,13 +19,23 @@
   --ds-font-size-h3: 1.05rem;
   --ds-font-size-body: 0.96rem;
   --ds-font-size-caption: 0.84rem;
-  --ds-line-height-body: 1.7;
-  --ds-line-height-tight: 1.25;
+  --ds-line-height-body: var(--customer-line-height-body);
+  --ds-line-height-tight: var(--customer-line-height-heading);
 }
 
-body {
+.customer-shell {
+  font-family: var(--customer-font-family);
   font-size: var(--ds-font-size-body);
-  line-height: var(--ds-line-height-body);
+  line-height: var(--customer-line-height-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.customer-shell button,
+.customer-shell input,
+.customer-shell select,
+.customer-shell textarea {
+  font-family: var(--customer-font-family);
 }
 
 h1, h2, h3, h4, p {
@@ -90,7 +109,9 @@ p {
   color: #FFFFFF;
   background: var(--color-primary);
   box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
-  font-weight: 700;
+  font-weight: var(--customer-font-semibold);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   text-decoration: none;
   cursor: pointer;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);

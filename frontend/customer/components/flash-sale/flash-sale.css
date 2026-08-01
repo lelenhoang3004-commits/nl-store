@@ -96,16 +96,17 @@
 .flash-sale-timer strong {
   color: var(--color-primary);
   font-size: clamp(1.25rem, 2.4vw, 1.7rem);
-  line-height: 1;
-  font-weight: 900;
+  line-height: 1.15;
+  font-weight: var(--customer-font-extrabold);
+  font-variant-numeric: tabular-nums;
 }
 
 .flash-sale-timer span {
   color: var(--color-muted);
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: var(--customer-font-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 900px) {

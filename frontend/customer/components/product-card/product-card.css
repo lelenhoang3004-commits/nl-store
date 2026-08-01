@@ -101,9 +101,9 @@
   padding: 5px 9px;
   border-radius: 999px;
   font-size: 0.64rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-bold);
   letter-spacing: 0.02em;
-  line-height: 1;
+  line-height: 1.2;
   text-transform: uppercase;
   box-shadow: 0 8px 20px rgba(15, 39, 77, 0.14);
   backdrop-filter: blur(10px);
@@ -199,7 +199,7 @@
   background: rgba(22, 58, 112, 0.06);
   color: #163A70;
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: var(--customer-font-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -212,9 +212,9 @@
   padding: 5px 9px;
   border-radius: 999px;
   font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  line-height: 1;
+  font-weight: var(--customer-font-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -233,16 +233,17 @@
 
 .product-card-content h3 {
   display: -webkit-box;
-  min-height: 2.7em;
-  max-height: 2.7em;
+  min-height: 2.9em;
+  max-height: 2.9em;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   margin: 0;
   color: #1A2740;
-  font-size: 1.01rem;
-  font-weight: 850;
-  line-height: 1.35;
+  font-size: clamp(0.95rem, 1vw, 1.05rem);
+  font-weight: var(--customer-font-semibold);
+  line-height: 1.45;
+  letter-spacing: -0.012em;
 }
 
 .product-card-content h3 a {
@@ -263,7 +264,7 @@
   min-height: 24px;
   color: #C89B3C;
   font-size: 0.82rem;
-  font-weight: 850;
+  font-weight: var(--customer-font-semibold);
   line-height: 1;
 }
 
@@ -273,7 +274,7 @@
 
 .product-rating small {
   color: #6B7280;
-  font-weight: 750;
+  font-weight: var(--customer-font-medium);
 }
 
 .product-price-row {
@@ -295,15 +296,16 @@
 .product-price-group strong {
   color: #163A70;
   font-size: 1.13rem;
-  font-weight: 950;
-  line-height: 1.05;
+  font-weight: var(--customer-font-bold);
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .product-price-group del {
   color: #9AA3AF;
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: var(--customer-font-medium);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -312,7 +314,7 @@
   align-self: end;
   color: #6B7280;
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: var(--customer-font-medium);
   line-height: 1.25;
   white-space: nowrap;
 }
@@ -341,8 +343,9 @@
   background: #163A70;
   color: #ffffff;
   font-size: 0.86rem;
-  font-weight: 850;
-  line-height: 1;
+  font-weight: var(--customer-font-semibold);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;

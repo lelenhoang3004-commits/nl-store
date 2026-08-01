@@ -88,7 +88,9 @@
   color: var(--color-primary);
   background: rgba(37, 99, 235, 0.08);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: var(--customer-font-semibold);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
@@ -119,7 +121,7 @@
 
 .user-menu-button span {
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: var(--customer-font-bold);
 }
 
 .user-menu-button img {
@@ -279,7 +281,7 @@
   color: #234e8f;
   font: inherit;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: var(--customer-font-semibold);
   cursor: pointer;
 }
 
@@ -393,7 +395,7 @@
   color: #2563eb;
   cursor: pointer;
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--customer-font-semibold);
 }
 @media (max-width: 560px) {
   .customer-search-panel {

@@ -2,6 +2,8 @@
 .customer-shell {
   min-height: 100vh;
   background: var(--color-background);
+  font-family: var(--customer-font-family);
+  line-height: var(--customer-line-height-body);
 }
 
 .customer-main {
@@ -38,15 +40,18 @@
 .section-heading h2 {
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(1.35rem, 2vw, 2rem);
-  line-height: 1.2;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: var(--customer-font-bold);
+  line-height: 1.3;
+  letter-spacing: -0.025em;
 }
 
 .section-heading p {
   max-width: 560px;
   margin: 8px 0 0;
   color: var(--color-muted);
-  line-height: 1.7;
+  font-weight: var(--customer-font-regular);
+  line-height: 1.6;
 }
 
 .customer-button {
@@ -61,7 +66,9 @@
   color: #FFFFFF;
   background: var(--color-primary);
   box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
-  font-weight: 700;
+  font-weight: var(--customer-font-semibold);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   text-decoration: none;
   cursor: pointer;
 }
@@ -1461,7 +1468,7 @@
   background: rgba(37, 99, 235, 0.1);
   color: var(--color-primary);
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1564,7 +1571,7 @@
   padding: 0 14px;
   background: #0f172a;
   color: #fff;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -2138,7 +2145,7 @@
   border: 0;
   background: transparent;
   color: #0f2a5f;
-  font-weight: 850;
+  font-weight: var(--customer-font-bold);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -2160,7 +2167,7 @@
   background: #eef2f7;
   color: #475569;
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: var(--customer-font-bold);
 }
 
 .customer-profile-link-badge.is-linked {
@@ -2568,7 +2575,7 @@
   color: #E2A84A;
   font-family: "Font Awesome 6 Free";
   font-size: .72rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
   box-shadow: inset 0 0 0 1px rgba(226,168,74,.20);
 }
 
@@ -3130,7 +3137,7 @@
   background: #eef4fc;
   color: #234e8f;
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
 }
 
 .customer-payment-result-modal {
@@ -3261,7 +3268,7 @@
 .customer-payment-recipient-head span {
   color: #0f172a;
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
 }
 
 .customer-payment-recipient-head strong {
@@ -3270,7 +3277,7 @@
   background: #fff7ed;
   color: #c2410c;
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: var(--customer-font-extrabold);
   white-space: nowrap;
 }
 
@@ -3774,7 +3781,7 @@
   box-shadow: none;
   overflow: visible;
   color: #FFFFFF;
-  font-family: "Poppins", "Montserrat", "Playfair Display", serif;
+  font-family: var(--customer-font-family);
   line-height: .92;
   text-decoration: none;
   text-shadow: 0 8px 22px rgba(0, 0, 0, .32);
