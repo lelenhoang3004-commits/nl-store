@@ -291,7 +291,7 @@
 .header-popover {
   position: absolute;
   top: calc(100% + 12px);
-  right: max(16px, calc((100vw - 1180px) / 2));
+  right: max(var(--customer-page-padding, 16px), calc((100vw - var(--customer-page-max-width, 1600px)) / 2));
   display: none;
   width: min(320px, calc(100vw - 32px));
   padding: 18px;

@@ -1,8 +1,8 @@
-﻿/* Hero banner component. */
+/* Hero banner component. */
 .hero-component {
   position: relative;
   overflow: hidden;
-  width: min(100% - 32px, 1380px);
+  width: min(var(--customer-page-max-width, 1600px), calc(100% - (var(--customer-page-padding, 16px) * 2)));
   height: clamp(620px, 46vw, 680px);
   min-height: 620px;
   margin: 24px auto 0;
@@ -236,7 +236,7 @@
 
 @media (max-width: 1024px) {
   .hero-component {
-    width: min(100% - 28px, 960px);
+    width: min(var(--customer-page-max-width, 1600px), calc(100% - (var(--customer-page-padding, 16px) * 2)));
     height: 600px;
     min-height: 600px;
   }
@@ -252,7 +252,7 @@
 
 @media (max-width: 720px) {
   .hero-component {
-    width: calc(100% - 24px);
+    width: min(var(--customer-page-max-width, 1600px), calc(100% - (var(--customer-page-padding, 16px) * 2)));
     height: clamp(500px, 132vw, 580px);
     min-height: 500px;
     margin-top: 16px;
