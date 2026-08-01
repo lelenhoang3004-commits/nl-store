@@ -3323,7 +3323,7 @@ async function renderOrderDetailPage(orderId) {
     const transaction = transactions[0] || null;
     const transactionStatus = transaction ? normalizePaymentTransactionStatus(transaction.status) : null;
     const timelineItems = history.length ? history : [{ status: order.status, note: "Đơn hàng đã được tạo", createdAt: order.createdAt }];
-    const canCancel = ["pending", "confirmed", "processing"].includes(String(order.status || "").toLowerCase());
+    const canCancel = canCustomerCancelOrder(order);
 
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
       <div class="customer-order-detail-shell">
@@ -3345,7 +3345,7 @@ async function renderOrderDetailPage(orderId) {
               <div class="customer-order-actions">
                 <a class="customer-button secondary" href="#orders">Quay lại</a>
                 <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
-                ${canCancel ? '<button class="customer-button secondary" type="button" disabled>Hủy đơn</button>' : ""}
+                ${canCancel ? `<button class="customer-button secondary" type="button" data-order-cancel="${escapeHtml(order.id || orderId)}">H&#7911;y &#273;&#417;n</button>` : ""}
               </div>
               <div class="customer-order-panel-title">Tiến trình đơn hàng</div>
               <ul class="customer-order-timeline">
@@ -3423,6 +3423,7 @@ async function renderOrderDetailPage(orderId) {
         </div>
       </div>
     `);
+    bindCustomerOrderCancel(layoutState.main, order.id || orderId);
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
       <div class="customer-empty-state">
@@ -3437,6 +3438,87 @@ async function renderOrderDetailPage(orderId) {
   }
 }
 
+
+function canCustomerCancelOrder(order = {}) {
+  const orderStatus = String(order.status || "").toLowerCase();
+  const paymentStatus = String(order.paymentStatus || "").toLowerCase();
+  const paidAmount = Number(order.paidAmount || 0);
+  const transactions = Array.isArray(order.transactions) ? order.transactions : [];
+  const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success"].includes(String(transaction.status || "").toLowerCase()));
+  return orderStatus === "pending" && paymentStatus !== "paid" && paidAmount <= 0 && !hasSuccessfulPayment;
+}
+
+function bindCustomerOrderCancel(root, orderId) {
+  root?.querySelector("[data-order-cancel]")?.addEventListener("click", (event) => {
+    const id = event.currentTarget.dataset.orderCancel || orderId;
+    openCustomerOrderCancelModal(id);
+  });
+}
+
+function openCustomerOrderCancelModal(orderId) {
+  if (!orderId) return;
+  closeCustomerOrderCancelModal();
+  const overlay = document.createElement("div");
+  overlay.className = "customer-checkout-modal-backdrop";
+  overlay.dataset.orderCancelModal = "true";
+  overlay.innerHTML = `
+    <div class="customer-cart-modal" role="dialog" aria-modal="true" aria-labelledby="customer-order-cancel-title">
+      <h3 id="customer-order-cancel-title">H&#7911;y &#273;&#417;n h&#224;ng</h3>
+      <p>B&#7841;n c&#243; ch&#7855;c mu&#7889;n h&#7911;y &#273;&#417;n h&#224;ng n&#224;y?</p>
+      <div class="customer-cart-modal-actions">
+        <button class="customer-button secondary" type="button" data-order-cancel-close>Kh&#244;ng</button>
+        <button class="customer-button" type="button" data-order-cancel-confirm="${escapeHtml(orderId)}">X&#225;c nh&#7853;n h&#7911;y</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.body.classList.add("modal-open", "customer-modal-open");
+  document.body.style.overflow = "hidden";
+  overlay.querySelector("[data-order-cancel-close]")?.addEventListener("click", closeCustomerOrderCancelModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeCustomerOrderCancelModal();
+  });
+  overlay.querySelector("[data-order-cancel-confirm]")?.addEventListener("click", handleCustomerOrderCancelConfirm);
+}
+
+function closeCustomerOrderCancelModal() {
+  document.querySelectorAll(".customer-checkout-modal-backdrop[data-order-cancel-modal]").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open", "customer-modal-open");
+  document.body.style.overflow = "";
+}
+
+async function handleCustomerOrderCancelConfirm(event) {
+  const button = event.currentTarget;
+  const orderId = button.dataset.orderCancelConfirm || "";
+  if (!orderId || button.disabled) return;
+  button.disabled = true;
+  const previousText = button.innerHTML;
+  button.innerHTML = `<span class="customer-button-spinner"></span>&#272;ang h&#7911;y...`;
+  try {
+    await customerApi(`/orders/my/${encodeURIComponent(orderId)}/cancel`, {
+      method: "PATCH",
+      body: { reason: "Customer cancelled order." }
+    });
+    closeCustomerOrderCancelModal();
+    showCustomerToast("H\u1ee7y \u0111\u01a1n h\u00e0ng th\u00e0nh c\u00f4ng", "success");
+    await renderOrderDetailPage(orderId);
+    document.querySelector(".customer-order-detail-shell")?.scrollIntoView({ block: "start" });
+  } catch (error) {
+    button.disabled = false;
+    button.innerHTML = previousText;
+    const status = Number(error?.status || error?.statusCode || 0);
+    if (status === 401 || status === 403) {
+      showCustomerToast("B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n h\u1ee7y \u0111\u01a1n h\u00e0ng n\u00e0y.", "error");
+      return;
+    }
+    if (status === 409) {
+      showCustomerToast("\u0110\u01a1n h\u00e0ng \u0111\u00e3 \u0111\u1ed5i tr\u1ea1ng th\u00e1i n\u00ean kh\u00f4ng th\u1ec3 h\u1ee7y.", "error");
+      await renderOrderDetailPage(orderId);
+      return;
+    }
+    showCustomerToast(error?.message || "Kh\u00f4ng th\u1ec3 h\u1ee7y \u0111\u01a1n h\u00e0ng. Vui l\u00f2ng th\u1eed l\u1ea1i.", "error");
+  }
+}
 async function renderProfilePage() {
   if (!customerAuth.isAuthenticated()) {
     layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div><h2>Vui lòng đăng nhập</h2><p>Đăng nhập để quản lý hồ sơ của bạn.</p><a class="customer-button" href="#login">Đăng nhập</a></div>`);

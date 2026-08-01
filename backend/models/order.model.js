@@ -68,6 +68,9 @@ export class OrderDetail extends BaseModel {
     this.productName = attributes.productName || attributes.product_name;
     this.productSku = attributes.productSku || attributes.product_sku;
     this.productImageUrl = attributes.productImageUrl || attributes.product_image_url || null;
+    this.variantId = attributes.variantId || attributes.variant_id || null;
+    this.size = attributes.size || null;
+    this.color = attributes.color || null;
     this.quantity = Number(attributes.quantity || 0);
     this.unitPrice = Number(attributes.unitPrice || attributes.unit_price || 0);
     this.discountAmount = Number(attributes.discountAmount || attributes.discount_amount || 0);

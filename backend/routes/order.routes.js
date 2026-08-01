@@ -45,6 +45,12 @@ router.post(
   orderController.changeCustomerPaymentMethod
 );
 
+
+router.patch(
+  "/my/:id/cancel",
+  validateRequest(validateOrderIdRequest),
+  orderController.cancelMyOrder
+);
 router.get(
   "/my/:id",
   validateRequest(validateOrderIdRequest),

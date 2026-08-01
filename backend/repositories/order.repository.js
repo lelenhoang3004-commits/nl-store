@@ -39,6 +39,8 @@ const ORDER_COLUMNS = `
   updated_at
 `;
 
+const ORDER_STATUS_CANCELLED = "cancelled";
+
 export class OrderRepository extends BaseRepository {
   async findAll(options) {
     const startedAt = Date.now();
@@ -81,6 +83,20 @@ export class OrderRepository extends BaseRepository {
     });
 
     return Number(rows[0]?.total || 0);
+  }
+
+  async findByIdForUpdate(id, connection) {
+    const [rows] = await this.execute(
+      `SELECT ${ORDER_COLUMNS}
+      FROM orders
+      WHERE id = ? AND deleted_at IS NULL
+      LIMIT 1
+      FOR UPDATE`,
+      [id],
+      connection
+    );
+
+    return rows[0] ? new Order(rows[0]) : null;
   }
 
   async findById(id) {
@@ -219,6 +235,69 @@ export class OrderRepository extends BaseRepository {
     });
   }
 
+
+  async cancelOrder(orderId, { paymentStatus = "failed" } = {}, connection = null) {
+    const startedAt = Date.now();
+    const [result] = await this.execute(
+      `UPDATE orders
+      SET status = ?,
+        payment_status = CASE WHEN payment_status IN ('paid', 'refunded') THEN payment_status ELSE ? END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL AND status <> 'cancelled'`,
+      [ORDER_STATUS_CANCELLED, paymentStatus, orderId],
+      connection
+    );
+
+    logger.sql("Order cancellation update query executed.", {
+      repository: "OrderRepository",
+      operation: "cancelOrder",
+      durationMs: Date.now() - startedAt
+    });
+
+    return result.affectedRows > 0;
+  }
+
+  async cancelOpenPaymentTransactions(orderId, connection = null) {
+    await this.execute(
+      `UPDATE payment_transactions
+      SET status = 'cancelled',
+        updated_at = CURRENT_TIMESTAMP
+      WHERE order_id = ? AND status IN ('pending', 'processing')`,
+      [orderId],
+      connection
+    );
+  }
+
+  async restoreInventory(items, connection = null) {
+    for (const item of items) {
+      const quantity = Number(item.quantity || 0);
+      if (quantity <= 0) continue;
+      if (item.variantId) {
+        await this.execute(
+          `UPDATE product_variants
+          SET stock = stock + ?,
+            sold = GREATEST(sold - ?, 0),
+            status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND deleted_at IS NULL`,
+          [quantity, quantity, item.variantId],
+          connection
+        );
+      }
+      if (item.productId) {
+        await this.execute(
+          `UPDATE products
+          SET stock = stock + ?,
+            sold = GREATEST(sold - ?, 0),
+            status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND deleted_at IS NULL`,
+          [quantity, quantity, item.productId],
+          connection
+        );
+      }
+    }
+  }
   async createTransaction(orderId, payload, connection = null) {
     const startedAt = Date.now();
     const [result] = await this.execute(
@@ -286,7 +365,7 @@ export class OrderRepository extends BaseRepository {
     return result.affectedRows > 0;
   }
 
-  async findDetailsByOrderId(orderId) {
+  async findDetailsByOrderId(orderId, connection = null) {
     const [rows] = await this.execute(
       `SELECT
         id,
@@ -295,6 +374,9 @@ export class OrderRepository extends BaseRepository {
         product_name,
         product_sku,
         product_image_url,
+        variant_id,
+        size,
+        color,
         quantity,
         unit_price,
         discount_amount,
@@ -302,25 +384,27 @@ export class OrderRepository extends BaseRepository {
       FROM order_details
       WHERE order_id = ?
       ORDER BY id ASC`,
-      [orderId]
+      [orderId],
+      connection
     );
 
     return rows.map((row) => new OrderDetail(row));
   }
 
-  async findHistoryByOrderId(orderId) {
+  async findHistoryByOrderId(orderId, connection = null) {
     const [rows] = await this.execute(
       `SELECT id, order_id, status, note, changed_by, created_at
       FROM order_histories
       WHERE order_id = ?
       ORDER BY created_at ASC`,
-      [orderId]
+      [orderId],
+      connection
     );
 
     return rows.map((row) => new OrderHistory(row));
   }
 
-  async findTransactionsByOrderId(orderId) {
+  async findTransactionsByOrderId(orderId, connection = null) {
     const [rows] = await this.execute(
       `SELECT id, order_id, transaction_code, provider, method, amount, status, paid_at, metadata, created_at
       FROM (
@@ -333,7 +417,8 @@ export class OrderRepository extends BaseRepository {
         WHERE order_id = ?
       ) AS transactions
       ORDER BY created_at DESC`,
-      [orderId, orderId]
+      [orderId, orderId],
+      connection
     );
 
     return rows.map((row) => new OrderTransaction(row));

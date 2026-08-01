@@ -13,8 +13,8 @@ const ORDER_STATUS = Object.freeze({
   PENDING: "pending",
   CONFIRMED: "confirmed",
   PROCESSING: "processing",
-  SHIPPED: "shipped",
-  DELIVERED: "delivered",
+  SHIPPING: "shipping",
+  COMPLETED: "completed",
   CANCELLED: "cancelled",
   REFUNDED: "refunded"
 });
@@ -42,9 +42,9 @@ const ORDER_QUERY_OPTIONS = Object.freeze({
 const STATUS_TRANSITIONS = Object.freeze({
   [ORDER_STATUS.PENDING]: [ORDER_STATUS.CONFIRMED, ORDER_STATUS.CANCELLED],
   [ORDER_STATUS.CONFIRMED]: [ORDER_STATUS.PROCESSING, ORDER_STATUS.CANCELLED],
-  [ORDER_STATUS.PROCESSING]: [ORDER_STATUS.SHIPPED, ORDER_STATUS.CANCELLED],
-  [ORDER_STATUS.SHIPPED]: [ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED],
-  [ORDER_STATUS.DELIVERED]: [ORDER_STATUS.REFUNDED],
+  [ORDER_STATUS.PROCESSING]: [ORDER_STATUS.SHIPPING],
+  [ORDER_STATUS.SHIPPING]: [ORDER_STATUS.COMPLETED],
+  [ORDER_STATUS.COMPLETED]: [ORDER_STATUS.REFUNDED],
   [ORDER_STATUS.CANCELLED]: [],
   [ORDER_STATUS.REFUNDED]: []
 });
@@ -184,6 +184,49 @@ export class OrderService extends BaseService {
     return this.getOrderById(id);
   }
 
+
+  async cancelCustomerOrder(id, customerId, payload = {}) {
+    const reason = normalizeOptionalString(payload.reason) || "Order cancelled by customer.";
+    await withTransaction(async (connection) => {
+      const order = await this.repository.findByIdForUpdate(id, connection);
+      if (!order) {
+        throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+      }
+      if (String(order.customerId) !== String(customerId)) {
+        throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+      }
+      if (String(order.paymentStatus || "").toLowerCase() === PAYMENT_STATUS.PAID || Number(order.paidAmount || 0) > 0) {
+        throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
+      }
+      const transactions = await this.repository.findTransactionsByOrderId(id, connection);
+      const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success"].includes(String(transaction.status || "").toLowerCase()));
+      if (hasSuccessfulPayment) {
+        throw new AppError("Paid orders must use the refund flow before cancellation.", 409, "ORDER_PAID_CANNOT_BE_CANCELLED");
+      }
+      if (order.status !== ORDER_STATUS.PENDING) {
+        throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
+          currentStatus: order.status
+        });
+      }
+
+      const items = await this.repository.findDetailsByOrderId(id, connection);
+      await this.repository.restoreInventory(items, connection);
+      const cancelled = await this.repository.cancelOrder(id, { paymentStatus: PAYMENT_STATUS.FAILED }, connection);
+      if (!cancelled) {
+        throw new AppError("This order can no longer be cancelled.", 409, "ORDER_CANNOT_BE_CANCELLED", {
+          currentStatus: order.status
+        });
+      }
+      await this.repository.cancelOpenPaymentTransactions(id, connection);
+      await this.repository.addHistory(id, {
+        status: ORDER_STATUS.CANCELLED,
+        note: reason,
+        changedBy: customerId
+      }, connection);
+    });
+
+    return this.getCustomerOrderById(id, customerId);
+  }
   async deleteOrder(id) {
     await this.getOrderById(id);
 

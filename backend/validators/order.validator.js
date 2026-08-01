@@ -15,7 +15,7 @@ import { validatePagination } from "./pagination.validator.js";
 import { validatePhone } from "./phone.validator.js";
 import { validatePrice } from "./price.validator.js";
 
-const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
+const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled", "refunded"];
 const PAYMENT_STATUSES = ["unpaid", "partial", "paid", "failed", "refunded"];
 const TRANSACTION_STATUSES = ["pending", "success", "failed", "refunded"];
 const PAYMENT_METHODS = ["cod", "bank_transfer", "credit_card", "momo", "vnpay", "paypal"];

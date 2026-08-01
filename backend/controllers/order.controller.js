@@ -56,6 +56,14 @@ export class OrderController extends BaseController {
     }, "Order created successfully.", 201);
   });
 
+
+  cancelMyOrder = asyncHandler(async (request, response) => {
+    const order = await this.service.cancelCustomerOrder(request.params.id, request.user.id, request.body || {});
+
+    return this.sendSuccess(response, {
+      order
+    }, "Order cancelled successfully.");
+  });
   storeMyOrder = asyncHandler(async (request, response) => {
     const order = await this.service.createOrder(request.body, request.user.id);
 
