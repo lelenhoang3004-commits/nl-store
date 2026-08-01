@@ -437,7 +437,7 @@ function updateCustomerNotificationUI(root, options = {}) {
   badge.classList.toggle("is-empty", unreadCount === 0);
 
   if (options.guest) {
-    popover.innerHTML = `<strong>Thông báo</strong><p>Vui lòng đăng nhập để xem thông báo.</p><a href="#login">Đăng nhập</a>`;
+    popover.innerHTML = `<strong>Thông báo</strong><p>Vui lòng đăng nhập để xem thông báo.</p>`;
     return;
   }
 

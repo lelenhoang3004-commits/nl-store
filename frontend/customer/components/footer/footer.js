@@ -51,7 +51,7 @@ export function createCustomerFooter() {
     </div>
     <div class="customer-container footer-bottom">
       <span>© 2026 N&amp;L Store. Bảo lưu mọi quyền.</span>
-      <span>Phiên bản giao diện khách hàng 1.0.0</span>
+      <span>V1.0.0</span>
     </div>
   `;
 }
