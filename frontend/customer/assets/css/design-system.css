@@ -1,6 +1,8 @@
 /* Customer design system tokens and shared UI primitives. */
 :root {
-  --customer-page-max-width: 1600px;
+  --customer-home-max-width: 1600px;
+  --customer-page-max-width: 1320px;
+  --customer-compact-max-width: 1180px;
   --customer-page-padding: 32px;
   --ds-font-size-display: clamp(2.4rem, 4.8vw, 4.2rem);
   --ds-font-size-h1: clamp(1.8rem, 3.4vw, 2.5rem);
@@ -46,6 +48,13 @@ p {
     calc(100% - (var(--customer-page-padding, 16px) * 2))
   );
   margin: 0 auto;
+}
+.customer-header .customer-container,
+.customer-container[data-home-content] {
+  width: min(
+    var(--customer-home-max-width, 1600px),
+    calc(100% - (var(--customer-page-padding, 16px) * 2))
+  );
 }
 
 .customer-shell {

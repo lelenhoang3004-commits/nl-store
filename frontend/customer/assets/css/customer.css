@@ -10,10 +10,17 @@
 
 .customer-container {
   width: min(
-    var(--customer-page-max-width, 1600px),
+    var(--customer-page-max-width, 1320px),
     calc(100% - (var(--customer-page-padding, 16px) * 2))
   );
   margin: 0 auto;
+}
+.customer-header .customer-container,
+.customer-container[data-home-content] {
+  width: min(
+    var(--customer-home-max-width, 1600px),
+    calc(100% - (var(--customer-page-padding, 16px) * 2))
+  );
 }
 
 .customer-section {
