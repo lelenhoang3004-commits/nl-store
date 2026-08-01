@@ -140,6 +140,14 @@ const PRODUCT_MENU_FILTERS = Object.freeze({
 let currentRoute = null;
 let appInitialized = false;
 
+function scrollCustomerPageToTop(smooth = true) {
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: smooth ? 'smooth' : 'auto'
+  });
+}
+
 function normalizeOrderStatus(status = "") {
   const value = String(status || "").toLowerCase();
   const variants = {
@@ -545,7 +553,14 @@ function renderHeader() {
 function navigateToRoute(route, replace = false) {
   if (!route) return;
   const normalized = '#' + String(route).replace(/^#/, '');
+  const targetRoute = normalizeRoute(normalized);
   if (window.location.hash === normalized) {
+    if (targetRoute === 'home') {
+      syncCustomerNavigationActive('home');
+      scrollCustomerPageToTop(true);
+      return;
+    }
+
     renderRoute();
     return;
   }
@@ -717,7 +732,7 @@ function renderHomeRoute(sectionId = "") {
         return;
       }
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollCustomerPageToTop(true);
     });
   });
 }
