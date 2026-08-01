@@ -111,6 +111,12 @@ const layoutState = {
     timer: null,
     transactionId: null,
     inFlight: false
+  },
+  orderSuccessModal: {
+    root: null,
+    autoCloseTimer: null,
+    keydownHandler: null,
+    orderId: ""
   }
 };
 
@@ -2056,42 +2062,126 @@ function canChangePaymentMethod(payment = {}, guide = {}) {
 }
 
 function showCheckoutSuccessModal(orderCode, paymentMethod = "cod", paymentGuide = null, payment = null) {
+  return openOrderSuccessModal({ orderCode, paymentMethod, paymentGuide, payment });
+}
+
+function openOrderSuccessModal({ order = null, orderCode = "", paymentMethod = "cod", paymentGuide = null, payment = null } = {}) {
+  closeOrderSuccessModal({ clearTimer: true });
+
   const guide = paymentGuide || {};
   const isCreditCardDemo = isCreditCardPaymentMethod(paymentMethod);
   const isCodPayment = normalizePaymentMethodValue(paymentMethod) === "cod";
-  const orderId = getPaymentGuideOrderId(guide, payment);
+  const orderId = getOrderSuccessOrderId(order, guide, payment);
+  const displayOrderCode = orderCode || order?.orderCode || order?.order_code || order?.id || "DON HANG";
   const isPersonalMomo = isMomoPersonalGuide(paymentMethod, guide);
   const isPersonalBank = isBankPersonalGuide(paymentMethod, guide);
   const isReportablePayment = isCustomerReportableGuide(paymentMethod, guide);
   const canSaveQr = isPersonalMomo || isPersonalBank;
   const paymentTransactionId = payment?.id || payment?.paymentTransactionId || guide?.paymentTransactionId || guide?.payment_transaction_id || guide?.transaction_id || "";
-  const statusLabel = isCreditCardDemo ? "Chưa thanh toán – Chế độ mô phỏng" : getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
-  const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(orderCode)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(orderCode)}.png` : `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
+  const statusLabel = isCreditCardDemo ? "Ch\u01b0a thanh to\u00e1n - Ch\u1ebf \u0111\u1ed9 m\u00f4 ph\u1ecfng" : getPaymentStatusLabel(getPaymentGuideStatus(payment, guide));
+  const saveFilename = isPersonalBank ? `NL-Store-Bank-QR-${orderSafeCode(displayOrderCode)}.png` : isPersonalMomo ? `NL-Store-MoMo-${orderSafeCode(displayOrderCode)}.png` : `NL-Store-QR-${orderSafeCode(displayOrderCode)}.png`;
   const personalActions = isCreditCardDemo
-    ? `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Kiểm tra trạng thái</button>`
+    ? `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Ki&#7875;m tra tr&#7841;ng th&#225;i</button>`
     : isReportablePayment
-    ? `<button class="customer-button" type="button" data-report-payment="${escapeHtml(paymentTransactionId)}">${isPersonalBank ? "Tôi đã chuyển khoản" : "Tôi đã thanh toán"}</button>`
-    : `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Kiểm tra trạng thái</button>${guide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(guide.deeplink)}">Mở MoMo</a>` : ""}${(guide?.payUrl || guide?.pay_url) ? `<a class="customer-button" href="${escapeHtml((guide.payUrl || guide.pay_url))}">Thanh toán trên MoMo</a>` : ""}`;
+    ? `<button class="customer-button" type="button" data-report-payment="${escapeHtml(paymentTransactionId)}">${isPersonalBank ? "T&#244;i &#273;&#227; chuy&#7875;n kho&#7843;n" : "T&#244;i &#273;&#227; thanh to&#225;n"}</button>`
+    : `<button class="customer-button secondary" type="button" data-payment-status-check="${escapeHtml(paymentTransactionId)}">Ki&#7875;m tra tr&#7841;ng th&#225;i</button>${guide?.deeplink ? `<a class="customer-button secondary" href="${escapeHtml(guide.deeplink)}">M&#7903; MoMo</a>` : ""}${(guide?.payUrl || guide?.pay_url) ? `<a class="customer-button" href="${escapeHtml((guide.payUrl || guide.pay_url))}">Thanh to&#225;n tr&#234;n MoMo</a>` : ""}`;
+
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
+  overlay.dataset.orderSuccessModal = "true";
   overlay.innerHTML = `
     <div class="customer-checkout-modal customer-payment-result-modal" role="dialog" aria-modal="true">
-      <button class="customer-payment-modal-close" type="button" aria-label="Đóng cửa sổ thanh toán" data-payment-modal-close>&times;</button>
+      <button class="customer-payment-modal-close" type="button" aria-label="&#272;&#243;ng c&#7917;a s&#7893; thanh to&#225;n" data-payment-modal-close>&times;</button>
       <div class="customer-checkout-modal-icon"><i class="fa-solid ${isCreditCardDemo ? "fa-credit-card" : "fa-check"}" aria-hidden="true"></i></div>
-      <h3>${isCodPayment ? "Đặt hàng thành công – Thanh toán khi nhận hàng" : "Đặt hàng thành công – Vui lòng hoàn tất thanh toán"}</h3>
-      <p>Mã đơn hàng của bạn là <strong>${escapeHtml(orderCode || "")}</strong>.</p>
-      ${isCodPayment ? "" : `<p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} · ${escapeHtml(statusLabel)}</p>`}
-      ${renderPaymentGuideModal(paymentMethod, guide, { payment, orderCode })}
+      <h3>${isCodPayment ? "&#272;&#7863;t h&#224;ng th&#224;nh c&#244;ng - Thanh to&#225;n khi nh&#7853;n h&#224;ng" : "&#272;&#7863;t h&#224;ng th&#224;nh c&#244;ng - Vui l&#242;ng ho&#224;n t&#7845;t thanh to&#225;n"}</h3>
+      <p>M&#227; &#273;&#417;n h&#224;ng c&#7911;a b&#7841;n l&#224; <strong>${escapeHtml(displayOrderCode || "")}</strong>.</p>
+      ${isCodPayment ? "" : `<p>${escapeHtml(getPaymentMethodLabel(paymentMethod))} - ${escapeHtml(statusLabel)}</p>`}
+      ${renderPaymentGuideModal(paymentMethod, guide, { payment, orderCode: displayOrderCode })}
       <div class="customer-checkout-modal-actions">
-        ${canSaveQr ? `<button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(orderCode || "ORDER")}" data-payment-qr-filename="${escapeHtml(saveFilename)}">Lưu mã QR</button>` : ""}
+        ${canSaveQr ? `<button class="customer-button secondary" type="button" data-save-payment-qr="${escapeHtml(displayOrderCode || "ORDER")}" data-payment-qr-filename="${escapeHtml(saveFilename)}">L&#432;u m&#227; QR</button>` : ""}
         ${personalActions}
-        <a class="customer-button secondary" href="#orders/${encodeURIComponent(orderId || "")}">Xem đơn hàng</a>
+        <button class="customer-button secondary" type="button" data-order-success-view="${escapeHtml(orderId || "")}">Xem &#273;&#417;n h&#224;ng</button>
       </div>
     </div>
   `;
+
   document.body.appendChild(overlay);
+  document.body.classList.add("modal-open", "customer-modal-open", "customer-checkout-modal-open");
+  document.body.style.overflow = "hidden";
+
+  layoutState.orderSuccessModal.root = overlay;
+  layoutState.orderSuccessModal.orderId = orderId || "";
+
   bindPaymentGuideActions(overlay);
-  bindPaymentModalClose(overlay, orderId);
+  bindOrderSuccessModalEvents(overlay);
+  scheduleOrderSuccessAutoClose();
+  return overlay;
+}
+
+function getOrderSuccessOrderId(order = null, guide = {}, payment = null) {
+  return String(order?.id || order?.orderId || order?.order_id || getPaymentGuideOrderId(guide, payment) || "").trim();
+}
+
+function closeOrderSuccessModal({ clearTimer = true } = {}) {
+  const state = layoutState.orderSuccessModal || {};
+  if (clearTimer) clearOrderSuccessAutoClose();
+  if (state.keydownHandler) {
+    document.removeEventListener("keydown", state.keydownHandler);
+  }
+  clearCreditCardDemoData(state.root || document);
+  stopPaymentPolling();
+  document.querySelectorAll(".customer-checkout-modal-backdrop[data-order-success-modal]").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open", "customer-modal-open", "customer-checkout-modal-open");
+  document.body.style.overflow = "";
+  layoutState.orderSuccessModal = { root: null, autoCloseTimer: null, keydownHandler: null, orderId: "" };
+}
+
+function scheduleOrderSuccessAutoClose() {
+  clearOrderSuccessAutoClose();
+  layoutState.orderSuccessModal.autoCloseTimer = window.setTimeout(() => {
+    closeOrderSuccessModal({ clearTimer: false });
+  }, 3000);
+}
+
+function clearOrderSuccessAutoClose() {
+  const timer = layoutState.orderSuccessModal?.autoCloseTimer;
+  if (timer) window.clearTimeout(timer);
+  if (layoutState.orderSuccessModal) layoutState.orderSuccessModal.autoCloseTimer = null;
+}
+
+function bindOrderSuccessModalEvents(root) {
+  const close = () => closeOrderSuccessModal({ clearTimer: true });
+  root.querySelector("[data-payment-modal-close]")?.addEventListener("click", close);
+  root.querySelector("[data-order-success-view]")?.addEventListener("click", (event) => {
+    const orderId = event.currentTarget.dataset.orderSuccessView || layoutState.orderSuccessModal?.orderId || "";
+    clearOrderSuccessAutoClose();
+    closeOrderSuccessModal({ clearTimer: false });
+    navigateToOrderDetailAfterSuccess(orderId);
+  });
+  const onKeydown = (event) => {
+    if (event.key === "Escape" && document.body.contains(root)) close();
+    if (!document.body.contains(root)) document.removeEventListener("keydown", onKeydown);
+  };
+  layoutState.orderSuccessModal.keydownHandler = onKeydown;
+  document.addEventListener("keydown", onKeydown);
+  root.addEventListener("click", (event) => {
+    if (event.target === root) close();
+  });
+}
+
+function navigateToOrderDetailAfterSuccess(orderId = "") {
+  const cleanOrderId = String(orderId || "").trim();
+  if (!cleanOrderId) {
+    navigateToRoute("orders");
+    return;
+  }
+  const targetRoute = `orders/${encodeURIComponent(cleanOrderId)}`;
+  const currentHashPath = (window.location.hash || "").replace(/^#\/?/, "").split("?")[0];
+  if (currentHashPath === targetRoute || currentRoute === targetRoute) {
+    document.querySelector(".customer-order-detail-shell")?.scrollIntoView({ block: "start" });
+    return;
+  }
+  navigateToRoute(targetRoute);
 }
 
 function renderPaymentGuideModal(paymentMethod, guide = null, context = {}) {
@@ -2499,6 +2589,8 @@ function bindPaymentGuideActions(root) {
   });
   root.querySelector("[data-payment-status-check]")?.addEventListener("click", async (event) => {
     const id = event.currentTarget.dataset.paymentStatusCheck || "";
+    const shouldCloseSuccessModal = root?.dataset?.orderSuccessModal === "true";
+    if (shouldCloseSuccessModal) closeOrderSuccessModal({ clearTimer: true });
     if (!id) return;
     const response = await customerApi(`/payments/transactions/${encodeURIComponent(id)}/status`);
     const payment = response?.data?.payment || {};
@@ -2524,6 +2616,7 @@ function bindPaymentGuideActions(root) {
 }
 
 window.addEventListener("hashchange", () => {
+  closeOrderSuccessModal({ clearTimer: true });
   clearCreditCardDemoData(document);
   stopPaymentPolling();
 });
@@ -3008,7 +3101,7 @@ function initCheckoutForm(container, checkoutSummary) {
         layoutState.cart = createEmptyCart();
         renderHeader();
       }
-      showCheckoutSuccessModal(response?.order?.orderCode || response?.order?.id || "ĐƠN HÀNG", paymentMethod, response?.payment_guide || response?.paymentGuide || null, response?.payment || null);
+      openOrderSuccessModal({ order: response?.order || null, orderCode: response?.order?.orderCode || response?.order?.id || "DON HANG", paymentMethod, paymentGuide: response?.payment_guide || response?.paymentGuide || null, payment: response?.payment || null });
       showCustomerToast("Đặt hàng thành công.", "success");
     } catch (error) {
       showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
