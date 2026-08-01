@@ -250,7 +250,7 @@ function orderStatusLabel(status) { return STATUS_META[normalizeKey(status)]?.la
 function paymentStatusLabel(status) { return ({ unpaid: "Chưa thanh toán", pending: "Chờ thanh toán", partial: "Thanh toán một phần", paid: "Đã thanh toán", failed: "Thanh toán thất bại", refunded: "Đã hoàn tiền", cancelled: "Đã hủy" })[normalizeKey(status)] || status || "—"; }
 function paymentMethodLabel(method) {
   const bucket = PAYMENT_METHODS.find((item) => item.aliases.some((alias) => normalizeKey(alias) === normalizeKey(method)));
-  return bucket?.label || ({ unknown: "Chưa xác định", vnpay: "VNPay" })[normalizeKey(method)] || method || "—";
+  return bucket?.label || ({ unknown: "Chưa xác định" })[normalizeKey(method)] || method || "—";
 }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatCompactCurrency(value) { return new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0)); }

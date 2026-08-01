@@ -1,13 +1,18 @@
-const PAYMENT_METHOD_LABELS = Object.freeze({
-  cod: "Thanh to\u00e1n khi nh\u1eadn h\u00e0ng",
+export const PAYMENT_METHOD_LABELS = Object.freeze({
+  cod: "COD",
   bank_transfer: "Chuy\u1ec3n kho\u1ea3n ng\u00e2n h\u00e0ng",
   bank_personal_qr: "Chuy\u1ec3n kho\u1ea3n ng\u00e2n h\u00e0ng",
-  momo: "Thanh to\u00e1n b\u1eb1ng MoMo",
-  momo_personal_qr: "Thanh to\u00e1n b\u1eb1ng MoMo",
-  credit_card: "Thanh to\u00e1n b\u1eb1ng th\u1ebb t\u00edn d\u1ee5ng",
-  credit_card_demo: "Thanh to\u00e1n b\u1eb1ng th\u1ebb t\u00edn d\u1ee5ng"
+  momo: "MoMo",
+  momo_personal_qr: "MoMo",
+  credit_card: "Th\u1ebb t\u00edn d\u1ee5ng",
+  credit_card_demo: "Th\u1ebb t\u00edn d\u1ee5ng"
 });
-
+export const SUPPORTED_CHECKOUT_PAYMENT_METHODS = Object.freeze([
+  { code: "cod", label: PAYMENT_METHOD_LABELS.cod, footerLabel: "COD" },
+  { code: "bank_transfer", label: PAYMENT_METHOD_LABELS.bank_transfer, footerLabel: "Chuyển khoản" },
+  { code: "momo", label: PAYMENT_METHOD_LABELS.momo, footerLabel: "MoMo" },
+  { code: "CREDIT_CARD", label: PAYMENT_METHOD_LABELS.credit_card, footerLabel: "Thẻ tín dụng" }
+]);
 const ORDER_STATUS_LABELS = Object.freeze({
   pending: "Chờ xác nhận",
   confirmed: "Đã xác nhận",

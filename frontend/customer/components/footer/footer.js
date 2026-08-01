@@ -1,3 +1,5 @@
+import { SUPPORTED_CHECKOUT_PAYMENT_METHODS } from "../../../admin/utils/payment-formatters.js";
+
 const footerColumns = [
   {
     title: "Danh mục",
@@ -13,7 +15,7 @@ const footerColumns = [
   }
 ];
 
-const paymentMethods = ["Visa", "Mastercard", "PayPal", "Momo"];
+const paymentMethods = SUPPORTED_CHECKOUT_PAYMENT_METHODS.map((method) => method.footerLabel);
 
 export function createCustomerFooter() {
   return `

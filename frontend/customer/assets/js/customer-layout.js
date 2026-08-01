@@ -7,7 +7,7 @@ import { createHomePage, initHomePage } from "../../home/home.js?v=20260730-hero
 import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
-import { formatOrderStatus, formatPaymentMethod, formatPaymentStatus } from "../../../admin/utils/payment-formatters.js";
+import { SUPPORTED_CHECKOUT_PAYMENT_METHODS, formatOrderStatus, formatPaymentMethod, formatPaymentStatus } from "../../../admin/utils/payment-formatters.js";
 
 // Minimal, robust layout manager for customer site
 // Prevent Live Server / dev-server injected websocket reloads from forcing a full page reload.
@@ -2186,7 +2186,7 @@ function renderPaymentGuideModal(paymentMethod, guide = null, context = {}) {
           <span>Thanh toán thẻ tín dụng</span>
           <strong>MÔ PHỎNG – KHÔNG PHÁT SINH GIAO DỊCH THẬT</strong>
         </div>
-        <div class="customer-payment-card-brands"><span>VISA</span><span>Mastercard</span><span>3D Secure</span></div>
+        <div class="customer-payment-card-brands"><span>Thẻ tín dụng</span><span>3D Secure</span></div>
         <p class="customer-payment-guide-note">Không nhập thông tin thẻ ngân hàng thật. Dữ liệu chỉ được dùng để mô phỏng giao diện và không được gửi đến máy chủ.</p>
         <form class="customer-card-demo-form" data-credit-card-demo-form autocomplete="off" novalidate>
           <label>Tên chủ thẻ<input name="cardholder" type="text" autocomplete="off" maxlength="80" placeholder="NGUYEN VAN A"></label>
@@ -2729,38 +2729,18 @@ async function renderCheckoutPage() {
 
               <div class="customer-checkout-section-title">Phương thức thanh toán</div>
               <div class="customer-payment-options">
-                <label class="customer-payment-card is-active">
-                  <input type="radio" name="paymentMethod" value="cod" checked>
-                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-box-open"></i></span>
-                  <div>
-                    <strong>Thanh toán khi nhận hàng (COD)</strong>
-                    <p>Thanh toán trực tiếp khi nhận hàng.</p>
-                  </div>
-                </label>
-                <label class="customer-payment-card">
-                  <input type="radio" name="paymentMethod" value="bank_transfer">
-                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
-                  <div>
-                    <strong>Chuyển khoản ngân hàng</strong>
-                    <p>Chuyển khoản trước khi giao hàng.</p>
-                  </div>
-                </label>
-                <label class="customer-payment-card">
-                  <input type="radio" name="paymentMethod" value="CREDIT_CARD">
-                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
-                  <div>
-                    <strong>Thanh toán bằng thẻ tín dụng</strong>
-                    <p>Thanh toán an toàn bằng thẻ Visa, Mastercard hoặc thẻ ngân hàng.</p>
-                  </div>
-                </label>
-                <label class="customer-payment-card">
-                  <input type="radio" name="paymentMethod" value="momo">
-                  <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
-                  <div>
-                    <strong>MoMo</strong>
-                    <p>Thanh toán bằng ví điện tử MoMo.</p>
-                  </div>
-                </label>
+                ${SUPPORTED_CHECKOUT_PAYMENT_METHODS.map((method, index) => {
+                  const normalizedMethod = normalizePaymentMethodValue(method.code);
+                  const config = CHECKOUT_PAYMENT_ICON_MAP[normalizedMethod] || CHECKOUT_PAYMENT_ICON_MAP.cod;
+                  return `<label class="customer-payment-card ${index === 0 ? "is-active" : ""}">
+                    <input type="radio" name="paymentMethod" value="${escapeHtml(method.code)}" ${index === 0 ? "checked" : ""}>
+                    <span class="customer-payment-icon" aria-hidden="true"><i class="fa-solid ${config.icon}"></i></span>
+                    <div>
+                      <strong>${escapeHtml(method.label)}</strong>
+                      <p>${escapeHtml(getCheckoutPaymentDescription(normalizedMethod))}</p>
+                    </div>
+                  </label>`;
+                }).join("")}
               </div>
               ${renderCheckoutPaymentDetails(checkoutSummary)}
             </form>
@@ -2839,9 +2819,9 @@ function renderCheckoutPaymentDetails(summary) {
         </div>
       </section>
       <section class="customer-payment-detail-panel" data-payment-detail="credit_card" hidden>
-        <div class="customer-payment-detail-head"><strong>Thanh toan bang the tin dung</strong><span>Hosted fields</span></div>
+        <div class="customer-payment-detail-head"><strong>Thẻ tín dụng</strong><span>Đang hoàn thiện</span></div>
         <div class="customer-card-hosted-shell" aria-disabled="true">
-          <div class="customer-payment-card-brands"><span>VISA</span><span>Mastercard</span><span>3D Secure</span></div>
+          <div class="customer-payment-card-brands"><span>Thẻ tín dụng</span><span>3D Secure</span></div>
           <div class="customer-hosted-field is-disabled">So the - truong bao mat cua provider</div>
           <div class="customer-hosted-field-row"><div class="customer-hosted-field is-disabled">Ngay het han</div><div class="customer-hosted-field is-disabled">Ma bao mat</div></div>
           <button type="button" disabled>Thanh toan ${total}</button>
@@ -4415,12 +4395,20 @@ function resolveAssetUrl(url) {
 
 
 const CHECKOUT_PAYMENT_ICON_MAP = Object.freeze({
-  cod: { icon: "fa-box-open", label: "Thanh toán khi nhận hàng" },
+  cod: { icon: "fa-box-open", label: "COD" },
   bank_transfer: { icon: "fa-building-columns", label: "Chuyển khoản ngân hàng" },
-  credit_card: { icon: "fa-credit-card", label: "Thanh toán bằng thẻ tín dụng" },
-  vnpay: { icon: "fa-credit-card", label: "VNPay" },
-  momo: { icon: "fa-wallet", label: "MoMo" }
+  momo: { icon: "fa-wallet", label: "MoMo" },
+  credit_card: { icon: "fa-credit-card", label: "Thẻ tín dụng" }
 });
+
+function getCheckoutPaymentDescription(method = "") {
+  return ({
+    cod: "Thanh toán trực tiếp khi nhận hàng.",
+    bank_transfer: "Chuyển khoản ngân hàng trước khi giao hàng.",
+    momo: "Thanh toán bằng ví điện tử MoMo.",
+    credit_card: "Thanh toán bằng thẻ tín dụng khi cổng thanh toán khả dụng."
+  })[normalizePaymentMethodValue(method)] || "Phương thức thanh toán được hỗ trợ.";
+}
 
 function observeCheckoutPaymentCards() {
   try {
