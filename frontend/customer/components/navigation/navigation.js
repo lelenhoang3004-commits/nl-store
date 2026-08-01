@@ -1,4 +1,4 @@
-﻿const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
+const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
     ? "http://localhost:5000/api/v1"
     : "https://nl-store.onrender.com/api/v1"
@@ -17,6 +17,9 @@ const promoHighlights = [
   { label: "Bộ sưu tập", text: "Lớp phối tối giản cho phong cách hiện đại.", href: "#collections" },
   { label: "Thương hiệu", text: "Cùng các đối tác thời trang hàng đầu.", href: "#brands" }
 ];
+
+let activeNavigationRoot = null;
+let navigationGlobalListenersBound = false;
 
 let categoryCache = {
   items: [],
@@ -56,6 +59,7 @@ export function initCustomerNavigation(root = document) {
   const nav = root.querySelector("[data-customer-nav]");
   const megaToggle = root.querySelector("[data-mega-toggle]");
   const megaMenu = root.querySelector("[data-mega-menu]");
+  activeNavigationRoot = root;
   const currentHref = (window.location.hash || "#home").toLowerCase();
   nav?.querySelectorAll("a").forEach((link) => {
     link.classList.toggle("is-active", link.getAttribute("href")?.toLowerCase() === currentHref);
@@ -85,10 +89,33 @@ export function initCustomerNavigation(root = document) {
     }
   });
 
+  bindNavigationGlobalListeners();
+}
+
+function closeActiveMegaMenu() {
+  const root = activeNavigationRoot || document;
+  root.querySelector("[data-mega-menu]")?.classList.remove("is-open");
+  root.querySelector("[data-mega-toggle]")?.setAttribute("aria-expanded", "false");
+}
+
+function bindNavigationGlobalListeners() {
+  if (navigationGlobalListenersBound) return;
+  navigationGlobalListenersBound = true;
+
   document.addEventListener("click", (event) => {
+    const root = activeNavigationRoot;
+    if (!root) return;
+
+    const nav = root.querySelector("[data-customer-nav]");
+    const megaToggle = root.querySelector("[data-mega-toggle]");
     if (!nav?.contains(event.target) && !megaToggle?.contains(event.target)) {
-      megaMenu?.classList.remove("is-open");
-      megaToggle?.setAttribute("aria-expanded", "false");
+      closeActiveMegaMenu();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeActiveMegaMenu();
     }
   });
 }
