@@ -46,7 +46,8 @@ export function createProductCard(product) {
   const item = normalizeProductCardData(product);
   const priceText = formatCurrency(item.price);
   const comparePriceText = item.comparePrice ? formatCurrency(item.comparePrice) : "";
-  const badgeClass = `product-badge ${getBadgeClass(item.badge)}`;
+  const badgeText = item.discount ? "GIẢM GIÁ" : item.badge;
+  const badgeClass = `product-badge ${getBadgeClass(badgeText)}`;
   const stockState = getStockState(item);
   const stockLabel = stockState.label;
   const fallbackImage = escapeHtml(globalThis.FASHION_IMAGE_PLACEHOLDER || "");
@@ -56,7 +57,7 @@ export function createProductCard(product) {
       <div class="product-card-media-wrap">
         <a class="product-media" href="#product-detail/${item.id}" aria-label="${escapeHtml(item.name)}">
           <span class="product-badge-cluster">
-            <span class="${badgeClass}">${escapeHtml(item.badge)}</span>
+            <span class="${badgeClass}">${escapeHtml(badgeText)}</span>
             ${item.discount ? `<span class="product-discount">-${escapeHtml(item.discount)}%</span>` : ""}
           </span>
           <img class="product-media-image primary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">
@@ -86,8 +87,8 @@ export function createProductCard(product) {
           <div class="product-price-group">
             <strong>${priceText}</strong>
             ${comparePriceText ? `<del>${comparePriceText}</del>` : ""}
+            <span class="product-sold">${escapeHtml(item.sold)} đã bán</span>
           </div>
-          <span class="product-sold">${escapeHtml(item.sold)} đã bán</span>
         </div>
         <div class="product-card-button-row">
           <button class="ds-button product-card-button" type="button" data-add-to-cart data-product-id="${item.id}">
