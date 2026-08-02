@@ -2,12 +2,14 @@
 .product-grid-shell {
   display: grid;
   gap: 20px;
+  width: 100%;
 }
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
   animation: productGridFade 280ms ease;
   align-items: stretch;
 }
@@ -85,26 +87,26 @@
   }
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1439px) {
   .product-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-}
 
-@media (max-width: 980px) {
-  .product-grid {
+  .product-grid-loading {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 720px) {
-  .product-grid {
+@media (max-width: 900px) {
+  .product-grid,
+  .product-grid-loading {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
-  .product-grid {
+  .product-grid,
+  .product-grid-loading {
     grid-template-columns: 1fr;
   }
 }

@@ -1,4 +1,4 @@
-﻿import { createProductGrid, initProductGrid } from "../components/product-grid/product-grid.js";
+import { createProductGrid, initProductGrid } from "../components/product-grid/product-grid.js";
 import { createHeroComponent, initHeroComponent } from "../components/hero/hero.js?v=20260730-hero-refresh";
 import { createFlashSaleSection, initFlashSaleSection } from "../components/flash-sale/flash-sale.js";
 import { createFeaturedProductsSection, initFeaturedProductsSection } from "../components/featured-products/featured-products.js";
@@ -97,7 +97,10 @@ function mapApiProduct(product = {}) {
   return {
     id: product.id,
     name: product.name,
-    category: product.categoryName || "Sản phẩm",
+    category: product.categoryName || product.category_name || product.category?.name || "Sản phẩm",
+    categoryId: product.categoryId ?? product.category_id ?? product.category?.id ?? null,
+    categoryCode: product.categoryCode || product.category_code || product.category?.code || "",
+    categorySlug: product.categorySlug || product.category_slug || product.category?.slug || "",
     image: getPreferredProductImage(product),
     hoverImage: "",
     thumbnailUrl: getPreferredProductImage(product),
@@ -257,6 +260,7 @@ async function loadHomePage(target) {
 
   try {
     const data = await getHomePageData();
+    homePageDataCache = data;
     renderHomeContent(target, data.products, data.categories);
   } catch (error) {
     console.error("Lỗi tải trang chủ:", error);
@@ -345,7 +349,12 @@ export function initHomePage(root = document) {
   return loadHomePage(target);
 }
 function createPremiumHomepageMarkup(products = productCatalog, categories = []) {
-  const jewelryProducts = products.filter(isJewelryProduct);
+  const uniqueProducts = uniqueProductsById(products);
+  const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
+  const featuredProducts = uniqueProducts;
+  const newProducts = uniqueProducts;
+  const bestSellerProducts = [...uniqueProducts].sort((left, right) => Number(right.sold || 0) - Number(left.sold || 0));
+  const jewelryProducts = uniqueProducts.filter(isJewelryProduct);
   return `
     ${createHeroComponent()}
 
@@ -353,9 +362,10 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
       ${createFlashSaleSection({
     title: contentShape.flashSale.eyebrow,
     subtitle: contentShape.flashSale.subtitle,
-    items: products.slice(0, 4),
-    page: 1,
-    totalPages: 1
+    items: saleProducts.length ? saleProducts : featuredProducts,
+    page: getHomeSectionPage("flashSale"),
+    totalPages: getHomeSectionTotalPages(saleProducts.length ? saleProducts : featuredProducts),
+    onPageChange: "handleHomeFlashSalePage"
   })}
     </section>
 
@@ -365,9 +375,10 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     description: "Lựa chọn đặc sắc để nâng tầm tủ đồ với phong thái tự tin và tinh tế.",
     actionText: "Xem chi tiết",
     actionHref: "#story",
-    items: products.slice(0, 8),
-    page: 1,
-    totalPages: 1
+    items: featuredProducts,
+    page: getHomeSectionPage("featured"),
+    totalPages: getHomeSectionTotalPages(featuredProducts),
+    onPageChange: "handleHomeFeaturedPage"
   })}
     </section>
 
@@ -377,9 +388,10 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     description: "Những thiết kế mới tươi tắn cho phong cách chuyển động hiện đại và trang phục hàng ngày nâng tầm.",
     actionText: "Khám phá",
     actionHref: "#products",
-    items: products.slice(0, 4),
-    page: 1,
-    totalPages: 1
+    items: newProducts,
+    page: getHomeSectionPage("newArrival"),
+    totalPages: getHomeSectionTotalPages(newProducts),
+    onPageChange: "handleHomeNewArrivalPage"
   })}
     </section>
 
@@ -389,10 +401,10 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     description: "Các bộ sưu tập cân bằng giữa sự thoải mái, phom dáng và tính linh hoạt.",
     actionText: "Mua hàng bán chạy",
     actionHref: "#products",
-    items: products.slice(0, 4),
-    page: 1,
-    totalPages: 2,
-    onPageChange: "handleProductGridPage"
+    items: bestSellerProducts,
+    page: getHomeSectionPage("bestSeller"),
+    totalPages: getHomeSectionTotalPages(bestSellerProducts),
+    onPageChange: "handleHomeBestSellerPage"
   })}
     </section>
 
@@ -417,8 +429,9 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
       ${createProductGrid({
         items: jewelryProducts,
         empty: jewelryProducts.length === 0,
-        page: 1,
-        totalPages: Math.max(1, Math.ceil(jewelryProducts.length / 8))
+        page: getHomeSectionPage("jewelry"),
+        totalPages: getHomeSectionTotalPages(jewelryProducts),
+        onPageChange: "handleHomeJewelryPage"
       })}
     </section>
 
@@ -455,8 +468,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
 
 function isJewelryProduct(product = {}) {
   const normalize = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const searchable = `${normalize(product.name)} ${normalize(product.category)} ${normalize(product.categoryName)}`;
-  return searchable.includes("day chuyen") || searchable.includes("trang suc");
+  const searchable = `${normalize(product.name)} ${normalize(product.category)} ${normalize(product.categoryName)} ${normalize(product.categoryCode)} ${normalize(product.categorySlug)}`;
+  return searchable.includes("day chuyen") || searchable.includes("trang suc") || searchable.includes("trang-suc") || searchable.includes("jewelry");
 }
 
 function createSkeletonShell() {
@@ -488,6 +501,76 @@ function createSkeletonCards(count) {
     </div>
   `).join("");
 }
+
+function uniqueProductsById(items = []) {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    const key = String(item?.id ?? item?.productId ?? item?.product_id ?? "").trim();
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const HOME_SECTION_PAGE_SIZE = 8;
+const homeSectionPages = { flashSale: 1, featured: 1, newArrival: 1, bestSeller: 1, jewelry: 1 };
+
+function getHomeSectionPage(section) {
+  return Math.max(1, Number(homeSectionPages[section] || 1));
+}
+
+function getHomeSectionTotalPages(items = []) {
+  return Math.max(1, Math.ceil(uniqueProductsById(items).length / HOME_SECTION_PAGE_SIZE));
+}
+
+function getHomeSectionItems(section, products = []) {
+  const uniqueProducts = uniqueProductsById(products);
+  const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
+
+  switch (section) {
+    case "flashSale":
+      return saleProducts.length ? saleProducts : uniqueProducts;
+    case "bestSeller":
+      return [...uniqueProducts].sort((left, right) => Number(right.sold || 0) - Number(left.sold || 0));
+    case "jewelry":
+      return uniqueProducts.filter(isJewelryProduct);
+    case "featured":
+    case "newArrival":
+    default:
+      return uniqueProducts;
+  }
+}
+
+function rerenderHomeSection(section, page) {
+  homeSectionPages[section] = Math.max(1, Number(page || 1));
+  const data = homePageDataCache;
+  const sectionId = { flashSale: "flash-sale", featured: "featured-product", newArrival: "new-arrival", bestSeller: "best-seller", jewelry: "jewelry" }[section];
+  const sectionNode = document.getElementById(sectionId);
+  const current = sectionNode?.querySelector("[data-product-grid-shell]");
+  if (!sectionNode || !current || !data) return;
+
+  const items = getHomeSectionItems(section, data.products);
+  current.outerHTML = createProductGrid({
+    items,
+    page: getHomeSectionPage(section),
+    totalPages: getHomeSectionTotalPages(items),
+    onPageChange: {
+      flashSale: "handleHomeFlashSalePage",
+      featured: "handleHomeFeaturedPage",
+      newArrival: "handleHomeNewArrivalPage",
+      bestSeller: "handleHomeBestSellerPage",
+      jewelry: "handleHomeJewelryPage"
+    }[section]
+  });
+  initProductGrid(sectionNode);
+  sectionNode.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+window.handleHomeFlashSalePage = (page) => rerenderHomeSection("flashSale", page);
+window.handleHomeFeaturedPage = (page) => rerenderHomeSection("featured", page);
+window.handleHomeNewArrivalPage = (page) => rerenderHomeSection("newArrival", page);
+window.handleHomeBestSellerPage = (page) => rerenderHomeSection("bestSeller", page);
+window.handleHomeJewelryPage = (page) => rerenderHomeSection("jewelry", page);
 
 window.handleProductGridPage = function handleProductGridPage(page) {
   const target = document.querySelector("[data-home-content]");

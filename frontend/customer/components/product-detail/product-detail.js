@@ -41,6 +41,7 @@ export async function initProductDetailPage(root = document, productId = "", opt
     const relatedProducts = await loadRelatedProducts(product);
 
     target.innerHTML = createProductDetailMarkup(product, relatedProducts);
+    window.__productDetailRelatedProducts = relatedProducts;
     initProductDetailInteractions(target, product, options);
     initProductGrid(target);
   } catch (error) {
@@ -158,12 +159,27 @@ function createProductDetailMarkup(product, relatedProducts = []) {
         </div>
       </div>
       ${relatedProducts.length
-        ? createProductGrid({ items: relatedProducts, page: 1, totalPages: 1 })
+        ? createProductGrid({ items: relatedProducts, page: 1, totalPages: Math.max(1, Math.ceil(relatedProducts.length / 8)), onPageChange: "handleProductDetailRelatedPage" })
         : `<article class="customer-card" style="padding:24px;">Chưa có sản phẩm liên quan.</article>`}
     </section>
   `;
 }
 
+
+window.handleProductDetailRelatedPage = function handleProductDetailRelatedPage(page) {
+  const section = document.querySelector(".product-detail-related");
+  const current = section?.querySelector("[data-product-grid-shell]");
+  const items = window.__productDetailRelatedProducts || [];
+  if (!section || !current) return;
+  current.outerHTML = createProductGrid({
+    items,
+    page,
+    totalPages: Math.max(1, Math.ceil(items.length / 8)),
+    onPageChange: "handleProductDetailRelatedPage"
+  });
+  initProductGrid(section);
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 function getInitialProductPrice(product, variants = []) {
   const availableVariants = variants.filter((variant) => variant.status === "active");
   if (availableVariants.length) {
@@ -571,13 +587,12 @@ async function loadRelatedProducts(product) {
   const url = new URL(`${API_BASE_URL}/products`);
   url.searchParams.set("categoryId", product.categoryId);
   url.searchParams.set("status", "active");
-  url.searchParams.set("limit", "4");
+  url.searchParams.set("limit", "100");
 
   const payload = await fetchJson(url.toString());
   const products = payload?.data?.products || [];
   return products
-    .filter((item) => String(item.id) !== String(product.id))
-    .slice(0, 4)
+    .filter((item, index, list) => String(item.id) !== String(product.id) && list.findIndex((candidate) => String(candidate.id) === String(item.id)) === index)
     .map(mapRelatedProduct);
 }
 

@@ -3,6 +3,7 @@ import { createCustomerHeader, initCustomerHeader } from "../../components/heade
 import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
 import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
+import { createProductGrid, initProductGrid } from "../../components/product-grid/product-grid.js";
 import { createHomePage, initHomePage } from "../../home/home.js?v=20260730-hero-refresh";
 import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
 import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
@@ -863,7 +864,8 @@ async function renderProductListPage() {
       return;
     }
 
-    const cards = products.map((product) => createProductCard(mapApiProductForCard(product))).join("");
+    const cards = uniqueCustomerProducts(products).map(mapApiProductForCard);
+    window.__customerProductResults = cards;
     const resultHeading = searchKeyword ? `Kết quả tìm kiếm cho: ${escapeHtml(searchKeyword)}` : `Danh mục: ${escapeHtml(title)}`;
     layoutState.main.innerHTML = renderPageShell(title, `
       <section class="customer-product-results">
@@ -874,10 +876,10 @@ async function renderProductListPage() {
             <p>Tìm thấy ${products.length} sản phẩm phù hợp.</p>
           </div>
         </div>
-        <div class="product-grid">${cards}</div>
+        ${createProductGrid({ items: cards, page: 1, totalPages: Math.max(1, Math.ceil(cards.length / 8)), onPageChange: "handleCustomerProductResultsPage" })}
       </section>
     `, shellOptions);
-    initProductCard(layoutState.main);
+    initProductGrid(layoutState.main);
     syncWishlistToggleButtons();
   } catch (error) {
     console.error("[products] Unable to load customer products", error);
@@ -968,6 +970,32 @@ function uniqueCustomerCategories(categories = []) {
   });
 }
 
+
+function uniqueCustomerProducts(items = []) {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    const key = String(item?.id ?? item?.productId ?? item?.product_id ?? "").trim();
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+window.handleCustomerProductResultsPage = function handleCustomerProductResultsPage(page) {
+  const section = document.querySelector(".customer-product-results");
+  const current = section?.querySelector("[data-product-grid-shell]");
+  const items = window.__customerProductResults || [];
+  if (!section || !current) return;
+  current.outerHTML = createProductGrid({
+    items,
+    page,
+    totalPages: Math.max(1, Math.ceil(items.length / 8)),
+    onPageChange: "handleCustomerProductResultsPage"
+  });
+  initProductGrid(section);
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 function isProductInCategory(product = {}, slug = "", category = null) {
   if (category?.id && String(product.categoryId ?? product.category_id ?? "") === String(category.id)) return true;
   const normalizedSlug = normalizeSlug(slug);
