@@ -71,7 +71,7 @@ function createChatbotHtml() {
           </form>
         </div>
       </div>
-      <button class="nl-chatbot-label" type="button" data-chatbot-label aria-label="Mở trợ lý AI">Trợ lý AI</button>
+      <button class="nl-chatbot-label" type="button" data-chatbot-label aria-label="Mở hỗ trợ">HỖ TRỢ</button>
       <button class="nl-chatbot-toggle" type="button" data-chatbot-toggle aria-label="Mở chatbot N&L Store">${avatarImage()}</button>
     </section>
   `;
