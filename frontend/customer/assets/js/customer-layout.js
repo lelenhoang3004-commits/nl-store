@@ -3489,7 +3489,11 @@ function canCustomerCancelOrder(order = {}) {
 }
 
 function bindCustomerOrderCancel(root, orderId) {
-  root?.querySelector("[data-order-cancel]")?.addEventListener("click", (event) => {
+  const trigger = root?.querySelector("[data-order-cancel]");
+  if (!trigger || trigger.dataset.customerCancelBound === "true") return;
+
+  trigger.dataset.customerCancelBound = "true";
+  trigger.addEventListener("click", (event) => {
     const id = event.currentTarget.dataset.orderCancel || orderId;
     openCustomerOrderCancelModal(id);
   });
@@ -3518,7 +3522,12 @@ function openCustomerOrderCancelModal(orderId) {
   overlay.addEventListener("click", (event) => {
     if (event.target === overlay) closeCustomerOrderCancelModal();
   });
-  overlay.querySelector("[data-order-cancel-confirm]")?.addEventListener("click", handleCustomerOrderCancelConfirm);
+
+  const confirmButton = overlay.querySelector("[data-order-cancel-confirm]");
+  if (!confirmButton || confirmButton.dataset.customerCancelHandlerBound === "true") return;
+
+  confirmButton.dataset.customerCancelHandlerBound = "true";
+  confirmButton.addEventListener("click", handleCustomerOrderCancelConfirm);
 }
 
 function closeCustomerOrderCancelModal() {
@@ -3531,16 +3540,18 @@ async function handleCustomerOrderCancelConfirm(event) {
   const button = event.currentTarget;
   const orderId = button.dataset.orderCancelConfirm || "";
   if (!orderId || button.disabled) return;
+
   button.disabled = true;
   const previousText = button.innerHTML;
-  button.innerHTML = `<span class="customer-button-spinner"></span>&#272;ang h&#7911;y...`;
+  button.innerHTML = `<span class="customer-button-spinner"></span>Đang hủy...`;
+
   try {
     await customerApi(`/orders/my/${encodeURIComponent(orderId)}/cancel`, {
       method: "PATCH",
       body: { reason: "Customer cancelled order." }
     });
     closeCustomerOrderCancelModal();
-    showCustomerToast("H\u1ee7y \u0111\u01a1n h\u00e0ng th\u00e0nh c\u00f4ng", "success");
+    showCustomerToast("Hủy đơn hàng thành công", "success");
     await renderOrderDetailPage(orderId);
     document.querySelector(".customer-order-detail-shell")?.scrollIntoView({ block: "start" });
   } catch (error) {
@@ -3548,15 +3559,15 @@ async function handleCustomerOrderCancelConfirm(event) {
     button.innerHTML = previousText;
     const status = Number(error?.status || error?.statusCode || 0);
     if (status === 401 || status === 403) {
-      showCustomerToast("B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n h\u1ee7y \u0111\u01a1n h\u00e0ng n\u00e0y.", "error");
+      showCustomerToast("Bạn không có quyền hủy đơn hàng này.", "error");
       return;
     }
     if (status === 409) {
-      showCustomerToast("\u0110\u01a1n h\u00e0ng \u0111\u00e3 \u0111\u1ed5i tr\u1ea1ng th\u00e1i n\u00ean kh\u00f4ng th\u1ec3 h\u1ee7y.", "error");
+      showCustomerToast("Đơn hàng đã đổi trạng thái nên không thể hủy.", "error");
       await renderOrderDetailPage(orderId);
       return;
     }
-    showCustomerToast(error?.message || "Kh\u00f4ng th\u1ec3 h\u1ee7y \u0111\u01a1n h\u00e0ng. Vui l\u00f2ng th\u1eed l\u1ea1i.", "error");
+    showCustomerToast(error?.message || "Không thể hủy đơn hàng. Vui lòng thử lại.", "error");
   }
 }
 async function renderProfilePage() {
