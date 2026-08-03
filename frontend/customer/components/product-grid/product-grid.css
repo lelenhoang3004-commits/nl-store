@@ -7,7 +7,8 @@
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 280px));
+  justify-content: start;
   gap: 20px;
   width: 100%;
   animation: productGridFade 280ms ease;
@@ -89,7 +90,7 @@
 
 @media (max-width: 1439px) {
   .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 280px));
   }
 
   .product-grid-loading {
@@ -100,13 +101,13 @@
 @media (max-width: 900px) {
   .product-grid,
   .product-grid-loading {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 280px));
   }
 }
 
 @media (max-width: 560px) {
   .product-grid,
   .product-grid-loading {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

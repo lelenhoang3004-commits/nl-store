@@ -11,6 +11,7 @@ export function createBestSellerSection(options = {}) {
     empty = false,
     page = 1,
     totalPages = 1,
+    pageSize = 8,
     onPageChange = null
   } = options;
 
@@ -28,7 +29,7 @@ export function createBestSellerSection(options = {}) {
         </div>
         <a class="customer-button secondary" href="${actionHref}">${actionText}</a>
       </div>
-      ${createProductGrid({ items: bestSellerItems, loading, empty, page, totalPages, onPageChange })}
+      ${createProductGrid({ items: bestSellerItems, loading, empty, page, totalPages, pageSize, onPageChange })}
     </section>
   `;
 }

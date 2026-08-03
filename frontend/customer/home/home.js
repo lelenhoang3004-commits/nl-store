@@ -114,7 +114,11 @@ function mapApiProduct(product = {}) {
       ? Math.round(((price - salePrice) / price) * 100)
       : 0,
     rating: Number(product.ratingAverage ?? product.rating_average ?? product.rating ?? 4.8),
-    sold: Number(product.sold || 0),
+    sold: Number(product.sold ?? product.soldCount ?? product.sold_count ?? 0),
+    soldCount: Number(product.sold ?? product.soldCount ?? product.sold_count ?? 0),
+    sold_count: Number(product.sold ?? product.soldCount ?? product.sold_count ?? 0),
+    createdAt: product.createdAt || product.created_at || product.createdDate || product.created_date || null,
+    created_at: product.created_at || product.createdAt || product.createdDate || product.created_date || null,
     badge: salePrice ? "GIẢM GIÁ" : "MỚI",
     inStock: Number(product.stock || 0) > 0,
     stock: Number(product.stock || 0),
@@ -126,7 +130,8 @@ function mapApiProduct(product = {}) {
 
 async function loadProductsFromApi() {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    const query = new URLSearchParams({ page: "1", limit: "100", sortBy: "createdAt", sortOrder: "desc", _: String(Date.now()) });
+    const response = await fetch(`${API_BASE_URL}/products?${query.toString()}`, { cache: "no-store" });
     const payload = await response.json();
 
     const products = getListFromApiPayload(payload, "products").map(mapApiProduct);
@@ -294,6 +299,7 @@ function renderHomeContent(target, products, categories) {
   initBrandShowcaseSection(target);
   initCustomerReviewsSection(target);
   initCategoryShowcaseToggle(target);
+  bindHomeSectionResizeHandler();
 }
 
 function initCategoryShowcaseToggle(root = document) {
@@ -350,11 +356,12 @@ export function initHomePage(root = document) {
 }
 function createPremiumHomepageMarkup(products = productCatalog, categories = []) {
   const uniqueProducts = uniqueProductsById(products);
+  clampHomeSectionPages(uniqueProducts, categories);
   const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
   const featuredProducts = uniqueProducts;
-  const newProducts = uniqueProducts;
-  const bestSellerProducts = [...uniqueProducts].sort((left, right) => Number(right.sold || 0) - Number(left.sold || 0));
-  const jewelryProducts = uniqueProducts.filter(isJewelryProduct);
+  const newProducts = getNewestProducts(uniqueProducts);
+  const bestSellerProducts = getBestSellerProducts(uniqueProducts);
+  const jewelryProducts = getJewelryProducts(uniqueProducts, categories);
   return `
     ${createHeroComponent()}
 
@@ -365,6 +372,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     items: saleProducts.length ? saleProducts : featuredProducts,
     page: getHomeSectionPage("flashSale"),
     totalPages: getHomeSectionTotalPages(saleProducts.length ? saleProducts : featuredProducts),
+    pageSize: getHomeSectionPageSize(),
     onPageChange: "handleHomeFlashSalePage"
   })}
     </section>
@@ -378,6 +386,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     items: featuredProducts,
     page: getHomeSectionPage("featured"),
     totalPages: getHomeSectionTotalPages(featuredProducts),
+    pageSize: getHomeSectionPageSize(),
     onPageChange: "handleHomeFeaturedPage"
   })}
     </section>
@@ -391,6 +400,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     items: newProducts,
     page: getHomeSectionPage("newArrival"),
     totalPages: getHomeSectionTotalPages(newProducts),
+    pageSize: getHomeSectionPageSize(),
     onPageChange: "handleHomeNewArrivalPage"
   })}
     </section>
@@ -404,6 +414,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     items: bestSellerProducts,
     page: getHomeSectionPage("bestSeller"),
     totalPages: getHomeSectionTotalPages(bestSellerProducts),
+    pageSize: getHomeSectionPageSize(),
     onPageChange: "handleHomeBestSellerPage"
   })}
     </section>
@@ -431,6 +442,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
         empty: jewelryProducts.length === 0,
         page: getHomeSectionPage("jewelry"),
         totalPages: getHomeSectionTotalPages(jewelryProducts),
+        pageSize: getHomeSectionPageSize(),
         onPageChange: "handleHomeJewelryPage"
       })}
     </section>
@@ -513,18 +525,31 @@ function uniqueProductsById(items = []) {
   });
 }
 
-const HOME_SECTION_PAGE_SIZE = 8;
 const homeSectionPages = { flashSale: 1, featured: 1, newArrival: 1, bestSeller: 1, jewelry: 1 };
+let homeSectionPageSize = getResponsiveHomePageSize();
+let homeResizeHandlerBound = false;
+
+function getResponsiveHomePageSize() {
+  const width = Number(globalThis.innerWidth || 1440);
+  if (width <= 560) return 1;
+  if (width <= 900) return 2;
+  if (width <= 1439) return 3;
+  return 4;
+}
+
+function getHomeSectionPageSize() {
+  return Math.max(1, Number(homeSectionPageSize || getResponsiveHomePageSize()));
+}
 
 function getHomeSectionPage(section) {
   return Math.max(1, Number(homeSectionPages[section] || 1));
 }
 
 function getHomeSectionTotalPages(items = []) {
-  return Math.max(1, Math.ceil(uniqueProductsById(items).length / HOME_SECTION_PAGE_SIZE));
+  return Math.max(1, Math.ceil(uniqueProductsById(items).length / getHomeSectionPageSize()));
 }
 
-function getHomeSectionItems(section, products = []) {
+function getHomeSectionItems(section, products = [], categories = []) {
   const uniqueProducts = uniqueProductsById(products);
   const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
 
@@ -532,29 +557,44 @@ function getHomeSectionItems(section, products = []) {
     case "flashSale":
       return saleProducts.length ? saleProducts : uniqueProducts;
     case "bestSeller":
-      return [...uniqueProducts].sort((left, right) => Number(right.sold || 0) - Number(left.sold || 0));
+      return getBestSellerProducts(uniqueProducts);
     case "jewelry":
-      return uniqueProducts.filter(isJewelryProduct);
-    case "featured":
+      return getJewelryProducts(uniqueProducts, categories);
     case "newArrival":
+      return getNewestProducts(uniqueProducts);
+    case "featured":
     default:
       return uniqueProducts;
   }
 }
 
-function rerenderHomeSection(section, page) {
-  homeSectionPages[section] = Math.max(1, Number(page || 1));
+function clampHomeSectionPage(section, items = []) {
+  const totalPages = getHomeSectionTotalPages(items);
+  homeSectionPages[section] = Math.min(Math.max(1, getHomeSectionPage(section)), totalPages);
+}
+
+function clampHomeSectionPages(products = [], categories = []) {
+  Object.keys(homeSectionPages).forEach((section) => {
+    clampHomeSectionPage(section, getHomeSectionItems(section, products, categories));
+  });
+}
+
+function rerenderHomeSection(section, page, options = {}) {
   const data = homePageDataCache;
+  const categories = data?.categories || [];
+  const items = getHomeSectionItems(section, data?.products || [], categories);
+  const totalPages = getHomeSectionTotalPages(items);
+  homeSectionPages[section] = Math.min(Math.max(1, Number(page || 1)), totalPages);
   const sectionId = { flashSale: "flash-sale", featured: "featured-product", newArrival: "new-arrival", bestSeller: "best-seller", jewelry: "jewelry" }[section];
   const sectionNode = document.getElementById(sectionId);
   const current = sectionNode?.querySelector("[data-product-grid-shell]");
   if (!sectionNode || !current || !data) return;
 
-  const items = getHomeSectionItems(section, data.products);
   current.outerHTML = createProductGrid({
     items,
     page: getHomeSectionPage(section),
-    totalPages: getHomeSectionTotalPages(items),
+    totalPages,
+    pageSize: getHomeSectionPageSize(),
     onPageChange: {
       flashSale: "handleHomeFlashSalePage",
       featured: "handleHomeFeaturedPage",
@@ -564,7 +604,147 @@ function rerenderHomeSection(section, page) {
     }[section]
   });
   initProductGrid(sectionNode);
-  sectionNode.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (options.scroll !== false) {
+    scrollHomeSectionIntoView(sectionNode);
+  }
+}
+
+function scrollHomeSectionIntoView(sectionNode) {
+  const header = document.querySelector(".customer-header, header");
+  const offset = (header?.getBoundingClientRect().height || 0) + 16;
+  const top = window.scrollY + sectionNode.getBoundingClientRect().top - offset;
+  window.scrollTo({ top: Math.max(0, top), left: 0, behavior: "smooth" });
+}
+
+function bindHomeSectionResizeHandler() {
+  if (homeResizeHandlerBound) return;
+  homeResizeHandlerBound = true;
+  let resizeTimer = null;
+
+  window.addEventListener("resize", () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      const nextPageSize = getResponsiveHomePageSize();
+      if (nextPageSize === homeSectionPageSize) return;
+      homeSectionPageSize = nextPageSize;
+      const data = homePageDataCache;
+      if (!data) return;
+      clampHomeSectionPages(data.products, data.categories);
+      Object.keys(homeSectionPages).forEach((section) => rerenderHomeSection(section, getHomeSectionPage(section), { scroll: false }));
+    }, 120);
+  });
+}
+
+const HOME_NEW_ARRIVAL_LIMIT = 12;
+
+function getNewestProducts(products = []) {
+  return uniqueProductsById(products)
+    .slice()
+    .sort(compareNewestProducts)
+    .slice(0, HOME_NEW_ARRIVAL_LIMIT);
+}
+
+function getBestSellerProducts(products = []) {
+  return uniqueProductsById(products)
+    .filter((product) => getProductSoldCount(product) > 0)
+    .sort((left, right) => {
+      const soldDifference = getProductSoldCount(right) - getProductSoldCount(left);
+      if (soldDifference !== 0) return soldDifference;
+      return compareNewestProducts(left, right);
+    });
+}
+
+function compareNewestProducts(left = {}, right = {}) {
+  const dateDifference = getProductCreatedTime(right) - getProductCreatedTime(left);
+  if (dateDifference !== 0) return dateDifference;
+  return getProductIdRank(right) - getProductIdRank(left);
+}
+
+function getProductCreatedTime(product = {}) {
+  const value = product.createdAt || product.created_at || product.createdDate || product.created_date || 0;
+  const time = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(time) ? time : 0;
+}
+
+function getProductSoldCount(product = {}) {
+  const value = Number(product.sold ?? product.soldCount ?? product.sold_count ?? product.da_ban ?? product.so_luong_da_ban ?? 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function getProductIdRank(product = {}) {
+  const rawId = String(product.id ?? product.productId ?? product.product_id ?? "");
+  const numericId = Number(rawId);
+  if (Number.isFinite(numericId)) return numericId;
+  const trailingNumber = Number(rawId.match(/(\d+)$/)?.[1] || 0);
+  return Number.isFinite(trailingNumber) ? trailingNumber : 0;
+}
+
+function getJewelryProducts(products = [], categories = []) {
+  const matchers = getJewelryCategoryMatchers(categories);
+  return uniqueProductsById(products).filter((product) => isProductInCategory(product, matchers));
+}
+
+function getJewelryCategoryMatchers(categories = []) {
+  const normalizedCategories = Array.isArray(categories) ? categories : [];
+  const jewelryCategories = normalizedCategories.filter((category) => isJewelryCategory(category));
+  return {
+    ids: new Set(jewelryCategories.map((category) => String(category.id ?? "").trim()).filter(Boolean)),
+    codes: new Set(jewelryCategories.flatMap((category) => [
+      category.code,
+      category.categoryCode,
+      category.slug
+    ]).map(normalizeCategoryKey).filter(Boolean)),
+    names: new Set(jewelryCategories.map((category) => normalizeCategoryKey(category.name)).filter(Boolean))
+  };
+}
+
+function isJewelryCategory(category = {}) {
+  return [
+    category.code,
+    category.categoryCode,
+    category.slug,
+    category.name
+  ].map(normalizeCategoryKey).some((value) => value === "trang-suc" || value.includes("trang-suc") || value === "jewelry");
+}
+
+function isProductInCategory(product = {}, matchers = getJewelryCategoryMatchers()) {
+  const productCategoryId = String(product.categoryId ?? product.category_id ?? product.category?.id ?? "").trim();
+  if (productCategoryId && matchers.ids?.has(productCategoryId)) return true;
+
+  const productCodes = [
+    product.categoryCode,
+    product.category_code,
+    product.categorySlug,
+    product.category_slug,
+    product.category?.code,
+    product.category?.slug
+  ].map(normalizeCategoryKey).filter(Boolean);
+  if (productCodes.some((value) => matchers.codes?.has(value) || value === "trang-suc" || value.includes("trang-suc") || value === "jewelry")) {
+    return true;
+  }
+
+  const productNames = [
+    product.category,
+    product.categoryName,
+    product.category_name,
+    product.category?.name
+  ].map(normalizeCategoryKey).filter(Boolean);
+  if (productNames.some((value) => matchers.names?.has(value) || value === "trang-suc" || value.includes("trang-suc"))) {
+    return true;
+  }
+
+  return normalizeCategoryKey(product.name).includes("day-chuyen");
+}
+
+function normalizeCategoryKey(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 window.handleHomeFlashSalePage = (page) => rerenderHomeSection("flashSale", page);
 window.handleHomeFeaturedPage = (page) => rerenderHomeSection("featured", page);
@@ -587,7 +767,8 @@ window.handleProductGridPage = function handleProductGridPage(page) {
   current.outerHTML = createProductGrid({
     items: products,
     page,
-    totalPages: Math.ceil(products.length / 8),
+    totalPages: Math.ceil(products.length / getHomeSectionPageSize()),
+    pageSize: getHomeSectionPageSize(),
     onPageChange: "handleProductGridPage"
   });
   initProductGrid(target);

@@ -60,7 +60,6 @@ export function initProductGrid(root = document) {
       const handler = button.dataset.pageHandler;
       if (handler && typeof window[handler] === "function") {
         window[handler](page);
-        button.closest("[data-product-grid-shell]")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   });
