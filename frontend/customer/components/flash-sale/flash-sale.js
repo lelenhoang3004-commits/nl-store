@@ -9,6 +9,7 @@ export function createFlashSaleSection(options = {}) {
     empty = false,
     page = 1,
     totalPages = 1,
+    pageSize = 8,
     onPageChange = null
   } = options;
 
@@ -33,7 +34,7 @@ export function createFlashSaleSection(options = {}) {
           <div><strong data-countdown-second>00</strong><span>Giây</span></div>
         </div>
       </div>
-      ${createProductGrid({ items, loading, empty, page, totalPages, onPageChange })}
+      ${createProductGrid({ items, loading, empty, page, totalPages, pageSize, onPageChange })}
     </section>
   `;
 }

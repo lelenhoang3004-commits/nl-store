@@ -357,7 +357,7 @@ export function initHomePage(root = document) {
 function createPremiumHomepageMarkup(products = productCatalog, categories = []) {
   const uniqueProducts = uniqueProductsById(products);
   clampHomeSectionPages(uniqueProducts, categories);
-  const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
+  const saleProducts = getDiscountProducts(uniqueProducts);
   const featuredProducts = uniqueProducts;
   const newProducts = getNewestProducts(uniqueProducts);
   const bestSellerProducts = getBestSellerProducts(uniqueProducts);
@@ -369,10 +369,10 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
       ${createFlashSaleSection({
     title: contentShape.flashSale.eyebrow,
     subtitle: contentShape.flashSale.subtitle,
-    items: saleProducts.length ? saleProducts : featuredProducts,
+    items: saleProducts,
     page: getHomeSectionPage("flashSale"),
-    totalPages: getHomeSectionTotalPages(saleProducts.length ? saleProducts : featuredProducts),
-    pageSize: getHomeSectionPageSize(),
+    totalPages: getHomeSectionTotalPages("flashSale", saleProducts),
+    pageSize: getHomeSectionPageSize("flashSale"),
     onPageChange: "handleHomeFlashSalePage"
   })}
     </section>
@@ -385,8 +385,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     actionHref: "#story",
     items: featuredProducts,
     page: getHomeSectionPage("featured"),
-    totalPages: getHomeSectionTotalPages(featuredProducts),
-    pageSize: getHomeSectionPageSize(),
+    totalPages: getHomeSectionTotalPages("featured", featuredProducts),
+    pageSize: getHomeSectionPageSize("featured"),
     onPageChange: "handleHomeFeaturedPage"
   })}
     </section>
@@ -399,8 +399,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     actionHref: "#products",
     items: newProducts,
     page: getHomeSectionPage("newArrival"),
-    totalPages: getHomeSectionTotalPages(newProducts),
-    pageSize: getHomeSectionPageSize(),
+    totalPages: getHomeSectionTotalPages("newArrival", newProducts),
+    pageSize: getHomeSectionPageSize("newArrival"),
     onPageChange: "handleHomeNewArrivalPage"
   })}
     </section>
@@ -413,8 +413,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
     actionHref: "#products",
     items: bestSellerProducts,
     page: getHomeSectionPage("bestSeller"),
-    totalPages: getHomeSectionTotalPages(bestSellerProducts),
-    pageSize: getHomeSectionPageSize(),
+    totalPages: getHomeSectionTotalPages("bestSeller", bestSellerProducts),
+    pageSize: getHomeSectionPageSize("bestSeller"),
     onPageChange: "handleHomeBestSellerPage"
   })}
     </section>
@@ -441,8 +441,8 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
         items: jewelryProducts,
         empty: jewelryProducts.length === 0,
         page: getHomeSectionPage("jewelry"),
-        totalPages: getHomeSectionTotalPages(jewelryProducts),
-        pageSize: getHomeSectionPageSize(),
+        totalPages: getHomeSectionTotalPages("jewelry", jewelryProducts),
+        pageSize: getHomeSectionPageSize("jewelry"),
         onPageChange: "handleHomeJewelryPage"
       })}
     </section>
@@ -526,36 +526,38 @@ function uniqueProductsById(items = []) {
 }
 
 const homeSectionPages = { flashSale: 1, featured: 1, newArrival: 1, bestSeller: 1, jewelry: 1 };
-let homeSectionPageSize = getResponsiveHomePageSize();
+let homeSectionColumnCount = getResponsiveHomeColumnCount();
 let homeResizeHandlerBound = false;
 
-function getResponsiveHomePageSize() {
+function getResponsiveHomeColumnCount() {
   const width = Number(globalThis.innerWidth || 1440);
   if (width <= 560) return 1;
   if (width <= 900) return 2;
-  if (width <= 1439) return 3;
-  return 4;
+  if (width <= 1099) return 3;
+  if (width <= 1439) return 4;
+  return 5;
 }
 
-function getHomeSectionPageSize() {
-  return Math.max(1, Number(homeSectionPageSize || getResponsiveHomePageSize()));
+function getHomeSectionPageSize(section = "") {
+  const columns = Math.max(1, Number(homeSectionColumnCount || getResponsiveHomeColumnCount()));
+  return ["flashSale", "newArrival", "bestSeller"].includes(section) ? columns : columns * 2;
 }
 
 function getHomeSectionPage(section) {
   return Math.max(1, Number(homeSectionPages[section] || 1));
 }
 
-function getHomeSectionTotalPages(items = []) {
-  return Math.max(1, Math.ceil(uniqueProductsById(items).length / getHomeSectionPageSize()));
+function getHomeSectionTotalPages(section, items = []) {
+  return Math.max(1, Math.ceil(uniqueProductsById(items).length / getHomeSectionPageSize(section)));
 }
 
 function getHomeSectionItems(section, products = [], categories = []) {
   const uniqueProducts = uniqueProductsById(products);
-  const saleProducts = uniqueProducts.filter((product) => Number(product.discount || 0) > 0 || Number(product.comparePrice || 0) > Number(product.price || 0));
+  const saleProducts = getDiscountProducts(uniqueProducts);
 
   switch (section) {
     case "flashSale":
-      return saleProducts.length ? saleProducts : uniqueProducts;
+      return saleProducts;
     case "bestSeller":
       return getBestSellerProducts(uniqueProducts);
     case "jewelry":
@@ -569,7 +571,7 @@ function getHomeSectionItems(section, products = [], categories = []) {
 }
 
 function clampHomeSectionPage(section, items = []) {
-  const totalPages = getHomeSectionTotalPages(items);
+  const totalPages = getHomeSectionTotalPages(section, items);
   homeSectionPages[section] = Math.min(Math.max(1, getHomeSectionPage(section)), totalPages);
 }
 
@@ -583,7 +585,7 @@ function rerenderHomeSection(section, page, options = {}) {
   const data = homePageDataCache;
   const categories = data?.categories || [];
   const items = getHomeSectionItems(section, data?.products || [], categories);
-  const totalPages = getHomeSectionTotalPages(items);
+  const totalPages = getHomeSectionTotalPages(section, items);
   homeSectionPages[section] = Math.min(Math.max(1, Number(page || 1)), totalPages);
   const sectionId = { flashSale: "flash-sale", featured: "featured-product", newArrival: "new-arrival", bestSeller: "best-seller", jewelry: "jewelry" }[section];
   const sectionNode = document.getElementById(sectionId);
@@ -594,7 +596,7 @@ function rerenderHomeSection(section, page, options = {}) {
     items,
     page: getHomeSectionPage(section),
     totalPages,
-    pageSize: getHomeSectionPageSize(),
+    pageSize: getHomeSectionPageSize(section),
     onPageChange: {
       flashSale: "handleHomeFlashSalePage",
       featured: "handleHomeFeaturedPage",
@@ -624,15 +626,50 @@ function bindHomeSectionResizeHandler() {
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(() => {
-      const nextPageSize = getResponsiveHomePageSize();
-      if (nextPageSize === homeSectionPageSize) return;
-      homeSectionPageSize = nextPageSize;
+      const nextColumnCount = getResponsiveHomeColumnCount();
+      if (nextColumnCount === homeSectionColumnCount) return;
+      homeSectionColumnCount = nextColumnCount;
       const data = homePageDataCache;
       if (!data) return;
       clampHomeSectionPages(data.products, data.categories);
       Object.keys(homeSectionPages).forEach((section) => rerenderHomeSection(section, getHomeSectionPage(section), { scroll: false }));
     }, 120);
   });
+}
+
+function getDiscountProducts(products = []) {
+  return uniqueProductsById(products)
+    .map((product) => ({
+      ...product,
+      discount: getProductDiscountPercent(product)
+    }))
+    .filter((product) => getProductDiscountPercent(product) > 0)
+    .sort((left, right) => {
+      const discountDifference = getProductDiscountPercent(right) - getProductDiscountPercent(left);
+      if (discountDifference !== 0) return discountDifference;
+      return compareNewestProducts(left, right);
+    });
+}
+
+function getProductDiscountPercent(product = {}) {
+  const originalPrice = getProductOriginalPrice(product);
+  const salePrice = getProductSalePrice(product);
+
+  if (!(originalPrice > 0) || !(salePrice >= 0) || salePrice >= originalPrice) {
+    return 0;
+  }
+
+  return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+}
+
+function getProductOriginalPrice(product = {}) {
+  const value = Number(product.comparePrice ?? product.originalPrice ?? product.original_price ?? product.priceOriginal ?? product.price_original ?? product.regularPrice ?? product.regular_price ?? product.price ?? 0);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function getProductSalePrice(product = {}) {
+  const value = Number(product.salePrice ?? product.sale_price ?? product.finalPrice ?? product.final_price ?? product.price ?? 0);
+  return Number.isFinite(value) ? value : 0;
 }
 
 const HOME_NEW_ARRIVAL_LIMIT = 12;
@@ -767,8 +804,8 @@ window.handleProductGridPage = function handleProductGridPage(page) {
   current.outerHTML = createProductGrid({
     items: products,
     page,
-    totalPages: Math.ceil(products.length / getHomeSectionPageSize()),
-    pageSize: getHomeSectionPageSize(),
+    totalPages: Math.ceil(products.length / getHomeSectionPageSize("featured")),
+    pageSize: getHomeSectionPageSize("featured"),
     onPageChange: "handleProductGridPage"
   });
   initProductGrid(target);
