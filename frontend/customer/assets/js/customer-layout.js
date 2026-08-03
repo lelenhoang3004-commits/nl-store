@@ -86,6 +86,7 @@ const layoutState = {
   wishlistProductIds: new Set(),
   wishlistTotal: 0,
   pendingRoute: "",
+  pendingRouteSection: "",
   lastAuthChangedTime: 0,
   isRenderingRoute: false,
   oauthPopup: null,
@@ -513,6 +514,58 @@ function getNewsletterPopupErrorMessage(error) {
   if (error?.message === "Newsletter subscription successful." || error?.message === "Newsletter subscribe failed.") return "Kh\u00f4ng th\u1ec3 \u0111\u0103ng k\u00fd l\u00fac n\u00e0y.";
   return error?.message || "Kh\u00f4ng th\u1ec3 \u0111\u0103ng k\u00fd l\u00fac n\u00e0y.";
 }
+function handleFooterLinkNavigation(event) {
+  const anchor = event.target.closest("[data-footer-link]");
+  if (!anchor) return false;
+
+  const target = anchor.getAttribute("data-footer-link") || "";
+  const targetSection = anchor.getAttribute("data-footer-section") || "";
+  event.preventDefault();
+
+  if (target === "login") {
+    if (customerAuth.isAuthenticated()) {
+      showCustomerToast("Bạn đã đăng nhập.", "success");
+      return true;
+    }
+
+    navigateToRoute("login");
+    return true;
+  }
+
+  if (target === "orders" || target === "wishlist") {
+    if (!customerAuth.isAuthenticated()) {
+      layoutState.pendingRoute = target;
+      layoutState.pendingRouteSection = "";
+      navigateToRoute("login");
+      return true;
+    }
+
+    layoutState.pendingRouteSection = "";
+    navigateToRoute(target);
+    return true;
+  }
+
+  if (target === "profile") {
+    if (!customerAuth.isAuthenticated()) {
+      layoutState.pendingRoute = "profile";
+      layoutState.pendingRouteSection = targetSection === "address" ? "address" : "";
+      navigateToRoute("login");
+      return true;
+    }
+
+    layoutState.pendingRouteSection = targetSection === "address" ? "address" : "";
+    navigateToRoute("profile");
+    return true;
+  }
+
+  if (["new-arrival", "best-seller", "flash-sale", "products"].includes(target)) {
+    navigateToRoute(target);
+    return true;
+  }
+
+  return false;
+}
+
 function bindGlobalEvents() {
   if (layoutState._eventsBound) return;
   layoutState._eventsBound = true;
@@ -551,6 +604,10 @@ function bindGlobalEvents() {
       if (productId) {
         handleWishlistToggle(productId, wishlistButton);
       }
+      return;
+    }
+
+    if (handleFooterLinkNavigation(event)) {
       return;
     }
 
@@ -635,6 +692,7 @@ function renderRoute() {
     if (nextRoute === 'login' && customerAuth.isAuthenticated()) {
       const redirect = layoutState.pendingRoute || 'home';
       layoutState.pendingRoute = '';
+      layoutState.pendingRouteSection = '';
       navigateToRoute(redirect, true);
       return;
     }
@@ -692,6 +750,7 @@ function renderRoute() {
       if (customerAuth.isAuthenticated()) {
         const redirect = layoutState.pendingRoute || 'home';
         layoutState.pendingRoute = '';
+        layoutState.pendingRouteSection = '';
         navigateToRoute(redirect);
         return;
       }
@@ -881,6 +940,9 @@ async function renderProductListPage() {
     `, shellOptions);
     initProductGrid(layoutState.main);
     syncWishlistToggleButtons();
+    window.requestAnimationFrame(() => {
+      scrollCustomerPageToTop(true);
+    });
   } catch (error) {
     console.error("[products] Unable to load customer products", error);
     layoutState.main.innerHTML = renderPageShell(title, `
@@ -3600,6 +3662,15 @@ async function renderProfilePage() {
       paymentState
     ));
     bindProfilePage(user);
+
+    if (layoutState.pendingRouteSection === "address") {
+      layoutState.pendingRouteSection = "";
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          scrollToCustomerSection("profile-address", true);
+        });
+      });
+    }
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div><h2>Không thể tải hồ sơ</h2><p>${escapeHtml(error?.message || "Vui lòng thử lại sau.")}</p></div>`);
     showCustomerToast(error?.message || "Không thể tải hồ sơ.", "error");
@@ -3637,7 +3708,7 @@ function createProfilePageHtml(user = {}, social = {}, paymentState = {}) {
       </section>
 
       <div class="customer-profile-grid">
-        <section class="customer-profile-card">
+        <section class="customer-profile-card" id="profile-address">
           <h3>Thông tin liên hệ</h3>
           <div class="customer-profile-info">
             ${createProfileInfoRow("Họ tên", name)}

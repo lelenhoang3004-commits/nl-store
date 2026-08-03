@@ -3,15 +3,30 @@ import { SUPPORTED_CHECKOUT_PAYMENT_METHODS } from "../../../admin/utils/payment
 const footerColumns = [
   {
     title: "Danh mục",
-    links: ["Sản phẩm mới", "Bán chạy", "Ưu đãi", "Bộ sưu tập"]
+    links: [
+      { label: "Sản phẩm mới", route: "new-arrival" },
+      { label: "Bán chạy", route: "best-seller" },
+      { label: "Ưu đãi", route: "flash-sale" },
+      { label: "Bộ sưu tập", route: "products" }
+    ]
   },
   {
     title: "Hỗ trợ",
-    links: ["Hướng dẫn size", "Đổi trả", "Vận chuyển", "Liên hệ"]
+    links: [
+      { label: "Hướng dẫn size", route: "home" },
+      { label: "Đổi trả", route: "home" },
+      { label: "Vận chuyển", route: "home" },
+      { label: "Liên hệ", route: "home" }
+    ]
   },
   {
     title: "Tài khoản",
-    links: ["Đăng nhập", "Đơn hàng", "Yêu thích", "Địa chỉ"]
+    links: [
+      { label: "Đăng nhập", route: "login" },
+      { label: "Đơn hàng", route: "orders" },
+      { label: "Yêu thích", route: "wishlist" },
+      { label: "Địa chỉ", route: "profile", section: "address" }
+    ]
   }
 ];
 
@@ -60,7 +75,7 @@ function createFooterColumn(column) {
   return `
     <section class="footer-column">
       <h2>${column.title}</h2>
-      ${column.links.map((link) => `<a href="#${link.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, "").replaceAll(" ", "-")}">${link}</a>`).join("")}
+      ${column.links.map((link) => `<a href="#${link.route}" data-footer-link="${link.route}" data-footer-section="${link.section || ""}">${link.label}</a>`).join("")}
     </section>
   `;
 }
