@@ -9,6 +9,7 @@ import { AppError } from "../utils/app-error.util.js";
 import { logger } from "../utils/logger.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { withTransaction } from "../utils/database.util.js";
+import { normalizeOptionalString } from "../utils/string.util.js";
 
 const ORDER_STATUS = Object.freeze({
   PENDING: "pending",

@@ -9,6 +9,7 @@ import { NotificationService } from "./notification.service.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { withTransaction } from "../utils/database.util.js";
+import { normalizeOptionalString } from "../utils/string.util.js";
 import crypto from "node:crypto";
 import { createPaymentProviderAdapter } from "./payment-providers/index.js";
 
@@ -622,14 +623,6 @@ function createTransferContent(orderCode) {
 function normalizePaymentMethodCode(value) {
   const method = String(value || "").trim().toLowerCase();
   return method === "credit_card" ? "CREDIT_CARD" : method;
-}
-
-function normalizeOptionalString(value) {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
-
-  return String(value).trim();
 }
 
 function createOrderCode() {
