@@ -3468,12 +3468,24 @@ async function renderOrderDetailPage(orderId) {
 
 
 function canCustomerCancelOrder(order = {}) {
-  const orderStatus = String(order.status || "").toLowerCase();
-  const paymentStatus = String(order.paymentStatus || "").toLowerCase();
+  const orderStatus = String(order.status || "").trim().toLowerCase();
+  const paymentStatus = String(order.paymentStatus || "").trim().toLowerCase();
   const paidAmount = Number(order.paidAmount || 0);
   const transactions = Array.isArray(order.transactions) ? order.transactions : [];
-  const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success"].includes(String(transaction.status || "").toLowerCase()));
-  return orderStatus === "pending" && paymentStatus !== "paid" && paidAmount <= 0 && !hasSuccessfulPayment;
+  const hasSuccessfulPayment = transactions.some((transaction) => ["paid", "success", "completed", "succeeded"].includes(String(transaction.status || "").trim().toLowerCase()));
+  const allowedStatuses = new Set([
+    "pending",
+    "pending_confirmation",
+    "waiting_for_confirmation",
+    "awaiting_confirmation",
+    "pending_payment",
+    "waiting_payment",
+    "chờ xác nhận",
+    "chờ thanh toán"
+  ]);
+  const paidStatuses = new Set(["paid", "success", "completed", "succeeded", "thanh toán thành công", "đã thanh toán"]);
+
+  return allowedStatuses.has(orderStatus) && !paidStatuses.has(paymentStatus) && paidAmount <= 0 && !hasSuccessfulPayment;
 }
 
 function bindCustomerOrderCancel(root, orderId) {

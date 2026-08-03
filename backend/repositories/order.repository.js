@@ -289,29 +289,49 @@ export class OrderRepository extends BaseRepository {
     for (const item of items) {
       const quantity = Number(item.quantity || 0);
       if (quantity <= 0) continue;
-      if (item.variantId) {
-        await this.execute(
-          `UPDATE product_variants
-          SET stock = stock + ?,
-            sold = GREATEST(sold - ?, 0),
-            status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND deleted_at IS NULL`,
-          [quantity, quantity, item.variantId],
-          connection
-        );
+
+      try {
+        if (item.variantId) {
+          await this.execute(
+            `UPDATE product_variants
+            SET stock = stock + ?,
+              sold = GREATEST(sold - ?, 0),
+              status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND deleted_at IS NULL`,
+            [quantity, quantity, item.variantId],
+            connection
+          );
+        }
+      } catch (error) {
+        logger.warn("Unable to restore variant inventory during order cancellation.", {
+          repository: "OrderRepository",
+          operation: "restoreInventory",
+          variantId: item.variantId,
+          message: error?.message
+        });
       }
-      if (item.productId) {
-        await this.execute(
-          `UPDATE products
-          SET stock = stock + ?,
-            sold = GREATEST(sold - ?, 0),
-            status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND deleted_at IS NULL`,
-          [quantity, quantity, item.productId],
-          connection
-        );
+
+      try {
+        if (item.productId) {
+          await this.execute(
+            `UPDATE products
+            SET stock = stock + ?,
+              sold = GREATEST(sold - ?, 0),
+              status = CASE WHEN status = 'out_of_stock' THEN 'active' ELSE status END,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND deleted_at IS NULL`,
+            [quantity, quantity, item.productId],
+            connection
+          );
+        }
+      } catch (error) {
+        logger.warn("Unable to restore product inventory during order cancellation.", {
+          repository: "OrderRepository",
+          operation: "restoreInventory",
+          productId: item.productId,
+          message: error?.message
+        });
       }
     }
   }
