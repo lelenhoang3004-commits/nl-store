@@ -89,8 +89,7 @@ class Carousel {
   }
 
   _renderNav() {
-    const pages = Math.max(1, Math.ceil((this.slides.length - (this.options.loop ? this.perPage * 2 : 0)) / this.perPage));
-    if (pages <= 1 || this.root.querySelector('.carousel-nav')) return;
+    if (this.root.querySelector('.carousel-nav')) return;
     const nav = document.createElement('div'); nav.className = 'carousel-nav';
     nav.innerHTML = `<button class="carousel-prev" aria-label="Trước">‹</button><button class="carousel-next" aria-label="Tiếp">›</button>`;
     this.root.appendChild(nav);
@@ -99,13 +98,13 @@ class Carousel {
   }
 
   _renderIndicators() {
-    const pages = Math.max(1, Math.ceil((this.slides.length - (this.options.loop ? this.perPage * 2 : 0)) / this.perPage));
-    if (pages <= 1 || this.root.querySelector('.carousel-indicators')) return;
+    if (this.root.querySelector('.carousel-indicators')) return;
     const wrap = document.createElement('div'); wrap.className = 'carousel-indicators';
+    const pages = Math.max(1, Math.ceil((this.slides.length - (this.options.loop? this.perPage*2:0)) / this.perPage));
     wrap.innerHTML = Array.from({length: pages}).map((_,i)=>`<button class="carousel-ind" data-index="${i}" aria-label="Đi tới slide ${i+1}"></button>`).join('');
     this.root.appendChild(wrap);
     this.indicators = $$('.carousel-ind', wrap);
-    this.indicators.forEach(btn => btn.addEventListener('click', () => { this.goTo(parseInt(btn.getAttribute('data-index')) * this.perPage); }));
+    this.indicators.forEach(btn => btn.addEventListener('click', (e)=>{ this.goTo(parseInt(btn.getAttribute('data-index')) * this.perPage); }));
   }
 
   _initLazy() {
