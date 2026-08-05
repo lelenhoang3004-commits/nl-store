@@ -1,3 +1,5 @@
+import { initCarousel } from "../carousel/carousel.js";
+
 export function createBrandShowcaseSection(options = {}) {
   const {
     title = "Thương hiệu nổi bật",
@@ -15,10 +17,9 @@ export function createBrandShowcaseSection(options = {}) {
           <p>${description}</p>
         </div>
       </div>
-      <div class="brand-showcase-slider" data-brand-showcase-slider>
-        <div class="brand-showcase-track" data-brand-showcase-track>
-          ${items.map(createBrandCard).join("")}
-          ${items.map(createBrandCard).join("")}
+      <div class="brand-showcase-carousel carousel" data-brand-showcase-carousel>
+        <div class="carousel-track">
+          ${items.map(createBrandSlide).join("")}
         </div>
       </div>
     </section>
@@ -26,58 +27,56 @@ export function createBrandShowcaseSection(options = {}) {
 }
 
 export function initBrandShowcaseSection(root = document) {
-  const slider = root.querySelector("[data-brand-showcase-slider]");
-  const track = root.querySelector("[data-brand-showcase-track]");
-
-  if (!slider || !track) {
-    return;
-  }
-
-  let offset = 0;
-  const speed = 0.45;
-  let animationFrame = null;
-
-  const step = () => {
-    offset -= speed;
-    const maxOffset = track.scrollWidth / 2;
-
-    if (Math.abs(offset) >= maxOffset) {
-      offset = 0;
+  const section = root.querySelector("[data-brand-showcase-section]");
+  if (!section) return;
+  initCarousel(section, {
+    perPage: 5,
+    gap: 18,
+    loop: false,
+    autoplay: false,
+    indicators: true,
+    navigation: true,
+    draggable: true,
+    breakpoints: {
+      640: 2,
+      900: 4,
+      1200: 5,
+      1600: 6
     }
-
-    track.style.transform = `translateX(${offset}px)`;
-    animationFrame = window.requestAnimationFrame(step);
-  };
-
-  const start = () => {
-    if (!animationFrame) {
-      animationFrame = window.requestAnimationFrame(step);
-    }
-  };
-
-  const stop = () => {
-    if (animationFrame) {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
-  };
-
-  slider.addEventListener("mouseenter", stop);
-  slider.addEventListener("mouseleave", start);
-  start();
+  });
 }
 
-function createBrandCard(brand) {
+function createBrandSlide(brand) {
   const name = brand.name || "Thương hiệu";
-  const logo = brand.logo || name;
-  const href = brand.href || "#products";
+  const initials = getBrandInitials(name);
+  const href = brand.href || buildBrandHref(brand);
 
   return `
-    <a class="brand-showcase-item" href="${href}">
-      <span>${logo}</span>
-      <strong>${name}</strong>
-    </a>
+    <div class="carousel-slide">
+      <a class="brand-showcase-item" href="${href}">
+        <span class="brand-showcase-abbr">${initials}</span>
+        <strong>${name}</strong>
+      </a>
+    </div>
   `;
+}
+
+function buildBrandHref(brand) {
+  if (brand.href) return brand.href;
+  if (brand.brandId) return `#products?brandId=${encodeURIComponent(brand.brandId)}`;
+  if (brand.brandCode) return `#products?brandCode=${encodeURIComponent(brand.brandCode)}`;
+  if (brand.code) return `#products?brandCode=${encodeURIComponent(brand.code)}`;
+  if (brand.slug) return `#products?brand=${encodeURIComponent(brand.slug)}`;
+  return `#products?brand=${encodeURIComponent(brand.name || "")}`;
+}
+
+function getBrandInitials(name = "") {
+  return String(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 }
 
 function getDefaultBrands() {

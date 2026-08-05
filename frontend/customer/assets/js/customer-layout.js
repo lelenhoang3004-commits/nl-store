@@ -2992,10 +2992,10 @@ function renderCheckoutPaymentDetails(summary) {
   return `
     <div class="customer-payment-detail-panels" data-payment-detail-panels>
       <section class="customer-payment-detail-panel is-active" data-payment-detail="cod">
-        <p>Thanh to&aacute;n khi nh&aacute;n h&agrave;ng. Cua hang se xac nhan don truoc khi giao.</p>
+        <p>Thanh toán khi nhận hàng. Cửa hàng sẽ xác nhận đơn trước khi giao.</p>
       </section>
       <section class="customer-payment-detail-panel" data-payment-detail="bank_transfer" hidden>
-        <div class="customer-payment-detail-head"><strong>Chuyen khoan ngan hang bang QR</strong><span>15 phut</span></div>
+        <div class="customer-payment-detail-head"><strong>Chuyển khoản ngân hàng bằng QR</strong><span>15 phut</span></div>
         <div class="customer-payment-preview-grid">
           <div class="customer-payment-qr-placeholder"><i class="fa-solid fa-qrcode" aria-hidden="true"></i><span>QR se duoc tao sau khi dat hang</span></div>
           <div class="customer-payment-preview-copy">
@@ -3012,7 +3012,7 @@ function renderCheckoutPaymentDetails(summary) {
           <div class="customer-hosted-field is-disabled">So the - truong bao mat cua provider</div>
           <div class="customer-hosted-field-row"><div class="customer-hosted-field is-disabled">Ngay het han</div><div class="customer-hosted-field is-disabled">Ma bao mat</div></div>
           <button type="button" disabled>Thanh toan ${total}</button>
-          <small>Thanh toan the dang duoc hoan thien. N&L Store khong thu thap so the, CVC, PIN hoac OTP.</small>
+          <small>N&L Store không thu thập số thẻ, CVC, PIN hoặc OTP.</small>
         </div>
       </section>
       <section class="customer-payment-detail-panel" data-payment-detail="momo" hidden>
