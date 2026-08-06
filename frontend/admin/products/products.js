@@ -1124,9 +1124,9 @@ function bindProductImageUpload(modal) {
 function bindProductVariantSection(modal, product, root = null) {
   const section = modal.querySelector("[data-product-variant-section]");
   if (!section) return;
-  const hint = section.querySelector("[data-product-variant-hint]");
-  const editor = section.querySelector("[data-product-variant-editor]");
-  const table = section.querySelector("[data-product-variant-table]");
+  let hint = section.querySelector("[data-product-variant-hint]");
+  let editor = section.querySelector("[data-product-variant-editor]");
+  let table = section.querySelector("[data-product-variant-table]");
   let editingVariantId = null;
   let inlineEditingId = null;
   let selectedColors = [];
@@ -1209,6 +1209,9 @@ function bindProductVariantSection(modal, product, root = null) {
       <div class="admin-product-variant-table" data-product-variant-table></div>
     `;
 
+    hint = section.querySelector("[data-product-variant-hint]");
+    editor = section.querySelector("[data-product-variant-editor]");
+    table = section.querySelector("[data-product-variant-table]");
     bindBuilderEvents();
   }
 
