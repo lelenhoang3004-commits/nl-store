@@ -2,7 +2,7 @@ import { BaseRepository } from "./base.repository.js";
 import { ProductVariant } from "../models/product-variant.model.js";
 import { logger } from "../utils/logger.util.js";
 
-const SELECT = `SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at FROM product_variants`;
+const SELECT = `SELECT id, product_id, sku, size, color, color_code, image_url, price, sale_price, stock, sold, status, created_at, updated_at FROM product_variants`;
 let schemaReadyPromise = null;
 
 export class ProductVariantRepository extends BaseRepository {
@@ -23,6 +23,7 @@ export class ProductVariantRepository extends BaseRepository {
         size VARCHAR(50),
         color VARCHAR(50),
         color_code VARCHAR(20),
+        image_url VARCHAR(255),
         price DECIMAL(12,2),
         sale_price DECIMAL(12,2),
         stock INT NOT NULL DEFAULT 0,
@@ -36,13 +37,14 @@ export class ProductVariantRepository extends BaseRepository {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
+    await this.ensureTableColumn("product_variants", "image_url", "VARCHAR(255) NULL AFTER color_code");
     await this.ensureTableColumn("order_details", "variant_id", "VARCHAR(100) NULL AFTER product_image_url");
     await this.ensureTableColumn("order_details", "size", "VARCHAR(50) NULL AFTER variant_id");
     await this.ensureTableColumn("order_details", "color", "VARCHAR(50) NULL AFTER size");
   }
 
   async ensureTableColumn(tableName, columnName, definition) {
-    const allowedTables = new Set(["order_details"]);
+    const allowedTables = new Set(["order_details", "product_variants"]);
     if (!allowedTables.has(tableName)) return;
 
     const [rows] = await this.client.getPool().execute(`SHOW COLUMNS FROM ${tableName} LIKE '${columnName}'`);
@@ -112,7 +114,7 @@ export class ProductVariantRepository extends BaseRepository {
     const executor = connection || this.client.getPool();
     const params = [sku];
     if (excludedId) params.push(excludedId);
-    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE sku = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
+    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, image_url, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE sku = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
     return rows[0] || null;
   }
 
@@ -121,27 +123,27 @@ export class ProductVariantRepository extends BaseRepository {
     const executor = connection || this.client.getPool();
     const params = [productId, String(color || "").trim().toLowerCase(), String(size || "").trim().toLowerCase()];
     if (excludedId) params.push(excludedId);
-    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE product_id = ? AND LOWER(TRIM(color)) = ? AND LOWER(TRIM(size)) = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
+    const [rows] = await executor.execute(`SELECT id, product_id, sku, size, color, color_code, image_url, price, sale_price, stock, sold, status, created_at, updated_at, deleted_at FROM product_variants WHERE product_id = ? AND LOWER(TRIM(color)) = ? AND LOWER(TRIM(size)) = ? ${excludedId ? "AND id <> ?" : ""} LIMIT 1`, params);
     return rows[0] || null;
   }
 
   async restore(id, payload, connection = null) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
-    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, price=?, sale_price=?, stock=?, sold=?, status=?, deleted_at=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=?`, [...this.params(payload), id]);
+    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, image_url=?, price=?, sale_price=?, stock=?, sold=?, status=?, deleted_at=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=?`, [...this.params(payload), id]);
     return this.findById(id, { connection });
   }
   async create(payload, connection = null) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
-    const [result] = await executor.execute(`INSERT INTO product_variants (product_id, sku, size, color, color_code, price, sale_price, stock, sold, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, this.params(payload));
+    const [result] = await executor.execute(`INSERT INTO product_variants (product_id, sku, size, color, color_code, image_url, price, sale_price, stock, sold, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, this.params(payload));
     return this.findById(result.insertId, { connection });
   }
 
   async update(id, payload, connection = null) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
-    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, price=?, sale_price=?, stock=?, sold=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL`, [...this.params(payload), id]);
+    await executor.execute(`UPDATE product_variants SET product_id=?, sku=?, size=?, color=?, color_code=?, image_url=?, price=?, sale_price=?, stock=?, sold=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL`, [...this.params(payload), id]);
     return this.findById(id, { connection });
   }
 
@@ -202,7 +204,7 @@ export class ProductVariantRepository extends BaseRepository {
     await executor.execute(`UPDATE products p SET p.stock=COALESCE((SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id=p.id AND pv.deleted_at IS NULL),0), p.sold=COALESCE((SELECT SUM(pv.sold) FROM product_variants pv WHERE pv.product_id=p.id AND pv.deleted_at IS NULL),0), p.updated_at=CURRENT_TIMESTAMP WHERE p.id=? AND p.deleted_at IS NULL`, [productId]);
   }
 
-  params(payload) { return [payload.productId, payload.sku, payload.size, payload.color, payload.colorCode, payload.price, payload.salePrice, payload.stock, payload.sold, payload.status]; }
+  params(payload) { return [payload.productId, payload.sku, payload.size, payload.color, payload.colorCode, payload.imageUrl, payload.price, payload.salePrice, payload.stock, payload.sold, payload.status]; }
 }
 
 function isOptionalVariantSchemaError(error) {

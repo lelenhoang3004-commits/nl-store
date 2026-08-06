@@ -75,7 +75,10 @@ export function validateUpdateProductRequest({ params, body }) {
 }
 
 function validateProductPayload(body = {}) {
+  const source = body?.product && typeof body.product === "object" && !Array.isArray(body.product) ? body.product : body;
+  const variants = Array.isArray(body?.variants) ? body.variants : [];
   const errors = [];
+  body = source;
 
   pushIfError(errors, validateRequired(body.name, "name", "body"));
   pushIfError(errors, validateRequired(body.sku, "sku", "body"));
@@ -126,6 +129,7 @@ function validateProductPayload(body = {}) {
 
   validateStringArray(errors, body.galleryUrls, "galleryUrls");
   validateStringArray(errors, body.tags, "tags");
+  validateVariants(errors, variants, body);
 
   return createValidationResult(errors);
 }
@@ -162,6 +166,32 @@ function validateStringArray(errors, value, field) {
   }
 }
 
+function validateVariants(errors, variants, product = {}) {
+  if (!variants.length) return;
+  const seenCombinations = new Set();
+  const seenSkus = new Set();
+  variants.forEach((variant, index) => {
+    const prefix = `variants[${index}]`;
+    const color = String(variant?.color || "").trim();
+    const size = String(variant?.size || "").trim();
+    const sku = String(variant?.sku || "").trim().toUpperCase();
+    if (!color) errors.push(createValidationError(`${prefix}.color`, "variant color is required.", "body", "VARIANT_COLOR_REQUIRED"));
+    if (!size) errors.push(createValidationError(`${prefix}.size`, "variant size is required.", "body", "VARIANT_SIZE_REQUIRED"));
+    if (!sku) errors.push(createValidationError(`${prefix}.sku`, "variant SKU is required.", "body", "VARIANT_SKU_REQUIRED"));
+    if (sku && !SKU_REGEX.test(sku)) errors.push(createValidationError(`${prefix}.sku`, "variant SKU must contain letters, numbers, dots, hyphens, or underscores.", "body", "INVALID_VARIANT_SKU"));
+    validateIntegerField(errors, variant?.stock, `${prefix}.stock`, 0);
+    if (!isEmpty(variant?.price)) errors.push(...validatePrice(variant.price, { field: `${prefix}.price`, location: "body" }).errors);
+    if (!isEmpty(variant?.salePrice ?? variant?.sale_price)) errors.push(...validatePrice(variant.salePrice ?? variant.sale_price, { field: `${prefix}.salePrice`, location: "body" }).errors);
+    const price = isEmpty(variant?.price) ? Number(product.price) : Number(variant.price);
+    const salePrice = Number(variant?.salePrice ?? variant?.sale_price);
+    if (!isEmpty(variant?.salePrice ?? variant?.sale_price) && Number.isFinite(price) && salePrice > price) errors.push(createValidationError(`${prefix}.salePrice`, "variant sale price must be less than or equal to variant or product price.", "body", "INVALID_VARIANT_PRICE"));
+    const combo = `${color.toLowerCase()}::${size.toLowerCase()}`;
+    if (color && size && seenCombinations.has(combo)) errors.push(createValidationError(`${prefix}.size`, "variant color and size must be unique in this product.", "body", "VARIANT_DUPLICATE_IN_PAYLOAD"));
+    if (sku && seenSkus.has(sku)) errors.push(createValidationError(`${prefix}.sku`, "variant SKU must be unique in this payload.", "body", "VARIANT_SKU_DUPLICATED_IN_PAYLOAD"));
+    if (color && size) seenCombinations.add(combo);
+    if (sku) seenSkus.add(sku);
+  });
+}
 function pushIfError(errors, error) {
   if (error) {
     errors.push(error);

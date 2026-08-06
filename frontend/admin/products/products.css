@@ -978,3 +978,18 @@ body.variant-delete-all-open {
     width: 100%;
   }
 }
+
+.admin-product-variant-section.is-draft { gap: 14px; }
+.admin-product-create-variant-table { overflow-x: auto; }
+.admin-product-create-variant-grid { display: grid; gap: 10px; min-width: 980px; }
+.admin-product-create-variant-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(90px, .75fr) minmax(150px, 1.1fr) minmax(110px, .85fr) minmax(110px, .85fr) minmax(90px, .7fr) minmax(150px, 1.1fr) 42px; gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-card); }
+.admin-product-create-variant-row.is-head { align-items: center; padding-block: 10px; color: var(--color-muted); font-size: .74rem; font-weight: 800; text-transform: uppercase; background: color-mix(in srgb, var(--color-card) 86%, var(--color-background)); }
+.admin-product-create-variant-row label { display: grid; gap: 6px; min-width: 0; }
+.admin-product-create-variant-row label span { color: var(--color-muted); font-size: .72rem; font-weight: 750; }
+.admin-product-create-variant-row input { width: 100%; min-height: 40px; border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-muted)); border-radius: 11px; background: color-mix(in srgb, var(--color-card) 88%, var(--color-background)); color: var(--color-text); padding: 8px 10px; }
+.admin-product-create-variant-row input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); outline: none; }
+.admin-product-create-variant-remove { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid color-mix(in srgb, var(--color-danger) 30%, var(--color-border)); border-radius: 12px; background: color-mix(in srgb, var(--color-danger) 9%, var(--color-card)); color: var(--color-danger); cursor: pointer; }
+.admin-product-create-variant-remove:hover { background: color-mix(in srgb, var(--color-danger) 16%, var(--color-card)); }
+.admin-product-create-variant-error { grid-column: 1 / -1; min-height: 0; color: var(--color-danger); font-size: .72rem; }
+.admin-product-form input[readonly][name="stock"] { background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card)); cursor: not-allowed; }
+@media (max-width: 720px) { .admin-product-create-variant-grid { min-width: 0; } .admin-product-create-variant-row, .admin-product-create-variant-row.is-head { grid-template-columns: 1fr; } .admin-product-create-variant-row.is-head { display: none; } .admin-product-create-variant-remove { width: 100%; } }

@@ -9,6 +9,7 @@ export class ProductVariant extends BaseModel {
     this.size = attributes.size || null;
     this.color = attributes.color || null;
     this.colorCode = attributes.colorCode || attributes.color_code || null;
+    this.imageUrl = attributes.imageUrl || attributes.image_url || null;
     this.price = attributes.price === null ? null : Number(attributes.price);
     this.salePrice = (attributes.salePrice ?? attributes.sale_price) === null ? null : Number(attributes.salePrice ?? attributes.sale_price);
     this.stock = Number(attributes.stock || 0);
@@ -20,7 +21,7 @@ export class ProductVariant extends BaseModel {
 
   toJSON() {
     return { id: this.id, productId: this.productId, sku: this.sku, size: this.size, color: this.color,
-      colorCode: this.colorCode, price: this.price, salePrice: this.salePrice, stock: this.stock,
+      colorCode: this.colorCode, imageUrl: this.imageUrl, price: this.price, salePrice: this.salePrice, stock: this.stock,
       sold: this.sold, status: this.status, createdAt: this.createdAt, updatedAt: this.updatedAt };
   }
 }

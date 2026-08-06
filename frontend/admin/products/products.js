@@ -200,7 +200,7 @@ function openProductForm(root, product = null) {
         <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-tags"></i><div><h3>Giá và kho</h3><p>Quản lý giá bán và số lượng sẵn có</p></div></div><div class="admin-product-section-grid is-four">
           ${field("Giá", "price", product?.price ?? 0, "number", true, 'min="0" step="1000" placeholder="250000"')}${field("Giá sale", "sale_price", product?.salePrice, "number", false, 'min="0" step="1000" placeholder="199000"')}${field("Tồn kho", "stock", product?.stock ?? 0, "number", false, 'min="0" step="1"')}${field("Đã bán", "sold", product?.sold ?? 0, "number", false, 'readonly aria-readonly="true"')}${field("Đánh giá sao", "rating_average", product?.rating_average ?? product?.ratingAverage ?? product?.rating ?? "", "number", false, 'min="0" max="5" step="0.1" placeholder="4.8"')}
         </div><div class="admin-product-helper-row"><span><i class="fa-solid fa-circle-info"></i> Giá sale phải nhỏ hơn hoặc bằng giá gốc</span><span><i class="fa-solid fa-circle-info"></i> Tồn kho không được âm</span></div></section>
-        <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Quản lý màu sắc, kích thước, giá và tồn kho từng biến thể</p></div></div><div class="admin-product-variant-section" data-product-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-product-variant-hint>Số lượng đã bán được tự động cập nhật từ đơn hàng.</span><button type="button" class="admin-product-variant-add" data-product-variant-add ${product?.id ? "" : "disabled"}>Thêm biến thể</button></div><div class="admin-product-variant-editor" data-product-variant-editor hidden></div><div class="admin-product-variant-table" data-product-variant-table></div></div></section>
+        ${renderProductFormVariantSection(product)}
         <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-images"></i><div><h3>Ảnh sản phẩm</h3><p>Tải ảnh đại diện từ máy tính và quản lý thư viện ảnh</p></div></div><div class="admin-product-image-layout"><div class="admin-product-upload-column"><input type="hidden" name="thumbnail_url" value="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}" data-original-thumbnail-url="${escapeHtml(product?.thumbnailUrl || product?.thumbnail_url || "")}"><input class="admin-product-file-input" id="product-thumbnail-file" type="file" multiple accept="image/*" data-product-image-input><div class="admin-product-upload-box" data-product-dropzone tabindex="0" role="button" aria-label="Chọn ảnh sản phẩm từ máy tính"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>Kéo thả ảnh vào đây</strong><span>hoặc bấm để chọn ảnh từ máy tính</span><small>Hỗ trợ JPG, PNG, WEBP. Tối đa 5MB.</small><button type="button" data-product-choose-image>Chọn ảnh sản phẩm</button></div><div class="admin-product-upload-status" aria-live="polite"><span data-product-file-name>${(product?.thumbnailUrl || product?.thumbnail_url) ? "Ảnh hiện tại" : "Chưa chọn ảnh"}</span><strong data-product-upload-message>${(product?.thumbnailUrl || product?.thumbnail_url) ? "Sẵn sàng đổi ảnh" : ""}</strong></div></div><div class="admin-product-thumbnail-card"><div class="admin-product-thumbnail-preview"><img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeHtml(resolveImageUrl(product?.thumbnailUrl || product?.thumbnail_url))}" alt="Xem trước ảnh thumbnail" loading="lazy" decoding="async" data-product-image data-thumbnail-preview></div><div><button type="button" class="admin-product-remove-image" data-product-remove-image ${(product?.thumbnailUrl || product?.thumbnail_url) ? "" : "hidden"}><i class="fa-regular fa-trash-can"></i> Xóa ảnh</button></div></div><label class="admin-product-gallery-field"><span>Gallery URLs</span><textarea name="gallery_urls" rows="5" placeholder="Mỗi dòng một URL ảnh">${escapeHtml((product?.galleryUrls || product?.gallery_urls || []).join("\n"))}</textarea><small class="admin-product-field-hint">Gallery vẫn hỗ trợ mỗi dòng một URL. Tối đa nên dùng 8 ảnh.</small></label></div><div class="admin-product-gallery-preview" data-gallery-preview></div></section>
         <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-align-left"></i><div><h3>Mô tả</h3><p>Nội dung khách hàng nhìn thấy trên trang sản phẩm</p></div></div><div class="admin-product-description-grid"><label><span>Mô tả ngắn</span><textarea name="short_description" maxlength="500" rows="4" placeholder="Mô tả ngắn gọn về sản phẩm">${escapeHtml(product?.shortDescription || "")}</textarea></label><label><span>Mô tả chi tiết</span><textarea name="description" rows="7" placeholder="Chất liệu, kiểu dáng, hướng dẫn bảo quản...">${escapeHtml(product?.description || "")}</textarea></label></div></section>
         <section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-hashtag"></i><div><h3>Tags</h3><p>Hỗ trợ tìm kiếm và phân loại sản phẩm</p></div></div>${field("Tags", "tags", (product?.tags || []).join(", "), "text", false, 'placeholder="áo nam, basic, cotton"')}<small class="admin-product-field-hint">Nhập nhiều tags, phân cách bằng dấu phẩy.</small></section>
@@ -209,14 +209,17 @@ function openProductForm(root, product = null) {
     </form>`, "[name='name']");
   bindProductImageUpload(modal);
   bindProductAttributeSection(modal, product);
+  bindCreateVariantDraftSection(modal, product);
   bindProductVariantSection(modal, product, root);
   modal.querySelector("[data-product-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = event.currentTarget, payload = formPayload(form), validation = validateFormPayload(payload);
+    const form = event.currentTarget, payload = formPayload(form);
+    const draftVariants = collectCreateVariantDrafts(form, payload);
+    const validation = draftVariants.error || validateFormPayload(payload);
     const errorTarget = form.querySelector("[data-product-form-error]");
     clearFormErrors(form);
     if (form.dataset.imageUploading === "true") { errorTarget.textContent = "Vui lòng chờ tải ảnh hoàn tất."; return; }
-    if (validation) { showFieldError(form, validation.field, validation.message); return; }
+    if (validation) { if (validation.field === "variants") { errorTarget.textContent = validation.message; errorTarget.scrollIntoView({ behavior: "smooth", block: "center" }); } else showFieldError(form, validation.field, validation.message); return; }
     setFormBusy(form, true);
     try {
       await validateAndNormalizeProductImages(payload, form);
@@ -227,6 +230,118 @@ function openProductForm(root, product = null) {
   });
 }
 
+function renderProductFormVariantSection(product) {
+  if (product?.id) {
+    return `<section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Quản lý màu sắc, kích thước, giá và tồn kho từng biến thể</p></div></div><div class="admin-product-variant-section" data-product-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-product-variant-hint>Số lượng đã bán được tự động cập nhật từ đơn hàng.</span><button type="button" class="admin-product-variant-add" data-product-variant-add>Thêm biến thể</button></div><div class="admin-product-variant-editor" data-product-variant-editor hidden></div><div class="admin-product-variant-table" data-product-variant-table></div></div></section>`;
+  }
+  return `<section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Nhập màu sắc, size, SKU, giá và tồn kho trước khi tạo sản phẩm</p></div></div><div class="admin-product-variant-section is-draft" data-create-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-create-variant-summary>Chưa có biến thể. Nếu thêm biến thể, tồn kho sản phẩm sẽ tự tính theo tổng tồn kho biến thể.</span><button type="button" class="admin-product-variant-add" data-create-variant-add>+ Thêm biến thể</button></div><div class="admin-product-create-variant-table" data-create-variant-table></div></div></section>`;
+}
+
+function bindCreateVariantDraftSection(modal, product) {
+  if (product?.id) return;
+  const form = modal.querySelector("[data-product-form]");
+  const section = modal.querySelector("[data-create-variant-section]");
+  if (!form || !section) return;
+  const table = section.querySelector("[data-create-variant-table]");
+  const summary = section.querySelector("[data-create-variant-summary]");
+  const stockInput = form.elements.stock;
+  let rows = [];
+
+  const render = () => {
+    const totalStock = rows.reduce((sum, row) => sum + Math.max(0, Number(row.stock || 0)), 0);
+    if (stockInput) {
+      stockInput.readOnly = rows.length > 0;
+      stockInput.setAttribute("aria-readonly", rows.length > 0 ? "true" : "false");
+      if (rows.length) stockInput.value = String(totalStock);
+    }
+    summary.textContent = rows.length ? `Đã thêm ${rows.length} biến thể · Tổng tồn kho ${totalStock}` : "Chưa có biến thể. Nếu thêm biến thể, tồn kho sản phẩm sẽ tự tính theo tổng tồn kho biến thể.";
+    table.innerHTML = rows.length ? `<div class="admin-product-create-variant-grid"><div class="admin-product-create-variant-row is-head"><span>Màu sắc</span><span>Size</span><span>SKU</span><span>Giá riêng</span><span>Giá sale</span><span>Tồn kho</span><span>Ảnh biến thể</span><span></span></div>${rows.map((row, index) => renderCreateVariantRow(row, index)).join("")}</div>` : "";
+  };
+
+  const syncRow = (rowEl) => {
+    const index = Number(rowEl.dataset.variantIndex);
+    const row = rows[index];
+    if (!row) return;
+    row.color = rowEl.querySelector("[data-variant-color]")?.value || "";
+    row.size = rowEl.querySelector("[data-variant-size]")?.value || "";
+    row.sku = rowEl.querySelector("[data-variant-sku]")?.value || "";
+    row.price = rowEl.querySelector("[data-variant-price]")?.value || "";
+    row.salePrice = rowEl.querySelector("[data-variant-sale-price]")?.value || "";
+    row.stock = rowEl.querySelector("[data-variant-stock]")?.value || "";
+    row.imageUrl = rowEl.querySelector("[data-variant-image-url]")?.value || "";
+  };
+
+  section.querySelector("[data-create-variant-add]")?.addEventListener("click", () => {
+    const baseSku = form.elements.sku?.value || "";
+    rows.push({ color: "", size: "", sku: createVariantSku(baseSku, "", ""), price: "", salePrice: "", stock: 0, imageUrl: "" });
+    render();
+    table.querySelector(`[data-variant-index="${rows.length - 1}"] [data-variant-color]`)?.focus();
+  });
+
+  table.addEventListener("input", (event) => {
+    const rowEl = event.target.closest("[data-variant-index]");
+    if (!rowEl) return;
+    syncRow(rowEl);
+    const row = rows[Number(rowEl.dataset.variantIndex)];
+    if ((event.target.matches("[data-variant-color]") || event.target.matches("[data-variant-size]") || event.target.matches("[data-product-form] [name=sku]")) && row && !row.skuTouched) {
+      row.sku = createVariantSku(form.elements.sku?.value || "", row.color, row.size);
+      rowEl.querySelector("[data-variant-sku]").value = row.sku;
+    }
+    if (event.target.matches("[data-variant-sku]")) row.skuTouched = true;
+    render();
+  });
+
+  table.addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-create-variant-remove]");
+    if (!remove) return;
+    rows.splice(Number(remove.dataset.createVariantRemove), 1);
+    render();
+  });
+
+  form.elements.sku?.addEventListener("input", () => {
+    rows = rows.map((row) => row.skuTouched ? row : { ...row, sku: createVariantSku(form.elements.sku?.value || "", row.color, row.size) });
+    render();
+  });
+
+  form.getCreateVariantDrafts = () => rows;
+  render();
+}
+
+function renderCreateVariantRow(row, index) {
+  return `<div class="admin-product-create-variant-row" data-variant-index="${index}"><label><span>Màu sắc</span><input type="text" value="${escapeHtml(row.color)}" data-variant-color></label><label><span>Size</span><input type="text" value="${escapeHtml(row.size)}" data-variant-size></label><label><span>SKU</span><input type="text" value="${escapeHtml(row.sku)}" data-variant-sku></label><label><span>Giá riêng</span><input type="number" min="0" step="1000" value="${escapeHtml(row.price)}" data-variant-price placeholder="Dùng giá sản phẩm"></label><label><span>Giá sale</span><input type="number" min="0" step="1000" value="${escapeHtml(row.salePrice)}" data-variant-sale-price></label><label><span>Tồn kho</span><input type="number" min="0" step="1" value="${escapeHtml(row.stock)}" data-variant-stock></label><label><span>Ảnh biến thể</span><input type="url" value="${escapeHtml(row.imageUrl)}" data-variant-image-url placeholder="URL ảnh"></label><button type="button" class="admin-product-create-variant-remove" data-create-variant-remove="${index}" aria-label="Xóa biến thể"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button><small class="admin-product-create-variant-error" data-create-variant-error></small></div>`;
+}
+
+function collectCreateVariantDrafts(form, productPayload) {
+  const rawRows = typeof form.getCreateVariantDrafts === "function" ? form.getCreateVariantDrafts() : [];
+  const rows = rawRows.map((row) => ({ color: String(row.color || "").trim(), size: String(row.size || "").trim(), sku: String(row.sku || "").trim().toUpperCase(), price: row.price === "" ? null : Number(row.price), salePrice: row.salePrice === "" ? null : Number(row.salePrice), stock: Number(row.stock), imageUrl: String(row.imageUrl || "").trim() })).filter((row) => row.color || row.size || row.sku || row.price !== null || row.salePrice !== null || Number.isFinite(row.stock) || row.imageUrl);
+  const seenCombos = new Set();
+  const seenSkus = new Set();
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const error = validateCreateVariantDraft(row, index, productPayload, seenCombos, seenSkus);
+    if (error) return { items: [], error };
+  }
+  if (rows.length) productPayload.stock = rows.reduce((sum, row) => sum + row.stock, 0);
+  return { items: rows, error: null };
+}
+
+function validateCreateVariantDraft(row, index, productPayload, seenCombos, seenSkus) {
+  const field = "variants";
+  const label = `Biến thể #${index + 1}`;
+  if (!row.color) return { field, message: `${label}: màu sắc là bắt buộc.` };
+  if (!row.size) return { field, message: `${label}: size là bắt buộc.` };
+  if (!row.sku) return { field, message: `${label}: SKU là bắt buộc.` };
+  if (!Number.isInteger(row.stock) || row.stock < 0) return { field, message: `${label}: tồn kho phải là số nguyên >= 0.` };
+  if (row.price !== null && (!Number.isFinite(row.price) || row.price < 0)) return { field, message: `${label}: giá biến thể phải >= 0.` };
+  const effectivePrice = row.price === null ? Number(productPayload.price) : row.price;
+  if (row.salePrice !== null && (!Number.isFinite(row.salePrice) || row.salePrice < 0 || row.salePrice > effectivePrice)) return { field, message: `${label}: giá sale phải nhỏ hơn hoặc bằng giá tương ứng.` };
+  const combo = `${normalizeVariantKey(row.color)}::${normalizeVariantKey(row.size)}`;
+  if (seenCombos.has(combo)) return { field, message: `${label}: trùng tổ hợp màu + size.` };
+  if (seenSkus.has(row.sku)) return { field, message: `${label}: trùng SKU.` };
+  seenCombos.add(combo);
+  seenSkus.add(row.sku);
+  return null;
+}
 function bindProductAttributeSection(modal, product) {
   const variantSection = modal.querySelector("[data-product-variant-section]")?.closest(".admin-product-form-section");
   if (!variantSection) return;

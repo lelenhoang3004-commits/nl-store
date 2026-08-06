@@ -10,6 +10,7 @@ import { UploadService } from "./upload.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { createPaginationMeta, parseQueryOptions } from "../utils/query-options.util.js";
 import { createSlug } from "../utils/slug.util.js";
+import { databaseClient } from "../utils/database.util.js";
 
 const PRODUCT_STATUS = Object.freeze({
   DRAFT: "draft",
@@ -76,15 +77,79 @@ export class ProductService extends BaseService {
   }
 
   async createProduct(payload) {
-    const normalizedPayload = await this.normalizePayload(payload);
+    const { product: productPayload, variants: variantPayloads } = splitCreatePayload(payload);
+    const normalizedPayload = await this.normalizePayload(productPayload);
+    const normalizedVariants = this.normalizeCreateVariants(variantPayloads, normalizedPayload);
 
     await this.ensureUniqueProduct(normalizedPayload);
     await this.ensureCategoryExists(normalizedPayload.categoryId);
+    await this.ensureUniqueCreateVariants(normalizedVariants);
 
-    const product = await this.repository.create(normalizedPayload);
-    return product.toJSON();
+    const createdProduct = await databaseClient.withTransaction(async (connection) => {
+      const productStock = normalizedVariants.length
+        ? normalizedVariants.reduce((total, variant) => total + variant.stock, 0)
+        : normalizedPayload.stock;
+      const product = await this.repository.create({ ...normalizedPayload, stock: productStock }, connection);
+
+      for (const variant of normalizedVariants) {
+        await this.variantRepository.create({ ...variant, productId: Number(product.id) }, connection);
+      }
+
+      if (normalizedVariants.length) {
+        await this.variantRepository.syncProductInventory(Number(product.id), connection);
+      }
+
+      return product;
+    });
+
+    return this.getProductById(createdProduct.id);
   }
 
+  normalizeCreateVariants(variants = [], productPayload = {}) {
+    if (!Array.isArray(variants) || !variants.length) return [];
+    if (variants.length > 200) throw new AppError("Variant list is too large.", 400, "VARIANT_BULK_TOO_LARGE");
+
+    const seenCombinations = new Set();
+    const seenSkus = new Set();
+    return variants.map((variant, index) => {
+      const sku = String(variant?.sku || createVariantSku(productPayload.sku, variant?.color, variant?.size)).trim().toUpperCase();
+      const color = nullableString(variant?.color);
+      const size = nullableString(variant?.size);
+      const colorCode = nullableString(variant?.colorCode ?? variant?.color_code);
+      const imageUrl = nullableString(variant?.imageUrl ?? variant?.image_url);
+      const price = nullableNumber(variant?.price);
+      const salePrice = nullableNumber(variant?.salePrice ?? variant?.sale_price);
+      const stock = Number(variant?.stock ?? 0);
+      const sold = Number(variant?.sold ?? 0);
+      const status = String(variant?.status || "active").trim().toLowerCase();
+      const effectivePrice = price === null ? Number(productPayload.price) : price;
+
+      if (!sku) throw new AppError(`Variant #${index + 1} SKU is required.`, 422, "VARIANT_SKU_REQUIRED");
+      if (!color) throw new AppError(`Variant #${index + 1} color is required.`, 422, "VARIANT_COLOR_REQUIRED");
+      if (!size) throw new AppError(`Variant #${index + 1} size is required.`, 422, "VARIANT_SIZE_REQUIRED");
+      if (!Number.isInteger(stock) || stock < 0 || !Number.isInteger(sold) || sold < 0) throw new AppError("Variant inventory is invalid.", 422, "INVALID_VARIANT_INVENTORY");
+      if (price !== null && price < 0) throw new AppError("Variant price is invalid.", 422, "INVALID_VARIANT_PRICE");
+      if (salePrice !== null && (salePrice < 0 || salePrice > effectivePrice)) throw new AppError("Variant sale price is invalid.", 422, "INVALID_VARIANT_PRICE");
+      if (colorCode && !/^#[0-9a-f]{6}$/i.test(colorCode)) throw new AppError("Color code must be a valid hex value.", 422, "INVALID_VARIANT_COLOR_CODE");
+      if (!PRODUCT_STATUSES.includes(status) && status !== "out_of_stock") throw new AppError("Variant status is invalid.", 422, "INVALID_VARIANT_STATUS");
+      if (imageUrl && imageUrl.length > 255) throw new AppError("Variant image URL is too long.", 422, "VARIANT_IMAGE_TOO_LONG");
+
+      const combinationKey = `${color.toLowerCase()}::${size.toLowerCase()}`;
+      if (seenCombinations.has(combinationKey)) throw new AppError("Variant color/size already exists in payload.", 422, "VARIANT_DUPLICATE_IN_PAYLOAD", { index, color, size });
+      if (seenSkus.has(sku)) throw new AppError("Variant SKU is duplicated in payload.", 422, "VARIANT_SKU_DUPLICATED_IN_PAYLOAD", { index, sku });
+      seenCombinations.add(combinationKey);
+      seenSkus.add(sku);
+
+      return { productId: null, sku, size, color, colorCode, imageUrl, price, salePrice, stock, sold, status: stock > 0 ? status : "out_of_stock" };
+    });
+  }
+
+  async ensureUniqueCreateVariants(variants = []) {
+    for (const variant of variants) {
+      const skuOwner = await this.variantRepository.findAnyBySku(variant.sku);
+      if (skuOwner && !skuOwner.deleted_at) throw new AppError("Variant SKU already exists.", 409, "VARIANT_SKU_EXISTS", { sku: variant.sku });
+    }
+  }
   async updateProduct(id, payload) {
     await this.getProductById(id);
 
@@ -234,4 +299,30 @@ function attachVariants(product, variants) {
   const colors = [...new Map(items.filter((item) => item.color).map((item) => [item.color.toLowerCase(), { name: item.color, code: item.colorCode }])).values()];
   const sizes = [...new Set(items.map((item) => item.size).filter(Boolean))];
   return { ...product, variants: items, colors, sizes, variantCount: items.length };
+}
+
+function splitCreatePayload(payload = {}) {
+  if (payload && typeof payload === "object" && !Array.isArray(payload) && payload.product && typeof payload.product === "object") {
+    return { product: payload.product, variants: Array.isArray(payload.variants) ? payload.variants : [] };
+  }
+  return { product: payload, variants: Array.isArray(payload.variants) ? payload.variants : [] };
+}
+
+function nullableString(value) {
+  return value === undefined || value === null || value === "" ? null : String(value).trim();
+}
+
+function nullableNumber(value) {
+  return value === undefined || value === null || value === "" ? null : Number(value);
+}
+
+function createVariantSku(baseSku, color, size) {
+  const base = String(baseSku || "SP").trim().toUpperCase().replace(/[^A-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "SP";
+  const colorPart = skuPart(color);
+  const sizePart = skuPart(size);
+  return [base, colorPart, sizePart].filter(Boolean).join("-").slice(0, 120);
+}
+
+function skuPart(value) {
+  return String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/Đ/g, "D").replace(/[^A-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }

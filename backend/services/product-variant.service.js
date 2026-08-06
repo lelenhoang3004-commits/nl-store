@@ -26,7 +26,7 @@ export class ProductVariantService {
     await this.ensureProduct(productId);
     const normalized = this.normalize(productId, payload);
 
-    const result = await databaseClient.withTransaction(async (connection) => {
+    const result = await this.withVariantTransaction(async (connection) => {
       return this.createOrRestoreVariant(normalized, { connection, single: true });
     });
     await this.repository.syncProductInventory(productId);
@@ -102,6 +102,13 @@ export class ProductVariantService {
     });
 
     return result;
+  }
+
+  async withVariantTransaction(callback) {
+    if (typeof this.repository.ensureSchema !== "function") {
+      return callback(null);
+    }
+    return databaseClient.withTransaction(callback);
   }
 
   async createOrRestoreVariant(normalized, { connection = null, single = false } = {}) {
@@ -240,8 +247,10 @@ export class ProductVariantService {
     if (price !== null && price < 0 || salePrice !== null && (salePrice < 0 || price !== null && salePrice > price)) throw new AppError("Variant price is invalid.", 422, "INVALID_VARIANT_PRICE");
     if (!STATUSES.includes(status)) throw new AppError("Variant status is invalid.", 422, "INVALID_VARIANT_STATUS");
     const colorCode = nullableString(pick("colorCode") ?? payload.color_code);
+    const imageUrl = nullableString(pick("imageUrl") ?? payload.image_url);
     if (colorCode && !/^#[0-9a-f]{6}$/i.test(colorCode)) throw new AppError("Color code must be a valid hex value.", 422, "INVALID_VARIANT_COLOR_CODE");
-    return { productId: Number(productId), sku, size, color, colorCode, price, salePrice, stock, sold, status };
+    if (imageUrl && imageUrl.length > 255) throw new AppError("Variant image URL is too long.", 422, "VARIANT_IMAGE_TOO_LONG");
+    return { productId: Number(productId), sku, size, color, colorCode, imageUrl, price, salePrice, stock, sold, status };
   }
 
   async ensureProduct(id) { const product = await this.productRepository.findById(id); if (!product) throw new AppError("Product was not found.", 404, "PRODUCT_NOT_FOUND"); return product; }
@@ -274,6 +283,7 @@ class ProductVariantLike {
       size: this.row.size || null,
       color: this.row.color || null,
       colorCode: this.row.color_code || this.row.colorCode || null,
+      imageUrl: this.row.image_url || this.row.imageUrl || null,
       price: this.row.price === null ? null : Number(this.row.price),
       salePrice: (this.row.sale_price ?? this.row.salePrice) === null ? null : Number(this.row.sale_price ?? this.row.salePrice),
       stock: Number(this.row.stock || 0),

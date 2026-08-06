@@ -142,9 +142,9 @@ export class ProductRepository extends BaseRepository {
     return rows.map((row) => new Product(row));
   }
 
-  async executeProductSelect(suffixSql, params) {
+  async executeProductSelect(suffixSql, params, connection = null) {
     try {
-      const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params);
+      const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params, connection);
       return rows;
     } catch (error) {
       // Log SQL error details for troubleshooting
@@ -167,7 +167,7 @@ export class ProductRepository extends BaseRepository {
           code: error.code,
           sqlMessage: error.sqlMessage
         });
-        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params, connection);
         return rows;
       }
 
@@ -177,7 +177,7 @@ export class ProductRepository extends BaseRepository {
         sqlMessage: error.sqlMessage
       });
       try {
-        const [rows] = await this.execute(`${PRODUCT_SELECT_WITHOUT_RATING_COUNT}\n${suffixSql}`, params);
+        const [rows] = await this.execute(`${PRODUCT_SELECT_WITHOUT_RATING_COUNT}\n${suffixSql}`, params, connection);
         return rows;
       } catch (fallbackError) {
         logger.error("Product select fallback failed.", {
@@ -196,14 +196,15 @@ export class ProductRepository extends BaseRepository {
           code: fallbackError.code,
           sqlMessage: fallbackError.sqlMessage
         });
-        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params);
+        const [rows] = await this.execute(`${LEGACY_PRODUCT_SELECT}\n${suffixSql}`, params, connection);
         return rows;
       }
     }
   }
 
-  execute(sql, params = []) {
-    return this.client.getPool().execute(sql, normalizeSqlParams(params));
+  execute(sql, params = [], connection = null) {
+    const executor = connection || this.client.getPool();
+    return executor.execute(sql, normalizeSqlParams(params));
   }
 
   async countAll(options) {
@@ -226,12 +227,13 @@ export class ProductRepository extends BaseRepository {
     return Number(rows[0]?.total || 0);
   }
 
-  async findById(id) {
+  async findById(id, connection = null) {
     const startedAt = Date.now();
     const rows = await this.executeProductSelect(
       `WHERE p.id = ? AND p.deleted_at IS NULL
       LIMIT 1`,
-      [id]
+      [id],
+      connection
     );
 
     logger.sql("Product lookup by id executed.", {
@@ -279,7 +281,7 @@ export class ProductRepository extends BaseRepository {
     return rows[0] ? new Product(rows[0]) : null;
   }
 
-  async create(payload) {
+  async create(payload, connection = null) {
     const startedAt = Date.now();
     const sql = `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, rating_average, rating_count, status, thumbnail_url, gallery_urls, tags, product_attributes)
@@ -290,7 +292,7 @@ export class ProductRepository extends BaseRepository {
     const legacySql = `INSERT INTO products
         (name, slug, sku, category_id, brand, short_description, description, price, sale_price, stock, sold, status, thumbnail_url, gallery_urls, tags, product_attributes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await this.executeProductWrite(sql, this.toSqlParams(payload), sqlWithoutRatingCount, this.toSqlParamsWithoutRatingCount(payload), legacySql, this.toLegacySqlParams(payload), "create");
+    const [result] = await this.executeProductWrite(sql, this.toSqlParams(payload), sqlWithoutRatingCount, this.toSqlParamsWithoutRatingCount(payload), legacySql, this.toLegacySqlParams(payload), "create", connection);
 
     logger.sql("Product create query executed.", {
       repository: "ProductRepository",
@@ -298,7 +300,7 @@ export class ProductRepository extends BaseRepository {
       durationMs: Date.now() - startedAt
     });
 
-    return this.findById(result.insertId);
+    return this.findById(result.insertId, connection);
   }
 
   async update(id, payload) {
@@ -357,9 +359,9 @@ export class ProductRepository extends BaseRepository {
 
     return this.findById(id);
   }
-  async executeProductWrite(sql, params, sqlWithoutRatingCount, paramsWithoutRatingCount, legacySql, legacyParams, operation) {
+  async executeProductWrite(sql, params, sqlWithoutRatingCount, paramsWithoutRatingCount, legacySql, legacyParams, operation, connection = null) {
     try {
-      return await this.execute(sql, params);
+      return await this.execute(sql, params, connection);
     } catch (error) {
       // Log SQL error details for troubleshooting
       logger.error("Product write failed.", {
@@ -384,7 +386,7 @@ export class ProductRepository extends BaseRepository {
           sqlMessage: error.sqlMessage || error.message
         });
         try {
-          return await this.execute(sqlWithoutRatingCount, paramsWithoutRatingCount);
+          return await this.execute(sqlWithoutRatingCount, paramsWithoutRatingCount, connection);
         } catch (fallbackError) {
           logger.error("Product write fallback failed.", {
             repository: "ProductRepository",
@@ -408,7 +410,7 @@ export class ProductRepository extends BaseRepository {
         code: error.code,
         sqlMessage: error.sqlMessage || error.message
       });
-      return this.execute(legacySql, legacyParams);
+      return this.execute(legacySql, legacyParams, connection);
     }
   }
   async updateStock(id, stock) {
