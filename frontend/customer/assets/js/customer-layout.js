@@ -118,7 +118,8 @@ const layoutState = {
     root: null,
     autoCloseTimer: null,
     keydownHandler: null,
-    orderId: ""
+    orderId: "",
+    hasRedirected: false
   }
 };
 
@@ -2201,6 +2202,7 @@ function openOrderSuccessModal({ order = null, orderCode = "", paymentMethod = "
 
   layoutState.orderSuccessModal.root = overlay;
   layoutState.orderSuccessModal.orderId = orderId || "";
+  layoutState.orderSuccessModal.hasRedirected = false;
 
   bindPaymentGuideActions(overlay);
   bindOrderSuccessModalEvents(overlay);
@@ -2223,13 +2225,13 @@ function closeOrderSuccessModal({ clearTimer = true } = {}) {
   document.querySelectorAll(".customer-checkout-modal-backdrop[data-order-success-modal]").forEach((node) => node.remove());
   document.body.classList.remove("modal-open", "customer-modal-open", "customer-checkout-modal-open");
   document.body.style.overflow = "";
-  layoutState.orderSuccessModal = { root: null, autoCloseTimer: null, keydownHandler: null, orderId: "" };
+  layoutState.orderSuccessModal = { root: null, autoCloseTimer: null, keydownHandler: null, orderId: "", hasRedirected: state.hasRedirected || false };
 }
 
 function scheduleOrderSuccessAutoClose() {
   clearOrderSuccessAutoClose();
   layoutState.orderSuccessModal.autoCloseTimer = window.setTimeout(() => {
-    closeOrderSuccessModal({ clearTimer: false });
+    redirectToOrders();
   }, 3000);
 }
 
@@ -2240,14 +2242,9 @@ function clearOrderSuccessAutoClose() {
 }
 
 function bindOrderSuccessModalEvents(root) {
-  const close = () => closeOrderSuccessModal({ clearTimer: true });
+  const close = () => redirectToOrders();
   root.querySelector("[data-payment-modal-close]")?.addEventListener("click", close);
-  root.querySelector("[data-order-success-view]")?.addEventListener("click", (event) => {
-    const orderId = event.currentTarget.dataset.orderSuccessView || layoutState.orderSuccessModal?.orderId || "";
-    clearOrderSuccessAutoClose();
-    closeOrderSuccessModal({ clearTimer: false });
-    navigateToOrderDetailAfterSuccess(orderId);
-  });
+  root.querySelector("[data-order-success-view]")?.addEventListener("click", close);
   const onKeydown = (event) => {
     if (event.key === "Escape" && document.body.contains(root)) close();
     if (!document.body.contains(root)) document.removeEventListener("keydown", onKeydown);
@@ -2257,6 +2254,21 @@ function bindOrderSuccessModalEvents(root) {
   root.addEventListener("click", (event) => {
     if (event.target === root) close();
   });
+}
+
+function redirectToOrders() {
+  if (layoutState.orderSuccessModal?.hasRedirected) return;
+  layoutState.orderSuccessModal.hasRedirected = true;
+
+  clearOrderSuccessAutoClose();
+  closeOrderSuccessModal({ clearTimer: false });
+
+  const currentHashPath = (window.location.hash || "").replace(/^#\/?/, "").split("?")[0];
+  if (currentHashPath === "orders" || currentRoute === "orders") {
+    renderOrdersPage();
+    return;
+  }
+  navigateToRoute("orders");
 }
 
 function navigateToOrderDetailAfterSuccess(orderId = "") {
@@ -3130,6 +3142,7 @@ function initCheckoutForm(container, checkoutSummary) {
   // Form submission
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (form.dataset.orderSubmitted === "true" || form.dataset.isSubmitting === "true") return;
     const validation = validateCheckoutForm(form);
 
     if (!validation.isValid) {
@@ -3158,9 +3171,10 @@ function initCheckoutForm(container, checkoutSummary) {
     const ward = province?.wards.find((w) => w.code === wardCode);
     const fullAddress = [line1, ward?.name || "", province?.name || "", "Việt Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
 
+    form.dataset.isSubmitting = "true";
     submitButton.disabled = true;
     submitButton.classList.add("is-loading");
-    submitButton.innerHTML = `<span class="customer-button-spinner"></span>Đang xử lý...`; 
+    submitButton.innerHTML = `<span class="customer-button-spinner"></span>Đang xử lý...`;
 
     try {
       const response = await customerCart.checkout({
@@ -3184,7 +3198,7 @@ function initCheckoutForm(container, checkoutSummary) {
         voucherCode: checkoutSummary.voucherSummary?.status === "success" ? checkoutSummary.voucherSummary.code : null,
         note
       });
-
+      form.dataset.orderSubmitted = "true";
       if (checkoutSummary.checkoutMode === "buy_now") {
         clearBuyNowCheckout();
       } else {
@@ -3195,9 +3209,16 @@ function initCheckoutForm(container, checkoutSummary) {
       showCustomerToast("Đặt hàng thành công.", "success");
     } catch (error) {
       showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
-      submitButton.disabled = false;
+    } finally {
+      form.dataset.isSubmitting = "false";
       submitButton.classList.remove("is-loading");
-      submitButton.textContent = "Đặt hàng";
+      if (form.dataset.orderSubmitted === "true") {
+        submitButton.disabled = true;
+        submitButton.textContent = "Đã đặt hàng";
+      } else {
+        submitButton.disabled = false;
+        submitButton.textContent = "Đặt hàng";
+      }
     }
   });
 
