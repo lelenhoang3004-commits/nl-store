@@ -124,6 +124,7 @@ function createModalTemplate(options) {
   const showSave = options.showSave !== false;
   const eyebrow = escapeHtml(options.eyebrow ?? "Admin Modal");
   const title = escapeHtml(options.title ?? "Modal Title");
+  const closeLabel = escapeHtml(options.closeLabel ?? "Close modal");
 
   return `
     <section class="modal-dialog${variantClass}" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -132,7 +133,7 @@ function createModalTemplate(options) {
           <p class="modal-eyebrow">${eyebrow}</p>
           <h2 id="modal-title">${title}</h2>
         </div>
-        <button class="modal-icon-button" type="button" aria-label="Close modal" data-modal-close>
+        <button class="modal-icon-button" type="button" aria-label="${closeLabel}" data-modal-close>
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </header>

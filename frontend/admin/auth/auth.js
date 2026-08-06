@@ -198,29 +198,29 @@ export function initLockScreenPage(root = document) {
 
 export function createSessionExpiredPage() {
   return createErrorPage({
-    code: "Session Expired",
+    code: "PHIÊN ĐĂNG NHẬP",
     title: "Phiên đăng nhập đã hết hạn",
-    description: "Vui lòng đăng nhập lại để tiếp tục quản trị hệ thống.",
+    description: "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng trang quản trị.",
     icon: "fa-clock",
     tone: "warning",
     primaryHref: "#login",
-    primaryLabel: "Login Again"
+    primaryLabel: "Đăng nhập lại"
   });
 }
 
 export function initSessionExpiredPage() {
   logoutAdminAccount("session-expired");
   openModal({
-    eyebrow: "Session",
-    title: "Session Expired",
-    saveText: "Login Again",
+    variant: "session-expired",
+    eyebrow: "PHIÊN ĐĂNG NHẬP",
+    title: "Phiên đăng nhập đã hết hạn",
+    saveText: "Đăng nhập lại",
     cancelText: "Đóng",
-    body: `
-      <p class="modal-danger-copy">
-        Phiên làm việc mẫu đã hết hạn. Hãy đăng nhập lại để tiếp tục thao tác trong Admin Panel.
-      </p>
-    `,
+    closeLabel: "Đóng thông báo hết phiên đăng nhập",
+    loadingDelay: 0,
+    body: "\n      <div class=\"modal-session-expired-icon\" aria-hidden=\"true\">\n        <i class=\"fa-regular fa-clock\"></i>\n      </div>\n      <p class=\"modal-session-expired-copy\">\n        Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng trang quản trị.\n      </p>\n    ",
     onSave() {
+      logoutAdminAccount("session-expired-login-again");
       window.location.hash = "login";
     }
   });
