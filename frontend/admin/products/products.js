@@ -209,8 +209,7 @@ function openProductForm(root, product = null) {
     </form>`, "[name='name']");
   bindProductImageUpload(modal);
   bindProductAttributeSection(modal, product);
-  bindCreateVariantDraftSection(modal, product);
-  bindProductVariantSection(modal, product, root);
+  bindProductVariantSection(modal, product || {}, root);
   modal.querySelector("[data-product-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget, payload = formPayload(form);
@@ -234,7 +233,7 @@ function renderProductFormVariantSection(product) {
   if (product?.id) {
     return `<section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Quản lý màu sắc, kích thước, giá và tồn kho từng biến thể</p></div></div><div class="admin-product-variant-section" data-product-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-product-variant-hint>Số lượng đã bán được tự động cập nhật từ đơn hàng.</span><button type="button" class="admin-product-variant-add" data-product-variant-add>Thêm biến thể</button></div><div class="admin-product-variant-editor" data-product-variant-editor hidden></div><div class="admin-product-variant-table" data-product-variant-table></div></div></section>`;
   }
-  return `<section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Nhập màu sắc, size, SKU, giá và tồn kho trước khi tạo sản phẩm</p></div></div><div class="admin-product-variant-section is-draft" data-create-variant-section><div class="admin-product-variant-toolbar"><span class="admin-product-variant-hint" data-create-variant-summary>Chưa có biến thể. Nếu thêm biến thể, tồn kho sản phẩm sẽ tự tính theo tổng tồn kho biến thể.</span><button type="button" class="admin-product-variant-add" data-create-variant-add>+ Thêm biến thể</button></div><div class="admin-product-create-variant-table" data-create-variant-table></div></div></section>`;
+  return `<section class="admin-product-form-section"><div class="admin-product-form-section-title"><i class="fa-solid fa-layer-group"></i><div><h3>Biến thể sản phẩm</h3><p>Chọn màu, size và tạo tổ hợp biến thể trước khi tạo sản phẩm</p></div></div><div class="admin-product-variant-section is-draft" data-product-variant-section></div></section>`;
 }
 
 function bindCreateVariantDraftSection(modal, product) {
@@ -1129,6 +1128,7 @@ function bindProductVariantSection(modal, product, root = null) {
   const editor = section.querySelector("[data-product-variant-editor]");
   const table = section.querySelector("[data-product-variant-table]");
   let editingVariantId = null;
+  let inlineEditingId = null;
   let selectedColors = [];
   let selectedSizes = [];
   let renderSelectionLists = null;
@@ -1144,13 +1144,14 @@ function bindProductVariantSection(modal, product, root = null) {
   let sizeOptions = [...(SIZE_PRESETS[activeSizePresetKey]?.sizes || SIZE_PRESETS.quanao.sizes)];
 
   if (!product?.id) {
-    section.innerHTML = `<div class="admin-product-variant-empty">Sản phẩm này chưa có biến thể. Tạo sản phẩm trước rồi quay lại phần này để tạo biến thể theo màu và size.</div>`;
-    if (hint) hint.textContent = "Tạo sản phẩm trước, sau đó thêm biến thể từ đây.";
-    return;
+    product.draftVariants = Array.isArray(product.draftVariants) ? product.draftVariants : [];
+    const form = modal.querySelector("[data-product-form]");
+    if (form) form.getCreateVariantDrafts = () => product.draftVariants;
   }
 
   renderBuilder();
-  void renderVariants();
+  if (product?.id) void renderVariants();
+  else renderVariantTable(product.draftVariants);
 
   function renderBuilder() {
     section.innerHTML = `
@@ -1358,6 +1359,22 @@ function bindProductVariantSection(modal, product, root = null) {
         return;
       }
 
+      if (!product?.id) {
+        const existingKeys = new Set((product.draftVariants || []).map((variant) => `${normalizeVariantKey(variant.color)}::${normalizeVariantKey(variant.size)}`));
+        const nextVariants = variantsPayload
+          .filter((variant) => !existingKeys.has(`${normalizeVariantKey(variant.color)}::${normalizeVariantKey(variant.size)}`))
+          .map((variant) => ({ ...variant, temporaryId: `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}` }));
+        if (!nextVariants.length) {
+          bulkCreateErrorTarget.textContent = "Không có tổ hợp mới để tạo.";
+          return;
+        }
+        product.draftVariants = [...(product.draftVariants || []), ...nextVariants];
+        bulkCreateErrorTarget.textContent = `Đã tạo tạm ${nextVariants.length} biến thể. Biến thể sẽ được lưu khi bấm Tạo sản phẩm.`;
+        toast.success(`Đã tạo tạm ${nextVariants.length} biến thể.`);
+        renderVariantTable(product.draftVariants);
+        return;
+      }
+
       const originalText = createButton.textContent;
       createButton.disabled = true;
       createButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tạo ${variantsPayload.length} biến thể...`;
@@ -1485,9 +1502,11 @@ function bindProductVariantSection(modal, product, root = null) {
       table.innerHTML = '<div class="admin-product-variant-empty">Chưa có biến thể nào. Hãy chọn màu và size, sau đó tạo biến thể hàng loạt.</div>';
     } else {
       table.innerHTML = `<div class="admin-product-variant-grid">${variants.map((variant) => {
-        const isEditing = String(inlineEditingId) === String(variant.id);
+        const variantId = variant.id ?? variant.temporaryId;
+        const isDraft = !product?.id;
+        const isEditing = String(inlineEditingId) === String(variantId);
         if (isEditing) {
-          return `<div class="admin-product-variant-row" data-variant-row="${variant.id}">
+          return `<div class="admin-product-variant-row" data-variant-row="${variantId}">
             <span><input class="variant-input" name="sku" value="${escapeHtml(variant.sku || "")}"></span>
             <span><input class="variant-input" name="color" value="${escapeHtml(variant.color || "")}"></span>
             <span><input class="variant-input" name="color_code" value="${escapeHtml(variant.colorCode || "")}" placeholder="#FFFFFF"></span>
@@ -1497,12 +1516,12 @@ function bindProductVariantSection(modal, product, root = null) {
             <span><input class="variant-input" name="stock" type="number" min="0" value="${Number(variant.stock || 0)}"></span>
             <span>${escapeHtml(String(variant.sold || 0))}</span>
             <span><select class="variant-input" name="status"><option value="active" ${variant.status === 'active' ? 'selected' : ''}>Đang bán</option><option value="inactive" ${variant.status === 'inactive' ? 'selected' : ''}>Tạm ẩn</option><option value="out_of_stock" ${variant.status === 'out_of_stock' ? 'selected' : ''}>Hết hàng</option></select></span>
-            <div class="admin-product-variant-actions"><button type="button" class="btn-save" data-variant-save="${variant.id}">Lưu thay đổi</button><button type="button" class="btn-cancel" data-variant-cancel="${variant.id}">Hủy</button></div>
+            <div class="admin-product-variant-actions"><button type="button" class="btn-save" data-variant-save="${variantId}">Lưu thay đổi</button><button type="button" class="btn-cancel" data-variant-cancel="${variantId}">Hủy</button></div>
           </div>`;
         }
 
         const stockBadge = Number(variant.stock || 0) === 0 ? `<span class="variant-badge is-empty">Hết hàng</span>` : Number(variant.stock || 0) <= 5 ? `<span class="variant-badge is-low">Sắp hết · ${Number(variant.stock)}</span>` : `${Number(variant.stock)}`;
-        return `<div class="admin-product-variant-row" data-variant-row="${variant.id}"><span>${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span>${escapeHtml(variant.salePrice === null ? "-" : formatCurrency(variant.salePrice))}</span><span>${stockBadge}</span><span>${escapeHtml(String(variant.sold || 0))}</span><span>${escapeHtml(statusLabel(variant.status))}</span><div class="admin-product-variant-actions"><button type="button" data-variant-edit="${variant.id}">Sửa</button><button type="button" class="is-danger" data-variant-delete="${variant.id}">Xóa</button></div></div>`;
+        return `<div class="admin-product-variant-row" data-variant-row="${variantId}"><span>${escapeHtml(variant.sku || "-")}</span><span>${escapeHtml(variant.color || "-")}</span><span>${escapeHtml(variant.size || "-")}</span><span>${escapeHtml(formatCurrency(variant.price ?? 0))}</span><span>${escapeHtml(variant.salePrice === null ? "-" : formatCurrency(variant.salePrice))}</span><span>${stockBadge}</span><span>${escapeHtml(String(variant.sold || 0))}</span><span>${escapeHtml(statusLabel(variant.status))}</span><div class="admin-product-variant-actions"><button type="button" data-variant-edit="${variantId}">Sửa</button><button type="button" class="is-danger" data-variant-delete="${variantId}">Xóa</button></div></div>`;
       }).join("")}</div>`;
     }
     table.querySelectorAll("[data-variant-edit]").forEach((button) => {
@@ -1533,7 +1552,40 @@ function bindProductVariantSection(modal, product, root = null) {
         if (inputs.stock !== null && (!Number.isInteger(inputs.stock) || inputs.stock < 0)) return toast.error('Tồn kho phải là số nguyên >= 0');
         if (inputs.color_code && !/^#[0-9a-f]{6}$/i.test(inputs.color_code)) return toast.error('Mã màu phải có định dạng HEX như #FFFFFF');
 
+        if (!product?.id) {
+
+
+          const index = variants.findIndex((item) => String(item.temporaryId) === String(vid));
+
+
+          if (index >= 0) {
+
+
+            variants[index] = { ...variants[index], sku: String(inputs.sku || '').trim().toUpperCase(), color: String(inputs.color || '').trim(), colorCode: String(inputs.color_code || '').trim(), size: String(inputs.size || '').trim(), price: inputs.price, salePrice: inputs.sale_price, stock: inputs.stock, status: row.querySelector('[name="status"]').value };
+
+
+            product.draftVariants = variants;
+
+
+            inlineEditingId = null;
+
+
+            renderVariantTable(product.draftVariants);
+
+
+          }
+
+
+          return;
+
+
+        }
+
+
+
         try {
+
+
           await productService.updateVariant(product.id, vid, {
             sku: String(inputs.sku || '').trim().toUpperCase(),
             color: String(inputs.color || '').trim(),
@@ -1563,8 +1615,20 @@ function bindProductVariantSection(modal, product, root = null) {
 
     table.querySelectorAll("[data-variant-delete]").forEach((button) => {
       button.addEventListener("click", async () => {
-        const variant = variants.find((item) => String(item.id) === String(button.dataset.variantDelete));
+        const variant = variants.find((item) => String(item.id ?? item.temporaryId) === String(button.dataset.variantDelete));
+
         if (!confirm('Bạn có chắc muốn xóa biến thể này không?')) return;
+
+        if (!product?.id) {
+
+          product.draftVariants = variants.filter((item) => String(item.temporaryId) !== String(button.dataset.variantDelete));
+
+          renderVariantTable(product.draftVariants);
+
+          return;
+
+        }
+
         try {
           await productService.deleteVariant(product.id, variant.id, silent());
           toast.success('Đã xóa biến thể');
@@ -1580,6 +1644,22 @@ function bindProductVariantSection(modal, product, root = null) {
       const sizeContainer = section.querySelector("[data-size-options]");
       colorContainer.dataset.bound = "true";
       sizeContainer.dataset.bound = "true";
+    }
+  }
+
+  function syncDraftStockTotal() {
+    if (product?.id) return;
+    const form = modal.querySelector("[data-product-form]");
+    const stockInput = form?.elements.stock;
+    const variants = product.draftVariants || [];
+    if (!stockInput) return;
+    if (variants.length) {
+      stockInput.readOnly = true;
+      stockInput.setAttribute("aria-readonly", "true");
+      stockInput.value = String(variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0));
+    } else {
+      stockInput.readOnly = false;
+      stockInput.setAttribute("aria-readonly", "false");
     }
   }
 
