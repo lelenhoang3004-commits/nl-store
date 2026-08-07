@@ -65,8 +65,12 @@ export function createCustomerFooter() {
       </section>
     </div>
     <div class="customer-container footer-bottom">
-      <span>© 2026 N&amp;L Store. Bảo lưu mọi quyền.</span>
-      <span>V1.0.0</span>
+      <span>&copy; 2026 N&amp;L Store. All rights reserved.</span>
+      <nav class="footer-policy-links" aria-label="Chính sách footer">
+        <a href="#home" data-footer-link="home">Chính sách bảo mật</a>
+        <a href="#home" data-footer-link="home">Điều khoản sử dụng</a>
+        <a href="#home" data-footer-link="home">Chính sách đổi trả</a>
+      </nav>
     </div>
   `;
 }
