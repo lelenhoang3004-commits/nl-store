@@ -1,5 +1,5 @@
 import { setButtonLoading } from "../loading/loading.js";
-import { toast } from "../toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 import { bindValidation, validateForm } from "../validation/validation.js";
 
 let activeModal = null;
@@ -70,7 +70,7 @@ function bindModalEvents(modal, options) {
       const validation = validateForm(form);
 
       if (!validation.isValid) {
-        toast.error("Vui lòng kiểm tra lại thông tin.");
+        notifyError("Vui lòng kiểm tra lại thông tin.");
         return;
       }
     }
@@ -81,14 +81,14 @@ function bindModalEvents(modal, options) {
       await wait(options.loadingDelay ?? 220);
       await options.onSave?.(modal);
       if (options.successMessage) {
-        toast.success(options.successMessage);
+        notifySuccess(options.successMessage);
       }
       closeModal();
     } catch (error) {
       const target = modal.querySelector("[data-modal-error], [data-category-form-error], [data-form-error]");
       if (target) target.textContent = error?.message || "Không thể xử lý yêu cầu.";
       if (options.showErrorToast !== false) {
-        toast.error(error?.message || "Không thể xử lý yêu cầu.");
+        notifyError(error?.message || "Không thể xử lý yêu cầu.");
       }
     } finally {
       if (document.body.contains(button)) {
@@ -250,3 +250,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

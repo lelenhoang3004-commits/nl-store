@@ -1,7 +1,7 @@
 import { confirmPresets } from "../confirm/confirm.js";
 import { createSkeletonRows } from "../loading/loading.js";
 import { openCrudModal } from "../modal/modal.js";
-import { toast } from "../toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 
 const DEFAULT_PAGE_SIZE = 5;
 const DEFAULT_ROW_ACTIONS = [
@@ -227,7 +227,7 @@ function bindEvents(container, options, state, table) {
     }
 
     openCrudModal("create", {}, options.moduleName ?? options.title);
-    toast.info("Đang mở biểu mẫu thêm mới.");
+    notifyInfo("Đang mở biểu mẫu thêm mới.");
   });
 
   container.querySelectorAll("[data-table-header-action]").forEach((button) => {
@@ -312,7 +312,7 @@ async function handleRowAction(action, row, options) {
     const confirmed = await confirmPresets.delete(row?.name ?? "dòng dữ liệu này");
 
     if (confirmed) {
-      toast.success(`Đã xác nhận xóa ${row?.name ?? "dòng dữ liệu"} trên giao diện mẫu.`);
+      notifySuccess(`Đã xác nhận xóa ${row?.name ?? "dòng dữ liệu"} trên giao diện mẫu.`);
       options.onAction?.(action, row);
     }
 
@@ -328,12 +328,12 @@ function showActionToast(action, row) {
   const name = row?.name ?? "dòng dữ liệu";
 
   if (action === "view") {
-    toast.info(`Đang xem chi tiết ${name}.`);
+    notifyInfo(`Đang xem chi tiết ${name}.`);
     return;
   }
 
   if (action === "edit") {
-    toast.warning(`Đang chỉnh sửa ${name}.`);
+    notifyWarning(`Đang chỉnh sửa ${name}.`);
   }
 }
 
@@ -424,3 +424,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

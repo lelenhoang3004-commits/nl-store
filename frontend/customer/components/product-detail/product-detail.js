@@ -1,5 +1,5 @@
 import { createProductGrid, initProductGrid } from "../product-grid/product-grid.js";
-import { showCustomerToast } from "../../assets/js/customer-cart.js";
+import { notifyWarning } from "../../../assets/js/notify.js";
 
 const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
@@ -365,14 +365,14 @@ function initProductDetailInteractions(root, product, options = {}) {
     const maxStock = getCurrentMaxStock();
     if (maxStock <= 0) {
       quantity = 0;
-      showCustomerToast("Sản phẩm này đã hết hàng", "warning");
+      notifyWarning("Sản phẩm này đã hết hàng");
       renderQuantity();
       return;
     }
     if (!Number.isInteger(nextQty) || nextQty < 1) nextQty = 1;
     if (nextQty > maxStock) {
       nextQty = maxStock;
-      showCustomerToast(`Chỉ còn ${maxStock} sản phẩm trong kho`, "warning");
+      notifyWarning(`Chỉ còn ${maxStock} sản phẩm trong kho`);
     }
     quantity = nextQty;
     clearSelectionError("quantity");
@@ -381,7 +381,7 @@ function initProductDetailInteractions(root, product, options = {}) {
 
   function increaseQuantity() {
     const maxStock = getCurrentMaxStock();
-    if (quantity >= maxStock) { showCustomerToast(`Chỉ còn ${maxStock} sản phẩm trong kho`, "warning"); return; }
+    if (quantity >= maxStock) { notifyWarning(`Chỉ còn ${maxStock} sản phẩm trong kho`); return; }
     quantity += 1; renderQuantity();
   }
 
@@ -400,7 +400,7 @@ function initProductDetailInteractions(root, product, options = {}) {
           : missingColor
             ? "Vui lòng chọn màu sắc sản phẩm."
             : "Vui lòng chọn kích thước sản phẩm.";
-        showCustomerToast(message, "warning");
+        notifyWarning(message);
         focusSelectionGroup(firstInvalidGroup);
         return null;
       }
@@ -411,18 +411,18 @@ function initProductDetailInteractions(root, product, options = {}) {
       }
 
       if (!selectedVariant || Number(selectedVariant.stock || 0) <= 0) {
-        showCustomerToast("Sản phẩm này đã hết hàng", "warning");
+        notifyWarning("Sản phẩm này đã hết hàng");
         return null;
       }
     }
 
     const maxStock = getCurrentMaxStock();
     if (maxStock <= 0) {
-      showCustomerToast("Sản phẩm này đã hết hàng", "warning");
+      notifyWarning("Sản phẩm này đã hết hàng");
       return null;
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxStock) {
-      showCustomerToast("Vui lòng chọn số lượng hợp lệ.", "warning");
+      notifyWarning("Vui lòng chọn số lượng hợp lệ.");
       quantity = Math.min(Math.max(Number(quantity) || 1, 1), maxStock);
       renderQuantity();
       return null;
@@ -702,3 +702,4 @@ function escapeHtml(value) {
 function escapeAttr(value) {
   return escapeHtml(value);
 }
+

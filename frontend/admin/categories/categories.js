@@ -1,6 +1,6 @@
 import { openModal } from "../components/modal/modal.js";
 import { showPageLoading, hidePageLoading } from "../components/loading/loading.js";
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { categoryService } from "../services/category.service.js";
 import { uploadService } from "../services/upload.service.js";
@@ -39,7 +39,7 @@ async function loadCategories() {
     state.error = null;
   } catch (error) {
     state.error = error;
-    toast.error(message(error));
+    notifyError(message(error));
     state.items = [];
   } finally {
     state.busy = false;
@@ -313,7 +313,7 @@ async function openCategoryModal(root, category = null) {
       try {
         if (editing) await categoryService.patch(category.id, payload, silent());
         else await categoryService.create(payload, silent());
-        toast.success(editing ? "Đã cập nhật danh mục." : "Đã thêm danh mục.");
+        notifySuccess(editing ? "Đã cập nhật danh mục." : "Đã thêm danh mục.");
         await reload(root);
       } catch (error) {
         const errorTarget = document.querySelector("[data-category-form-error]");
@@ -406,23 +406,23 @@ function resolveCategoryImageUrl(url) {
 
 async function toggleCategoryStatus(root, category) {
   if (!hasPermission(PERMISSIONS.CATEGORY_UPDATE) && !hasPermission(PERMISSIONS.CATEGORY_MANAGE)) {
-    toast.error("Bạn không có quyền đổi trạng thái danh mục.");
+    notifyError("Bạn không có quyền đổi trạng thái danh mục.");
     return;
   }
 
   const nextStatus = category.status === "active" ? "inactive" : "active";
   try {
     await categoryService.patch(`${category.id}/status`, { status: nextStatus }, silent());
-    toast.success("Đã cập nhật trạng thái danh mục.");
+    notifySuccess("Đã cập nhật trạng thái danh mục.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 
 async function deleteCategory(root, category) {
   if (!hasPermission(PERMISSIONS.CATEGORY_DELETE) && !hasPermission(PERMISSIONS.CATEGORY_MANAGE)) {
-    toast.error("Bạn không có quyền xóa danh mục.");
+    notifyError("Bạn không có quyền xóa danh mục.");
     return;
   }
 
@@ -432,10 +432,10 @@ async function deleteCategory(root, category) {
 
   try {
     await categoryService.remove(category.id, silent());
-    toast.success("Đã xóa danh mục.");
+    notifySuccess("Đã xóa danh mục.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 
@@ -471,3 +471,4 @@ function escapeHtml(value) {
 function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
+

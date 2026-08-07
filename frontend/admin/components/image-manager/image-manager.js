@@ -1,5 +1,5 @@
 import { openModal } from "../modal/modal.js";
-import { toast } from "../toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const DEFAULT_QUALITY = 0.82;
@@ -222,12 +222,12 @@ function addImages(container, state, files) {
   state.images = [...images, ...state.images];
   render(container, state);
   hydrateImageDimensions(container, state, images);
-  toast.success(`Đã thêm ${images.length} ảnh vào Image Manager.`);
+  notifySuccess(`Đã thêm ${images.length} ảnh vào Image Manager.`);
 }
 
 function validateImageFile(file) {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    toast.error(`${file.name} không đúng định dạng ảnh.`);
+    notifyError(`${file.name} không đúng định dạng ảnh.`);
     return false;
   }
 
@@ -267,7 +267,7 @@ async function optimizeImage(container, state, imageId) {
   replaceImageObjectUrl(image, processed);
   image.optimized = true;
   render(container, state);
-  toast.success("Đã compress ảnh trên trình duyệt.");
+  notifySuccess("Đã compress ảnh trên trình duyệt.");
 }
 
 async function resizeImage(container, state, imageId) {
@@ -287,7 +287,7 @@ async function resizeImage(container, state, imageId) {
   replaceImageObjectUrl(image, processed);
   image.optimized = true;
   render(container, state);
-  toast.info("Đã resize ảnh trên giao diện mẫu.");
+  notifyInfo("Đã resize ảnh trên giao diện mẫu.");
 }
 
 async function cropImage(container, state, imageId) {
@@ -310,12 +310,12 @@ async function cropImage(container, state, imageId) {
   replaceImageObjectUrl(image, processed);
   image.optimized = true;
   render(container, state);
-  toast.info("Đã crop ảnh dạng vuông.");
+  notifyInfo("Đã crop ảnh dạng vuông.");
 }
 
 async function compressAll(container, state) {
   if (state.images.length === 0) {
-    toast.info("Chưa có ảnh để compress.");
+    notifyInfo("Chưa có ảnh để compress.");
     return;
   }
 
@@ -388,7 +388,7 @@ function removeImage(container, state, imageId) {
 
   state.images = state.images.filter((item) => item.id !== imageId);
   render(container, state);
-  toast.warning("Đã xóa ảnh khỏi Image Manager.");
+  notifyWarning("Đã xóa ảnh khỏi Image Manager.");
 }
 
 function openImagePreview(image) {
@@ -522,3 +522,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

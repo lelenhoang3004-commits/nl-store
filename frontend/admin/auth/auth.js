@@ -1,6 +1,6 @@
 import { setButtonLoading } from "../components/loading/loading.js";
 import { openModal } from "../components/modal/modal.js";
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { bindValidation, validateForm } from "../components/validation/validation.js";
 import { getRememberedEmail, loginAdminAccount, logoutAdminAccount } from "./auth-session.js";
 
@@ -47,11 +47,11 @@ export function initLoginPage(root = document) {
 
     if (!result.ok) {
       showLoginError(form, result.message);
-      toast.error(result.message);
+      notifyError(result.message);
       return;
     }
 
-    toast.success("Đăng nhập quản trị thành công.");
+    notifySuccess("Đăng nhập quản trị thành công.");
     window.location.hash = "#dashboard";
   });
 }
@@ -93,7 +93,7 @@ export function initForgotPasswordPage(root = document) {
       href: "#reset-password",
       label: "Nhập OTP"
     });
-    toast.success("Đã gửi hướng dẫn đặt lại mật khẩu trên giao diện mẫu.");
+    notifySuccess("Đã gửi hướng dẫn đặt lại mật khẩu trên giao diện mẫu.");
   });
 }
 
@@ -122,14 +122,14 @@ export function initResetPasswordPage(root = document) {
     const confirmPassword = form.querySelector('[name="confirmPassword"]').value;
 
     if (password !== confirmPassword) {
-      toast.error("Confirm Password chưa khớp.");
+      notifyError("Confirm Password chưa khớp.");
       return;
     }
 
     setButtonLoading(button, true, "Đang đặt lại");
     await wait(520);
     setButtonLoading(button, false);
-    toast.success("Đã đặt lại mật khẩu trên giao diện mẫu.");
+    notifySuccess("Đã đặt lại mật khẩu trên giao diện mẫu.");
     window.location.hash = "login";
   });
 }
@@ -156,14 +156,14 @@ export function createChangePasswordPage() {
 export function initChangePasswordPage(root = document) {
   bindAuthForm(root, "change", async (button, form) => {
     if (form.querySelector('[name="password"]').value !== form.querySelector('[name="confirmPassword"]').value) {
-      toast.error("Confirm New Password chưa khớp.");
+      notifyError("Confirm New Password chưa khớp.");
       return;
     }
 
     setButtonLoading(button, true, "Đang cập nhật");
     await wait(520);
     setButtonLoading(button, false);
-    toast.success("Đã đổi mật khẩu trên giao diện mẫu.");
+    notifySuccess("Đã đổi mật khẩu trên giao diện mẫu.");
   });
 }
 
@@ -191,7 +191,7 @@ export function initLockScreenPage(root = document) {
     setButtonLoading(button, true, "Đang mở khóa");
     await wait(420);
     setButtonLoading(button, false);
-    toast.success("Đã mở khóa màn hình trên giao diện mẫu.");
+    notifySuccess("Đã mở khóa màn hình trên giao diện mẫu.");
     window.location.hash = "dashboard";
   });
 }
@@ -331,7 +331,7 @@ function bindAuthForm(root, formName, onSubmit) {
     event.preventDefault();
 
     if (!validateForm(form).isValid) {
-      toast.error("Vui lòng kiểm tra lại thông tin.");
+      notifyError("Vui lòng kiểm tra lại thông tin.");
       return;
     }
 
@@ -344,3 +344,4 @@ function wait(milliseconds) {
     window.setTimeout(resolve, milliseconds);
   });
 }
+

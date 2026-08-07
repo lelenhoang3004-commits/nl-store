@@ -1,5 +1,5 @@
 import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { adminUserService } from "../services/admin-user.service.js";
 import { loadTemplate } from "../router/template-cache.js";
 
@@ -110,7 +110,7 @@ async function reload(root) {
   } catch (error) {
     state.users = [];
     state.error = error;
-    toast.error(message(error));
+    notifyError(message(error));
   } finally {
     state.busy = false;
     renderTable(root);
@@ -239,7 +239,7 @@ function openEditModal(root, user) {
       const form = modal.querySelector("[data-admin-user-form]");
       const payload = readUserForm(form);
       await adminUserService.patch(user.id, payload, silent());
-      toast.success("Đã cập nhật người dùng.");
+      notifySuccess("Đã cập nhật người dùng.");
       closeUserModal(modal);
       await reload(root);
     }
@@ -259,7 +259,7 @@ function openRoleModal(root, user) {
     onSave: async (modal) => {
       const role = modal.querySelector("select[name='role']")?.value;
       await adminUserService.updateRole(user.id, role, silent());
-      toast.success("Đã cập nhật role.");
+      notifySuccess("Đã cập nhật role.");
       closeUserModal(modal);
       await reload(root);
     }
@@ -286,7 +286,7 @@ function openPermissionsModal(root, user) {
     onSave: async (modal) => {
       const permissions = [...modal.querySelectorAll("input[name='permissions']:checked")].map((input) => input.value);
       await adminUserService.updatePermissions(user.id, permissions, silent());
-      toast.success("Đã cập nhật quyền.");
+      notifySuccess("Đã cập nhật quyền.");
       closeUserModal(modal);
       await reload(root);
     }
@@ -297,10 +297,10 @@ async function toggleUserLock(root, user) {
   const nextStatus = user.status === "locked" ? "active" : "locked";
   try {
     await adminUserService.updateStatus(user.id, nextStatus, silent());
-    toast.success(nextStatus === "locked" ? "Đã khóa người dùng." : "Đã mở khóa người dùng.");
+    notifySuccess(nextStatus === "locked" ? "Đã khóa người dùng." : "Đã mở khóa người dùng.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 
@@ -373,7 +373,7 @@ function openUserModal({ title, body, saveText = "Lưu", showSave = true, onSave
       await onSave?.(overlay);
     } catch (error) {
       if (errorTarget) errorTarget.textContent = message(error);
-      toast.error(message(error));
+      notifyError(message(error));
     } finally {
       saveButton.disabled = false;
     }
@@ -423,3 +423,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

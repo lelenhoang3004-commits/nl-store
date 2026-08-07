@@ -1,4 +1,4 @@
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 
 const SETTINGS_STORAGE_KEY = "fashion-admin-settings-draft";
@@ -179,7 +179,7 @@ function bindSettingsEvents(root) {
 
   root.querySelector("[data-settings-save]")?.addEventListener("click", () => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsDraft));
-    toast.success("Đã lưu cài đặt mẫu vào LocalStorage.");
+    notifySuccess("Đã lưu cài đặt mẫu vào LocalStorage.");
   });
 }
 
@@ -279,3 +279,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

@@ -1,5 +1,5 @@
-﻿import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
-import { toast } from "../components/toast/toast.js";
+import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
+import { notifyError, notifySuccess } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { voucherService } from "../services/voucher.service.js";
 
@@ -51,7 +51,7 @@ async function reload(root) {
     state.vouchers = (response.data?.vouchers || []).map(normalizeVoucher);
     state.pagination = response.meta?.pagination || null;
     state.error = null;
-  } catch (error) { state.vouchers = []; state.error = error; toast.error(message(error)); }
+  } catch (error) { state.vouchers = []; state.error = error; notifyError(message(error)); }
   finally { state.busy = false; renderTable(root); renderPagination(root); }
 }
 
@@ -110,7 +110,7 @@ async function openVoucherModal(root, voucherSummary = null) {
       const response = await voucherService.getById(voucherSummary.id, silent());
       voucher = normalizeVoucher(response.data?.voucher || voucherSummary);
     } catch (error) {
-      toast.error(message(error));
+      notifyError(message(error));
       return;
     }
   }
@@ -132,13 +132,13 @@ async function openVoucherModal(root, voucherSummary = null) {
       const payload = readForm(form, voucher, editing);
       if (editing) await voucherService.patch(voucher.id, payload, silent());
       else await voucherService.create(payload, silent());
-      toast.success(editing ? "Đã cập nhật mã giảm giá." : "Đã thêm mã giảm giá.");
+      notifySuccess(editing ? "Đã cập nhật mã giảm giá." : "Đã thêm mã giảm giá.");
       form.reset();
       closeModal(overlay);
       await reload(root);
     } catch (error) {
       if (errorTarget) errorTarget.textContent = message(error);
-      toast.error(message(error));
+      notifyError(message(error));
     } finally {
       saveButton.disabled = false;
     }
@@ -227,20 +227,20 @@ function readInteger(value, label) {
 async function toggleVoucher(root, voucher) {
   try {
     await voucherService.updateStatus(voucher.id, voucher.status === "active" ? "inactive" : "active", silent());
-    toast.success("Đã cập nhật trạng thái mã.");
+    notifySuccess("Đã cập nhật trạng thái mã.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 async function deleteVoucher(root, voucher) {
   if (!confirm(`Xóa mã ${voucher.code}? Voucher đã sử dụng sẽ được chuyển sang tạm khóa.`)) return;
   try {
     const response = await voucherService.remove(voucher.id, silent());
-    toast.success(response.data?.voucher?.deactivated ? "Voucher đã sử dụng nên đã được tạm khóa." : "Đã xóa mã giảm giá.");
+    notifySuccess(response.data?.voucher?.deactivated ? "Voucher đã sử dụng nên đã được tạm khóa." : "Đã xóa mã giảm giá.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 function closeModal(overlay) { overlay.classList.remove("is-open"); setTimeout(() => { overlay.remove(); if (!document.querySelector(".admin-voucher-modal")) document.body.classList.remove("modal-open"); }, 150); }

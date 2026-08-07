@@ -1,4 +1,4 @@
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
@@ -85,7 +85,7 @@ function bindListEvents(root) {
   });
   root.querySelector("[data-product-reset]")?.addEventListener("click", async () => { form?.reset(); state.query = { ...DEFAULT_QUERY }; await reload(root); });
   root.querySelector("[data-product-create]")?.addEventListener("click", () => {
-    if (!hasProductPermission(PERMISSIONS.PRODUCT_CREATE)) return toast.error("Bạn không có quyền thêm sản phẩm.");
+    if (!hasProductPermission(PERMISSIONS.PRODUCT_CREATE)) return notifyError("Bạn không có quyền thêm sản phẩm.");
     openProductForm(root);
   });
   root.addEventListener("click", async (event) => {
@@ -108,7 +108,7 @@ function bindListEvents(root) {
 async function reload(root) {
   if (state.busy) return;
   setBusy(root, true);
-  try { await fetchProducts(); } catch (error) { state.error = error; toast.error(message(error)); }
+  try { await fetchProducts(); } catch (error) { state.error = error; notifyError(message(error)); }
   finally { renderRows(root); setBusy(root, false); }
 }
 
@@ -156,7 +156,7 @@ function renderCategoryFilter(root) {
 }
 
 async function loadAndOpenForm(root, productId) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền sửa sản phẩm.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return notifyError("Bạn không có quyền sửa sản phẩm.");
 
   const loadKey = String(productId);
 
@@ -170,7 +170,7 @@ async function loadAndOpenForm(root, productId) {
       const response = await productService.getProductById(productId, silent());
       openProductForm(root, response.data?.product);
     } catch (error) {
-      toast.error(message(error));
+      notifyError(message(error));
       throw error;
     } finally {
       if (activeProductLoadKey === loadKey) {
@@ -224,8 +224,8 @@ function openProductForm(root, product = null) {
       await validateAndNormalizeProductImages(payload, form);
       if (editing) await productService.updateProduct(product.id, payload, silent());
       else await productService.createProduct(payload, silent());
-      closeModal(); toast.success(editing ? "Đã cập nhật sản phẩm." : "Đã thêm sản phẩm."); await reload(root);
-    } catch (error) { errorTarget.textContent = message(error); errorTarget.scrollIntoView({ behavior: "smooth", block: "center" }); toast.error(message(error)); setFormBusy(form, false); }
+      closeModal(); notifySuccess(editing ? "Đã cập nhật sản phẩm." : "Đã thêm sản phẩm."); await reload(root);
+    } catch (error) { errorTarget.textContent = message(error); errorTarget.scrollIntoView({ behavior: "smooth", block: "center" }); notifyError(message(error)); setFormBusy(form, false); }
   });
 }
 
@@ -377,28 +377,28 @@ function isAccessoryProduct(name, categoryName) {
 }
 
 function openStockModal(root, product, onSuccess = () => reload(root)) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền cập nhật kho.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return notifyError("Bạn không có quyền cập nhật kho.");
   const modal = createModal(`<header><div><p class="admin-products-eyebrow">Inventory</p><h2>Cập nhật tồn kho</h2></div><button type="button" data-modal-close>×</button></header><form class="admin-product-stock-form" data-stock-form><p>Tồn kho hiện tại: <strong>${Number(product.stock)}</strong></p>${field("Tồn kho mới", "stock", product.stock, "number", true, 'min="0" step="1"')}<label><span>Lý do cập nhật</span><textarea name="reason" maxlength="500" placeholder="Ví dụ: Nhập thêm hàng"></textarea></label><p class="admin-product-form-error" data-product-form-error></p><footer><button type="button" class="is-secondary" data-modal-close>Đóng</button><button type="submit">Cập nhật</button></footer></form>`);
   modal.querySelector("[data-stock-form]").addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget, data = new FormData(form), stock = Number(data.get("stock"));
     if (!Number.isInteger(stock) || stock < 0) throw new Error("Tồn kho không được âm.");
     setFormBusy(form, true);
-    try { await productService.updateStock(product.id, { stock, reason: String(data.get("reason") || "").trim() }, silent()); closeModal(); toast.success("Đã cập nhật tồn kho."); refreshAdminSidebarCounts(); await onSuccess(); }
-    catch (error) { form.querySelector("[data-product-form-error]").textContent = message(error); toast.error(message(error)); setFormBusy(form, false); }
+    try { await productService.updateStock(product.id, { stock, reason: String(data.get("reason") || "").trim() }, silent()); closeModal(); notifySuccess("Đã cập nhật tồn kho."); refreshAdminSidebarCounts(); await onSuccess(); }
+    catch (error) { form.querySelector("[data-product-form-error]").textContent = message(error); notifyError(message(error)); setFormBusy(form, false); }
   });
 }
 
 async function changeStatus(root, productId, status) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền cập nhật trạng thái.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return notifyError("Bạn không có quyền cập nhật trạng thái.");
   if (!confirm(`Xác nhận chuyển trạng thái sang "${statusLabel(status)}"?`)) return;
-  try { await productService.updateStatus(productId, status, silent()); toast.success("Đã cập nhật trạng thái sản phẩm."); refreshAdminSidebarCounts(); await reload(root); }
-  catch (error) { toast.error(message(error)); }
+  try { await productService.updateStatus(productId, status, silent()); notifySuccess("Đã cập nhật trạng thái sản phẩm."); refreshAdminSidebarCounts(); await reload(root); }
+  catch (error) { notifyError(message(error)); }
 }
 async function deleteProduct(root, productId) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_DELETE)) return toast.error("Bạn không có quyền xóa sản phẩm.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_DELETE)) return notifyError("Bạn không có quyền xóa sản phẩm.");
   if (!confirm("Xóa mềm sản phẩm này? Dữ liệu đơn hàng cũ vẫn được giữ nguyên.")) return;
-  try { await productService.deleteProduct(productId, silent()); toast.success("Đã xóa sản phẩm."); await reload(root); }
-  catch (error) { toast.error(message(error)); }
+  try { await productService.deleteProduct(productId, silent()); notifySuccess("Đã xóa sản phẩm."); await reload(root); }
+  catch (error) { notifyError(message(error)); }
 }
 
 function renderDetail(product) {
@@ -417,7 +417,7 @@ function openStockModalForDetail(root, product) {
 }
 
 function openVariantModal(root, product) {
-  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return toast.error("Bạn không có quyền quản lý biến thể.");
+  if (!hasProductPermission(PERMISSIONS.PRODUCT_UPDATE)) return notifyError("Bạn không có quyền quản lý biến thể.");
   const modal = createModal(`
     <div class="variant-modal-shell">
       <header class="variant-modal-header">
@@ -537,8 +537,8 @@ function openVariantModal(root, product) {
       }));
       listTarget.querySelectorAll("[data-variant-delete]").forEach((button) => button.addEventListener("click", async () => {
         if (!confirm("Bạn có chắc muốn xóa biến thể này không?")) return;
-        try { await productService.deleteVariant(product.id, button.dataset.variantDelete, silent()); toast.success("Đã xóa biến thể"); await renderVariants(); }
-        catch (error) { errorTarget.textContent = message(error); toast.error(message(error)); }
+        try { await productService.deleteVariant(product.id, button.dataset.variantDelete, silent()); notifySuccess("Đã xóa biến thể"); await renderVariants(); }
+        catch (error) { errorTarget.textContent = message(error); notifyError(message(error)); }
       }));
     } catch (error) {
       listTarget.innerHTML = `<p>${escapeHtml(message(error))}</p>`;
@@ -549,7 +549,7 @@ function openVariantModal(root, product) {
   function openDeleteAllVariantsModal() {
     if (document.querySelector(".variant-delete-all-overlay")) return;
     if (!variantsCache.length) {
-      toast.error("Sản phẩm không có biến thể để xóa.");
+      notifyError("Sản phẩm không có biến thể để xóa.");
       return;
     }
 
@@ -634,14 +634,14 @@ function openVariantModal(root, product) {
       try {
         await productService.deleteAllVariants(product.id, silent());
         close();
-        toast.success("Đã xóa tất cả biến thể của sản phẩm.");
+        notifySuccess("Đã xóa tất cả biến thể của sản phẩm.");
         refreshAdminSidebarCounts();
         await renderVariants();
         setActiveTab("list");
       } catch (error) {
         const errorMessage = message(error);
         errorNode.textContent = errorMessage;
-        toast.error(errorMessage);
+        notifyError(errorMessage);
       } finally {
         deleteAllInFlight = false;
         submitButton.textContent = "Xóa tất cả biến thể";
@@ -720,7 +720,7 @@ function openVariantModal(root, product) {
       const results = await Promise.allSettled(updates.map((item) => productService.updateVariantStock(product.id, item.id, { stock: item.stock }, silent())));
       const failed = results.filter((result) => result.status === "rejected");
       if (failed.length) throw new Error(`${failed.length}/${results.length} biến thể cập nhật thất bại.`);
-      toast.success("Cập nhật tồn kho thành công");
+      notifySuccess("Cập nhật tồn kho thành công");
       refreshAdminSidebarCounts();
       setBulkStatus("Cập nhật tồn kho thành công");
       await renderVariants();
@@ -728,7 +728,7 @@ function openVariantModal(root, product) {
     } catch (error) {
       const errorMessage = message(error);
       setBulkStatus(errorMessage);
-      toast.error(errorMessage);
+      notifyError(errorMessage);
     } finally {
       if (trigger) {
         trigger.disabled = false;
@@ -786,7 +786,7 @@ function openVariantModal(root, product) {
       const payload = collectVariantPayload();
       if (editingVariantId) await productService.updateVariant(product.id, editingVariantId, payload, silent());
       else await productService.createVariant(product.id, payload, silent());
-      toast.success(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
+      notifySuccess(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
       populateForm(null);
       form.reset();
       form.elements.status.value = "active";
@@ -794,7 +794,7 @@ function openVariantModal(root, product) {
       setActiveTab("list");
     } catch (error) {
       errorTarget.textContent = message(error);
-      toast.error(message(error));
+      notifyError(message(error));
     }
   });
 
@@ -858,12 +858,12 @@ function openVariantModal(root, product) {
         state.detail.price = product.price;
         if (updateSalePrice) state.detail.salePrice = product.salePrice;
       }
-      toast.success(`Đã cập nhật giá cho ${results.length} biến thể.`);
+      notifySuccess(`Đã cập nhật giá cho ${results.length} biến thể.`);
       await renderVariants();
       setActiveTab("list");
     } catch (error) {
       bulkPriceError.textContent = message(error);
-      toast.error(message(error));
+      notifyError(message(error));
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = "Áp dụng giá cho tất cả size";
@@ -1077,7 +1077,7 @@ function bindProductImageUpload(modal) {
       uploadMessage.textContent = `Tải thành công ${uploadedUrls.length} ảnh`;
       uploadMessage.className = "is-success";
       fileName.textContent = files.length === 1 ? (response.data?.originalName || files[0].name) : `${uploadedUrls.length} ảnh đã thêm vào gallery`;
-      toast.success(`Đã thêm ${uploadedUrls.length} ảnh vào Gallery URLs.`);
+      notifySuccess(`Đã thêm ${uploadedUrls.length} ảnh vào Gallery URLs.`);
     } catch (error) {
       hiddenInput.value = previousThumbnailUrl;
       thumbnail.src = resolveImageUrl(previousThumbnailUrl);
@@ -1117,7 +1117,7 @@ function bindProductImageUpload(modal) {
     objectUrls = [];
   }
 
-  function showUploadError(errorMessage) { uploadMessage.textContent = errorMessage; uploadMessage.className = "is-error"; toast.error(errorMessage); }
+  function showUploadError(errorMessage) { uploadMessage.textContent = errorMessage; uploadMessage.className = "is-error"; notifyError(errorMessage); }
   modal._productPreviewCleanup = clearObjectUrls;
   updateGallery();
 }
@@ -1278,8 +1278,8 @@ function bindProductVariantSection(modal, product, root = null) {
       const formData = new FormData(customColorForm);
       const name = String(formData.get("customColorName") || "").trim();
       const code = String(formData.get("customColorCode") || "").trim();
-      if (!name) return toast.error("Vui lòng nhập tên màu.");
-      if (code && !/^#[0-9a-f]{6}$/i.test(code)) return toast.error("Mã màu phải có định dạng HEX như #1E3A8A.");
+      if (!name) return notifyError("Vui lòng nhập tên màu.");
+      if (code && !/^#[0-9a-f]{6}$/i.test(code)) return notifyError("Mã màu phải có định dạng HEX như #1E3A8A.");
       const value = name;
       if (!colorOptions.some((item) => item.value === value || item.name === name)) {
         colorOptions = [...colorOptions, { name, value, colorCode: code || "#cccccc" }];
@@ -1287,21 +1287,21 @@ function bindProductVariantSection(modal, product, root = null) {
       }
       customColorForm.reset();
       renderSelectionLists();
-      toast.success(`Đã thêm màu ${name}.`);
+      notifySuccess(`Đã thêm màu ${name}.`);
     });
 
     customSizeForm?.addEventListener("submit", (event) => {
       event.preventDefault();
       const formData = new FormData(customSizeForm);
       const value = String(formData.get("customSize") || "").trim();
-      if (!value) return toast.error("Vui lòng nhập size mới.");
+      if (!value) return notifyError("Vui lòng nhập size mới.");
       if (!sizeOptions.includes(value)) {
         sizeOptions = [...sizeOptions, value];
         selectedSizes = [...selectedSizes, value];
       }
       customSizeForm.reset();
       renderSelectionLists();
-      toast.success(`Đã thêm size ${value}.`);
+      notifySuccess(`Đã thêm size ${value}.`);
     });
 
     section.querySelectorAll("[data-size-preset]").forEach((button) => button.addEventListener("click", () => {
@@ -1373,7 +1373,7 @@ function bindProductVariantSection(modal, product, root = null) {
         }
         product.draftVariants = [...(product.draftVariants || []), ...nextVariants];
         bulkCreateErrorTarget.textContent = `Đã tạo tạm ${nextVariants.length} biến thể. Biến thể sẽ được lưu khi bấm Tạo sản phẩm.`;
-        toast.success(`Đã tạo tạm ${nextVariants.length} biến thể.`);
+        notifySuccess(`Đã tạo tạm ${nextVariants.length} biến thể.`);
         renderVariantTable(product.draftVariants);
         return;
       }
@@ -1395,13 +1395,13 @@ function bindProductVariantSection(modal, product, root = null) {
           ? `Đã xử lý ${processed}/${variantsPayload.length} biến thể. Có ${failed} biến thể không thể tạo.`
           : `Đã tạo ${created} biến thể, khôi phục ${restored} biến thể và bỏ qua ${existing} biến thể đang tồn tại.`;
         bulkCreateErrorTarget.textContent = summary;
-        if (failed) toast.error(summary); else toast.success(summary);
+        if (failed) notifyError(summary); else notifySuccess(summary);
         await renderVariants({ force: true });
         if (root) renderRows(root);
       } catch (error) {
         const errorMessage = message(error);
         bulkCreateErrorTarget.textContent = errorMessage;
-        toast.error(errorMessage);
+        notifyError(errorMessage);
       } finally {
         createButton.disabled = false;
         createButton.textContent = originalText;
@@ -1449,7 +1449,7 @@ function bindProductVariantSection(modal, product, root = null) {
       const successCount = results.filter((result) => result.status === "fulfilled").length;
       const failedCount = results.length - successCount;
       if (successCount) {
-        toast.success(`Đã cập nhật tồn kho cho ${successCount} biến thể.`);
+        notifySuccess(`Đã cập nhật tồn kho cho ${successCount} biến thể.`);
       }
       if (failedCount) {
         bulkErrorTarget.textContent = `Không cập nhật được ${failedCount} biến thể.`;
@@ -1480,7 +1480,7 @@ function bindProductVariantSection(modal, product, root = null) {
       renderVariantTable(variants);
     } catch (error) {
       table.innerHTML = `<div class="admin-product-variant-empty">${escapeHtml(message(error))}</div>`;
-      toast.error(message(error));
+      notifyError(message(error));
     } finally {
       if (variantsLoadingProductId === product.id) {
         variantsLoadingProductId = null;
@@ -1546,14 +1546,14 @@ function bindProductVariantSection(modal, product, root = null) {
         inputsArr.forEach((el) => { const name = el.name; const val = el.type === 'number' ? (el.value === '' ? null : Number(el.value)) : el.value; inputs[name] = val; });
 
         // Validation
-        if (!String(inputs.sku || '').trim()) return toast.error('SKU không được để trống.');
-        if (!String(inputs.color || '').trim()) return toast.error('Màu không được để trống.');
-        if (!String(inputs.size || '').trim()) return toast.error('Size không được để trống.');
-        if (inputs.price !== null && inputs.price < 0) return toast.error('Giá phải >= 0');
-        if (inputs.sale_price !== null && inputs.sale_price < 0) return toast.error('Giá sale phải >= 0');
-        if (inputs.sale_price !== null && inputs.price !== null && inputs.sale_price > inputs.price) return toast.error('Giá sale không được lớn hơn giá.');
-        if (inputs.stock !== null && (!Number.isInteger(inputs.stock) || inputs.stock < 0)) return toast.error('Tồn kho phải là số nguyên >= 0');
-        if (inputs.color_code && !/^#[0-9a-f]{6}$/i.test(inputs.color_code)) return toast.error('Mã màu phải có định dạng HEX như #FFFFFF');
+        if (!String(inputs.sku || '').trim()) return notifyError('SKU không được để trống.');
+        if (!String(inputs.color || '').trim()) return notifyError('Màu không được để trống.');
+        if (!String(inputs.size || '').trim()) return notifyError('Size không được để trống.');
+        if (inputs.price !== null && inputs.price < 0) return notifyError('Giá phải >= 0');
+        if (inputs.sale_price !== null && inputs.sale_price < 0) return notifyError('Giá sale phải >= 0');
+        if (inputs.sale_price !== null && inputs.price !== null && inputs.sale_price > inputs.price) return notifyError('Giá sale không được lớn hơn giá.');
+        if (inputs.stock !== null && (!Number.isInteger(inputs.stock) || inputs.stock < 0)) return notifyError('Tồn kho phải là số nguyên >= 0');
+        if (inputs.color_code && !/^#[0-9a-f]{6}$/i.test(inputs.color_code)) return notifyError('Mã màu phải có định dạng HEX như #FFFFFF');
 
         if (!product?.id) {
 
@@ -1599,12 +1599,12 @@ function bindProductVariantSection(modal, product, root = null) {
             stock: inputs.stock,
             status: row.querySelector('[name="status"]').value
           }, silent());
-          toast.success('Đã cập nhật biến thể');
+          notifySuccess('Đã cập nhật biến thể');
           inlineEditingId = null;
           await renderVariants({ force: true });
           if (root) renderRows(root);
         } catch (error) {
-          toast.error(message(error));
+          notifyError(message(error));
         }
       });
     });
@@ -1634,11 +1634,11 @@ function bindProductVariantSection(modal, product, root = null) {
 
         try {
           await productService.deleteVariant(product.id, variant.id, silent());
-          toast.success('Đã xóa biến thể');
+          notifySuccess('Đã xóa biến thể');
           await renderVariants({ force: true });
           if (root) renderRows(root);
         } catch (error) {
-          toast.error(message(error));
+          notifyError(message(error));
         }
       });
     });
@@ -1730,7 +1730,7 @@ function bindProductVariantSection(modal, product, root = null) {
       try {
         if (editingVariantId) await productService.updateVariant(product.id, editingVariantId, payload, silent());
         else await productService.createVariant(product.id, payload, silent());
-        toast.success(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
+        notifySuccess(editingVariantId ? "Đã cập nhật biến thể." : "Đã thêm biến thể.");
         editor.hidden = true;
         editor.innerHTML = "";
         editingVariantId = null;
@@ -1738,7 +1738,7 @@ function bindProductVariantSection(modal, product, root = null) {
         if (root) renderRows(root);
       } catch (error) {
         errorTarget.textContent = message(error);
-        toast.error(message(error));
+        notifyError(message(error));
       }
     });
   }
@@ -1810,6 +1810,7 @@ function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: 
 function formatDate(value) { const d = new Date(value); return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString("vi-VN"); }
 function id(value) { const n = Number(value); return Number.isSafeInteger(n) && n > 0 ? n : ""; }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
 
 
 

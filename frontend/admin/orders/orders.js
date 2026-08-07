@@ -1,4 +1,4 @@
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
 import { loadTemplate } from "../router/template-cache.js";
@@ -126,7 +126,7 @@ async function reloadList(root) {
     await fetchOrders();
   } catch (error) {
     listState.error = error;
-    toast.error(getErrorMessage(error));
+    notifyError(getErrorMessage(error));
   } finally {
     renderOrderRows(root);
     setBusy(root, false);
@@ -260,11 +260,11 @@ function initOrderDetail(root, orderId) {
     setBusy(form, true);
     try {
       await orderService.updateStatus(orderId, { status: data.get("status"), note: String(data.get("note") || "").trim() }, silentErrors());
-      toast.success("Đã cập nhật trạng thái đơn hàng.");
+      notifySuccess("Đã cập nhật trạng thái đơn hàng.");
       await refreshOrderDetail(root, orderId);
       refreshAdminSidebarCounts();
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      notifyError(getErrorMessage(error));
       setBusy(form, false);
     }
   });
@@ -279,7 +279,7 @@ function initOrderDetail(root, orderId) {
         note: isMomoPayment(payment) ? "Admin xác nhận thanh toán MoMo QR cá nhân." : "Admin xác nhận cửa hàng đã nhận tiền chuyển khoản.",
         confirmedSource: isMomoPayment(payment) ? "admin_momo_personal_qr" : "admin_manual_transfer"
       }, silentErrors());
-      toast.success("Đã xác nhận đã nhận tiền.");
+      notifySuccess("Đã xác nhận đã nhận tiền.");
       await refreshOrderDetail(root, orderId);
       refreshAdminSidebarCounts();
     });
@@ -344,7 +344,7 @@ function openOrderPaymentConfirmDialog(payment = {}, order = {}, onConfirm = nul
         await onConfirm?.();
         close(true);
       } catch (error) {
-        toast.error(getErrorMessage(error));
+        notifyError(getErrorMessage(error));
         setLoading(false);
       }
     });
@@ -368,7 +368,7 @@ async function refreshOrderDetail(root, orderId) {
     detailLoadError = error;
     root.innerHTML = renderErrorState(error);
     bindErrorRetry(root, () => refreshOrderDetail(root, orderId));
-    toast.error(getErrorMessage(error));
+    notifyError(getErrorMessage(error));
   } finally {
     setBusy(root, false);
   }
@@ -389,16 +389,16 @@ function openCancelModal(orderId, onSuccess) {
     event.preventDefault();
     const form = event.currentTarget;
     const reason = String(new FormData(form).get("reason") || "").trim();
-    if (!reason) return toast.error("Vui lòng nhập lý do hủy đơn.");
+    if (!reason) return notifyError("Vui lòng nhập lý do hủy đơn.");
     setBusy(form, true);
     try {
       await orderService.cancel(orderId, { reason }, silentErrors());
       closeCancelModal();
-      toast.success("Đã hủy đơn và hoàn lại tồn kho.");
+      notifySuccess("Đã hủy đơn và hoàn lại tồn kho.");
       await onSuccess?.();
       refreshAdminSidebarCounts();
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      notifyError(getErrorMessage(error));
       setBusy(form, false);
     }
   });
@@ -429,5 +429,6 @@ function formatDate(value) { const date = new Date(value); return Number.isNaN(d
 function formatAddress(address = {}) { return address.full_address || address.fullAddress || [address.detail_address || address.detailAddress || address.address || address.line1, address.ward_name || address.wardName || address.ward, address.province_name || address.provinceName || address.province || address.city, address.country].filter(Boolean).join(", ") || "Chưa cập nhật"; }
 function resolveImageUrl(url) { if (!url) return PLACEHOLDER_IMAGE; return globalThis.normalizeImageUrl?.(url) ?? url; }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
 
 

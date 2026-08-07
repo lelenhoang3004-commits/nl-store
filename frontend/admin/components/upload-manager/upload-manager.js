@@ -1,4 +1,4 @@
-import { toast } from "../toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 
 const DEFAULT_MAX_SIZE_MB = 3;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -91,7 +91,7 @@ function bindListEvents(container, state) {
     button.addEventListener("click", () => {
       state.primaryId = button.dataset.uploadPrimary;
       renderAndRebind(container, state);
-      toast.info("Đã đổi ảnh đại diện trên giao diện mẫu.");
+      notifyInfo("Đã đổi ảnh đại diện trên giao diện mẫu.");
     });
   });
 
@@ -110,7 +110,7 @@ function bindListEvents(container, state) {
       }
 
       renderAndRebind(container, state);
-      toast.warning("Đã xóa ảnh khỏi danh sách upload mẫu.");
+      notifyWarning("Đã xóa ảnh khỏi danh sách upload mẫu.");
     });
   });
 
@@ -167,17 +167,17 @@ function addFiles(container, state, files) {
   state.primaryId = state.primaryId || newItems[0].id;
   renderAndRebind(container, state);
   simulateProgress(container, state, newItems.map((item) => item.id));
-  toast.success(`Đã thêm ${newItems.length} ảnh vào Upload Manager.`);
+  notifySuccess(`Đã thêm ${newItems.length} ảnh vào Upload Manager.`);
 }
 
 function validateFile(file, state) {
   if (!IMAGE_TYPES.includes(file.type)) {
-    toast.error(`${file.name} không đúng định dạng ảnh.`);
+    notifyError(`${file.name} không đúng định dạng ảnh.`);
     return false;
   }
 
   if (file.size > state.maxSizeMb * 1024 * 1024) {
-    toast.error(`${file.name} vượt quá ${state.maxSizeMb}MB.`);
+    notifyError(`${file.name} vượt quá ${state.maxSizeMb}MB.`);
     return false;
   }
 
@@ -376,3 +376,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

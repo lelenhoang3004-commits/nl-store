@@ -6,7 +6,8 @@ import { createProductCard, initProductCard } from "../../components/product-car
 import { createProductGrid, initProductGrid } from "../../components/product-grid/product-grid.js";
 import { createHomePage, initHomePage } from "../../home/home.js?v=20260730-hero-refresh";
 import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
-import { createEmptyCart, customerCart, getCartErrorMessage, showCustomerToast } from "./customer-cart.js";
+import { createEmptyCart, customerCart, getCartErrorMessage } from "./customer-cart.js";
+import { notifyError, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 import { SUPPORTED_CHECKOUT_PAYMENT_METHODS, formatOrderStatus, formatPaymentMethod, formatPaymentStatus } from "../../../admin/utils/payment-formatters.js";
 
@@ -525,7 +526,7 @@ function handleFooterLinkNavigation(event) {
 
   if (target === "login") {
     if (customerAuth.isAuthenticated()) {
-      showCustomerToast("Bạn đã đăng nhập.", "success");
+      notifySuccess("Bạn đã đăng nhập.");
       return true;
     }
 
@@ -1231,7 +1232,7 @@ function openOAuthLoginPopup(provider, button) {
 
   if (!popup) {
     button.disabled = false;
-    showCustomerToast(`Vui lòng cho phép popup để đăng nhập ${providerLabel}.`, "error");
+    notifyError(`Vui lòng cho phép popup để đăng nhập ${providerLabel}.`);
     return;
   }
 
@@ -1258,7 +1259,7 @@ async function handleOAuthMessage(event) {
   document.querySelectorAll("[data-oauth]").forEach(button => { button.disabled = false; });
 
   if (errorTypes.includes(event.data.type)) {
-    showCustomerToast(event.data.message || "Đăng nhập thất bại", "error");
+    notifyError(event.data.message || "Đăng nhập thất bại");
     return;
   }
 
@@ -1278,7 +1279,7 @@ async function handleOAuthMessage(event) {
     window.history.replaceState(null, "", "index.html#home");
     currentRoute = "";
     renderRoute();
-    showCustomerToast("Đăng nhập thành công", "success");
+    notifySuccess("Đăng nhập thành công");
   } catch (error) {
     console.debug(`[auth] ${providerLabel} popup login failed`, error?.message || error);
     customerAuth.clearExternalLogin(`${provider}-popup-token-invalid`);
@@ -1286,7 +1287,7 @@ async function handleOAuthMessage(event) {
     currentRoute = "";
     renderHeader();
     renderRoute();
-    showCustomerToast(error?.message || "Đăng nhập thất bại", "error");
+    notifyError(error?.message || "Đăng nhập thất bại");
   } finally {
     layoutState.isCompletingOAuth = false;
   }
@@ -1332,7 +1333,7 @@ function renderLoginPage() {
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]"); clearLoginFieldErrors(form);
     if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span>Đang đăng nhập...</span>";
-    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); await Promise.all([refreshCart(), refreshWishlist()]); renderHeader(); if (await continuePendingCheckoutAfterLogin()) return; showCustomerToast("Đăng nhập thành công.","success"); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
+    try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); await Promise.all([refreshCart(), refreshWishlist()]); renderHeader(); if (await continuePendingCheckoutAfterLogin()) return; notifySuccess("Đăng nhập thành công."); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
     catch(error){ showLoginError(form,error); }
     finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
   });
@@ -1409,7 +1410,7 @@ function renderForgotPasswordPage() {
     button.innerHTML = "<span>Đang đổi mật khẩu...</span>";
     try {
       await customerAuth.resetPassword({ email: resetEmail, code, password, confirmPassword });
-      showCustomerToast("Mật khẩu đã được đặt lại. Vui lòng đăng nhập.", "success");
+      notifySuccess("Mật khẩu đã được đặt lại. Vui lòng đăng nhập.");
       navigateToRoute("login");
     } catch (error) {
       showCustomerMessage(form, error?.message || "Không thể đặt lại mật khẩu.");
@@ -1507,7 +1508,7 @@ function renderRegisterPage() {
   const root=layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.textContent="Đang đăng ký...";
     const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
-    try{await customerAuth.register(payload);showCustomerToast("Đăng ký thành công. Vui lòng đăng nhập.","success");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.textContent="Đăng ký";}
+    try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.textContent="Đăng ký";}
   });
 }
 
@@ -1523,7 +1524,7 @@ function renderPhoneLoginPage() {
     </form></article></div></section>`;
   const form=layoutState.main.querySelector("[data-phone-form]"),send=form.querySelector("[data-send-otp]"),fields=form.querySelector("[data-otp-fields]"); let timer;
   send.addEventListener("click",async()=>{send.disabled=true;try{const result=await customerAuth.sendPhoneOtp(form.phone.value);fields.hidden=false;fields.querySelector("[name=otp]").required=true;const passwordField=fields.querySelector("[data-new-password]"),confirmField=fields.querySelector("[data-confirm-password]");passwordField.hidden=!result.requiresPassword;confirmField.hidden=!result.requiresPassword;passwordField.querySelector("input").required=Boolean(result.requiresPassword);confirmField.querySelector("input").required=Boolean(result.requiresPassword);let left=result.resendAfter||60;const counter=fields.querySelector("[data-countdown]");counter.textContent=left;clearInterval(timer);timer=setInterval(()=>{left-=1;counter.textContent=Math.max(left,0);if(left<=0){clearInterval(timer);send.disabled=false;send.textContent="Gửi lại mã OTP";}},1000);showCustomerMessage(form,"Mã OTP đã được gửi.","success");}catch(error){showCustomerMessage(form,error?.message||"Không thể gửi OTP.");send.disabled=false;}});
-  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});await Promise.all([refreshCart(), refreshWishlist()]);renderHeader();if(await continuePendingCheckoutAfterLogin())return;showCustomerToast("Đăng nhập thành công.","success");const redirect=layoutState.pendingRoute||"home";layoutState.pendingRoute="";navigateToRoute(redirect);}catch(error){showCustomerMessage(form,error?.message||"Xác thực OTP thất bại.");}finally{button.disabled=false;}});
+  form.addEventListener("submit",async event=>{event.preventDefault();const data=new FormData(form),button=form.querySelector("button[type=submit]");button.disabled=true;try{await customerAuth.verifyPhoneOtp({phone:String(data.get("phone")||"").trim(),otp:String(data.get("otp")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||"")});await Promise.all([refreshCart(), refreshWishlist()]);renderHeader();if(await continuePendingCheckoutAfterLogin())return;notifySuccess("Đăng nhập thành công.");const redirect=layoutState.pendingRoute||"home";layoutState.pendingRoute="";navigateToRoute(redirect);}catch(error){showCustomerMessage(form,error?.message||"Xác thực OTP thất bại.");}finally{button.disabled=false;}});
 }
 
 async function renderAuthCallbackPage() {
@@ -1552,7 +1553,7 @@ async function renderAuthCallbackPage() {
     window.history.replaceState(null, "", "index.html#home");
     currentRoute = "";
     renderRoute();
-    showCustomerToast("Đăng nhập thành công", "success");
+    notifySuccess("Đăng nhập thành công");
   } catch (callbackError) {
     console.debug("[auth] OAuth callback failed", callbackError?.message || callbackError);
     customerAuth.clearExternalLogin("oauth-token-invalid");
@@ -1675,7 +1676,7 @@ function decodeOAuthUser(encodedUser) {
 }
 
 function finishOAuthFailure(message) {
-  showCustomerToast(message || "Đăng nhập thất bại", "error");
+  notifyError(message || "Đăng nhập thất bại");
   window.history.replaceState(null, "", "index.html#login");
   currentRoute = "";
   renderHeader();
@@ -1860,8 +1861,8 @@ function bindCartPageEvents() {
       const container = button.parentElement;
       const maxStock = Number(container?.dataset?.maxStock || 0);
       const current = Number(container.querySelector("span")?.textContent || 0);
-      if (maxStock <= 0) { showCustomerToast("Sản phẩm này đã hết hàng", "error"); return; }
-      if (current >= maxStock) { showCustomerToast(`Chỉ còn ${maxStock} sản phẩm trong kho`, "warning"); return; }
+      if (maxStock <= 0) { notifyError("Sản phẩm này đã hết hàng"); return; }
+      if (current >= maxStock) { notifyWarning(`Chỉ còn ${maxStock} sản phẩm trong kho`); return; }
       await customerCart.updateQuantity(itemId, current + 1);
       await renderCartPage();
     });
@@ -1925,10 +1926,10 @@ function bindCartPageEvents() {
         status: "success",
         message: `Áp dụng thành công! Giá̉m ${formatCurrency(result.discountAmount || 0)}.`
       };
-      showCustomerToast(layoutState.cartVoucher.message, "success");
+      notifySuccess(layoutState.cartVoucher.message);
     } catch (error) {
       layoutState.cartVoucher = { code, discountAmount: 0, status: "error", message: getVoucherErrorMessage(error) };
-      showCustomerToast(layoutState.cartVoucher.message, "error");
+      notifyError(layoutState.cartVoucher.message);
     }
 
     await renderCartPage();
@@ -1944,7 +1945,7 @@ function bindCartPageEvents() {
   layoutState.main.querySelector("[data-cart-checkout]")?.addEventListener("click", async () => {
     const selectedCount = Array.isArray(layoutState.cart?.items) ? layoutState.cart.items.filter((item) => item.isSelected).length : 0;
     if (!selectedCount) {
-      showCustomerToast("Vui lòng chọn ít nhất một sản phẩm để thanh toán.", "error");
+      notifyError("Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
       return;
     }
     clearBuyNowCheckout();
@@ -1955,7 +1956,7 @@ function bindCartPageEvents() {
         returnRoute: "#checkout"
       });
       layoutState.pendingRoute = "checkout";
-      showCustomerToast("Vui lòng đăng nhập để tiếp tục thanh toán. Giỏ hàng của bạn đã được giữ lại.", "success");
+      notifySuccess("Vui lòng đăng nhập để tiếp tục thanh toán. Giỏ hàng của bạn đã được giữ lại.");
       navigateToRoute("login");
       return;
     }
@@ -2015,7 +2016,7 @@ async function removeCartItemWithConfirm(itemId) {
     onConfirm: async () => {
       await customerCart.removeItem(itemId);
       await renderCartPage();
-      showCustomerToast("Đã xóa sản phẩm khỏi giỏ hàng.", "success");
+      notifySuccess("Đã xóa sản phẩm khỏi giỏ hàng.");
     }
   });
 }
@@ -2477,7 +2478,7 @@ function startPaymentPolling(transactionId, onUpdate) {
       const status = String(payment?.actualTransactionStatus || payment?.transactionStatus || payment?.paymentStatus || "").toLowerCase();
       if (["paid", "success", "failed", "cancelled", "expired", "refunded"].includes(status)) {
         stopPaymentPolling();
-        if (status === "paid" || status === "success") showCustomerToast("Thanh toán đã được xác nhận.", "success");
+        if (status === "paid" || status === "success") notifySuccess("Thanh toán đã được xác nhận.");
       }
     } catch (error) {
       console.debug("[payment-polling] status check failed", error?.message);
@@ -2492,7 +2493,7 @@ function startPaymentPolling(transactionId, onUpdate) {
 async function savePaymentQr(root, orderCode = "ORDER", filenameOverride = "") {
   const qr = root?.querySelector?.("[data-payment-qr-image], canvas") || document.querySelector("[data-payment-qr-image], canvas");
   if (!qr) {
-    showCustomerToast("Chưa có mã QR để lưu.", "error");
+    notifyError("Chưa có mã QR để lưu.");
     return;
   }
   const filename = filenameOverride || `NL-Store-QR-${orderSafeCode(orderCode)}.png`;
@@ -2503,7 +2504,7 @@ async function savePaymentQr(root, orderCode = "ORDER", filenameOverride = "") {
     href = await imageToPngDataUrl(qr);
   }
   if (!href) {
-    showCustomerToast("Không thể lưu mã QR.", "error");
+    notifyError("Không thể lưu mã QR.");
     return;
   }
   const link = document.createElement("a");
@@ -2512,7 +2513,7 @@ async function savePaymentQr(root, orderCode = "ORDER", filenameOverride = "") {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  showCustomerToast("Đã lưu mã QR", "success");
+  notifySuccess("Đã lưu mã QR");
 }
 
 
@@ -2659,7 +2660,7 @@ function bindCreditCardDemoForm(root) {
     }
     clearCreditCardDemoData(root);
     setMessage('Đã hoàn tất mô phỏng nhập thông tin thẻ. Chưa có giao dịch thanh toán thật được thực hiện.', 'success');
-    showCustomerToast('Đã hoàn tất mô phỏng nhập thông tin thẻ. Chưa có giao dịch thanh toán thật được thực hiện.', 'success');
+    notifySuccess('Đã hoàn tất mô phỏng nhập thông tin thẻ. Chưa có giao dịch thanh toán thật được thực hiện.');
   });
 }
 function normalizePaymentActionError(error) {
@@ -2682,11 +2683,11 @@ function bindPaymentGuideActions(root) {
     button.disabled = true;
     try {
       await customerApi(`/payments/transactions/${encodeURIComponent(id)}/customer-report`, { method: "POST" });
-      showCustomerToast("Đã ghi nhận thanh toán – đang chờ cửa hàng xác nhận.", "success");
+      notifySuccess("Đã ghi nhận thanh toán – đang chờ cửa hàng xác nhận.");
       button.textContent = "Đang chờ xác nhận";
     } catch (error) {
       button.disabled = false;
-      showCustomerToast(normalizePaymentActionError(error), "error");
+      notifyError(normalizePaymentActionError(error));
     }
   });
   root.querySelector("[data-payment-status-check]")?.addEventListener("click", async (event) => {
@@ -2697,7 +2698,7 @@ function bindPaymentGuideActions(root) {
     const response = await customerApi(`/payments/transactions/${encodeURIComponent(id)}/status`);
     const payment = response?.data?.payment || {};
     const status = getPaymentStatusLabel(getPaymentGuideStatus(payment, payment.paymentGuide || {}));
-    showCustomerToast(`Trạng thái thanh toán: ${status}`, "success");
+    notifySuccess(`Trạng thái thanh toán: ${status}`);
   });
   root.querySelectorAll("[data-copy-payment]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -2709,9 +2710,9 @@ function bindPaymentGuideActions(root) {
         button.dataset.originalText = originalText;
         button.textContent = "Đã sao chép";
         window.setTimeout(() => { button.textContent = button.dataset.originalText || originalText; }, 1200);
-        showCustomerToast("Đã sao chép", "success");
+        notifySuccess("Đã sao chép");
       } catch {
-        showCustomerToast("Không thể sao chép tự động.", "error");
+        notifyError("Không thể sao chép tự động.");
       }
     });
   });
@@ -2825,14 +2826,14 @@ async function renderCheckoutPage() {
         });
         const oldPrice = Number(originalItem.unit_price ?? originalItem.sale_price ?? originalItem.price ?? 0);
         if (oldPrice && Number(validatedItem.unit_price || 0) !== oldPrice) {
-          showCustomerToast("Giá sản phẩm đã được cập nhật theo dữ liệu mới nhất.", "success");
+          notifySuccess("Giá sản phẩm đã được cập nhật theo dữ liệu mới nhất.");
         }
         buyNowItems = [validatedItem];
         sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify({ mode: "buy_now", items: buyNowItems, created_at: Date.now() }));
         items = buyNowItems.map(mapBuyNowItemForCheckout);
       } catch (error) {
         clearBuyNowCheckout();
-        showCustomerToast(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.", "error");
+        notifyError(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.");
         navigateToRoute(productId ? `product-detail/${encodeURIComponent(productId)}` : "home");
         return;
       }
@@ -3148,7 +3149,7 @@ function initCheckoutForm(container, checkoutSummary) {
     if (!validation.isValid) {
       form.dataset.checkoutErrors = JSON.stringify(validation.errors);
       renderCheckoutFieldErrors(form);
-      showCustomerToast("Vui lòng kiểm tra lại thông tin trước khi đặt hàng.", "error");
+      notifyError("Vui lòng kiểm tra lại thông tin trước khi đặt hàng.");
       return;
     }
 
@@ -3163,7 +3164,7 @@ function initCheckoutForm(container, checkoutSummary) {
     const paymentMethod = String(formData.get("paymentMethod") || "cod");
 
     if (!checkoutSummary.items.length) {
-      showCustomerToast("Giỏ hàng đang trống.", "error");
+      notifyError("Giỏ hàng đang trống.");
       return;
     }
 
@@ -3206,9 +3207,9 @@ function initCheckoutForm(container, checkoutSummary) {
         renderHeader();
       }
       openOrderSuccessModal({ order: response?.order || null, orderCode: response?.order?.orderCode || response?.order?.id || "DON HANG", paymentMethod, paymentGuide: response?.payment_guide || response?.paymentGuide || null, payment: response?.payment || null });
-      showCustomerToast("Đặt hàng thành công.", "success");
+      notifySuccess("Đặt hàng thành công.");
     } catch (error) {
-      showCustomerToast(error?.message || "Đặt hàng thất bại.", "error");
+      notifyError(error?.message || "Đặt hàng thất bại.");
     } finally {
       form.dataset.isSubmitting = "false";
       submitButton.classList.remove("is-loading");
@@ -3252,11 +3253,11 @@ async function openOrderPaymentModal(orderId, options = {}) {
     const response = await customerApi(url, options.retry ? { method: "POST" } : undefined);
     payment = response?.data?.payment || null;
   } catch (error) {
-    showCustomerToast(normalizePaymentActionError(error) || "Không thể mở thanh toán cho đơn hàng.", "error");
+    notifyError(normalizePaymentActionError(error) || "Không thể mở thanh toán cho đơn hàng.");
     return;
   }
   if (!payment) {
-    showCustomerToast("Chưa có thông tin thanh toán cho đơn hàng.", "error");
+    notifyError("Chưa có thông tin thanh toán cho đơn hàng.");
     return;
   }
 
@@ -3634,7 +3635,7 @@ async function handleCustomerOrderCancelConfirm(event) {
       body: { reason: "Customer cancelled order." }
     });
     closeCustomerOrderCancelModal();
-    showCustomerToast("Hủy đơn hàng thành công", "success");
+    notifySuccess("Hủy đơn hàng thành công");
     await renderOrderDetailPage(orderId);
     document.querySelector(".customer-order-detail-shell")?.scrollIntoView({ block: "start" });
   } catch (error) {
@@ -3642,15 +3643,15 @@ async function handleCustomerOrderCancelConfirm(event) {
     button.innerHTML = previousText;
     const status = Number(error?.status || error?.statusCode || 0);
     if (status === 401 || status === 403) {
-      showCustomerToast("Bạn không có quyền hủy đơn hàng này.", "error");
+      notifyError("Bạn không có quyền hủy đơn hàng này.");
       return;
     }
     if (status === 409) {
-      showCustomerToast("Đơn hàng đã đổi trạng thái nên không thể hủy.", "error");
+      notifyError("Đơn hàng đã đổi trạng thái nên không thể hủy.");
       await renderOrderDetailPage(orderId);
       return;
     }
-    showCustomerToast(error?.message || "Không thể hủy đơn hàng. Vui lòng thử lại.", "error");
+    notifyError(error?.message || "Không thể hủy đơn hàng. Vui lòng thử lại.");
   }
 }
 async function renderProfilePage() {
@@ -3694,7 +3695,7 @@ async function renderProfilePage() {
     }
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Hồ sơ", `<div class="customer-empty-state"><div class="customer-empty-icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div><h2>Không thể tải hồ sơ</h2><p>${escapeHtml(error?.message || "Vui lòng thử lại sau.")}</p></div>`);
-    showCustomerToast(error?.message || "Không thể tải hồ sơ.", "error");
+    notifyError(error?.message || "Không thể tải hồ sơ.");
   }
 }
 
@@ -3999,7 +4000,7 @@ async function submitProfileEdit(form, currentUser, modal) {
     }
     customerAuth.setUser(user);
     closeProfileModal(modal);
-    showCustomerToast("Đã cập nhật hồ sơ.", "success");
+    notifySuccess("Đã cập nhật hồ sơ.");
     renderHeader();
     renderProfilePage();
   } catch (error) {
@@ -4051,7 +4052,7 @@ function openPasswordModal(userOverride = null) {
         body
       });
       closeProfileModal(modal);
-      showCustomerToast(hasPassword ? "Đã đổi mật khẩu." : "Đã thiết lập mật khẩu.", "success");
+      notifySuccess(hasPassword ? "Đã đổi mật khẩu." : "Đã thiết lập mật khẩu.");
       const latestUser = await refreshCurrentCustomerUser(response?.data?.user);
       customerAuth.setUser({ ...(latestUser || customerAuth.getUser() || {}), hasPassword: true, has_password: true });
       renderHeader();
@@ -4149,7 +4150,7 @@ function openPaymentModal(method = null) {
         }
       });
       closeProfileModal(modal);
-      showCustomerToast(response?.message || "Đã lưu phương thức thanh toán.", "success");
+      notifySuccess(response?.message || "Đã lưu phương thức thanh toán.");
       renderProfilePage();
     } catch (error) {
       showCustomerMessage(form, error?.message || "Không thể lưu phương thức thanh toán.");
@@ -4163,34 +4164,34 @@ async function handleSocialAction(provider, action) {
   try {
     if (action === "unlink") {
       await customerApi(`/users/profile/social-connections/${encodeURIComponent(provider)}`, { method: "DELETE" });
-      showCustomerToast("Đã hủy liên kết tài khoản.", "success");
+      notifySuccess("Đã hủy liên kết tài khoản.");
       renderProfilePage();
       return;
     }
     const response = await customerApi(`/users/profile/social-connections/${encodeURIComponent(provider)}/link-intent`, { method: "POST" });
-    showCustomerToast(response?.message || "Chức năng liên kết đang thử nghiệm.", "warning");
+    notifyWarning(response?.message || "Chức năng liên kết đang thử nghiệm.");
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể cập nhật liên kết.", "error");
+    notifyError(error?.message || "Không thể cập nhật liên kết.");
   }
 }
 
 async function updatePaymentDefault(id) {
   try {
     await customerApi(`/users/profile/payment-methods/${encodeURIComponent(id)}/default`, { method: "PATCH" });
-    showCustomerToast("Đã cập nhật phương thức mặc định.", "success");
+    notifySuccess("Đã cập nhật phương thức mặc định.");
     renderProfilePage();
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể cập nhật phương thức mặc định.", "error");
+    notifyError(error?.message || "Không thể cập nhật phương thức mặc định.");
   }
 }
 
 async function deletePaymentMethod(id) {
   try {
     await customerApi(`/users/profile/payment-methods/${encodeURIComponent(id)}`, { method: "DELETE" });
-    showCustomerToast("Đã xóa phương thức thanh toán.", "success");
+    notifySuccess("Đã xóa phương thức thanh toán.");
     renderProfilePage();
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể xóa phương thức thanh toán.", "error");
+    notifyError(error?.message || "Không thể xóa phương thức thanh toán.");
   }
 }
 
@@ -4230,7 +4231,7 @@ async function renderWishlistPage() {
         + escapeHtml(message)
         + '</p><button class="customer-button" type="button" onclick="window.location.reload()">Thử lại</button></div>'
     );
-    showCustomerToast(message, "error");
+    notifyError(message);
     return;
   }
   renderHeader();
@@ -4287,7 +4288,7 @@ async function handleWishlistToggle(productId, button) {
   if (!productId) return;
 
   if (!customerAuth.isAuthenticated()) {
-    showCustomerToast("Vui lòng đăng nhập để lưu sản phẩm yêu thích.", "error");
+    notifyError("Vui lòng đăng nhập để lưu sản phẩm yêu thích.");
     return;
   }
 
@@ -4296,10 +4297,10 @@ async function handleWishlistToggle(productId, button) {
     const url = `/wishlist/${encodeURIComponent(productId)}`;
     if (isActive) {
       await customerApi(url, { method: "DELETE" });
-      showCustomerToast("Đã bỏ khỏi yêu thích", "success");
+      notifySuccess("Đã bỏ khỏi yêu thích");
     } else {
       await customerApi(url, { method: "POST" });
-      showCustomerToast("Đã thêm vào yêu thích", "success");
+      notifySuccess("Đã thêm vào yêu thích");
     }
     await refreshWishlist();
     renderHeader();
@@ -4308,7 +4309,7 @@ async function handleWishlistToggle(productId, button) {
       await renderWishlistPage();
     }
   } catch (error) {
-    showCustomerToast(error?.message || "Đã xảy ra lỗi khi cập nhật yêu thích.", "error");
+    notifyError(error?.message || "Đã xảy ra lỗi khi cập nhật yêu thích.");
   }
 }
 
@@ -4376,20 +4377,20 @@ async function handleProductCardBuyNow(button) {
     const variantCount = Number(detail.variantCount ?? detail.variant_count ?? (Array.isArray(detail.variants) ? detail.variants.length : 0));
 
     if (variantCount > 0) {
-      showCustomerToast("Vui lòng chọn size/màu trước khi mua ngay.", "warning");
+      notifyWarning("Vui lòng chọn size/màu trước khi mua ngay.");
       navigateToRoute(`product-detail/${encodeURIComponent(productId)}`);
       return;
     }
 
     const stock = Number(detail.stock ?? button.dataset.productStock ?? 0);
     if (stock <= 0) {
-      showCustomerToast("Sản phẩm này đã hết hàng.", "warning");
+      notifyWarning("Sản phẩm này đã hết hàng.");
       return;
     }
 
     startBuyNowCheckout(createProductCardBuyNowItem(detail, button));
   } catch (error) {
-    showCustomerToast(error?.message || "Không thể mua ngay sản phẩm này. Vui lòng thử lại.", "error");
+    notifyError(error?.message || "Không thể mua ngay sản phẩm này. Vui lòng thử lại.");
   } finally {
     button.disabled = false;
   }
@@ -4513,7 +4514,7 @@ function startBuyNowCheckout(item) {
     if (!customerAuth.isAuthenticated()) {
       savePendingCheckout(createPendingCheckoutFromBuyNowItem(item));
       layoutState.pendingRoute = "checkout?mode=buy-now";
-      showCustomerToast("Vui lòng đăng nhập để tiếp tục thanh toán. Lựa chọn của bạn đã được lưu.", "success");
+      notifySuccess("Vui lòng đăng nhập để tiếp tục thanh toán. Lựa chọn của bạn đã được lưu.");
       navigateToRoute("login");
       return;
     }
@@ -4522,7 +4523,7 @@ function startBuyNowCheckout(item) {
     sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify(payload));
     navigateToRoute("checkout?mode=buy-now");
   } catch {
-    showCustomerToast("Không thể khởi tạo thanh toán ngay. Vui lòng thử lại.", "error");
+    notifyError("Không thể khởi tạo thanh toán ngay. Vui lòng thử lại.");
   }
 }
 
@@ -4546,14 +4547,14 @@ async function continuePendingCheckoutAfterLogin() {
     const item = await createValidatedBuyNowItemFromPending(pending);
     sessionStorage.setItem(BUY_NOW_CHECKOUT_KEY, JSON.stringify({ mode: "buy_now", items: [item], created_at: Date.now() }));
     clearPendingCheckout();
-    showCustomerToast("Đã khôi phục sản phẩm bạn vừa chọn.", "success");
+    notifySuccess("Đã khôi phục sản phẩm bạn vừa chọn.");
     navigateToRoute("checkout?mode=buy-now");
     return true;
   } catch (error) {
     const sourceRoute = pending.sourceRoute || "#home";
     clearPendingCheckout();
     clearBuyNowCheckout();
-    showCustomerToast(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.", "error");
+    notifyError(error?.message || "Phiên mua hàng trước đó không còn hợp lệ. Vui lòng chọn lại màu sắc và kích thước.");
     navigateToRoute(String(sourceRoute).replace(/^#/, "") || "home");
     return true;
   }
@@ -4647,7 +4648,7 @@ function mapBuyNowItemForCheckout(item = {}) {
 
 async function handleAddToCartPayload(payload) {
   if (!customerAuth.isAuthenticated()) {
-    showCustomerToast("Vui lòng đăng nhập trước khi thêm vào giỏ hàng.", "error");
+    notifyError("Vui lòng đăng nhập trước khi thêm vào giỏ hàng.");
     navigateToRoute('login');
     return;
   }
@@ -4656,9 +4657,9 @@ async function handleAddToCartPayload(payload) {
     await customerCart.addItem(payload);
     await refreshCart();
     renderHeader();
-    showCustomerToast("Đã thêm vào giỏ hàng.", "success");
+    notifySuccess("Đã thêm vào giỏ hàng.");
   } catch (error) {
-    showCustomerToast(getCartErrorMessage(error), "error");
+    notifyError(getCartErrorMessage(error));
   }
 }
 
@@ -4927,4 +4928,5 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
+
 

@@ -1,6 +1,6 @@
 import { showPageLoading, hidePageLoading } from "../components/loading/loading.js";
 import { openModal } from "../components/modal/modal.js";
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { inventoryService } from "../services/inventory.service.js";
 
@@ -33,7 +33,7 @@ export function initInventoryPage(root = document) {
   renderHistory(root);
   renderInventoryTable(root, inventoryRows);
   bindInventoryEvents(root);
-  toast.info("Đã tải module Quản lý tồn kho bằng dữ liệu giả.");
+  notifyInfo("Đã tải module Quản lý tồn kho bằng dữ liệu giả.");
 }
 
 function bindInventoryEvents(root) {
@@ -182,3 +182,4 @@ function getStatusClass(status) {
 function formatQuantity(quantity) {
   return quantity > 0 ? `+${quantity}` : String(quantity);
 }
+

@@ -1,10 +1,10 @@
-﻿import { confirmPresets } from "../../admin/components/confirm/confirm.js";
+import { confirmPresets } from "../../admin/components/confirm/confirm.js";
 import { createFooter } from "../../admin/components/footer/footer.js";
 import { createHeader, updateBreadcrumb } from "../../admin/components/header/header.js";
 import { initNotificationCenter } from "../../admin/components/notification-center/notification-center.js";
 import { createSidebar, setActiveSidebarItem, stopAdminSidebarCounts } from "../../admin/components/sidebar/sidebar.js";
 import { closeThemeManager, initThemeManager, isThemeManagerElement, toggleThemeManager } from "../../admin/components/theme/theme-manager.js";
-import { toast } from "../../admin/components/toast/toast.js";
+import { notifyError, notifyInfo, notifyWarning } from "./notify.js";
 import { globalErrorManager } from "../../admin/errors/index.js";
 import { logoutAdminAccount, startSessionManager } from "../../admin/auth/auth-session.js";
 import { createAdminRouter } from "../../admin/router/router.js";
@@ -22,14 +22,14 @@ let authRedirectInProgress = false;
 
 const sessionManagerCallbacks = {
   onSessionExpired(reason) {
-    toast.warning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn.");
+    notifyWarning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn.");
     window.location.hash = "session-expired";
   },
   onTokenRefreshed() {
     window.dispatchEvent(new CustomEvent("fashion-admin-token-refreshed"));
   },
   onLoggedOutInAnotherTab() {
-    toast.info("Phiên đăng nhập đã được đăng xuất ở tab khác.");
+    notifyInfo("Phiên đăng nhập đã được đăng xuất ở tab khác.");
     window.location.hash = "login";
   }
 };
@@ -106,7 +106,7 @@ function bindLayoutEvents() {
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    toast.error("Bạn không có quyền truy cập.");
+    notifyError("Bạn không có quyền truy cập.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -117,7 +117,7 @@ function handleUnauthorizedApiResponse() {
   authRedirectInProgress = true;
   stopAdminSidebarCounts();
   logoutAdminAccount("api-unauthorized");
-  toast.warning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+  notifyWarning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
   window.location.hash = "#login";
 }
 
@@ -184,7 +184,7 @@ async function handleLogout() {
   if (confirmed) {
     stopAdminSidebarCounts();
     logoutAdminAccount("logout");
-    toast.info("Đã đăng xuất khỏi trang quản trị.");
+    notifyInfo("Đã đăng xuất khỏi trang quản trị.");
     window.location.hash = "login";
   }
 }

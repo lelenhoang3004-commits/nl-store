@@ -1,6 +1,6 @@
 import { confirmDialog } from "../confirm/confirm.js";
 import { openModal } from "../modal/modal.js";
-import { toast } from "../toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 
 const STORAGE_LIMIT_BYTES = 512 * 1024 * 1024;
 const initializedManagers = new WeakSet();
@@ -254,7 +254,7 @@ function addFiles(container, state, files) {
 
   state.files = [...newFiles, ...state.files];
   render(container, state);
-  toast.success(`Đã thêm ${newFiles.length} file vào File Manager.`);
+  notifySuccess(`Đã thêm ${newFiles.length} file vào File Manager.`);
 }
 
 async function deleteFile(container, state, fileId) {
@@ -283,7 +283,7 @@ async function deleteFile(container, state, fileId) {
 
   state.files = state.files.filter((item) => item.id !== fileId);
   render(container, state);
-  toast.warning("Đã xóa file khỏi File Manager mẫu.");
+  notifyWarning("Đã xóa file khỏi File Manager mẫu.");
 }
 
 function openRenameModal(container, state, fileId) {
@@ -312,7 +312,7 @@ function openRenameModal(container, state, fileId) {
       const nextName = input?.value.trim();
 
       if (!nextName) {
-        toast.error("Tên file không được để trống.");
+        notifyError("Tên file không được để trống.");
         return;
       }
 
@@ -344,7 +344,7 @@ function openFolderModal(container, state) {
       const folderName = input?.value.trim();
 
       if (!folderName) {
-        toast.error("Tên folder không được để trống.");
+        notifyError("Tên folder không được để trống.");
         return;
       }
 
@@ -621,3 +621,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

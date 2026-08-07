@@ -1,4 +1,4 @@
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { API_CONFIG } from "../services/api/api.config.js";
 import { dashboardService } from "../services/dashboard.service.js";
@@ -55,7 +55,7 @@ export function initDashboard(root = document) {
       dashboardState = { ...(dashboardState || emptyDashboard()), revenueChart: response.data?.revenueChart || [] };
       renderRevenueChart(root, dashboardState.revenueChart);
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      notifyError(getErrorMessage(error));
     } finally {
       select.disabled = false;
     }

@@ -1,5 +1,5 @@
 import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { newsletterService } from "../services/newsletter.service.js";
 import { refreshAdminSidebarCounts } from "../components/sidebar/sidebar.js";
@@ -54,7 +54,7 @@ async function reload(root) {
   } catch (error) {
     state.subscribers = [];
     state.error = error;
-    toast.error(message(error));
+    notifyError(message(error));
   } finally {
     state.busy = false;
     renderTable(root);
@@ -117,10 +117,10 @@ async function toggleStatus(root, subscriber) {
   try {
     await newsletterService.updateStatus(subscriber.id, nextStatus, silent());
     refreshAdminSidebarCounts();
-    toast.success("Đã cập nhật trạng thái đăng ký email.");
+    notifySuccess("Đã cập nhật trạng thái đăng ký email.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 
@@ -129,10 +129,10 @@ async function deleteSubscriber(root, subscriber) {
   try {
     await newsletterService.remove(subscriber.id, silent());
     refreshAdminSidebarCounts();
-    toast.success("Đã xóa email đăng ký.");
+    notifySuccess("Đã xóa email đăng ký.");
     await reload(root);
   } catch (error) {
-    toast.error(message(error));
+    notifyError(message(error));
   }
 }
 
@@ -155,5 +155,6 @@ async function markNewsletterReviewed() {
     // Sidebar count refresh is best-effort; the subscriber list remains usable if marking reviewed fails.
   }
 }
+
 
 

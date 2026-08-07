@@ -9,7 +9,7 @@ import { handleDownloadResponse, handleResponse } from "./response-handler.js";
 import { retryRequest } from "./retry.service.js";
 import { tokenService } from "./token.service.js";
 import { stateActions } from "../../state/index.js";
-import { toast } from "../../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 import { logoutAdminAccount } from "../../auth/auth-session.js";
 
 // Single gateway for every backend request in the admin frontend.
@@ -179,7 +179,7 @@ export class ApiClient {
     if (error.status === 401) {
       logoutAdminAccount("unauthorized");
       if (window.location.hash !== "#login") {
-        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+        notifyError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
         window.location.hash = "login";
       }
       return;
@@ -187,7 +187,7 @@ export class ApiClient {
 
     if (error.status === 403) {
       if (requestConfig.showErrorToast !== false) {
-        toast.error("Bạn không có quyền thực hiện thao tác này.");
+        notifyError("Bạn không có quyền thực hiện thao tác này.");
       }
       return;
     }
@@ -274,3 +274,4 @@ function getStatusEventName(status, events) {
 
   return "";
 }
+

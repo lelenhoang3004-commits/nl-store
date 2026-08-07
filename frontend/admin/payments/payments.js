@@ -1,4 +1,4 @@
-import { toast } from "../components/toast/toast.js";
+import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
@@ -120,7 +120,7 @@ function bindEvents(root) {
 async function reloadList(root) {
   if (state.busy) return;
   setBusy(root, true);
-  try { await fetchPayments(); } catch (error) { state.error = error; toast.error(getErrorMessage(error)); }
+  try { await fetchPayments(); } catch (error) { state.error = error; notifyError(getErrorMessage(error)); }
   finally { renderRows(root); setBusy(root, false); }
 }
 
@@ -205,7 +205,7 @@ async function openDetailModal(root, id) {
     if (activeModal !== overlay) return;
     overlay.querySelector(".admin-payment-modal-dialog").innerHTML = `<header><h2>Chi ti\u1ebft giao d\u1ecbch</h2><button type="button" data-payment-modal-close aria-label="\u0110\u00f3ng">&times;</button></header><div class="admin-payment-modal-error"><p>${escapeHtml(getErrorMessage(error))}</p><button type="button" data-payment-modal-retry="${numberId(id)}">Th\u1eed l\u1ea1i</button></div>`;
     overlay.querySelector("[data-payment-modal-retry]")?.addEventListener("click", () => openDetailModal(root, id));
-    toast.error(getErrorMessage(error));
+    notifyError(getErrorMessage(error));
   }
 }
 
@@ -242,7 +242,7 @@ async function handleStatusAction(root, id, status, fromModal = false) {
   if (status === "paid") {
     const payment = await getPaymentForAction(id);
     if (!payment || !canConfirmManualPayment(payment)) {
-      toast.error("Giao dịch này không đủ điều kiện xác nhận đã nhận tiền.");
+      notifyError("Giao dịch này không đủ điều kiện xác nhận đã nhận tiền.");
       return;
     }
     const confirmed = await openPaymentConfirmDialog(payment);
@@ -330,10 +330,10 @@ async function updateStatus(root, id, status, fromModal = false, payload = {}) {
   setBusy(root, true); setModalBusy(true);
   try {
     await paymentService.updateStatus(id, status, silentErrors(), payload);
-    toast.success(status === "paid" ? "Đã xác nhận đã nhận tiền." : `Đã cập nhật trạng thái: ${formatPaymentStatus(status)}.`);
+    notifySuccess(status === "paid" ? "Đã xác nhận đã nhận tiền." : `Đã cập nhật trạng thái: ${formatPaymentStatus(status)}.`);
     await fetchPayments(); renderRows(root); refreshAdminSidebarCounts();
     if (fromModal && activeModal) { const response = await paymentService.getById(id, silentErrors()); if (activeModal) renderDetailModal(root, activeModal, response.data?.payment); }
-  } catch (error) { toast.error(getErrorMessage(error)); }
+  } catch (error) { notifyError(getErrorMessage(error)); }
   finally { setBusy(root, false); setModalBusy(false); }
 }
 function closeDetailModal() { modalUxCleanup?.(); modalUxCleanup = null; activeModal?.remove(); activeModal = null; document.body.classList.remove("modal-open"); }
@@ -347,3 +347,4 @@ function numberId(value) { const id = Number(value); return Number.isSafeInteger
 function silentErrors() { return { showErrorToast: false }; }
 function getErrorMessage(error) { if (error?.status === 401) return "Phi\u00ean \u0111\u0103ng nh\u1eadp h\u1ebft h\u1ea1n, vui l\u00f2ng \u0111\u0103ng nh\u1eadp l\u1ea1i."; if (error?.status === 403) return "B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n truy c\u1eadp qu\u1ea3n l\u00fd thanh to\u00e1n."; if (error?.status === 404) return "Kh\u00f4ng t\u00ecm th\u1ea5y giao d\u1ecbch thanh to\u00e1n."; if (error?.status >= 500) return "L\u1ed7i h\u1ec7 th\u1ed1ng, vui l\u00f2ng th\u1eed l\u1ea1i."; return error?.message || "Kh\u00f4ng th\u1ec3 x\u1eed l\u00fd y\u00eau c\u1ea7u thanh to\u00e1n, vui l\u00f2ng th\u1eed l\u1ea1i."; }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
