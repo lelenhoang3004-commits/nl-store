@@ -119,16 +119,34 @@
   text-align: center;
 }
 
+.user-menu-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
 .user-menu-button span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.08);
   font-size: 0.78rem;
   font-weight: var(--customer-font-bold);
+  line-height: 1;
 }
 
 .user-menu-button img {
+  display: block;
   width: 100%;
   height: 100%;
-  border-radius: inherit;
+  border-radius: 50%;
   object-fit: cover;
+  object-position: center;
 }
 
 .mobile-menu-button {
@@ -360,6 +378,11 @@
   .store-logo small,
   .header-icon-button[aria-label="Wishlist"] {
     display: none;
+  }
+
+  .user-menu-button {
+    width: 36px;
+    height: 36px;
   }
 
   .header-login-button {
