@@ -102,23 +102,26 @@ function renderSecondarySummary(root, summary) {
     ["Khách hàng", summary.totalCustomers, "fa-users"],
     ["Sản phẩm", summary.totalProducts, "fa-box"]
   ];
-  target.innerHTML = items.map(([label, value, icon]) => `<article><span class="secondary-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><div><span>${label}</span><strong>${formatNumber(value)}</strong></div></article>`).join("");
+  target.innerHTML = `<div class="dashboard-kpi-group-title"><span>Đơn hàng / khách hàng / sản phẩm</span></div><div class="dashboard-kpi-items">${items.map(([label, value, icon]) => `<article><span class="secondary-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><div><span>${label}</span><strong>${formatNumber(value)}</strong></div></article>`).join("")}</div>`;
 }
 
 function renderSummary(root, summary) {
   const target = root.querySelector("[data-dashboard-stats]");
   if (!target) return;
-  const cards = [
+  const revenueCards = [
     ["Tổng doanh thu", formatCurrency(summary.totalRevenue), "fa-coins"],
     ["Doanh thu hôm nay", formatCurrency(summary.todayRevenue), "fa-calendar-day"],
-    ["Doanh thu tháng này", formatCurrency(summary.monthRevenue), "fa-chart-line"],
+    ["Doanh thu tháng này", formatCurrency(summary.monthRevenue), "fa-chart-line"]
+  ];
+  const orderCards = [
     ["Tổng đơn hàng", formatNumber(summary.totalOrders), "fa-bag-shopping"],
     ["Đơn chờ xác nhận", formatNumber(summary.pendingOrders), "fa-clock"],
     ["Đơn đang giao", formatNumber(summary.shippingOrders), "fa-truck-fast"],
     ["Đơn hoàn thành", formatNumber(summary.completedOrders), "fa-circle-check"],
     ["Đơn đã hủy", formatNumber(summary.cancelledOrders), "fa-circle-xmark"]
   ];
-  target.innerHTML = cards.map(([label, value, icon]) => `<article class="stat-card"><span class="stat-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><div><p class="stat-label">${label}</p><strong class="stat-value">${value}</strong></div></article>`).join("");
+  const renderCard = ([label, value, icon], tone = "") => `<article class="stat-card ${tone}"><span class="stat-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><div><p class="stat-label">${label}</p><strong class="stat-value">${value}</strong></div></article>`;
+  target.innerHTML = `<div class="dashboard-kpi-group is-revenue"><div class="dashboard-kpi-group-title"><span>Doanh thu</span></div><div class="dashboard-kpi-items">${revenueCards.map((card) => renderCard(card, "is-primary")).join("")}</div></div><div class="dashboard-kpi-group is-orders"><div class="dashboard-kpi-group-title"><span>Đơn hàng</span></div><div class="dashboard-kpi-items">${orderCards.map((card) => renderCard(card)).join("")}</div></div>`;
 }
 
 function renderRevenueChart(root, rows) {
