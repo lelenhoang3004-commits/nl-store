@@ -1,4 +1,4 @@
-﻿import { AdminOrderRepository } from "../repositories/admin-order.repository.js";
+import { AdminOrderRepository } from "../repositories/admin-order.repository.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
 import { createPaginationMeta, parsePagination } from "../utils/query-options.util.js";
@@ -6,20 +6,32 @@ import { withTransaction } from "../utils/database.util.js";
 import { NotificationService } from "./notification.service.js";
 
 const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled", "refunded"];
+const ORDER_WORKFLOW = ["pending", "confirmed", "processing", "shipping", "completed"];
+const TERMINAL_STATUSES = new Set(["completed", "cancelled", "refunded"]);
 const TRANSITIONS = Object.freeze({
-  pending: ["confirmed", "cancelled"],
-  confirmed: ["processing", "cancelled"],
-  processing: ["shipping"],
+  pending: ["confirmed", "processing", "shipping", "completed", "cancelled"],
+  confirmed: ["processing", "shipping", "completed", "cancelled"],
+  processing: ["shipping", "completed"],
   shipping: ["completed"],
   completed: [],
   cancelled: [],
   refunded: []
 });
+const ORDER_STATUS_LABELS = Object.freeze({
+  pending: "Chờ xác nhận",
+  confirmed: "Đã xác nhận",
+  processing: "Đang xử lý",
+  shipping: "Đang giao",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
+  refunded: "Đã hoàn tiền"
+});
 
 export class AdminOrderService extends BaseService {
-  constructor(repository = new AdminOrderRepository(), notificationService = new NotificationService()) {
+  constructor(repository = new AdminOrderRepository(), notificationService = new NotificationService(), transactionRunner = withTransaction) {
     super(repository);
     this.notificationService = notificationService;
+    this.withTransaction = transactionRunner;
   }
 
   async listOrders(query = {}) {
@@ -55,31 +67,47 @@ export class AdminOrderService extends BaseService {
     if (!ORDER_STATUSES.includes(status)) {
       throw new AppError("Order status is invalid.", 422, "INVALID_ORDER_STATUS");
     }
-    await withTransaction(async (connection) => {
+    await this.withTransaction(async (connection) => {
       const order = await this.repository.findById(orderId, connection, true);
       if (!order) throw new AppError("Order was not found.", 404, "ADMIN_ORDER_NOT_FOUND");
       const allowedStatuses = TRANSITIONS[order.status] || [];
-      if (!allowedStatuses.includes(status)) {
+      if (status === order.status) return;
+      if (status === "cancelled") {
+        throw new AppError("Use the order cancellation flow to cancel this order.", 409, "ORDER_CANCEL_REQUIRES_CANCEL_FLOW", {
+          currentStatus: order.status
+        });
+      }
+      if (TERMINAL_STATUSES.has(order.status)) {
         throw new AppError("Order status transition is not allowed.", 409, "ORDER_STATUS_TRANSITION_NOT_ALLOWED", {
           currentStatus: order.status,
           nextStatus: status,
           allowedStatuses
         });
       }
-      if (status === "cancelled") {
-        await this.cancelLockedOrder(order, note || "Order cancelled by administrator.", adminUser, connection);
-        return;
+      const transitionSteps = getForwardTransitionSteps(order.status, status);
+      if (!transitionSteps.length || !allowedStatuses.includes(status)) {
+        throw new AppError("Order status transition is not allowed.", 409, "ORDER_STATUS_TRANSITION_NOT_ALLOWED", {
+          currentStatus: order.status,
+          nextStatus: status,
+          allowedStatuses
+        });
       }
-      await this.repository.updateStatus(orderId, status, connection);
-      await this.repository.createOrderHistory({
-        orderId: Number(orderId), status, note: note || `Admin changed order status to ${status}.`, changedBy: adminUser.id
-      }, connection);
+      const targetLabel = orderStatusLabel(status);
+      for (const stepStatus of transitionSteps) {
+        await this.repository.updateStatus(orderId, stepStatus, connection);
+        await this.repository.createOrderHistory({
+          orderId: Number(orderId),
+          status: stepStatus,
+          note: buildStatusHistoryNote({ stepStatus, targetStatus: status, targetLabel, note }),
+          changedBy: adminUser.id
+        }, connection);
+      }
     });
     return this.getOrderDetail(orderId);
   }
 
   async cancelOrder(orderId, reason, adminUser) {
-    await withTransaction(async (connection) => {
+    await this.withTransaction(async (connection) => {
       const order = await this.repository.findById(orderId, connection, true);
       if (!order) throw new AppError("Order was not found.", 404, "ADMIN_ORDER_NOT_FOUND");
       if (!["pending", "confirmed"].includes(order.status)) {
@@ -115,6 +143,24 @@ export class AdminOrderService extends BaseService {
       eventKey: `order-cancelled:${order.id}`
     }, connection);
   }
+}
+
+function getForwardTransitionSteps(currentStatus, targetStatus) {
+  const currentIndex = ORDER_WORKFLOW.indexOf(currentStatus);
+  const targetIndex = ORDER_WORKFLOW.indexOf(targetStatus);
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex <= currentIndex) return [];
+  return ORDER_WORKFLOW.slice(currentIndex + 1, targetIndex + 1);
+}
+
+function buildStatusHistoryNote({ stepStatus, targetStatus, targetLabel, note }) {
+  if (stepStatus !== targetStatus) {
+    return `Tự động hoàn tất bước trung gian khi quản trị viên chọn ${targetLabel}.`;
+  }
+  return note || `Quản trị viên cập nhật trạng thái đơn hàng thành ${orderStatusLabel(stepStatus)}.`;
+}
+
+function orderStatusLabel(status) {
+  return ORDER_STATUS_LABELS[status] || status;
 }
 
 function normalizeListOptions(query) {
