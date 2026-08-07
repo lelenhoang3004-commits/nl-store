@@ -5,9 +5,7 @@ export function createFooter() {
       <span>Hệ thống quản trị cửa hàng thời trang</span>
     </div>
     <div class="footer-meta" aria-label="Thông tin hệ thống">
-      <span>Version 1.0.0</span>
-      <span class="footer-dot"></span>
-      <span>UI Components</span>
+      <span>V1.0.0</span>
     </div>
   `;
 }

@@ -16,7 +16,7 @@ export function createLoginPage() {
       <form class="auth-form" data-validate-form data-auth-form="login">
         <div class="validation-summary" data-validation-summary></div>
         ${createField("Email", "email", "email", "name@example.com", "required|email", `value="${getRememberedEmail()}"`)}
-        ${createField("Password", "password", "password", "••••••••", "required|min:6")}
+        ${createPasswordField()}
         <div class="auth-option-row">
           <label class="auth-checkbox">
             <input type="checkbox" name="remember" ${getRememberedEmail() ? "checked" : ""}>
@@ -34,6 +34,7 @@ export function createLoginPage() {
 }
 
 export function initLoginPage(root = document) {
+  bindPasswordToggle(root);
   bindAuthForm(root, "login", async (button, form) => {
     const formData = new FormData(form);
 
@@ -317,6 +318,39 @@ function createField(label, name, type, placeholder, rules, extra = "") {
       <input type="${type}" name="${name}" placeholder="${placeholder}" data-label="${label}" data-validate="${rules}" ${extra}>
     </label>
   `;
+}
+
+function createPasswordField() {
+  return `
+    <label class="validation-field auth-password-field">
+      <span>Password</span>
+      <span class="auth-password-control">
+        <input type="password" name="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" data-label="Password" data-validate="required|min:6">
+        <button class="auth-password-toggle" type="button" aria-label="\u0048\u0069\u1ec7\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075" title="\u0048\u0069\u1ec7\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075" aria-pressed="false" data-password-toggle>
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+        </button>
+      </span>
+    </label>
+  `;
+}
+
+function bindPasswordToggle(root = document) {
+  root.querySelectorAll("[data-password-toggle]").forEach((button) => {
+    if (button.dataset.passwordToggleBound === "true") return;
+    button.dataset.passwordToggleBound = "true";
+    button.addEventListener("click", () => {
+      const input = button.closest(".auth-password-control")?.querySelector("input");
+      if (!input) return;
+      const shouldShow = input.type === "password";
+      input.type = shouldShow ? "text" : "password";
+      button.setAttribute("aria-label", shouldShow ? "\u1ea8\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075" : "\u0048\u0069\u1ec7\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075");
+      button.setAttribute("title", shouldShow ? "\u1ea8\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075" : "\u0048\u0069\u1ec7\u006e \u006d\u1ead\u0074 \u006b\u0068\u1ea9\u0075");
+      button.setAttribute("aria-pressed", String(shouldShow));
+      button.querySelector("i")?.classList.toggle("fa-eye", !shouldShow);
+      button.querySelector("i")?.classList.toggle("fa-eye-slash", shouldShow);
+      input.focus({ preventScroll: true });
+    });
+  });
 }
 
 function bindAuthForm(root, formName, onSubmit) {

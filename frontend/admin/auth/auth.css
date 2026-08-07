@@ -84,6 +84,43 @@
   outline: 0;
 }
 
+.auth-password-control {
+  position: relative;
+  display: block;
+}
+
+.auth-password-control input {
+  padding-right: 46px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--color-muted);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.auth-password-toggle:hover,
+.auth-password-toggle:focus-visible {
+  color: var(--color-text);
+  background: var(--color-hover);
+  outline: 0;
+}
+
+.auth-password-toggle[aria-pressed="true"] {
+  color: var(--color-primary);
+}
+
 .auth-option-row {
   display: flex;
   align-items: center;
