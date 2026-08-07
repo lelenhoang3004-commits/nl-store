@@ -9,17 +9,19 @@ const navigationItems = [
   { label: "Trang chủ", href: "#home" },
   { label: "Hàng mới", href: "#new-arrival" },
   { label: "Bán chạy", href: "#best-seller" },
-  { label: "Thương hiệu", href: "#brands" }
+  { label: "Thương hiệu", href: "#brand" }
 ];
 
 const promoHighlights = [
   { label: "Khuyến mãi", text: "Giảm đến 30% cho bộ sưu tập mới.", href: "#promotion" },
-  { label: "Bộ sưu tập", text: "Lớp phối tối giản cho phong cách hiện đại.", href: "#collections" },
-  { label: "Thương hiệu", text: "Cùng các đối tác thời trang hàng đầu.", href: "#brands" }
+  { label: "Bộ sưu tập", text: "Lớp phối tối giản cho phong cách hiện đại.", href: "#collection" },
+  { label: "Thương hiệu", text: "Cùng các đối tác thời trang hàng đầu.", href: "#brand" }
 ];
 
 let activeNavigationRoot = null;
 let navigationGlobalListenersBound = false;
+let sectionObserver = null;
+const navigationSectionIds = ["promotion", "collection", "brand"];
 
 let categoryCache = {
   items: [],
@@ -61,9 +63,8 @@ export function initCustomerNavigation(root = document) {
   const megaMenu = root.querySelector("[data-mega-menu]");
   activeNavigationRoot = root;
   const currentHref = (window.location.hash || "#home").toLowerCase();
-  nav?.querySelectorAll("a").forEach((link) => {
-    link.classList.toggle("is-active", link.getAttribute("href")?.toLowerCase() === currentHref);
-  });
+  updateNavigationActiveLink(nav, currentHref);
+  initSectionNavigationObserver(root);
 
   loadMegaMenuCategories(root, { staleOk: true });
 
@@ -82,14 +83,58 @@ export function initCustomerNavigation(root = document) {
 
   nav?.addEventListener("click", (event) => {
     const link = event.target.closest("a");
-    if (link) {
-      megaMenu?.classList.remove("is-open");
-      megaToggle?.setAttribute("aria-expanded", "false");
-      nav.querySelectorAll("a").forEach((item) => item.classList.toggle("is-active", item === link));
+    if (!link) return;
+
+    megaMenu?.classList.remove("is-open");
+    megaToggle?.setAttribute("aria-expanded", "false");
+
+    const href = link.getAttribute("href") || "";
+    const targetId = href.startsWith("#") ? href.slice(1).split("?")[0] : "";
+    if (navigationSectionIds.includes(targetId)) {
+      const target = document.getElementById(targetId);
+      if (target) {
+        event.preventDefault();
+        updateNavigationActiveLink(nav, `#${targetId}`);
+        window.history?.pushState?.(null, "", `#${targetId}`);
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      updateNavigationActiveLink(nav, href);
     }
   });
 
   bindNavigationGlobalListeners();
+}
+
+function updateNavigationActiveLink(nav, activeHref) {
+  if (!nav) return;
+  const normalizedHref = String(activeHref || "#home").toLowerCase();
+  nav.querySelectorAll("a").forEach((link) => {
+    link.classList.toggle("is-active", link.getAttribute("href")?.toLowerCase() === normalizedHref);
+  });
+}
+
+function initSectionNavigationObserver(root = document) {
+  const nav = root.querySelector("[data-customer-nav]");
+  const sections = navigationSectionIds.map((id) => document.getElementById(id)).filter(Boolean);
+  if (!nav || !sections.length || !("IntersectionObserver" in window)) return;
+
+  sectionObserver?.disconnect();
+  sectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+
+    if (visible?.target?.id) {
+      updateNavigationActiveLink(nav, `#${visible.target.id}`);
+    }
+  }, {
+    root: null,
+    rootMargin: "-30% 0px -55% 0px",
+    threshold: [0.15, 0.35, 0.6]
+  });
+
+  sections.forEach((section) => sectionObserver.observe(section));
 }
 
 function closeActiveMegaMenu() {
@@ -117,6 +162,10 @@ function bindNavigationGlobalListeners() {
     if (event.key === "Escape") {
       closeActiveMegaMenu();
     }
+  });
+
+  window.addEventListener("customer:home-sections-ready", () => {
+    initSectionNavigationObserver(activeNavigationRoot || document);
   });
 }
 

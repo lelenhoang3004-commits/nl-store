@@ -128,7 +128,7 @@ const PROFILE_BANKS = ["Vietcombank", "BIDV", "VietinBank", "Techcombank", "MB B
 const CREDIT_CARD_PAYMENT_MODE = Object.freeze({ DEMO: "CREDIT_CARD_DEMO", HOSTED: "CREDIT_CARD_HOSTED" });
 
 const protectedRoutes = new Set(["checkout", "orders", "profile", "cart", "wishlist"]);
-const homeSectionRoutes = new Set(["flash-sale", "featured-product", "new-arrival", "best-seller", "categories", "jewelry", "brands", "reviews", "newsletter", "promotion", "collections", "story", "products"]);
+const homeSectionRoutes = new Set(["flash-sale", "featured-product", "new-arrival", "best-seller", "categories", "jewelry", "brands", "brand", "reviews", "newsletter", "promotion", "collections", "collection", "story", "products"]);
 const FALLBACK_PRODUCT_IMAGE = "https://placehold.co/160x200/f1f5f9/334155?text=Fashion";
 const PRODUCT_MENU_FILTERS = Object.freeze({
   "ao-khoac": { label: "Áo khoác", keywords: ["áo khoác", "ao khoac", "jacket", "hoodie"] },
@@ -165,21 +165,23 @@ function getCustomerHeaderOffset() {
 }
 
 function scrollToCustomerSection(sectionId, smooth = true) {
-  const target = document.getElementById(sectionId);
+  const target = document.getElementById(resolveCustomerSectionId(sectionId));
 
   if (!target) {
     console.warn(`[customer-layout] Section not found: ${sectionId}`);
     return false;
   }
 
-  const targetTop = window.scrollY + target.getBoundingClientRect().top - getCustomerHeaderOffset();
-  window.scrollTo({
-    top: Math.max(0, targetTop),
-    left: 0,
-    behavior: smooth ? 'smooth' : 'auto'
+  target.scrollIntoView({
+    behavior: smooth ? 'smooth' : 'auto',
+    block: 'start'
   });
 
   return true;
+}
+
+function resolveCustomerSectionId(sectionId = '') {
+  return ({ collections: 'collection', categories: 'collection', brands: 'brand', 'flash-sale': 'promotion' })[sectionId] || sectionId;
 }
 
 function scheduleCustomerSectionScroll(sectionId, smooth = true) {

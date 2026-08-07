@@ -300,6 +300,7 @@ function renderHomeContent(target, products, categories) {
   initCustomerReviewsSection(target);
   initCategoryShowcaseToggle(target);
   bindHomeSectionResizeHandler();
+  window.dispatchEvent(new CustomEvent("customer:home-sections-ready"));
 }
 
 function initCategoryShowcaseToggle(root = document) {
@@ -365,7 +366,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
   return `
     ${createHeroComponent()}
 
-    <section id="flash-sale" class="premium-section" data-reveal>
+    <section id="promotion" class="premium-section" data-reveal>
       ${createFlashSaleSection({
     title: contentShape.flashSale.eyebrow,
     subtitle: contentShape.flashSale.subtitle,
@@ -419,7 +420,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
   })}
     </section>
 
-    <section id="categories" class="premium-section" data-reveal>
+    <section id="collection" class="premium-section" data-reveal>
       ${createCategoryShowcaseSection({
     title: "Danh m\u1ee5c",
     description: "Duy\u1ec7t theo phong c\u00e1ch, ch\u1ee9c n\u0103ng v\u00e0 m\u00f9a m\u1ed9t c\u00e1ch thu\u1eadn ti\u1ec7n.",
@@ -447,7 +448,7 @@ function createPremiumHomepageMarkup(products = productCatalog, categories = [])
       })}
     </section>
 
-    <section id="brands" class="premium-section" data-reveal>
+    <section id="brand" class="premium-section" data-reveal>
       ${createBrandShowcaseSection({
     title: "Thương hiệu",
     description: "Những nhãn hàng uy tín và dấu ấn riêng tạo nên phong cách.",

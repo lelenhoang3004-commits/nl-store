@@ -65,7 +65,7 @@ export function createHeroComponent(options = {}) {
                 <p>${slide.description}</p>
                 <div class="hero-actions">
                   <a class="ds-button" href="#featured-product">${slide.ctaPrimary}</a>
-                  <a class="ds-button secondary" href="#collections">${slide.ctaSecondary}</a>
+                  <a class="ds-button secondary" href="#collection">${slide.ctaSecondary}</a>
                 </div>
                 <div class="hero-promo">
                   <i class="fa-solid fa-bolt" aria-hidden="true"></i>

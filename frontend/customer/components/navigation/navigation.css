@@ -30,6 +30,11 @@
   transform: translateY(-1px);
 }
 
+.customer-nav a.is-active {
+  color: var(--color-primary);
+  background: var(--color-hover);
+}
+
 .nav-mega-wrapper {
   position: relative;
 }
