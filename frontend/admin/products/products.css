@@ -159,9 +159,7 @@
 .admin-product-variant-inline-fields { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
 .admin-product-variant-inline-fields label { display: grid; gap: 6px; min-width: 180px; }
 .admin-product-variant-inline-fields button,.admin-product-variant-create { padding: 9px 12px; border: 0; border-radius: 10px; background: var(--color-primary); color: #fff; cursor: pointer; }
-.admin-product-variant-bulk-stock { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 16px; background: color-mix(in srgb, var(--color-background) 88%, var(--color-card)); }
 .admin-product-variant-bulk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.admin-product-variant-bulk-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .admin-product-variant-stock-table { display: grid; gap: 6px; border: 1px solid var(--color-border); border-radius: 12px; padding: 10px; background: var(--color-card); }
 .stock-row { display: grid; grid-template-columns: minmax(160px, 1fr) repeat(4, minmax(100px, 1fr)); gap: 8px; align-items: center; }
 .stock-row.stock-header { font-weight: 700; background: color-mix(in srgb, var(--color-card) 90%, var(--color-background)); border-radius: 10px; padding: 8px 10px; }
@@ -169,20 +167,8 @@
 .stock-color { padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--color-border) 10%, var(--color-card)); }
 .stock-input { width: 100%; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-background); }
 .admin-product-variant-stock-empty { padding: 14px; border: 1px dashed var(--color-border); border-radius: 12px; color: var(--color-muted); text-align: center; }
-.admin-product-variant-bulk-actions button { min-width: 170px; }
-.admin-product-variant-bulk-actions .admin-product-variant-hint { color: var(--color-muted); font-size: .85rem; }
 .admin-product-form-note { color: var(--color-muted); font-size: .82rem; }
-.admin-product-variant-bulk-stock label span { display: block; margin-bottom: 4px; font-size: .88rem; color: var(--color-text);} 
-.admin-product-variant-bulk-stock label { display: block; }
-.admin-product-variant-bulk-stock input,
-.admin-product-variant-bulk-stock select { width: 100%; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-card) 95%, var(--color-background)); }
-.admin-product-variant-bulk-stock select { appearance: none; }
-.admin-product-variant-bulk-stock .bulk-stock-color,
-.admin-product-variant-bulk-stock .bulk-stock-size { display: block; }
-.admin-product-variant-bulk-stock .bulk-stock-value { display: block; }
-.admin-product-variant-bulk-stock .admin-product-form-error { margin-top: 6px; color: var(--color-danger); }
 .admin-product-form-note { margin: 0; }
-.admin-product-variant-bulk-stock { grid-template-columns: 1fr; }
 .admin-product-variant-grid { display: grid; gap: 8px; }
 .admin-product-variant-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.7fr 1fr 1fr 0.6fr 0.6fr 0.8fr auto; gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-card); }
 .admin-product-variant-row > span { font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

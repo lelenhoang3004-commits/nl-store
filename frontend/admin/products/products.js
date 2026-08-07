@@ -452,7 +452,7 @@ function openVariantModal(root, product) {
             <article><h3>Áp dụng cho tất cả</h3><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-all-stock placeholder="VD: 10"></label><button type="button" data-bulk-apply="all">Áp dụng</button></article>
             <article><h3>Áp dụng theo màu</h3><label><span>Màu</span><select data-bulk-color><option value="">Chọn màu</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-color-stock placeholder="VD: 5"></label><button type="button" data-bulk-apply="color">Áp dụng</button></article>
             <article><h3>Áp dụng theo size</h3><label><span>Size</span><select data-bulk-size><option value="">Chọn size</option></select></label><label><span>Tồn kho mới</span><input type="number" min="0" step="1" data-bulk-size-stock placeholder="VD: 2"></label><button type="button" data-bulk-apply="size">Áp dụng</button></article>
-          </div>
+          </div>
         </section>
         <section class="variant-tab-panel" data-variant-panel="price">
           <div class="variant-panel-toolbar">
@@ -492,7 +492,7 @@ function openVariantModal(root, product) {
   const listTarget = modal.querySelector("[data-variant-list]");
   const form = modal.querySelector("[data-variant-form]");
   const errorTarget = modal.querySelector("[data-variant-error]");
-  const bulkStatus = modal.querySelector("[data-bulk-status]");
+  const bulkStatus = modal.querySelector("[data-bulk-status]");
   const bulkPriceForm = modal.querySelector("[data-bulk-price-form]");
   const bulkPriceSummary = modal.querySelector("[data-bulk-price-summary]");
   const bulkPriceError = modal.querySelector("[data-bulk-price-error]");
@@ -700,7 +700,7 @@ function openVariantModal(root, product) {
     const colors = uniqueValues(variants.map((variant) => variant.color));
     const sizes = uniqueValues(variants.map((variant) => variant.size));
     fillSelect(modal.querySelector("[data-bulk-color]"), colors, "Chọn màu");
-    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
+    fillSelect(modal.querySelector("[data-bulk-size]"), sizes, "Chọn size");
   }
 
   async function applyBulkStock(mode, trigger = null) {
@@ -874,7 +874,7 @@ function openVariantModal(root, product) {
   modal.querySelector("[data-variant-add]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("form"); });
   deleteAllButton?.addEventListener("click", openDeleteAllVariantsModal);
   modal.querySelector("[data-variant-cancel]")?.addEventListener("click", () => { populateForm(null); form.reset(); form.elements.status.value = "active"; setActiveTab("list"); });
-  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply, button)));
+  modal.querySelectorAll("[data-bulk-apply]").forEach((button) => button.addEventListener("click", () => applyBulkStock(button.dataset.bulkApply, button)));
 
   renderVariants();
 }
@@ -1188,22 +1188,6 @@ function bindProductVariantSection(modal, product, root = null) {
           <p class="admin-product-form-error" data-bulk-create-error></p>
           <button type="button" class="admin-product-variant-create" data-product-variant-create>Tạo biến thể đã chọn</button>
         </div>
-        <div class="admin-product-variant-step">
-          <div class="admin-product-variant-step-title">4. Cập nhật tồn kho hàng loạt</div>
-          <div class="admin-product-variant-bulk-stock">
-            <div class="admin-product-variant-bulk-grid">
-              <label><span>Phạm vi</span><select data-bulk-stock-scope><option value="all">Tất cả biến thể</option><option value="color">Theo màu</option><option value="size">Theo kích thước</option></select></label>
-              <label class="bulk-stock-color" hidden><span>Màu</span><select data-bulk-stock-color><option value="">Chọn màu</option></select></label>
-              <label class="bulk-stock-size" hidden><span>Size</span><select data-bulk-stock-size><option value="">Chọn size</option></select></label>
-              <label class="bulk-stock-value"><span>Tồn kho mới</span><input type="number" name="bulkStockValue" min="0" step="1" value="0" /></label>
-            </div>
-            <div class="admin-product-variant-bulk-actions">
-              <button type="button" class="admin-product-variant-create" data-bulk-stock-apply>Cập nhật tồn kho</button>
-              <span class="admin-product-variant-hint">Chọn phạm vi rồi bấm cập nhật tồn kho cho các biến thể phù hợp.</span>
-            </div>
-            <p class="admin-product-form-error" data-bulk-error></p>
-          </div>
-        </div>
       </div>
       <div class="admin-product-variant-editor" data-product-variant-editor hidden></div>
       <div class="admin-product-variant-table" data-product-variant-table></div>
@@ -1221,15 +1205,7 @@ function bindProductVariantSection(modal, product, root = null) {
     const customColorForm = section.querySelector("[data-custom-color-form]");
     const customSizeForm = section.querySelector("[data-custom-size-form]");
     const createButton = section.querySelector("[data-product-variant-create]");
-    const bulkStockApply = section.querySelector("[data-bulk-stock-apply]");
-    const bulkScopeSelect = section.querySelector("[data-bulk-stock-scope]");
-    const bulkColorField = section.querySelector(".bulk-stock-color");
-    const bulkSizeField = section.querySelector(".bulk-stock-size");
-    const bulkColorSelect = section.querySelector("[data-bulk-stock-color]");
-    const bulkSizeSelect = section.querySelector("[data-bulk-stock-size]");
-    const bulkStockValue = section.querySelector("[name='bulkStockValue']");
     const bulkCreateErrorTarget = section.querySelector("[data-bulk-create-error]");
-    const bulkErrorTarget = section.querySelector("[data-bulk-error]");
     const categorySelect = modal.querySelector('[name="category_id"]');
 
     const applySizePreset = (presetKey, { selectAll = false } = {}) => {
@@ -1313,10 +1289,6 @@ function bindProductVariantSection(modal, product, root = null) {
       if (preset && (!selectedSizes.length || arraysEqual(selectedSizes, SIZE_PRESETS[activeSizePresetKey]?.sizes || []))) {
         applySizePreset(preset.key, { selectAll: true });
       }
-    });
-
-    bulkScopeSelect?.addEventListener("change", () => {
-      updateBulkFields();
     });
 
     createButton?.addEventListener("click", async () => {
@@ -1406,56 +1378,6 @@ function bindProductVariantSection(modal, product, root = null) {
         createButton.disabled = false;
         createButton.textContent = originalText;
       }
-    });
-
-    bulkStockApply?.addEventListener("click", async () => {
-      bulkErrorTarget.textContent = "";
-      const scope = bulkScopeSelect?.value || "all";
-      const stockValue = bulkStockValue ? Number(bulkStockValue.value) : null;
-      const selectedColor = bulkColorSelect?.value || "";
-      const selectedSize = bulkSizeSelect?.value || "";
-      const allVariants = product?.existingVariants || [];
-      const updates = [];
-
-      if (stockValue === null || !Number.isInteger(stockValue) || stockValue < 0) {
-        bulkErrorTarget.textContent = "Tồn kho phải là số nguyên không âm.";
-        return;
-      }
-
-      if (!allVariants.length) {
-        bulkErrorTarget.textContent = "Không có biến thể nào để cập nhật.";
-        return;
-      }
-
-      let targetVariants = [];
-      if (scope === "all") {
-        targetVariants = allVariants;
-      } else if (scope === "color") {
-        if (!selectedColor) { bulkErrorTarget.textContent = "Vui lòng chọn màu."; return; }
-        targetVariants = allVariants.filter((variant) => normalizeVariantKey(variant.color) === normalizeVariantKey(selectedColor));
-      } else if (scope === "size") {
-        if (!selectedSize) { bulkErrorTarget.textContent = "Vui lòng chọn size."; return; }
-        targetVariants = allVariants.filter((variant) => normalizeVariantKey(variant.size) === normalizeVariantKey(selectedSize));
-      }
-
-      if (!targetVariants.length) {
-        bulkErrorTarget.textContent = "Không có biến thể nào phù hợp để cập nhật.";
-        return;
-      }
-
-      updates.push(...targetVariants.map((variant) => ({ variantId: variant.id, stock: stockValue })));
-
-      const results = await Promise.allSettled(updates.map((item) => productService.updateVariantStock(product.id, item.variantId, { stock: item.stock }, silent())));
-      const successCount = results.filter((result) => result.status === "fulfilled").length;
-      const failedCount = results.length - successCount;
-      if (successCount) {
-        notifySuccess(`Đã cập nhật tồn kho cho ${successCount} biến thể.`);
-      }
-      if (failedCount) {
-        bulkErrorTarget.textContent = `Không cập nhật được ${failedCount} biến thể.`;
-      }
-      await renderVariants({ force: true });
-      if (root) renderRows(root);
     });
 
     renderSelectionLists();
