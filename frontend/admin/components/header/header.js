@@ -1,16 +1,16 @@
-﻿import { createNotificationCenterTemplate } from "../notification-center/notification-center.js";
+import { createNotificationCenterTemplate } from "../notification-center/notification-center.js";
 import { getCurrentUser, isAuthenticated } from "../../permissions/user-session.js";
 
 export function createHeader(activeLabel = "Dashboard") {
   if (!isAuthenticated()) return createGuestHeader(activeLabel);
 
   const user = getCurrentUser();
-  const displayName = user.name && user.name !== "Guest" ? user.name : "Quáº£n trá»‹ viÃªn";
-  const displayEmail = user.email || "ChÆ°a Ä‘Äƒng nháº­p";
+  const displayName = user.name && user.name !== "Guest" ? user.name : "Qu?n tr? vi?n";
+  const displayEmail = user.email || "Chưa đăng nhập";
   const initials = createInitials(displayName);
   return `
     <div class="header-left">
-      <button class="icon-button menu-button" type="button" aria-label="Má»Ÿ menu" data-sidebar-toggle>
+      <button class="icon-button menu-button" type="button" aria-label="M? menu" data-sidebar-toggle>
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
       </button>
       <a class="header-logo" href="#dashboard" data-page="dashboard" aria-label="N&amp;L Store Admin">
@@ -30,9 +30,9 @@ export function createHeader(activeLabel = "Dashboard") {
       <span data-breadcrumb-current>${activeLabel}</span>
     </nav>
 
-    <label class="header-search" aria-label="TÃ¬m kiáº¿m">
+    <label class="header-search" aria-label="T?m ki?m">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input type="search" placeholder="TÃ¬m kiáº¿m sáº£n pháº©m, Ä‘Æ¡n hÃ ng, khÃ¡ch hÃ ng">
+      <input type="search" placeholder="Tìm kiếm sản phẩm, đơn hàng, khách hàng">
     </label>
 
     <div class="header-actions">
@@ -40,16 +40,16 @@ export function createHeader(activeLabel = "Dashboard") {
         ${createNotificationCenterTemplate()}
       </div>
 
-      <button class="icon-button" type="button" aria-label="ToÃ n mÃ n hÃ¬nh" data-fullscreen-toggle>
+      <button class="icon-button" type="button" aria-label="To?n m?n h?nh" data-fullscreen-toggle>
         <i class="fa-solid fa-expand" aria-hidden="true"></i>
       </button>
 
-      <button class="icon-button" type="button" aria-label="Chuyá»ƒn dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuy?n dark mode" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
 
       <div class="header-popover">
-        <button class="admin-profile" type="button" aria-label="TÃ i khoáº£n quáº£n trá»‹" data-dropdown-toggle="profile">
+        <button class="admin-profile" type="button" aria-label="T?i kho?n qu?n tr?" data-dropdown-toggle="profile">
           <span class="profile-avatar">${escapeHtml(initials)}</span>
           <span class="profile-copy">
             <strong>${escapeHtml(displayName)}</strong>
@@ -67,15 +67,15 @@ export function createHeader(activeLabel = "Dashboard") {
           </div>
           <a href="#settings" data-page="settings">
             <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
-            Há»“ sÆ¡ quáº£n trá»‹
+            H? s? qu?n tr?
           </a>
           <a href="#settings" data-page="settings">
             <i class="fa-solid fa-gear" aria-hidden="true"></i>
-            CÃ i Ä‘áº·t
+            Cài đặt
           </a>
           <button type="button" data-logout-trigger>
             <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-            ÄÄƒng xuáº¥t
+            Đăng xuất
           </button>
         </div>
       </div>
@@ -86,7 +86,7 @@ export function createHeader(activeLabel = "Dashboard") {
 function createGuestHeader(activeLabel = "Login") {
   return `
     <div class="header-left">
-      <button class="icon-button menu-button" type="button" aria-label="M&#7903; menu" data-sidebar-toggle>
+      <button class="icon-button menu-button" type="button" aria-label="M? menu" data-sidebar-toggle>
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
       </button>
       <a class="header-logo" href="#login" data-page="login" aria-label="N&amp;L Store Admin">
@@ -107,7 +107,7 @@ function createGuestHeader(activeLabel = "Login") {
     </nav>
 
     <div class="header-actions admin-guest-actions">
-      <button class="icon-button" type="button" aria-label="Chuy&#7875;n dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuy?n dark mode" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
     </div>

@@ -1,4 +1,4 @@
-﻿import { filterMenuByPermission } from "../../permissions/access-control.js";
+import { filterMenuByPermission } from "../../permissions/access-control.js";
 import { PERMISSIONS } from "../../permissions/permissions.js";
 import { getCurrentUser, isAuthenticated } from "../../permissions/user-session.js";
 import { sidebarCountsService } from "../../services/sidebar-counts.service.js";
@@ -68,7 +68,7 @@ export function createSidebar(activePage = "dashboard") {
         <strong>N&amp;L Store</strong>
         <span>${currentUser.role}</span>
       </div>
-      <button class="sidebar-collapse-button" type="button" aria-label="Thu g\u1ecdn sidebar" data-sidebar-collapse>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu g?n sidebar" data-sidebar-collapse>
         <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
       </button>
     </div>
@@ -99,7 +99,7 @@ function createGuestSidebar() {
 
     <div class="sidebar-guest-note">
       <span>Secure Management Portal</span>
-      <small>&#272;&#259;ng nh&#7853;p &#273;&#7875; truy c&#7853;p h&#7879; th&#7889;ng qu&#7843;n tr&#7883;.</small>
+      <small>Đăng nhập để truy cập hệ thống quản trị.</small>
     </div>
   `;
 }

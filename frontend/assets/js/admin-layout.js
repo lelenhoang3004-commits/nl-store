@@ -1,4 +1,4 @@
-﻿import { confirmPresets } from "../../admin/components/confirm/confirm.js";
+import { confirmPresets } from "../../admin/components/confirm/confirm.js";
 import { createFooter } from "../../admin/components/footer/footer.js";
 import { createHeader, updateBreadcrumb } from "../../admin/components/header/header.js";
 import { initNotificationCenter } from "../../admin/components/notification-center/notification-center.js";
@@ -22,14 +22,14 @@ let authRedirectInProgress = false;
 
 const sessionManagerCallbacks = {
   onSessionExpired(reason) {
-    notifyWarning(reason === "idle-timeout" ? "Báº¡n Ä‘Ã£ khÃ´ng thao tÃ¡c trong má»™t thá»i gian." : "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n.");
+    notifyWarning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn." );
     window.location.hash = "session-expired";
   },
   onTokenRefreshed() {
     window.dispatchEvent(new CustomEvent("fashion-admin-token-refreshed"));
   },
   onLoggedOutInAnotherTab() {
-    notifyInfo("PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng xuáº¥t á»Ÿ tab khÃ¡c.");
+    notifyInfo("Đã đăng xuất khỏi trang quản trị." );
     window.location.hash = "login";
   }
 };
@@ -111,7 +111,7 @@ function bindLayoutEvents() {
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    notifyError("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
+    notifyError("B?n kh?ng c? quy?n truy c?p.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -122,7 +122,7 @@ function handleUnauthorizedApiResponse() {
   authRedirectInProgress = true;
   stopAdminSidebarCounts();
   logoutAdminAccount("api-unauthorized");
-  notifyWarning("PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.");
+  notifyWarning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại." );
   window.location.hash = "#login";
 }
 
@@ -189,7 +189,7 @@ async function handleLogout() {
   if (confirmed) {
     stopAdminSidebarCounts();
     logoutAdminAccount("logout");
-    notifyInfo("ÄÃ£ Ä‘Äƒng xuáº¥t khá»i trang quáº£n trá»‹.");
+    notifyInfo("Đã đăng xuất khỏi trang quản trị." );
     window.location.hash = "login";
   }
 }
@@ -210,7 +210,7 @@ function toggleSidebarCollapse() {
 function updateSidebarCollapseButton(isCollapsed) {
   const button = document.querySelector("[data-sidebar-collapse]");
   if (!button) return;
-  const label = isCollapsed ? "Má»Ÿ rá»™ng sidebar" : "Thu gá»n sidebar";
+  const label = isCollapsed ? "M? r?ng sidebar" : "Thu g?n sidebar";
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.setAttribute("aria-expanded", String(!isCollapsed));

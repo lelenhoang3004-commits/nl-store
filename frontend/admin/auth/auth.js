@@ -1,4 +1,4 @@
-﻿import { setButtonLoading } from "../components/loading/loading.js";
+import { setButtonLoading } from "../components/loading/loading.js";
 import { openModal } from "../components/modal/modal.js";
 import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { bindValidation, validateForm } from "../components/validation/validation.js";
@@ -11,8 +11,8 @@ const authCopy = {
 export function createLoginPage() {
   return createAuthPage({
     variant: "login",
-    title: "&#272;&#259;ng nh&#7853;p",
-    description: "Truy c&#7853;p b&#7843;ng &#273;i&#7873;u khi&#7875;n qu&#7843;n tr&#7883; c&#7917;a h&#224;ng th&#7901;i trang.",
+    title: "Đăng nhập",
+    description: "Truy cập bảng điều khiển quản trị cửa hàng thời trang.",
     body: `
       <form class="auth-form" data-validate-form data-auth-form="login">
         <div class="validation-summary" data-validation-summary></div>
@@ -21,13 +21,13 @@ export function createLoginPage() {
         <div class="auth-option-row">
           <label class="auth-checkbox">
             <input type="checkbox" name="remember" ${getRememberedEmail() ? "checked" : ""}>
-            <span>Ghi nh&#7899; &#273;&#259;ng nh&#7853;p</span>
+            <span>Ghi nhớ đăng nhập</span>
           </label>
-          <a class="auth-link" href="#forgot-password" data-page="forgot-password">Qu&#234;n m&#7853;t kh&#7849;u?</a>
+          <a class="auth-link" href="#forgot-password" data-page="forgot-password">Quên mật khẩu?</a>
         </div>
         <button class="auth-primary-button" type="submit">
           <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
-          <span>&#272;&#259;ng nh&#7853;p</span>
+          <span>Đăng nhập</span>
         </button>
       </form>
     `
@@ -39,7 +39,7 @@ export function initLoginPage(root = document) {
   bindAuthForm(root, "login", async (button, form) => {
     const formData = new FormData(form);
 
-    setButtonLoading(button, true, "Äang Ä‘Äƒng nháº­p");
+    setButtonLoading(button, true, "Đang đăng nhập");
     const result = await loginAdminAccount({
       email: formData.get("email"),
       password: formData.get("password"),
@@ -53,7 +53,7 @@ export function initLoginPage(root = document) {
       return;
     }
 
-    notifySuccess("ÄÄƒng nháº­p quáº£n trá»‹ thÃ nh cÃ´ng.");
+    notifySuccess("Đăng nhập quản trị thành công.");
     window.location.hash = "#dashboard";
   });
 }
@@ -62,7 +62,7 @@ function showLoginError(form, message) {
   const summary = form.querySelector("[data-validation-summary]");
   if (!summary) return;
   summary.hidden = false;
-  summary.textContent = message || "ÄÄƒng nháº­p tháº¥t báº¡i.";
+  summary.textContent = message || "Đăng nhập thất bại.";
   summary.classList.add("is-visible");
 }
 
@@ -76,9 +76,9 @@ export function createForgotPasswordPage() {
         ${createField("Email", "email", "email", "name@example.com", "required|email")}
         <button class="auth-primary-button" type="submit">
           <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
-          <span>Send</span>
+          <span>Gửi</span>
         </button>
-        <a class="auth-link" href="#login" data-page="login">Quay láº¡i Ä‘Äƒng nháº­p</a>
+        <a class="auth-link" href="#login" data-page="login">Quay lại đăng nhập</a>
       </form>
     `
   });
@@ -86,33 +86,30 @@ export function createForgotPasswordPage() {
 
 export function initForgotPasswordPage(root = document) {
   bindAuthForm(root, "forgot", async (button, form) => {
-    setButtonLoading(button, true, "Äang gá»­i");
+    setButtonLoading(button, true, "Đang gửi");
     await wait(520);
     setButtonLoading(button, false);
     form.outerHTML = createSuccessScreen({
-      title: "ÄÃ£ gá»­i email",
-      description: "Kiá»ƒm tra há»™p thÆ° cá»§a báº¡n Ä‘á»ƒ láº¥y OTP Ä‘áº·t láº¡i máº­t kháº©u. ÄÃ¢y lÃ  mÃ n hÃ¬nh mÃ´ phá»ng, chÆ°a gá»­i email tháº­t.",
+      title: "Đã gửi email",
+      description: "Kiểm tra hộp thư của bạn để lấy OTP đặt lại mật khẩu. Đây là màn hình mô phỏng, chưa gửi email thật.",
       href: "#reset-password",
-      label: "Nháº­p OTP"
+      label: "Nhập OTP"
     });
-    notifySuccess("ÄÃ£ gá»­i hÆ°á»›ng dáº«n Ä‘áº·t láº¡i máº­t kháº©u trÃªn giao diá»‡n máº«u.");
+    notifySuccess("Đã gửi hướng dẫn đặt lại mật khẩu trên giao diện mẫu.");
   });
 }
 
 export function createResetPasswordPage() {
   return createAuthPage({
     title: "Đặt lại mật khẩu",
-    description: "Nhập OTP và mật khẩu mới cho tài khoản quản trị.",
+    description: "Nh?p OTP v? m?t kh?u m?i cho t?i kho?n qu?n tr?.",
     body: `
       <form class="auth-form" data-validate-form data-auth-form="reset">
         <div class="validation-summary" data-validation-summary></div>
-        ${createField("OTP", "otp", "text", "123456", "required|regex:^[0-9]{6}$", 'data-regex-message="OTP gá»“m 6 chá»¯ sá»‘."')}
-        ${createField("Password", "password", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|password")}
-        ${createField("Confirm Password", "confirmPassword", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|min:8")}
-        <button class="auth-primary-button" type="submit">
-          <i class="fa-solid fa-key" aria-hidden="true"></i>
-          <span>Reset Password</span>
-        </button>
+        ${createField("OTP", "otp", "text", "123456", "required|regex:^[0-9]{6}$", 'data-regex-message="OTP g?m 6 ch? s?."')}
+        ${createField("Password", "password", "password", "????????", "required|password")}
+        ${createField("Confirm Password", "confirmPassword", "password", "????????", "required|min:8")}
+        <button class="auth-primary-button" type="submit"><i class="fa-solid fa-key" aria-hidden="true"></i><span>Reset Password</span></button>
       </form>
     `
   });
@@ -122,16 +119,10 @@ export function initResetPasswordPage(root = document) {
   bindAuthForm(root, "reset", async (button, form) => {
     const password = form.querySelector('[name="password"]').value;
     const confirmPassword = form.querySelector('[name="confirmPassword"]').value;
-
-    if (password !== confirmPassword) {
-      notifyError("Confirm Password chÆ°a khá»›p.");
-      return;
-    }
-
-    setButtonLoading(button, true, "Äang Ä‘áº·t láº¡i");
-    await wait(520);
-    setButtonLoading(button, false);
-    notifySuccess("ÄÃ£ Ä‘áº·t láº¡i máº­t kháº©u trÃªn giao diá»‡n máº«u.");
+    if (password !== confirmPassword) { notifyError("Confirm Password ch?a kh?p."); return; }
+    setButtonLoading(button, true, "Đang đặt lại");
+    await wait(520); setButtonLoading(button, false);
+    notifySuccess("Đã đặt lại mật khẩu trên giao diện mẫu.");
     window.location.hash = "login";
   });
 }
@@ -143,9 +134,9 @@ export function createChangePasswordPage() {
     body: `
       <form class="auth-form" data-validate-form data-auth-form="change">
         <div class="validation-summary" data-validation-summary></div>
-        ${createField("Current Password", "currentPassword", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|min:6")}
-        ${createField("New Password", "password", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|password")}
-        ${createField("Confirm New Password", "confirmPassword", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|min:8")}
+        ${createField("Current Password", "currentPassword", "password", "⬢⬢⬢⬢⬢⬢⬢⬢", "required|min:6")}
+        ${createField("New Password", "password", "password", "⬢⬢⬢⬢⬢⬢⬢⬢", "required|password")}
+        ${createField("Confirm New Password", "confirmPassword", "password", "⬢⬢⬢⬢⬢⬢⬢⬢", "required|min:8")}
         <button class="auth-primary-button" type="submit">
           <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
           <span>Change Password</span>
@@ -157,32 +148,24 @@ export function createChangePasswordPage() {
 
 export function initChangePasswordPage(root = document) {
   bindAuthForm(root, "change", async (button, form) => {
-    if (form.querySelector('[name="password"]').value !== form.querySelector('[name="confirmPassword"]').value) {
-      notifyError("Confirm New Password chÆ°a khá»›p.");
-      return;
-    }
-
-    setButtonLoading(button, true, "Äang cáº­p nháº­t");
-    await wait(520);
-    setButtonLoading(button, false);
-    notifySuccess("ÄÃ£ Ä‘á»•i máº­t kháº©u trÃªn giao diá»‡n máº«u.");
+    if (form.querySelector('[name="password"]').value !== form.querySelector('[name="confirmPassword"]').value) { notifyError("Confirm New Password ch?a kh?p."); return; }
+    setButtonLoading(button, true, "?ang c?p nh?t");
+    await wait(520); setButtonLoading(button, false);
+    notifySuccess("?? ??i m?t kh?u tr?n giao di?n m?u.");
   });
 }
 
 export function createLockScreenPage() {
   return createAuthPage({
     title: "Lock Screen",
-    description: "Xác thực lại tài khoản quản trị để tiếp tục.",
+    description: "X?c th?c l?i t?i kho?n qu?n tr? ?? ti?p t?c.",
     body: `
       <form class="auth-form" data-validate-form data-auth-form="lock">
         <div class="auth-logo" aria-hidden="true"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt=""></div>
-        <strong style="text-align:center;color:var(--color-text);">TÃ i khoáº£n quáº£n trá»‹</strong>
+        <strong style="text-align:center;color:var(--color-text);">T?i kho?n qu?n tr?</strong>
         <div class="validation-summary" data-validation-summary></div>
-        ${createField("Password", "password", "password", "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢", "required|min:6")}
-        <button class="auth-primary-button" type="submit">
-          <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
-          <span>Unlock</span>
-        </button>
+        ${createField("Password", "password", "password", "????????", "required|min:6")}
+        <button class="auth-primary-button" type="submit"><i class="fa-solid fa-lock-open" aria-hidden="true"></i><span>Unlock</span></button>
       </form>
     `
   });
@@ -190,78 +173,40 @@ export function createLockScreenPage() {
 
 export function initLockScreenPage(root = document) {
   bindAuthForm(root, "lock", async (button) => {
-    setButtonLoading(button, true, "Äang má»Ÿ khÃ³a");
-    await wait(420);
-    setButtonLoading(button, false);
-    notifySuccess("ÄÃ£ má»Ÿ khÃ³a mÃ n hÃ¬nh trÃªn giao diá»‡n máº«u.");
+    setButtonLoading(button, true, "?ang m? kh?a");
+    await wait(420); setButtonLoading(button, false);
+    notifySuccess("?? m? kh?a m?n h?nh tr?n giao di?n m?u.");
     window.location.hash = "dashboard";
   });
 }
 
 export function createSessionExpiredPage() {
-  return createErrorPage({
-    code: "PHIÃŠN ÄÄ‚NG NHáº¬P",
-    title: "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n",
-    description: "PhiÃªn Ä‘Äƒng nháº­p cá»§a báº¡n Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i Ä‘á»ƒ tiáº¿p tá»¥c sá»­ dá»¥ng trang quáº£n trá»‹.",
-    icon: "fa-clock",
-    tone: "warning",
-    primaryHref: "#login",
-    primaryLabel: "ÄÄƒng nháº­p láº¡i"
-  });
+  return createErrorPage({ code: "PHIÊN ĐĂNG NHẬP", title: "Phiên đăng nhập đã hết hạn", description: "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng trang quản trị.", icon: "fa-clock", tone: "warning", primaryHref: "#login", primaryLabel: "Đăng nhập lại" });
 }
 
 export function initSessionExpiredPage() {
   logoutAdminAccount("session-expired");
-  openModal({
-    variant: "session-expired",
-    eyebrow: "PHIÃŠN ÄÄ‚NG NHáº¬P",
-    title: "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n",
-    saveText: "ÄÄƒng nháº­p láº¡i",
-    cancelText: "ÄÃ³ng",
-    closeLabel: "ÄÃ³ng thÃ´ng bÃ¡o háº¿t phiÃªn Ä‘Äƒng nháº­p",
-    loadingDelay: 0,
-    body: "\n      <div class=\"modal-session-expired-icon\" aria-hidden=\"true\">\n        <i class=\"fa-regular fa-clock\"></i>\n      </div>\n      <p class=\"modal-session-expired-copy\">\n        PhiÃªn Ä‘Äƒng nháº­p cá»§a báº¡n Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i Ä‘á»ƒ tiáº¿p tá»¥c sá»­ dá»¥ng trang quáº£n trá»‹.\n      </p>\n    ",
-    onSave() {
-      logoutAdminAccount("session-expired-login-again");
-      window.location.hash = "login";
-    }
-  });
+  openModal({ variant: "session-expired", eyebrow: "PHIÊN ĐĂNG NHẬP", title: "Phiên đăng nhập đã hết hạn", saveText: "Đăng nhập lại", cancelText: "Đóng", closeLabel: "Đóng thông báo hết phiên đăng nhập", loadingDelay: 0, body: `<div class="modal-session-expired-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></div><p class="modal-session-expired-copy">Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục sử dụng trang quản trị.</p>`, onSave() { logoutAdminAccount("session-expired-login-again"); window.location.hash = "login"; } });
 }
 
 export function createForbiddenPage() {
   return createErrorPage({
     code: "403",
-    title: "KhÃ´ng cÃ³ quyá»n truy cáº­p",
-    description: "TÃ i khoáº£n hiá»‡n táº¡i chÆ°a cÃ³ quyá»n xem khu vá»±c nÃ y.",
+    title: "Kh?ng c? quy?n truy c?p",
+    description: "T?i kho?n hi?n t?i ch?a c? quy?n xem khu v?c n?y.",
     icon: "fa-ban",
     tone: "danger",
     primaryHref: "#dashboard",
-    primaryLabel: "Vá» Dashboard"
+    primaryLabel: "Về Dashboard"
   });
 }
 
 export function createNotFoundAuthPage(route = {}) {
-  return createErrorPage({
-    code: "404",
-    title: "KhÃ´ng tÃ¬m tháº¥y trang",
-    description: `Route #${route.requestedPath ?? "unknown"} khÃ´ng tá»“n táº¡i trong Admin Panel.`,
-    icon: "fa-map-location-dot",
-    tone: "warning",
-    primaryHref: "#dashboard",
-    primaryLabel: "Vá» Dashboard"
-  });
+  return createErrorPage({ code: "404", title: "Không tìm thấy trang", description: `Route #${route.requestedPath ?? "unknown"} không tồn tại trong Admin Panel.`, icon: "fa-map-location-dot", tone: "warning", primaryHref: "#dashboard", primaryLabel: "Về Dashboard" });
 }
 
 export function createServerErrorPage() {
-  return createErrorPage({
-    code: "500",
-    title: "CÃ³ lá»—i há»‡ thá»‘ng",
-    description: "ÄÃ¢y lÃ  mÃ n hÃ¬nh lá»—i giáº£ láº­p cho tráº¡ng thÃ¡i server error.",
-    icon: "fa-triangle-exclamation",
-    tone: "danger",
-    primaryHref: "#dashboard",
-    primaryLabel: "Vá» Dashboard"
-  });
+  return createErrorPage({ code: "500", title: "Có lỗi hệ thống", description: "Đây là màn hình lỗi giả lập cho trạng thái server error.", icon: "fa-triangle-exclamation", tone: "danger", primaryHref: "#dashboard", primaryLabel: "Về Dashboard" });
 }
 
 function createAuthPage({ title, description, body, variant = "default" }) {
@@ -382,7 +327,7 @@ function bindAuthForm(root, formName, onSubmit) {
     event.preventDefault();
 
     if (!validateForm(form).isValid) {
-      notifyError("Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin.");
+      notifyError("Vui l?ng ki?m tra l?i th?ng tin.");
       return;
     }
 
