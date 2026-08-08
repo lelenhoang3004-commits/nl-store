@@ -167,8 +167,11 @@
 
 .admin-payment-table th:nth-child(5),
 .admin-payment-table td:nth-child(5) {
-  min-width: 190px;
+  min-width: 110px;
+  max-width: 140px;
   white-space: nowrap;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .admin-payment-table th:nth-child(8),
@@ -202,7 +205,7 @@
 .admin-payment-table th:nth-child(2), .admin-payment-table td:nth-child(2) { width: 130px; }
 .admin-payment-table th:nth-child(3), .admin-payment-table td:nth-child(3) { width: 170px; }
 .admin-payment-table th:nth-child(4), .admin-payment-table td:nth-child(4) { width: 130px; }
-.admin-payment-table th:nth-child(5), .admin-payment-table td:nth-child(5) { width: 170px; min-width: 0; }
+.admin-payment-table th:nth-child(5), .admin-payment-table td:nth-child(5) { width: 128px; min-width: 110px; max-width: 140px; padding-right: 11px; padding-left: 11px; text-align: left; vertical-align: middle; }
 .admin-payment-table th:nth-child(6), .admin-payment-table td:nth-child(6) { width: 132px; text-align: right; }
 .admin-payment-table th:nth-child(7), .admin-payment-table td:nth-child(7) { width: 76px; }
 .admin-payment-table th:nth-child(8), .admin-payment-table td:nth-child(8) { width: 136px; min-width: 0; }
@@ -210,7 +213,8 @@
 .admin-payment-table th:nth-child(11), .admin-payment-table td:nth-child(11) { width: 118px; }
 .admin-payment-code { display: block; max-width: 150px; overflow: hidden; color: var(--color-primary); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .admin-payment-table td:nth-child(2) a { display: inline-block; max-width: 118px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-payment-provider, .admin-payment-method-cell { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-payment-provider { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-payment-method-cell { overflow: visible; color: var(--color-text); font-size: .82rem; font-weight: 500; line-height: 1.35; white-space: nowrap; text-overflow: clip; }
 .admin-payment-table td:nth-child(6) strong { white-space: nowrap; font-weight: 750; }
 .admin-payment-date { line-height: 1.2; white-space: nowrap; }
 .admin-payment-date span, .admin-payment-date small { display: block; }

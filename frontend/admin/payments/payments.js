@@ -142,7 +142,7 @@ function renderPaymentRow(payment) {
     <td>${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">${escapeHtml(payment.orderCode || `#${payment.orderId}`)}</a>` : "-"}</td>
     <td><strong>${escapeHtml(payment.customerName || "-")}</strong><small>${escapeHtml(payment.customerPhone || payment.customerEmail || "")}</small></td>
     <td><span class="admin-payment-provider" title="${escapeHtml(payment.provider || "-")}">${escapeHtml(formatProviderLabel(payment.provider))}</span></td>
-    <td class="admin-payment-method-cell">${escapeHtml(formatPaymentMethod(resolvePaymentMethod(payment)))}</td>
+    <td class="admin-payment-method-cell">${escapeHtml(getPaymentMethodLabel(resolvePaymentMethod(payment), payment.provider))}</td>
     <td><strong>${formatCurrency(payment.amount, payment.currency)}</strong></td>
     <td>${escapeHtml(payment.currency || "-")}</td>
     <td class="admin-payment-status-cell">${statusBadge(payment.status)}</td>
@@ -181,6 +181,14 @@ function isPersonalBankPayment(payment) { return String(payment?.provider || pay
 function isManualConfirmablePayment(payment) { const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase(); return method === "bank_transfer" || isPersonalBankPayment(payment) || isMomoPayment(payment); }
 function canConfirmManualPayment(payment) { const status = normalizePaymentStatus(payment?.status); return isManualConfirmablePayment(payment) && ["pending", "processing"].includes(status); }
 function resolvePaymentMethod(payment) { return payment?.method || payment?.paymentMethod || payment?.metadata?.paymentGuide?.provider || payment?.provider || ""; }
+function getPaymentMethodLabel(method, provider) {
+  const values = [method, provider].map((value) => String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_"));
+  if (values.some((value) => ["bank_transfer", "bank_personal_qr", "bank_qr", "bank", "banking", "bank_transfer_qr"].includes(value))) return "Ngân hàng";
+  if (values.some((value) => ["momo", "momo_personal_qr"].includes(value))) return "MoMo";
+  if (values.some((value) => ["credit_card", "credit_card_demo", "card"].includes(value))) return "Thẻ tín dụng";
+  if (values.some((value) => ["cod", "cash_on_delivery"].includes(value))) return "COD";
+  return formatPaymentMethod(method || provider || "");
+}
 function actionButton(id, status, label) { return `<button type="button" data-payment-id="${numberId(id)}" data-payment-status="${status}">${label}</button>`; }
 
 function renderPagination(root) {
