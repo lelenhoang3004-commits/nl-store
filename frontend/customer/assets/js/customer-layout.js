@@ -1494,23 +1494,27 @@ function renderForgotPasswordPage() {
   }
 }
 function renderRegisterPage() {
-  layoutState.main.innerHTML = `<section class="customer-section auth-page"><div class="customer-container"><article class="auth-card auth-card-wide">
-    <a class="auth-back" href="#home">← Quay lại trang trước</a><div class="auth-heading"><span class="auth-kicker">N&L SHOP</span><h1>Đăng ký</h1><p>Đăng ký để mua sắm cùng N&L Shop</p></div>
-    <form data-register-form class="auth-form"><div data-auth-message hidden></div><div class="auth-grid">
-      <label><span>Họ và tên</span><input name="fullName" required autocomplete="name" placeholder="Nguyễn Văn A"></label>
-      <label><span>Số điện thoại</span><input type="tel" name="phone" required autocomplete="tel" placeholder="0901234567"></label>
-      <label class="auth-full"><span>Địa chỉ</span><input name="address" required autocomplete="street-address" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></label>
-      <label class="auth-full"><span>Email</span><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></label>
-      <label><span>Mật khẩu</span><input type="password" name="password" required autocomplete="new-password" placeholder="Ít nhất 8 ký tự"></label>
-      <label><span>Xác nhận mật khẩu</span><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nhập lại mật khẩu"></label>
-    </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>Tôi đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư</span></label>
-      <button class="customer-button auth-primary" type="submit">Đăng ký</button>${renderSocialButtons("tiếp tục")}
-      <p class="auth-switch">Đã có tài khoản? <a href="#login">Đăng nhập</a></p>
-    </form></article></div></section>`;
+  layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page auth-register-page"><div class="customer-container"><article class="auth-card auth-register-card">
+    <div class="auth-register-content">
+      <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay l&#7841;i trang tr&#432;&#7899;c</span></a>
+      <div class="auth-heading auth-register-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L STORE</span><h1>&#272;&#259;ng k&#253; t&#224;i kho&#7843;n</h1><p>T&#7841;o t&#224;i kho&#7843;n &#273;&#7875; b&#7855;t &#273;&#7847;u tr&#7843;i nghi&#7879;m N&amp;L Store.</p></div>
+      <form data-register-form class="auth-form auth-register-form"><div data-auth-message hidden></div><div class="auth-register-grid">
+        <label class="auth-field"><span>H&#7885; v&#224; t&#234;n</span><div class="auth-input-shell"><i class="fa-regular fa-user" aria-hidden="true"></i><input name="fullName" required autocomplete="name" placeholder="Nguy&#7877;n V&#259;n A"></div><small data-field-error="fullName"></small></label>
+        <label class="auth-field"><span>S&#7889; &#273;i&#7879;n tho&#7841;i</span><div class="auth-input-shell"><i class="fa-solid fa-phone" aria-hidden="true"></i><input type="tel" name="phone" required autocomplete="tel" placeholder="0901234567"></div><small data-field-error="phone"></small></label>
+        <label class="auth-field auth-full"><span>&#272;&#7883;a ch&#7881;</span><div class="auth-input-shell"><i class="fa-regular fa-map" aria-hidden="true"></i><input name="address" required autocomplete="street-address" placeholder="S&#7889; nh&#224;, &#273;&#432;&#7901;ng, ph&#432;&#7901;ng/x&#227;, t&#7881;nh/th&#224;nh"></div><small data-field-error="address"></small></label>
+        <label class="auth-field auth-full"><span>Email</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></div><small data-field-error="email"></small></label>
+        <label class="auth-field"><span>M&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="new-password" placeholder="&#205;t nh&#7845;t 8 k&#253; t&#7921;"></div><small>M&#7853;t kh&#7849;u t&#7889;i thi&#7875;u 8 k&#253; t&#7921;.</small></label>
+        <label class="auth-field"><span>X&#225;c nh&#7853;n m&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nh&#7853;p l&#7841;i m&#7853;t kh&#7849;u"></div><small data-field-error="confirmPassword"></small></label>
+      </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>T&#244;i &#273;&#7891;ng &#253; v&#7899;i <a href="#terms">&#272;i&#7873;u kho&#7843;n s&#7917; d&#7909;ng</a> v&#224; <a href="#privacy">Ch&#237;nh s&#225;ch quy&#7873;n ri&#234;ng t&#432;</a></span></label>
+        <button class="customer-button auth-primary" type="submit"><span>&#272;&#259;ng k&#253;</span></button>${renderSocialButtons("ti&#7871;p t&#7909;c")}
+        <p class="auth-switch">&#272;&#227; c&#243; t&#224;i kho&#7843;n? <a href="#login">&#272;&#259;ng nh&#7853;p</a></p>
+      </form>
+    </div>
+  </article></div></section>`;
   const root=layoutState.main; bindOAuthButtons(root);
-  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.textContent="Đang đăng ký...";
+  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
     const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
-    try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.textContent="Đăng ký";}
+    try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.innerHTML="<span>Đăng ký</span>";}
   });
 }
 
