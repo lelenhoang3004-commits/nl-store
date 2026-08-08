@@ -1,7 +1,9 @@
 export const PAYMENT_METHOD_LABELS = Object.freeze({
   cod: "COD",
-  bank_transfer: "Chuy\u1ec3n kho\u1ea3n ng\u00e2n h\u00e0ng",
-  bank_personal_qr: "Chuy\u1ec3n kho\u1ea3n ng\u00e2n h\u00e0ng",
+  bank_transfer: "Ngân hàng",
+  bank_personal_qr: "Ngân hàng",
+  bank_qr: "Ngân hàng",
+  bank: "Ngân hàng",
   momo: "MoMo",
   momo_personal_qr: "MoMo",
   credit_card: "Th\u1ebb t\u00edn d\u1ee5ng",
@@ -72,8 +74,10 @@ export function formatOrderStatus(status = "") {
 }
 
 export function formatPaymentMethod(method = "") {
-  const key = normalizeCode(method);
-  return PAYMENT_METHOD_LABELS[key] || String(method || "-");
+  const raw = String(method || "").trim();
+  const key = normalizeCode(raw);
+  if (raw.toLowerCase() === "chuyển khoản ngân hàng") return "Ngân hàng";
+  return PAYMENT_METHOD_LABELS[key] || raw || "-";
 }
 
 export function formatPaymentStatus(status = "") {
