@@ -1079,3 +1079,31 @@ body:not(.theme-dark) .datatable-scroll::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: var(--admin-light-border-strong);
 }
+
+body.admin-auth-route:not(.theme-dark) .admin-shell {
+  background: #f6f9ff;
+}
+
+body.admin-auth-route .admin-main {
+  max-width: none;
+  padding: 0;
+}
+
+body.admin-auth-route .router-page {
+  min-height: 100%;
+}
+
+body.admin-auth-route .admin-header {
+  grid-template-columns: auto minmax(160px, 1fr) auto;
+}
+
+body.admin-auth-route .admin-footer {
+  width: min(calc(100% - 56px), 1160px);
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  body.admin-auth-route .admin-footer {
+    width: calc(100% - 32px);
+  }
+}

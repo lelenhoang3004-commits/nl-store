@@ -1,4 +1,4 @@
-import { confirmPresets } from "../../admin/components/confirm/confirm.js";
+﻿import { confirmPresets } from "../../admin/components/confirm/confirm.js";
 import { createFooter } from "../../admin/components/footer/footer.js";
 import { createHeader, updateBreadcrumb } from "../../admin/components/header/header.js";
 import { initNotificationCenter } from "../../admin/components/notification-center/notification-center.js";
@@ -22,14 +22,14 @@ let authRedirectInProgress = false;
 
 const sessionManagerCallbacks = {
   onSessionExpired(reason) {
-    notifyWarning(reason === "idle-timeout" ? "Bạn đã không thao tác trong một thời gian." : "Phiên đăng nhập đã hết hạn.");
+    notifyWarning(reason === "idle-timeout" ? "Báº¡n Ä‘Ã£ khÃ´ng thao tÃ¡c trong má»™t thá»i gian." : "PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ háº¿t háº¡n.");
     window.location.hash = "session-expired";
   },
   onTokenRefreshed() {
     window.dispatchEvent(new CustomEvent("fashion-admin-token-refreshed"));
   },
   onLoggedOutInAnotherTab() {
-    notifyInfo("Phiên đăng nhập đã được đăng xuất ở tab khác.");
+    notifyInfo("PhiÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng xuáº¥t á»Ÿ tab khÃ¡c.");
     window.location.hash = "login";
   }
 };
@@ -48,17 +48,22 @@ function bootstrapAdminLayout() {
 }
 
 function renderPersistentLayout() {
-  sidebar.innerHTML = createSidebar("dashboard");
+  sidebar.innerHTML = createSidebar(getCurrentRouteMenuKey());
   updateSidebarCollapseButton(document.body.classList.contains("sidebar-collapsed"));
   header.innerHTML = createHeader("Dashboard");
   footer.innerHTML = createFooter();
-  initNotificationCenter(header);
+  if (header.querySelector("[data-notification-center]")) initNotificationCenter(header);
 }
 
+function getCurrentRouteMenuKey() {
+  const hash = String(window.location.hash || "").replace(/^#/, "").split("?")[0].trim();
+  return hash || "dashboard";
+}
 function startRouter() {
   adminRouter = createAdminRouter({
     outlet: main,
     onRouteChange(route) {
+      document.body.classList.toggle("admin-auth-route", route.requiresAuth === false);
       setActiveSidebarItem(route.menuKey);
       updateBreadcrumb(route.breadcrumb ?? route.title);
       document.title = `${route.title} | N&L Store Admin`;
@@ -106,7 +111,7 @@ function bindLayoutEvents() {
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    notifyError("Bạn không có quyền truy cập.");
+    notifyError("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -117,7 +122,7 @@ function handleUnauthorizedApiResponse() {
   authRedirectInProgress = true;
   stopAdminSidebarCounts();
   logoutAdminAccount("api-unauthorized");
-  notifyWarning("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.");
+  notifyWarning("PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n, vui lÃ²ng Ä‘Äƒng nháº­p láº¡i.");
   window.location.hash = "#login";
 }
 
@@ -184,7 +189,7 @@ async function handleLogout() {
   if (confirmed) {
     stopAdminSidebarCounts();
     logoutAdminAccount("logout");
-    notifyInfo("Đã đăng xuất khỏi trang quản trị.");
+    notifyInfo("ÄÃ£ Ä‘Äƒng xuáº¥t khá»i trang quáº£n trá»‹.");
     window.location.hash = "login";
   }
 }
@@ -205,7 +210,7 @@ function toggleSidebarCollapse() {
 function updateSidebarCollapseButton(isCollapsed) {
   const button = document.querySelector("[data-sidebar-collapse]");
   if (!button) return;
-  const label = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
+  const label = isCollapsed ? "Má»Ÿ rá»™ng sidebar" : "Thu gá»n sidebar";
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.setAttribute("aria-expanded", String(!isCollapsed));

@@ -1,6 +1,6 @@
-import { filterMenuByPermission } from "../../permissions/access-control.js";
+﻿import { filterMenuByPermission } from "../../permissions/access-control.js";
 import { PERMISSIONS } from "../../permissions/permissions.js";
-import { getCurrentUser } from "../../permissions/user-session.js";
+import { getCurrentUser, isAuthenticated } from "../../permissions/user-session.js";
 import { sidebarCountsService } from "../../services/sidebar-counts.service.js";
 
 const REFRESH_INTERVAL_MS = 60000;
@@ -53,6 +53,8 @@ let refreshInFlight = null;
 let focusBound = false;
 
 export function createSidebar(activePage = "dashboard") {
+  if (!isAuthenticated()) return createGuestSidebar();
+
   const currentUser = getCurrentUser();
   const visibleMenuItems = filterMenuByPermission(adminMenuItems, currentUser);
   startAdminSidebarCounts();
@@ -78,6 +80,29 @@ export function createSidebar(activePage = "dashboard") {
   `;
 }
 
+function createGuestSidebar() {
+  stopAdminSidebarCounts();
+
+  return `
+    <div class="sidebar-brand sidebar-brand-guest">
+      <div class="brand-mark" aria-hidden="true">
+        <img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="">
+      </div>
+      <div class="brand-copy">
+        <strong>N&amp;L Store</strong>
+        <span>Administration</span>
+      </div>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu g&#7885;n sidebar" data-sidebar-collapse>
+        <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-guest-note">
+      <span>Secure Management Portal</span>
+      <small>&#272;&#259;ng nh&#7853;p &#273;&#7875; truy c&#7853;p h&#7879; th&#7889;ng qu&#7843;n tr&#7883;.</small>
+    </div>
+  `;
+}
 export function setActiveSidebarItem(page) {
   document.querySelectorAll("[data-page]").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.page === page);

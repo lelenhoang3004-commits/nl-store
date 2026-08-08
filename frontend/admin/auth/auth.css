@@ -273,3 +273,284 @@
   border-radius: 18px;
   object-fit: cover;
 }
+
+/* Admin login two-column redesign */
+.admin-auth-login-page {
+  position: relative;
+  isolation: isolate;
+  min-height: min(780px, calc(100vh - 156px));
+  padding: clamp(28px, 4vw, 48px);
+  overflow: hidden;
+}
+
+.admin-auth-login-page::before,
+.admin-auth-login-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.admin-auth-login-page::before {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(37, 99, 235, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 24%, rgba(14, 165, 233, 0.14), transparent 30%),
+    radial-gradient(circle at 62% 86%, rgba(15, 23, 42, 0.07), transparent 34%),
+    linear-gradient(180deg, #f6f9ff 0%, #eef5ff 100%);
+}
+
+.admin-auth-login-page::after {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: 0.58;
+  mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 92%, transparent 100%);
+}
+
+.admin-auth-shell {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+}
+
+.admin-auth-login-page .admin-auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 47fr) minmax(420px, 53fr);
+  align-items: center;
+  gap: clamp(48px, 5vw, 72px);
+}
+
+.admin-auth-intro {
+  color: var(--color-text);
+}
+
+.admin-auth-eyebrow {
+  margin: 0 0 14px;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.admin-auth-intro h2 {
+  max-width: 520px;
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(36px, 4vw, 44px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.admin-auth-description {
+  max-width: 480px;
+  margin: 18px 0 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.admin-auth-benefits {
+  display: grid;
+  gap: 14px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-auth-benefits li {
+  position: relative;
+  min-height: 30px;
+  padding-left: 42px;
+  color: var(--color-text-soft);
+  font-size: 0.94rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.admin-auth-benefits li::before {
+  content: "\f00c";
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+  font-family: "Font Awesome 6 Free";
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.16);
+}
+
+.admin-auth-login-card {
+  justify-self: center;
+  width: min(100%, 456px);
+  border-radius: 24px;
+  border-color: rgba(148, 163, 184, 0.26);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+.admin-auth-login-card .auth-header {
+  gap: 8px;
+  padding: 40px 40px 14px;
+  text-align: center;
+}
+
+.admin-auth-login-card .auth-logo {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 4px;
+}
+
+.admin-auth-login-card .auth-header h1 {
+  margin-top: 6px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.admin-auth-login-card .auth-system-name {
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-auth-login-card .auth-header p:last-child {
+  max-width: 340px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.admin-auth-login-card .auth-form {
+  gap: 16px;
+  padding: 20px 40px 40px;
+}
+
+.admin-auth-login-card .auth-form label span,
+.admin-auth-login-card .auth-option-row,
+.admin-auth-login-card .auth-link {
+  font-size: 0.86rem;
+}
+
+.admin-auth-login-card .auth-form input {
+  min-height: 50px;
+  border-color: rgba(148, 163, 184, 0.34);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+
+.admin-auth-login-card .auth-form input:focus,
+.admin-auth-login-card .auth-password-control:focus-within input {
+  border-color: var(--color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.admin-auth-login-card .auth-option-row {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.admin-auth-login-card .auth-checkbox {
+  color: var(--color-muted);
+}
+
+.admin-auth-login-card .auth-checkbox input {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.admin-auth-login-card .auth-link {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.admin-auth-login-card .auth-primary-button {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 12px;
+  border-color: transparent;
+  background: var(--color-primary);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.2);
+}
+
+.admin-auth-login-card .auth-primary-button:hover,
+.admin-auth-login-card .auth-primary-button:focus-visible {
+  background: #1d4ed8;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24);
+  outline: none;
+}
+
+@media (max-width: 1199px) {
+  .admin-auth-login-page .admin-auth-shell {
+    grid-template-columns: minmax(0, 45fr) minmax(400px, 55fr);
+    gap: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-auth-login-page {
+    padding: 26px 20px;
+  }
+
+  .admin-auth-login-page .admin-auth-shell {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: min(100%, 520px);
+  }
+
+  .admin-auth-intro {
+    text-align: center;
+  }
+
+  .admin-auth-intro h2 {
+    max-width: 520px;
+    margin: 0 auto;
+    font-size: clamp(28px, 7vw, 36px);
+  }
+
+  .admin-auth-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-auth-benefits {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-auth-login-page {
+    min-height: auto;
+    padding: 20px 14px;
+  }
+
+  .admin-auth-intro {
+    display: none;
+  }
+
+  .admin-auth-login-card .auth-header {
+    padding: 32px 24px 12px;
+  }
+
+  .admin-auth-login-card .auth-form {
+    padding: 18px 24px 30px;
+  }
+
+  .admin-auth-login-card .auth-option-row {
+    flex-wrap: wrap;
+  }
+}
