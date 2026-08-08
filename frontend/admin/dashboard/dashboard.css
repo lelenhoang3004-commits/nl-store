@@ -1256,3 +1256,273 @@ body:not(.theme-dark) .stat-card.is-primary { border-color: #D6E2F2; border-left
   .dashboard-secondary .dashboard-kpi-items { grid-template-columns: 1fr; }
   .dashboard-card { padding: 16px; }
 }
+/* Top products compact pass: tighter list only, no data/ranking changes. */
+.top-products-card {
+  padding: 17px;
+}
+
+.top-products-card .card-header {
+  margin-bottom: 12px;
+}
+
+.top-products-card .product-list {
+  gap: 9px;
+}
+
+.top-products-card .top-product-row {
+  display: grid;
+  grid-template-columns: 36px 52px minmax(0, 1fr) minmax(126px, max-content);
+  grid-template-areas:
+    "rank image info revenue"
+    "rank image progress revenue";
+  gap: 7px 10px;
+  align-items: center;
+  min-height: 78px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 76%, transparent);
+  border-radius: 13px;
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+.top-products-card .top-product-row.is-gold,
+.top-products-card .top-product-row.is-silver,
+.top-products-card .top-product-row.is-bronze {
+  background: var(--color-card);
+  box-shadow: none;
+}
+
+.top-products-card .top-product-rank {
+  grid-area: rank;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: .86rem;
+}
+
+.top-products-card .top-product-rank i {
+  top: -7px;
+  font-size: .72rem;
+  filter: none;
+}
+
+.top-products-card .top-product-row.is-gold .top-product-rank {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.top-products-card .top-product-row.is-silver .top-product-rank {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.top-products-card .top-product-row.is-bronze .top-product-rank {
+  background: #FFEDD5;
+  color: #9A3412;
+}
+
+.top-products-card .top-product-row.is-blue .top-product-rank {
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-card));
+  color: var(--color-primary);
+}
+
+.top-products-card .top-product-image {
+  grid-area: image;
+  width: 52px;
+  height: 52px;
+  aspect-ratio: 1 / 1;
+  border-radius: 11px;
+  object-fit: cover;
+  box-shadow: none;
+}
+
+.top-products-card .top-product-info {
+  grid-area: info;
+  min-width: 0;
+}
+
+.top-products-card .top-product-info strong {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--color-text);
+  font-size: .9rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.top-products-card .top-product-info span,
+.top-products-card .top-product-info small {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  margin-top: 5px;
+  color: var(--color-muted);
+  font-size: .75rem;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.top-products-card .top-product-info span {
+  max-width: min(58%, 220px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-products-card .top-product-info small {
+  gap: 4px;
+  margin-left: 10px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.top-products-card .top-product-info small i {
+  font-size: .7rem;
+}
+
+.top-products-card .top-product-progress {
+  grid-area: progress;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 260px);
+}
+
+.top-products-card .top-product-progress span {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.top-products-card .top-product-progress i {
+  border-radius: inherit;
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.top-products-card .top-product-progress small {
+  min-width: 30px;
+  color: var(--color-muted);
+  font-size: .68rem;
+  line-height: 1;
+  text-align: right;
+}
+
+.top-products-card .top-product-revenue {
+  grid-area: revenue;
+  min-width: 126px;
+  max-width: 152px;
+  justify-items: end;
+  gap: 3px;
+  color: var(--color-muted);
+  text-align: right;
+}
+
+.top-products-card .top-product-revenue span {
+  font-size: .7rem;
+  line-height: 1.1;
+}
+
+.top-products-card .top-product-revenue strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: .86rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-products-card .top-product-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: .66rem;
+  line-height: 1;
+}
+
+.top-products-card .top-products-link {
+  min-height: 38px;
+  margin-top: 2px;
+  padding: 8px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  font-size: .82rem;
+}
+
+.top-products-card .top-products-link:hover {
+  color: color-mix(in srgb, var(--color-primary) 82%, #0f172a);
+}
+
+body:not(.theme-dark) .top-products-card .top-product-row {
+  border-color: #E6ECF4;
+  background: #FFFFFF;
+}
+
+body:not(.theme-dark) .top-products-card .top-product-row.is-gold,
+body:not(.theme-dark) .top-products-card .top-product-row.is-silver,
+body:not(.theme-dark) .top-products-card .top-product-row.is-bronze {
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+body:not(.theme-dark) .top-products-card .top-product-info small {
+  background: transparent;
+}
+
+@media (max-width: 900px) {
+  .top-products-card .top-product-row {
+    grid-template-columns: 34px 50px minmax(0, 1fr) minmax(112px, max-content);
+    min-height: 76px;
+  }
+
+  .top-products-card .top-product-revenue {
+    min-width: 112px;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-products-card {
+    padding: 16px;
+  }
+
+  .top-products-card .top-product-row {
+    grid-template-columns: 34px 50px minmax(0, 1fr);
+    grid-template-areas:
+      "rank image info"
+      "rank image revenue"
+      "rank image progress";
+    min-height: 92px;
+    gap: 6px 10px;
+    padding: 10px;
+  }
+
+  .top-products-card .top-product-info span {
+    max-width: 100%;
+  }
+
+  .top-products-card .top-product-info small {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+
+  .top-products-card .top-product-revenue {
+    min-width: 0;
+    max-width: 100%;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .top-products-card .top-product-progress {
+    width: 100%;
+  }
+}
