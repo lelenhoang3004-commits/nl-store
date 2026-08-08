@@ -1287,3 +1287,87 @@ body.admin-auth-route .admin-footer {
   min-width: 33px;
   padding: 0;
 }
+
+/* Shared compact admin page container for newsletter and vouchers. */
+.admin-newsletter-page,
+.admin-vouchers-page {
+  width: min(100%, 1480px);
+  max-width: 1480px;
+  margin-inline: auto;
+}
+
+.admin-main:has(.admin-newsletter-page),
+.admin-main:has(.admin-vouchers-page) {
+  max-width: none;
+  overflow-x: hidden;
+  padding-inline: clamp(16px, 2vw, 28px);
+}
+
+.admin-newsletter-table-wrap,
+.admin-voucher-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.admin-newsletter-actions,
+.admin-voucher-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-newsletter-actions button,
+.admin-voucher-actions button {
+  display: inline-grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-card));
+  color: var(--color-primary);
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.admin-newsletter-actions button:hover,
+.admin-newsletter-actions button:focus-visible,
+.admin-voucher-actions button:hover,
+.admin-voucher-actions button:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+  outline: none;
+}
+
+.admin-newsletter-actions button:focus-visible,
+.admin-voucher-actions button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-newsletter-actions .is-danger,
+.admin-voucher-actions .is-danger {
+  border-color: color-mix(in srgb, #dc2626 18%, var(--color-border));
+  background: color-mix(in srgb, #dc2626 7%, var(--color-card));
+  color: #dc2626;
+}
+
+.admin-newsletter-actions .is-danger:hover,
+.admin-voucher-actions .is-danger:hover {
+  border-color: color-mix(in srgb, #dc2626 32%, var(--color-border));
+  background: color-mix(in srgb, #dc2626 12%, var(--color-card));
+  color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+  .admin-main:has(.admin-newsletter-page),
+  .admin-main:has(.admin-vouchers-page) {
+    padding-inline: 12px;
+  }
+}

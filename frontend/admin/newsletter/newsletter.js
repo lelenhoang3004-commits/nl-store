@@ -1,4 +1,4 @@
-import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
+﻿import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
 import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { newsletterService } from "../services/newsletter.service.js";
@@ -9,7 +9,7 @@ let state = { subscribers: [], pagination: null, query: { ...DEFAULT_QUERY }, bu
 let filterTimer = null;
 
 export async function createNewsletterPage() {
-  showPageLoading("Đang tải đăng ký email...");
+  showPageLoading("Äang táº£i Ä‘Äƒng kÃ½ email...");
   try { return await loadTemplate(new URL("./index.html", import.meta.url)); }
   finally { hidePageLoading(); }
 }
@@ -79,24 +79,24 @@ function normalizeSubscriber(subscriber = {}) {
 function renderTable(root) {
   const body = root.querySelector("[data-newsletter-body]");
   if (!body) return;
-  if (state.busy) { body.innerHTML = `<tr><td colspan="8" class="admin-newsletter-empty">Đang tải danh sách email...</td></tr>`; return; }
-  if (state.error) { body.innerHTML = `<tr><td colspan="8"><div class="admin-newsletter-error"><span>${escapeHtml(message(state.error))}</span><button type="button" data-newsletter-refresh>Thử lại</button></div></td></tr>`; return; }
-  body.innerHTML = state.subscribers.length ? state.subscribers.map(renderRow).join("") : `<tr><td colspan="8" class="admin-newsletter-empty">Chưa có email đăng ký nào.</td></tr>`;
+  if (state.busy) { body.innerHTML = `<tr><td colspan="8" class="admin-newsletter-empty">Äang táº£i danh sÃ¡ch email...</td></tr>`; return; }
+  if (state.error) { body.innerHTML = `<tr><td colspan="8"><div class="admin-newsletter-error"><span>${escapeHtml(message(state.error))}</span><button type="button" data-newsletter-refresh>Thá»­ láº¡i</button></div></td></tr>`; return; }
+  body.innerHTML = state.subscribers.length ? state.subscribers.map(renderRow).join("") : `<tr><td colspan="8" class="admin-newsletter-empty">ChÆ°a cÃ³ email Ä‘Äƒng kÃ½ nÃ o.</td></tr>`;
 }
 
 function renderRow(subscriber) {
   return `<tr>
-    <td>#${escapeHtml(subscriber.id)}</td>
-    <td><strong>${escapeHtml(subscriber.email)}</strong></td>
-    <td>${escapeHtml(subscriber.fullName || "—")}</td>
-    <td>${escapeHtml(subscriber.source)}</td>
-    <td><span class="admin-newsletter-status is-${escapeHtml(subscriber.status)}">${escapeHtml(subscriber.status)}</span></td>
-    <td>${formatDate(subscriber.subscribedAt || subscriber.createdAt)}</td>
-    <td>${formatDate(subscriber.unsubscribedAt)}</td>
+    <td class="admin-newsletter-id">#${escapeHtml(subscriber.id)}</td>
+    <td><strong class="admin-newsletter-email" title="${escapeHtml(subscriber.email)}">${escapeHtml(subscriber.email)}</strong></td>
+    <td class="admin-newsletter-name">${escapeHtml(subscriber.fullName || "\u2014")}</td>
+    <td><span class="admin-newsletter-source" title="${escapeHtml(subscriber.source)}">${escapeHtml(formatSourceLabel(subscriber.source))}</span></td>
+    <td><span class="admin-newsletter-status is-${escapeHtml(subscriber.status)}">${escapeHtml(statusLabel(subscriber.status))}</span></td>
+    <td class="admin-newsletter-date">${formatCompactDate(subscriber.subscribedAt || subscriber.createdAt)}</td>
+    <td class="admin-newsletter-date">${formatCompactDate(subscriber.unsubscribedAt)}</td>
     <td><div class="admin-newsletter-actions">
-      <button type="button" data-newsletter-action="view" data-newsletter-id="${escapeHtml(subscriber.id)}" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
-      <button type="button" data-newsletter-action="toggle" data-newsletter-id="${escapeHtml(subscriber.id)}" title="Chuyển trạng thái"><i class="fa-solid ${subscriber.status === "subscribed" ? "fa-toggle-on" : "fa-toggle-off"}"></i></button>
-      <button class="is-danger" type="button" data-newsletter-action="delete" data-newsletter-id="${escapeHtml(subscriber.id)}" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+      <button type="button" data-newsletter-action="view" data-newsletter-id="${escapeHtml(subscriber.id)}" title="Xem chi ti\u1ebft" aria-label="Xem chi ti\u1ebft email"><i class="fa-solid fa-eye"></i></button>
+      <button type="button" data-newsletter-action="toggle" data-newsletter-id="${escapeHtml(subscriber.id)}" title="Chuy\u1ec3n tr\u1ea1ng th\u00e1i" aria-label="Chuy\u1ec3n tr\u1ea1ng th\u00e1i email"><i class="fa-solid ${subscriber.status === "subscribed" ? "fa-toggle-on" : "fa-toggle-off"}"></i></button>
+      <button class="is-danger" type="button" data-newsletter-action="delete" data-newsletter-id="${escapeHtml(subscriber.id)}" title="X\u00f3a" aria-label="X\u00f3a email"><i class="fa-solid fa-trash"></i></button>
     </div></td>
   </tr>`;
 }
@@ -105,11 +105,11 @@ function renderPagination(root) {
   const target = root.querySelector("[data-newsletter-pagination]");
   if (!target || !state.pagination) { if (target) target.innerHTML = ""; return; }
   const { page, totalPages, totalItems, hasPreviousPage, hasNextPage } = state.pagination;
-  target.innerHTML = `<span>${state.subscribers.length} / ${totalItems} email</span><div><button data-newsletter-page="${page - 1}" ${hasPreviousPage ? "" : "disabled"}>Trước</button><strong>Trang ${page}/${totalPages || 1}</strong><button data-newsletter-page="${page + 1}" ${hasNextPage ? "" : "disabled"}>Sau</button></div>`;
+  target.innerHTML = `<span>${state.subscribers.length} / ${totalItems} email</span><div><button data-newsletter-page="${page - 1}" ${hasPreviousPage ? "" : "disabled"}>TrÆ°á»›c</button><strong>Trang ${page}/${totalPages || 1}</strong><button data-newsletter-page="${page + 1}" ${hasNextPage ? "" : "disabled"}>Sau</button></div>`;
 }
 
 function showDetails(subscriber) {
-  alert(`Email: ${subscriber.email}\nHọ tên: ${subscriber.fullName || "—"}\nSource: ${subscriber.source}\nStatus: ${subscriber.status}\nNgày đăng ký: ${formatDate(subscriber.subscribedAt || subscriber.createdAt)}\nNgày hủy: ${formatDate(subscriber.unsubscribedAt)}`);
+  alert(`Email: ${subscriber.email}\nHá» tÃªn: ${subscriber.fullName || "â€”"}\nSource: ${subscriber.source}\nStatus: ${subscriber.status}\nNgÃ y Ä‘Äƒng kÃ½: ${formatDate(subscriber.subscribedAt || subscriber.createdAt)}\nNgÃ y há»§y: ${formatDate(subscriber.unsubscribedAt)}`);
 }
 
 async function toggleStatus(root, subscriber) {
@@ -117,7 +117,7 @@ async function toggleStatus(root, subscriber) {
   try {
     await newsletterService.updateStatus(subscriber.id, nextStatus, silent());
     refreshAdminSidebarCounts();
-    notifySuccess("Đã cập nhật trạng thái đăng ký email.");
+    notifySuccess("ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Äƒng kÃ½ email.");
     await reload(root);
   } catch (error) {
     notifyError(message(error));
@@ -125,26 +125,39 @@ async function toggleStatus(root, subscriber) {
 }
 
 async function deleteSubscriber(root, subscriber) {
-  if (!confirm(`Xóa email ${subscriber.email}?`)) return;
+  if (!confirm(`XÃ³a email ${subscriber.email}?`)) return;
   try {
     await newsletterService.remove(subscriber.id, silent());
     refreshAdminSidebarCounts();
-    notifySuccess("Đã xóa email đăng ký.");
+    notifySuccess("ÄÃ£ xÃ³a email Ä‘Äƒng kÃ½.");
     await reload(root);
   } catch (error) {
     notifyError(message(error));
   }
 }
 
-function message(error) {
-  if (error?.status === 401) return "Phiên đăng nhập hết hạn.";
-  if (error?.status === 403) return "Không có quyền quản lý đăng ký email.";
-  if (error?.status === 404) return "Không tìm thấy email đăng ký.";
-  if (error?.status === 422) return "Email không hợp lệ.";
-  if (error?.status >= 500) return "Lỗi hệ thống.";
-  return error?.message || "Không thể xử lý yêu cầu.";
+function formatSourceLabel(source) {
+  const key = String(source || "").trim().toLowerCase();
+  return ({ newsletter_popup: "Newsletter popup", website: "Website" })[key] || source || "-";
 }
-function formatDate(value) { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }
+function statusLabel(status) {
+  return ({ subscribed: "Subscribed", unsubscribed: "Unsubscribed" })[String(status || "").toLowerCase()] || status || "-";
+}
+function formatCompactDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return `<span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small>`;
+}
+function message(error) {
+  if (error?.status === 401) return "PhiÃªn Ä‘Äƒng nháº­p háº¿t háº¡n.";
+  if (error?.status === 403) return "KhÃ´ng cÃ³ quyá»n quáº£n lÃ½ Ä‘Äƒng kÃ½ email.";
+  if (error?.status === 404) return "KhÃ´ng tÃ¬m tháº¥y email Ä‘Äƒng kÃ½.";
+  if (error?.status === 422) return "Email khÃ´ng há»£p lá»‡.";
+  if (error?.status >= 500) return "Lá»—i há»‡ thá»‘ng.";
+  return error?.message || "KhÃ´ng thá»ƒ xá»­ lÃ½ yÃªu cáº§u.";
+}
+function formatDate(value) { if (!value) return "â€”"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "â€”" : date.toLocaleString("vi-VN"); }
 function silent() { return { showErrorToast: false }; }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 async function markNewsletterReviewed() {
@@ -155,6 +168,7 @@ async function markNewsletterReviewed() {
     // Sidebar count refresh is best-effort; the subscriber list remains usable if marking reviewed fails.
   }
 }
+
 
 
 
