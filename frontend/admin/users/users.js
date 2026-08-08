@@ -174,18 +174,18 @@ function renderUserRow(user) {
       <td class="admin-users-id">#${escapeHtml(user.id)}</td>
       <td><strong>${escapeHtml(user.fullName || "-")}</strong></td>
       <td><span class="admin-users-email" title="${escapeHtml(user.email || "-")}">${escapeHtml(user.email || "-")}</span></td>
-      <td class="admin-users-phone">${escapeHtml(user.phone || "ó")}</td>
+      <td class="admin-users-phone">${escapeHtml(user.phone || "\u2014")}</td>
       <td><span class="admin-users-role is-${escapeHtml(String(user.role || "").toLowerCase())}">${escapeHtml(user.role || "-")}</span></td>
       <td><span class="admin-users-status is-${escapeHtml(user.status || "unknown")}">${escapeHtml(user.status || "-")}</span></td>
       <td><button type="button" class="admin-users-permission-chip" data-user-action="permissions" data-user-id="${escapeHtml(user.id)}">${permissions.length} quy·ªÅn</button></td>
       <td class="admin-users-date">${escapeHtml(formatDate(user.createdAt))}</td>
       <td>
         <div class="admin-users-actions">
-          <button type="button" data-user-action="view" data-user-id="${escapeHtml(user.id)}" title="Xem chi ti?t" aria-label="Xem chi ti?t ngu?i d˘ng"><i class="fa-solid fa-eye"></i></button>
-          <button type="button" data-user-action="edit" data-user-id="${escapeHtml(user.id)}" title="S?a" aria-label="S?a ngu?i d˘ng"><i class="fa-solid fa-pen-to-square"></i></button>
-          <button type="button" data-user-action="toggle" data-user-id="${escapeHtml(user.id)}" title="${user.status === "locked" ? "M? khÛa" : "KhÛa"}" aria-label="${user.status === "locked" ? "M? khÛa ngu?i d˘ng" : "KhÛa ngu?i d˘ng"}"><i class="fa-solid ${user.status === "locked" ? "fa-lock-open" : "fa-lock"}"></i></button>
-          <button type="button" data-user-action="role" data-user-id="${escapeHtml(user.id)}" title="–?i role" aria-label="–?i role ngu?i d˘ng"><i class="fa-solid fa-user-gear"></i></button>
-          <button type="button" data-user-action="permissions" data-user-id="${escapeHtml(user.id)}" title="C&#7853;p nh&#7853;t quy&#7873;n" aria-label="C&#7853;p nh&#7853;t quy&#7873;n ng&#432;&#7901;i d&#249;ng"><i class="fa-solid fa-key"></i></button>
+          <button type="button" data-user-action="view" data-user-id="${escapeHtml(user.id)}" title="Xem chi ti\u1ebft" aria-label="Xem chi ti\u1ebft ng\u01b0\u1eddi d\u00f9ng"><i class="fa-solid fa-eye"></i></button>
+          <button type="button" data-user-action="edit" data-user-id="${escapeHtml(user.id)}" title="S\u1eeda" aria-label="S\u1eeda ng\u01b0\u1eddi d\u00f9ng"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button type="button" data-user-action="toggle" data-user-id="${escapeHtml(user.id)}" title="${user.status === "locked" ? "M\u1edf kh\u00f3a" : "Kh\u00f3a"}" aria-label="${user.status === "locked" ? "M\u1edf kh\u00f3a ng\u01b0\u1eddi d\u00f9ng" : "Kh\u00f3a ng\u01b0\u1eddi d\u00f9ng"}"><i class="fa-solid ${user.status === "locked" ? "fa-lock-open" : "fa-lock"}"></i></button>
+          <button type="button" data-user-action="role" data-user-id="${escapeHtml(user.id)}" title="\u0110\u1ed5i role" aria-label="\u0110\u1ed5i role ng\u01b0\u1eddi d\u00f9ng"><i class="fa-solid fa-user-gear"></i></button>
+          <button type="button" data-user-action="permissions" data-user-id="${escapeHtml(user.id)}" title="C\u1eadp nh\u1eadt quy\u1ec1n" aria-label="C\u1eadp nh\u1eadt quy\u1ec1n ng\u01b0\u1eddi d\u00f9ng"><i class="fa-solid fa-key"></i></button>
         </div>
       </td>
     </tr>

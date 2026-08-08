@@ -155,13 +155,24 @@ function renderPaymentRow(payment) {
 function renderActions(payment, modal = false) {
   const canManage = hasPermission(PERMISSIONS.PAYMENT_MANAGE);
   const status = normalizePaymentStatus(payment.status);
-  const classes = modal ? "admin-payment-modal-actions" : "admin-payment-actions";
+  const classes = modal ? "admin-payment-modal-actions" : "admin-payment-actions admin-row-actions";
+  if (modal) {
+    return `<div class="${classes}">
+      ${canManage && canConfirmManualPayment(payment) ? actionButton(payment.id, "paid", "X&#225;c nh&#7853;n &#273;&#227; nh&#7853;n ti&#7873;n") : ""}
+      ${canManage && status === "pending" ? actionButton(payment.id, "failed", "&#272;&#225;nh d&#7845;u th&#7845;t b&#7841;i") : ""}
+      ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "Ho&#224;n ti&#7873;n") : ""}
+      ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem &#273;&#417;n h&#224;ng</a>` : ""}
+    </div>`;
+  }
+  const menuActions = [
+    canManage && canConfirmManualPayment(payment) ? actionButton(payment.id, "paid", "X&#225;c nh&#7853;n &#273;&#227; nh&#7853;n ti&#7873;n") : "",
+    canManage && status === "pending" ? actionButton(payment.id, "failed", "&#272;&#225;nh d&#7845;u th&#7845;t b&#7841;i") : "",
+    canManage && status === "paid" ? actionButton(payment.id, "refunded", "Ho&#224;n ti&#7873;n") : "",
+    payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem &#273;&#417;n h&#224;ng</a>` : ""
+  ].filter(Boolean).join("");
   return `<div class="${classes}">
-    ${modal ? "" : `<button type="button" data-payment-detail="${numberId(payment.id)}">Chi ti\u1ebft</button>`}
-    ${canManage && canConfirmManualPayment(payment) ? actionButton(payment.id, "paid", "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n") : ""}
-    ${canManage && status === "pending" ? actionButton(payment.id, "failed", "\u0110\u00e1nh d\u1ea5u th\u1ea5t b\u1ea1i") : ""}
-    ${canManage && status === "paid" ? actionButton(payment.id, "refunded", "Ho\u00e0n ti\u1ec1n") : ""}
-    ${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">Xem \u0111\u01a1n h\u00e0ng</a>` : ""}
+    <button type="button" class="admin-row-action is-primary-soft" data-payment-detail="${numberId(payment.id)}"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>Chi ti&#7871;t</span></button>
+    ${menuActions ? `<details class="admin-row-action-menu"><summary class="admin-row-action is-icon" aria-label="M&#7903; th&#234;m h&#224;nh &#273;&#7897;ng thanh to&#225;n"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></summary><div class="admin-row-action-menu-panel">${menuActions}</div></details>` : ""}
   </div>`;
 }
 
@@ -349,7 +360,8 @@ function formatCompactDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return `<span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small>`;
-}function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
+}
+function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }
 function formatMetadata(value) { if (!value) return "-"; try { return JSON.stringify(value, null, 2); } catch { return String(value); } }
 function numberId(value) { const id = Number(value); return Number.isSafeInteger(id) && id > 0 ? id : ""; }
