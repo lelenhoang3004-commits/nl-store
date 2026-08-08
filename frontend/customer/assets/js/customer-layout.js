@@ -1331,6 +1331,7 @@ function renderLoginPage() {
       </form>
     </div>
   </article></div></section>`;
+  resetAuthRouteScroll();
   const root = layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]"); clearLoginFieldErrors(form);
@@ -1339,6 +1340,10 @@ function renderLoginPage() {
     catch(error){ showLoginError(form,error); }
     finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
   });
+}
+
+function resetAuthRouteScroll() {
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 }
 
 function clearLoginFieldErrors(form) {
@@ -1511,6 +1516,7 @@ function renderRegisterPage() {
       </form>
     </div>
   </article></div></section>`;
+  resetAuthRouteScroll();
   const root=layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
     const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
