@@ -149,8 +149,8 @@ function renderOrderRows(root) {
     ? listState.orders.map((order) => `
       <tr>
         <td><a class="admin-order-code" href="#orders/${order.id}" data-page="orders/${order.id}" title="${escapeHtml(order.orderCode)}"><strong>${escapeHtml(order.orderCode)}</strong></a></td>
-        <td><strong class="admin-order-customer-name">${escapeHtml(order.customerName || "�")}</strong></td>
-        <td class="admin-order-phone">${escapeHtml(order.customerPhone || "�")}</td>
+        <td><strong class="admin-order-customer-name">${escapeHtml(order.customerName || "—")}</strong></td>
+        <td class="admin-order-phone">${escapeHtml(order.customerPhone || "—")}</td>
         <td class="admin-order-money-cell"><strong>${formatCurrency(order.grandTotal)}</strong></td>
         <td class="admin-order-method-cell" title="${escapeHtml(paymentMethodLabel(order.paymentMethod))}">${escapeHtml(paymentMethodLabel(order.paymentMethod))}</td>
         <td>${badge(paymentStatusLabel(order.paymentStatus), order.paymentStatus)}</td>
@@ -502,7 +502,7 @@ function paymentMethodLabel(method) { return formatPaymentMethod(method); }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
 function formatCompactDate(value) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "�";
+  if (Number.isNaN(date.getTime())) return "—";
   return `<span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small>`;
 }function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }
 function formatAddress(address = {}) { return address.full_address || address.fullAddress || [address.detail_address || address.detailAddress || address.address || address.line1, address.ward_name || address.wardName || address.ward, address.province_name || address.provinceName || address.province || address.city, address.country].filter(Boolean).join(", ") || "Chưa cập nhật"; }

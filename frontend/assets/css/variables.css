@@ -12,7 +12,8 @@
   --color-success: #22C55E;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
-  --font-main: "Poppins", Arial, sans-serif;
+  --admin-font-family: "Be Vietnam Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-main: var(--admin-font-family);
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 16px;

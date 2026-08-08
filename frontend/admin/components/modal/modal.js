@@ -162,8 +162,8 @@ function getCrudModalConfig(type, row, moduleName) {
     <div class="modal-detail-grid">
       <span>Tên</span><strong>${safeRow.name ?? emptyText}</strong>
       <span>Nhóm</span><strong>${safeRow.category ?? emptyText}</strong>
-      <span>Tr�ng th�i</span><strong>${safeRow.status ?? emptyText}</strong>
-      <span>Gi� tr�</span><strong>${safeRow.total ?? emptyText}</strong>
+      <span>Trạng thái</span><strong>${safeRow.status ?? emptyText}</strong>
+      <span>Giá trị</span><strong>${safeRow.total ?? emptyText}</strong>
     </div>
   `;
 
@@ -179,25 +179,24 @@ function getCrudModalConfig(type, row, moduleName) {
         <input type="text" name="category" value="${safeRow.category ?? ""}" placeholder="Nhập nhóm" data-label="Nhóm" data-validate="required|min:2|max:60">
       </label>
       <label class="validation-field">
-        <span>Tr�ng th�i</span>
-        <select name="status" data-label="Tr�ng th�i" data-validate="required">
-          <option>ang b�n</option>
+        <span>Trạng thái</span>
+        <select name="status" data-label="Trạng thái" data-validate="required">
+          <option>Đang bán</option>
           <option>Chờ duyệt</option>
           <option>Tạm ẩn</option>
         </select>
       </label>
       <label class="validation-field">
-        <span>Gi� tr�</span>
-        <input type="text" name="total" value="${safeRow.total ?? ""}" placeholder="Nh�p gi� tr�" data-label="Gi� tr�" data-validate="required|price">
+        <span>Giá trị</span>
+        <input type="text" name="total" value="${safeRow.total ?? ""}" placeholder="Nhập giá trị" data-label="Giá trị" data-validate="required|price">
       </label>
     </div>
   `;
 
   const deleteBody = `
     <p class="modal-danger-copy">
-      B�n ang chu�n b� x�a <strong>${safeRow.name ?? moduleName}</strong>. �y ch� l� giao di�n m�u,
-      ch�a c� thao t�c Backend th�t.
-    </p>
+      Bạn đang chuẩn bị xóa <strong>${safeRow.name ?? moduleName}</strong>. Đây chỉ là giao diện mẫu,
+      chưa có thao tác Backend thật.
   `;
 
   const configs = {
@@ -222,11 +221,11 @@ function getCrudModalConfig(type, row, moduleName) {
     },
     delete: {
       eyebrow: safeModuleName,
-      title: "X�c nh�n x�a",
+      title: "Xác nhận xóa",
       body: deleteBody,
       saveText: "Delete",
       variant: "danger",
-      successMessage: "� x�c nh�n x�a tr�n giao di�n m�u."
+      successMessage: "Đã xác nhận xóa trên giao diện mẫu."
     }
   };
 
