@@ -7,10 +7,10 @@ const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23f8fafc'/%3E%3Cstop offset='1' stop-color='%23e2e8f0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='160' height='160' rx='28' fill='url(%23g)'/%3E%3Cpath d='M55 101l13-22 11 16 10-12 16 18H55z' fill='%23cbd5e1'/%3E%3Ccircle cx='100' cy='59' r='11' fill='%23cbd5e1'/%3E%3C/svg%3E";
 const STATUS_ORDER = ["pending", "confirmed", "processing", "shipping", "completed", "cancelled"];
 const PAYMENT_METHODS = [
-  { key: "cod", aliases: ["cod"], label: "Thanh toán khi nhận hàng", icon: "fa-money-bill-wave", tone: "cash" },
-  { key: "bank_transfer", aliases: ["bank_transfer", "bank", "BANK_PERSONAL_QR"], label: "Chuyển khoản ngân hàng", icon: "fa-building-columns", tone: "bank" },
+  { key: "cod", aliases: ["cod"], label: "COD", icon: "fa-money-bill-wave", tone: "cash" },
+  { key: "bank_transfer", aliases: ["bank_transfer", "bank", "BANK_PERSONAL_QR", "BANK_TRANSFER", "BANK_QR"], label: "Ngân hàng", icon: "fa-building-columns", tone: "bank" },
   { key: "momo", aliases: ["momo", "MOMO_PERSONAL_QR"], label: "MoMo", icon: "fa-wallet", tone: "momo" },
-  { key: "credit_card", aliases: ["credit_card", "CREDIT_CARD_DEMO"], label: "Thẻ tín dụng", icon: "fa-credit-card", tone: "card" }
+  { key: "credit_card", aliases: ["credit_card", "CREDIT_CARD", "CREDIT_CARD_DEMO"], label: "Thẻ tín dụng", icon: "fa-credit-card", tone: "card" }
 ];
 const STATUS_META = {
   pending: { label: "Chờ xác nhận", icon: "fa-comment-dots", tone: "pending" },
