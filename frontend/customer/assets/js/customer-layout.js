@@ -1319,7 +1319,7 @@ function renderLoginPage() {
     </aside>
     <div class="auth-login-content">
       <a class="auth-back" href="#home"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại trang trước</span></a>
-      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L STORE</span><h1><span>Chào mừng bạn</span><span>quay lại</span></h1><p>Đăng nhập để tiếp tục mua sắm, lưu lựa chọn yêu thích và nhận ưu đãi dành riêng cho bạn.</p></div>
+      <div class="auth-heading auth-login-heading"><div class="auth-logo-mark"><img src="../assets/images/nl-store-logo.png?v=20260729-logo" alt="N&amp;L Store"></div><span class="auth-kicker">N&amp;L STORE</span><h1>Ch&#224;o m&#7915;ng tr&#7903; l&#7841;i</h1><p>&#272;&#259;ng nh&#7853;p &#273;&#7875; ti&#7871;p t&#7909;c tr&#7843;i nghi&#7879;m N&amp;L Store.</p></div>
       <form data-login-form class="auth-form auth-login-form" novalidate><div data-auth-message hidden></div>${pendingCheckoutNotice}
         <label class="auth-field"><span>Email hoặc số điện thoại</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input name="email" required autocomplete="username" placeholder="email@example.com hoặc 0901234567"></div><small data-field-error="email"></small></label>
         <label class="auth-field"><span>Mật khẩu</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="current-password" placeholder="Nhập mật khẩu"></div><small data-field-error="password"></small></label>
@@ -1334,7 +1334,7 @@ function renderLoginPage() {
   const root = layoutState.main; bindOAuthButtons(root);
   root.querySelector("[data-login-form]")?.addEventListener("submit", async event => {
     event.preventDefault(); const form=event.currentTarget; const data=new FormData(form); const button=form.querySelector("button[type=submit]"); clearLoginFieldErrors(form);
-    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span>Đang đăng nhập...</span>";
+    if(customerAuth.isLoginSubmitting)return; customerAuth.isLoginSubmitting=true; button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng nhập...</span>";
     try { await customerAuth.login({ email:String(data.get("email")||"").trim(), password:String(data.get("password")||""), remember:Boolean(data.get("remember")) }); await Promise.all([refreshCart(), refreshWishlist()]); renderHeader(); if (await continuePendingCheckoutAfterLogin()) return; notifySuccess("Đăng nhập thành công."); const redirect=layoutState.pendingRoute||"home"; layoutState.pendingRoute=""; navigateToRoute(redirect); }
     catch(error){ showLoginError(form,error); }
     finally{ customerAuth.isLoginSubmitting=false; button.disabled=false; button.innerHTML="<span>Đăng nhập</span>"; }
