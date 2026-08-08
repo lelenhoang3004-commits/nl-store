@@ -1183,3 +1183,115 @@ body.variant-delete-all-open {
   .admin-product-card { padding: 12px; }
   .admin-product-table { min-width: 1060px; }
 }
+/* Product table action buttons: compact modern Xem/Sua/menu group only. */
+.admin-product-table .admin-product-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: auto;
+  max-width: none;
+  min-width: 154px;
+}
+
+.admin-product-table .admin-product-actions .product-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--action-border, var(--color-border)) 88%, transparent);
+  border-radius: 10px;
+  background: var(--action-bg, var(--color-card));
+  color: var(--action-fg, var(--color-text));
+  font-size: .78rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  box-shadow: none;
+  transform: translateY(0);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.admin-product-table .admin-product-actions .product-action-btn i {
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.admin-product-table .admin-product-actions .product-action-btn.is-view {
+  --action-bg: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  --action-fg: var(--color-primary);
+  --action-border: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+}
+
+.admin-product-table .admin-product-actions .product-action-btn.is-edit {
+  --action-bg: color-mix(in srgb, var(--color-muted) 5%, var(--color-card));
+  --action-fg: color-mix(in srgb, var(--color-text) 78%, var(--color-primary));
+  --action-border: color-mix(in srgb, var(--color-muted) 18%, var(--color-border));
+}
+
+.admin-product-table .admin-product-actions .product-action-btn.is-more {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  background: var(--color-card);
+  color: var(--color-muted);
+  border-color: color-mix(in srgb, var(--color-border) 88%, transparent);
+}
+
+.admin-product-table .admin-product-actions .product-action-btn:hover,
+.admin-product-table .admin-product-actions .product-action-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+}
+
+.admin-product-table .admin-product-actions .product-action-btn.is-view:hover,
+.admin-product-table .admin-product-actions .product-action-btn.is-view:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 13%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+}
+
+.admin-product-table .admin-product-actions .product-action-btn.is-edit:hover,
+.admin-product-table .admin-product-actions .product-action-btn.is-edit:focus-visible,
+.admin-product-table .admin-product-actions .product-action-btn.is-more:hover,
+.admin-product-table .admin-product-actions .product-action-btn.is-more:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+  color: color-mix(in srgb, var(--color-text) 82%, var(--color-primary));
+}
+
+.admin-product-table .admin-product-actions .product-action-btn:focus-visible,
+.admin-product-table .product-action-menu-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-product-table .product-action-menu {
+  flex: 0 0 auto;
+}
+
+.admin-product-table .product-action-menu-panel {
+  top: calc(100% + 7px);
+}
+
+@media (max-width: 1280px) {
+  .admin-product-table .admin-product-actions {
+    min-width: 142px;
+    gap: 5px;
+  }
+
+  .admin-product-table .admin-product-actions .product-action-btn {
+    height: 32px;
+    min-height: 32px;
+    padding-inline: 9px;
+  }
+
+  .admin-product-table .admin-product-actions .product-action-btn.is-more {
+    width: 32px;
+    min-width: 32px;
+  }
+}
