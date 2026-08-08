@@ -334,13 +334,14 @@
 }
 
 .admin-auth-intro h2 {
-  max-width: 520px;
+  max-width: 620px;
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(36px, 4vw, 44px);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: 0;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: clamp(38px, 3vw, 52px);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
 }
 
 .admin-auth-description {

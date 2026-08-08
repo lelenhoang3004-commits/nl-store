@@ -214,7 +214,7 @@ function createAuthPage({ title, description, body, variant = "default" }) {
   const intro = isLogin ? `
       <aside class="admin-auth-intro" aria-label="N&amp;L Store Admin">
         <p class="admin-auth-eyebrow">N&amp;L STORE ADMIN</p>
-        <h2>Qu&#7843;n tr&#7883; c&#7917;a h&#224;ng<br>nhanh ch&#243;ng v&#224; tr&#7921;c quan.</h2>
+        <h2>Qu&#7843;n tr&#7883; c&#7917;a h&#224;ng nhanh ch&#243;ng v&#224; tr&#7921;c quan.</h2>
         <p class="admin-auth-description">Theo d&#245;i s&#7843;n ph&#7849;m, &#273;&#417;n h&#224;ng, kh&#225;ch h&#224;ng v&#224; ho&#7841;t &#273;&#7897;ng kinh doanh trong m&#7897;t h&#7879; th&#7889;ng duy nh&#7845;t.</p>
         <ul class="admin-auth-benefits">
           <li>Qu&#7843;n l&#253; &#273;&#417;n h&#224;ng t&#7853;p trung</li>
