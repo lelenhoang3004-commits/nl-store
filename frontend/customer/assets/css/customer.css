@@ -4683,3 +4683,70 @@
     padding: 24px 18px;
   }
 }
+
+/* Shared auth header alignment for Login and Register. */
+.auth-login-content .auth-login-heading,
+.auth-register-content .auth-register-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.auth-login-content .auth-login-heading .auth-logo-mark,
+.auth-register-content .auth-register-heading .auth-logo-mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 11px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.13);
+}
+
+.auth-login-content .auth-login-heading .auth-kicker,
+.auth-register-content .auth-register-heading .auth-kicker {
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.auth-login-content .auth-login-heading h1,
+.auth-register-content .auth-register-heading h1 {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 8px;
+  font-family: var(--customer-font-family);
+  font-size: clamp(30px, 3vw, 36px);
+  font-weight: var(--customer-font-extrabold);
+  line-height: 1.14;
+  letter-spacing: 0;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.auth-login-content .auth-login-heading p,
+.auth-register-content .auth-register-heading p {
+  max-width: 430px;
+  margin: 0 auto;
+  color: var(--color-muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.auth-register-content .auth-register-heading p {
+  max-width: 520px;
+}
+
+@media (max-width: 560px) {
+  .auth-login-content .auth-login-heading,
+  .auth-register-content .auth-register-heading {
+    margin-bottom: 28px;
+  }
+
+  .auth-login-content .auth-login-heading h1,
+  .auth-register-content .auth-register-heading h1 {
+    font-size: 30px;
+  }
+}
