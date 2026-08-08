@@ -148,24 +148,29 @@ function renderOrderRows(root) {
   body.innerHTML = listState.orders.length
     ? listState.orders.map((order) => `
       <tr>
-        <td><a href="#orders/${order.id}" data-page="orders/${order.id}"><strong>${escapeHtml(order.orderCode)}</strong></a></td>
-        <td>${escapeHtml(order.customerName || "—")}</td>
-        <td>${escapeHtml(order.customerPhone || "—")}</td>
-        <td><strong>${formatCurrency(order.grandTotal)}</strong></td>
-        <td>${escapeHtml(paymentMethodLabel(order.paymentMethod))}</td>
+        <td><a class="admin-order-code" href="#orders/${order.id}" data-page="orders/${order.id}" title="${escapeHtml(order.orderCode)}"><strong>${escapeHtml(order.orderCode)}</strong></a></td>
+        <td><strong class="admin-order-customer-name">${escapeHtml(order.customerName || "�")}</strong></td>
+        <td class="admin-order-phone">${escapeHtml(order.customerPhone || "�")}</td>
+        <td class="admin-order-money-cell"><strong>${formatCurrency(order.grandTotal)}</strong></td>
+        <td class="admin-order-method-cell" title="${escapeHtml(paymentMethodLabel(order.paymentMethod))}">${escapeHtml(paymentMethodLabel(order.paymentMethod))}</td>
         <td>${badge(paymentStatusLabel(order.paymentStatus), order.paymentStatus)}</td>
         <td>${badge(orderStatusLabel(order.status), order.status)}</td>
-        <td>${formatDate(order.createdAt)}</td>
-        <td><div class="admin-order-actions">
-          <a href="#orders/${order.id}" data-page="orders/${order.id}">Xem chi tiết</a>
-          ${hasPermission(PERMISSIONS.ORDER_MANAGE) && STATUS_TRANSITIONS[order.status]?.length ? `<a href="#orders/${order.id}" data-page="orders/${order.id}">Cập nhật trạng thái</a>` : ""}
-          ${canCancel(order) && hasPermission(PERMISSIONS.ORDER_CANCEL) ? `<button type="button" data-order-cancel="${order.id}">Hủy đơn</button>` : ""}
-        </div></td>
+        <td class="admin-order-date">${formatCompactDate(order.createdAt)}</td>
+        <td>${renderListActions(order)}</td>
       </tr>`).join("")
     : '<tr><td colspan="9" class="admin-order-empty">Không có đơn hàng phù hợp.</td></tr>';
   renderPagination(root);
 }
 
+function renderListActions(order) {
+  const canUpdate = hasPermission(PERMISSIONS.ORDER_MANAGE) && STATUS_TRANSITIONS[order.status]?.length;
+  const cancelAction = canCancel(order) && hasPermission(PERMISSIONS.ORDER_CANCEL) ? `<button type="button" class="is-danger" data-order-cancel="${order.id}">H&#7911;y &#273;&#417;n</button>` : "";
+  return `<div class="admin-order-actions admin-row-actions">
+    <a class="admin-row-action is-primary-soft" href="#orders/${order.id}" data-page="orders/${order.id}"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>Xem</span></a>
+    ${canUpdate ? `<a class="admin-row-action" href="#orders/${order.id}" data-page="orders/${order.id}"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span>C&#7853;p nh&#7853;t</span></a>` : ""}
+    ${cancelAction ? `<details class="admin-row-action-menu"><summary class="admin-row-action is-icon" aria-label="M&#7903; th&#234;m h&#224;nh &#273;&#7897;ng &#273;&#417;n h&#224;ng"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></summary><div class="admin-row-action-menu-panel">${cancelAction}</div></details>` : ""}
+  </div>`;
+}
 function renderPagination(root) {
   const target = root.querySelector("[data-order-pagination]");
   const pagination = listState.pagination;
@@ -495,7 +500,11 @@ function orderStatusLabel(status) { return ({ pending: "Chờ xác nhận", conf
 function paymentStatusLabel(status) { return formatPaymentStatus(status); }
 function paymentMethodLabel(method) { return formatPaymentMethod(method); }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
-function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }
+function formatCompactDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "�";
+  return `<span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small>`;
+}function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN"); }
 function formatAddress(address = {}) { return address.full_address || address.fullAddress || [address.detail_address || address.detailAddress || address.address || address.line1, address.ward_name || address.wardName || address.ward, address.province_name || address.provinceName || address.province || address.city, address.country].filter(Boolean).join(", ") || "Chưa cập nhật"; }
 function resolveImageUrl(url) { if (!url) return PLACEHOLDER_IMAGE; return globalThis.normalizeImageUrl?.(url) ?? url; }
 function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }

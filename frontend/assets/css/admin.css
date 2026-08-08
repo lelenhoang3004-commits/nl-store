@@ -1107,3 +1107,183 @@ body.admin-auth-route .admin-footer {
     width: calc(100% - 32px);
   }
 }
+
+/* Shared compact admin page/table/action utilities for payments, orders, users. */
+.admin-payments-page,
+.admin-orders-page,
+.admin-users-page {
+  width: min(100%, 1480px);
+  max-width: 1480px;
+  margin-inline: auto;
+}
+
+.admin-main:has(.admin-payments-page),
+.admin-main:has(.admin-orders-page),
+.admin-main:has(.admin-users-page) {
+  max-width: none;
+  overflow-x: hidden;
+  padding-inline: clamp(16px, 2vw, 28px);
+}
+
+.admin-payment-table-wrap,
+.admin-order-table-wrap,
+.admin-users-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.admin-row-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-row-action,
+.admin-row-action-menu-panel > button,
+.admin-row-action-menu-panel > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 33px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-card);
+  color: var(--color-text);
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 650;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.admin-row-action.is-primary-soft {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  color: var(--color-primary);
+}
+
+.admin-row-action.is-icon {
+  width: 33px;
+  min-width: 33px;
+  padding: 0;
+  color: var(--color-muted);
+}
+
+.admin-row-action:hover,
+.admin-row-action:focus-visible,
+.admin-row-action-menu-panel > button:hover,
+.admin-row-action-menu-panel > a:hover,
+.admin-row-action-menu-panel > button:focus-visible,
+.admin-row-action-menu-panel > a:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  color: var(--color-primary);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+  outline: none;
+}
+
+.admin-row-action:focus-visible,
+.admin-row-action-menu-panel > button:focus-visible,
+.admin-row-action-menu-panel > a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-row-action-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.admin-row-action-menu summary {
+  list-style: none;
+}
+
+.admin-row-action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-row-action-menu-panel {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 12;
+  display: grid;
+  gap: 6px;
+  min-width: 190px;
+  padding: 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, .16);
+}
+
+.admin-row-action-menu:not([open]) .admin-row-action-menu-panel {
+  display: none;
+}
+
+.admin-row-action-menu-panel > button,
+.admin-row-action-menu-panel > a {
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.admin-row-action-menu-panel .is-danger,
+.admin-row-action-menu-panel > button[data-order-cancel] {
+  color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .admin-main:has(.admin-payments-page),
+  .admin-main:has(.admin-orders-page),
+  .admin-main:has(.admin-users-page) {
+    padding-inline: 12px;
+  }
+}
+
+/* Specificity guard for shared row actions against older page button rules. */
+.admin-payments-page .admin-row-action,
+.admin-orders-page .admin-row-action,
+.admin-users-page .admin-row-action,
+.admin-payments-page .admin-row-action-menu-panel > button,
+.admin-payments-page .admin-row-action-menu-panel > a,
+.admin-orders-page .admin-row-action-menu-panel > button,
+.admin-orders-page .admin-row-action-menu-panel > a,
+.admin-users-page .admin-row-action-menu-panel > button,
+.admin-users-page .admin-row-action-menu-panel > a {
+  min-height: 33px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-card);
+  color: var(--color-text);
+  font-size: .76rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.admin-payments-page .admin-row-action.is-primary-soft,
+.admin-orders-page .admin-row-action.is-primary-soft,
+.admin-users-page .admin-row-action.is-primary-soft {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  color: var(--color-primary);
+}
+
+.admin-payments-page .admin-row-action.is-icon,
+.admin-orders-page .admin-row-action.is-icon,
+.admin-users-page .admin-row-action.is-icon {
+  width: 33px;
+  min-width: 33px;
+  padding: 0;
+}

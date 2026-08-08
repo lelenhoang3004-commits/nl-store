@@ -138,16 +138,16 @@ function renderRows(root) {
 
 function renderPaymentRow(payment) {
   return `<tr>
-    <td><button type="button" class="admin-payment-link" data-payment-detail="${numberId(payment.id)}"><strong>${escapeHtml(payment.transactionCode || "-")}</strong></button></td>
+    <td><button type="button" class="admin-payment-link admin-payment-code" data-payment-detail="${numberId(payment.id)}" title="${escapeHtml(payment.transactionCode || "-")}"><strong>${escapeHtml(payment.transactionCode || "-")}</strong></button></td>
     <td>${payment.orderId ? `<a href="#orders/${numberId(payment.orderId)}" data-page="orders/${numberId(payment.orderId)}">${escapeHtml(payment.orderCode || `#${payment.orderId}`)}</a>` : "-"}</td>
     <td><strong>${escapeHtml(payment.customerName || "-")}</strong><small>${escapeHtml(payment.customerPhone || payment.customerEmail || "")}</small></td>
-    <td>${escapeHtml(payment.provider || "-")}</td>
+    <td><span class="admin-payment-provider" title="${escapeHtml(payment.provider || "-")}">${escapeHtml(formatProviderLabel(payment.provider))}</span></td>
     <td class="admin-payment-method-cell">${escapeHtml(formatPaymentMethod(resolvePaymentMethod(payment)))}</td>
     <td><strong>${formatCurrency(payment.amount, payment.currency)}</strong></td>
     <td>${escapeHtml(payment.currency || "-")}</td>
     <td class="admin-payment-status-cell">${statusBadge(payment.status)}</td>
-    <td>${formatDate(payment.paidAt)}</td>
-    <td>${formatDate(payment.createdAt)}</td>
+    <td class="admin-payment-date">${formatCompactDate(payment.paidAt)}</td>
+    <td class="admin-payment-date">${formatCompactDate(payment.createdAt)}</td>
     <td>${renderActions(payment)}</td>
   </tr>`;
 }
@@ -340,7 +340,16 @@ function closeDetailModal() { modalUxCleanup?.(); modalUxCleanup = null; activeM
 function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("button, input, select").forEach((element) => { element.disabled = busy; }); }
 function setModalBusy(busy) { activeModal?.querySelectorAll?.("button").forEach((element) => { element.disabled = busy; }); }
 function statusBadge(status) { const normalized = normalizePaymentStatus(status); return `<span class="admin-payment-badge is-${escapeHtml(normalized || "unknown")}">${escapeHtml(formatPaymentStatus(status))}</span>`; }
-function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
+function formatProviderLabel(provider) {
+  const key = String(provider || "").toUpperCase();
+  return ({ MOMO_PERSONAL_QR: "MoMo QR", BANK_PERSONAL_QR: "Chuy\u1ec3n kho\u1ea3n QR", COD: "COD", CREDIT_CARD: "Th\u1ebb t\u00edn d\u1ee5ng", MOMO: "MoMo" })[key] || provider || "-";
+}
+function formatCompactDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return `<span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small>`;
+}function formatCurrency(value, currency = "VND") { try { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: currency || "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); } catch { return `${Number(value || 0).toLocaleString("vi-VN")} ${currency || ""}`.trim(); } }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }
 function formatMetadata(value) { if (!value) return "-"; try { return JSON.stringify(value, null, 2); } catch { return String(value); } }
 function numberId(value) { const id = Number(value); return Number.isSafeInteger(id) && id > 0 ? id : ""; }
