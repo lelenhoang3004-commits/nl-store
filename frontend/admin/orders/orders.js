@@ -235,6 +235,12 @@ function getTransitionPath(currentStatus, nextStatus) {
   return ORDER_STATUS_FLOW.slice(currentIndex + 1, nextIndex + 1);
 }
 
+function getNextOrderStatus(currentStatus) {
+  const currentIndex = ORDER_STATUS_FLOW.indexOf(normalizeOrderStatus(currentStatus));
+  if (currentIndex < 0 || currentIndex >= ORDER_STATUS_FLOW.length - 1) return null;
+  return ORDER_STATUS_FLOW[currentIndex + 1];
+}
+
 function normalizeOrderDetailResponse(data = {}) {
   const payments = data.payments || (data.payment ? [data.payment] : detailState?.payments || []);
   return { ...data, payments, payment: payments[0] || data.payment || null };
@@ -332,17 +338,28 @@ function initOrderDetail(root, orderId) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const currentStatus = detailState?.order?.status;
-    const nextStatus = String(data.get("status") || "");
-    const transitionPath = getTransitionPath(currentStatus, nextStatus);
-    if (!transitionPath.length) return;
+    const currentStatus = normalizeOrderStatus(detailState?.order?.status);
+    const selectedStatus = normalizeOrderStatus(data.get("status"));
+    const targetStatus = selectedStatus && selectedStatus !== currentStatus ? selectedStatus : getNextOrderStatus(currentStatus);
+    if (!targetStatus) {
+      notifyInfo("\u0110\u01a1n h\u00e0ng \u0111\u00e3 \u1edf tr\u1ea1ng th\u00e1i cu\u1ed1i c\u00f9ng.");
+      return;
+    }
+    const transitionPath = getTransitionPath(currentStatus, targetStatus);
+    if (!transitionPath.length) {
+      notifyWarning("Kh\u00f4ng c\u00f2n b\u01b0\u1edbc chuy\u1ec3n tr\u1ea1ng th\u00e1i h\u1ee3p l\u1ec7.");
+      return;
+    }
     if (transitionPath.length >= 2) {
       const confirmed = await openStatusJumpConfirmDialog(transitionPath);
       if (!confirmed) return;
     }
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitLabel = submitButton?.textContent || "C\u1eadp nh\u1eadt";
     setBusy(form, true);
+    if (submitButton) submitButton.textContent = "\u0110ang c\u1eadp nh\u1eadt...";
     try {
-      const response = await orderService.updateStatus(orderId, { status: nextStatus, note: String(data.get("note") || "").trim() }, silentErrors());
+      const response = await orderService.updateStatus(orderId, { status: targetStatus, note: String(data.get("note") || "").trim() }, silentErrors());
       detailState = normalizeOrderDetailResponse(response.data || detailState);
       notifySuccess("\u0110\u00e3 c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i \u0111\u01a1n h\u00e0ng.");
       root.innerHTML = renderOrderDetail(detailState);
@@ -351,6 +368,7 @@ function initOrderDetail(root, orderId) {
     } catch (error) {
       notifyError(getErrorMessage(error));
       setBusy(form, false);
+      if (submitButton) submitButton.textContent = submitLabel;
     }
   });
 
