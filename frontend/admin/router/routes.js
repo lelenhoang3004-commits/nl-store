@@ -22,6 +22,7 @@ import { createDashboard, initDashboard } from "../dashboard/dashboard.js";
 import { createInventoryPage, initInventoryPage } from "../inventory/inventory.js";
 import { createOrdersPage, initOrdersPage } from "../orders/orders.js";
 import { createPaymentsPage, initPaymentsPage } from "../payments/payments.js";
+import { createProfilePage, initProfilePage } from "../profile/profile.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
 import { createProductsPage, initProductsPage } from "../products/products.js";
 import { createUsersPage, initUsersPage } from "../users/users.js";
@@ -245,6 +246,17 @@ export const adminRoutes = [
     render: createActivityTimelinePage,
     init: initActivityTimelinePage
   },
+  {
+    path: "profile",
+    title: "Hồ sơ quản trị",
+    breadcrumb: "Hồ sơ quản trị",
+    menuKey: null,
+    requiresAuth: true,
+    permissions: [],
+    render: createProfilePage,
+    init: initProfilePage
+  },
+
   {
     path: "settings",
     title: "Cài đặt",

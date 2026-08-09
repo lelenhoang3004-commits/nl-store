@@ -65,7 +65,7 @@ export function createHeader(activeLabel = "Dashboard") {
               <small>${escapeHtml(displayEmail)}</small>
             </div>
           </div>
-          <a href="#settings" data-page="settings">
+          <a href="#profile" data-page="profile">
             <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
             Hồ sơ quản trị
           </a>

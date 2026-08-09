@@ -164,6 +164,27 @@ export function getAuthenticatedUser() {
   return isSessionActive(session) ? session.user : null;
 }
 
+export function updateAuthenticatedUser(userPatch = {}) {
+  const session = getAuthSession();
+
+  if (!isSessionActive(session)) {
+    return null;
+  }
+
+  const nextUser = {
+    ...session.user,
+    ...userPatch,
+    role: String(userPatch.role || session.user.role || "").toUpperCase()
+  };
+  const nextSession = {
+    ...session,
+    user: nextUser
+  };
+
+  saveSession(nextSession, "profile-updated");
+  return nextUser;
+}
+
 export function isLoggedIn() {
   return Boolean(getAuthenticatedUser());
 }
