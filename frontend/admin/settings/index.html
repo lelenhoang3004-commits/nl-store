@@ -1,5 +1,5 @@
-<section class="settings-page" aria-labelledby="settings-title">
-  <header class="settings-heading">
+<section class="admin-settings-page settings-page" aria-labelledby="settings-title">
+  <header class="settings-heading settings-card">
     <div>
       <p class="settings-eyebrow">CÀI ĐẶT</p>
       <h1 id="settings-title">Cài đặt hệ thống</h1>
@@ -11,8 +11,14 @@
     </div>
   </header>
 
-  <div class="settings-shell">
-    <aside class="settings-tabs" aria-label="Nhóm cài đặt" data-settings-tabs></aside>
+  <div class="settings-workspace settings-shell">
+    <aside class="settings-sidebar" aria-label="Nhóm cài đặt">
+      <div class="settings-sidebar-heading">
+        <span>CẤU HÌNH</span>
+        <strong>Tùy chỉnh hệ thống</strong>
+      </div>
+      <nav class="settings-tabs" data-settings-tabs></nav>
+    </aside>
     <section class="settings-content" data-settings-panel></section>
   </div>
 </section>

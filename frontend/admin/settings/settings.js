@@ -17,8 +17,7 @@ let notificationDraft = {};
 let notificationInitial = {};
 
 export async function createSettingsPage() {
-  const templateUrl = new URL("./index.html", import.meta.url);
-  return loadTemplate(templateUrl);
+  return loadTemplate(new URL("./index.html", import.meta.url));
 }
 
 export function initSettingsPage(root = document) {
@@ -80,18 +79,18 @@ function bindSettingsEvents(root) {
 
 function renderSettingsTabs(root) {
   const sections = [
-    { key: "general", label: "Chung", icon: "fa-sliders" },
-    { key: "appearance", label: "Giao diện", icon: "fa-palette" },
-    { key: "notifications", label: "Thông báo", icon: "fa-bell" },
-    { key: "security", label: "Bảo mật", icon: "fa-shield-halved" }
+    { key: "general", label: "Chung", description: "Cấu hình cơ bản", icon: "fa-sliders" },
+    { key: "appearance", label: "Giao diện", description: "Hiển thị quản trị", icon: "fa-palette" },
+    { key: "notifications", label: "Thông báo", description: "Cảnh báo hệ thống", icon: "fa-bell" },
+    { key: "security", label: "Bảo mật", description: "Tài khoản & bảo mật", icon: "fa-shield-halved" }
   ];
   const container = root.querySelector("[data-settings-tabs]");
   if (!container) return;
 
   container.innerHTML = sections.map((section) => `
-    <button type="button" class="${section.key === activeSectionKey ? "is-active" : ""}" data-settings-tab="${section.key}">
-      <i class="fa-solid ${section.icon}" aria-hidden="true"></i>
-      <span>${section.label}</span>
+    <button type="button" class="settings-nav-item ${section.key === activeSectionKey ? "is-active" : ""}" data-settings-tab="${section.key}">
+      <span class="settings-nav-icon"><i class="fa-solid ${section.icon}" aria-hidden="true"></i></span>
+      <span class="settings-nav-copy"><strong>${section.label}</strong><small>${section.description}</small></span>
     </button>
   `).join("");
 }
@@ -113,98 +112,114 @@ function renderActiveSection(root) {
 
 function renderGeneralSection() {
   const rows = [
-    ["Tên hệ thống", "N&L Store Admin"],
-    ["Tên cửa hàng", "N&L Store"],
-    ["Ngôn ngữ", "Tiếng Việt"],
-    ["Múi giờ", "Asia/Ho_Chi_Minh"],
-    ["Định dạng tiền", "VND"]
+    ["Tên hệ thống", "N&L Store Admin", false],
+    ["Tên cửa hàng", "N&L Store", false],
+    ["Ngôn ngữ", "Tiếng Việt", true],
+    ["Múi giờ", "Asia/Ho_Chi_Minh", true],
+    ["Định dạng tiền", "VND", true]
   ];
 
   return `
-    ${renderSectionHeader("Cài đặt chung", "Thông tin cơ bản của hệ thống quản trị.", "Chỉ hiển thị")}
-    <div class="settings-info-list">
-      ${rows.map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("")}
-    </div>
+    ${renderPageSectionIntro("Cài đặt chung", "Quản lý thông tin cơ bản của hệ thống quản trị.")}
+    <section class="settings-section-card" aria-labelledby="settings-system-info-title">
+      <div class="settings-section-card-header">
+        <p>THÔNG TIN HỆ THỐNG</p>
+        <h3 id="settings-system-info-title">Thông tin cơ bản của hệ thống quản trị.</h3>
+      </div>
+      <div class="settings-info-list">
+        ${rows.map(([label, value, badge]) => `
+          <div class="setting-row">
+            <div class="setting-label">${label}</div>
+            <div class="setting-value">${badge ? `<span class="settings-neutral-badge">${value}</span>` : value}</div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
   `;
 }
 
 function renderAppearanceSection() {
   const mode = getStoredThemeMode();
   const options = [
-    ["light", "Giao diện sáng", "Nền sáng, dễ đọc trong môi trường văn phòng.", "fa-sun"],
-    ["dark", "Giao diện tối", "Giảm chói khi làm việc trong điều kiện thiếu sáng.", "fa-moon"],
-    ["system", "Theo hệ thống", "Tự đồng bộ với chế độ hiển thị của thiết bị.", "fa-display"]
+    ["light", "Sáng", "Giao diện sáng cho môi trường văn phòng.", "fa-sun"],
+    ["dark", "Tối", "Giảm chói khi làm việc thiếu sáng.", "fa-moon"],
+    ["system", "Theo hệ thống", "Tự đồng bộ với thiết bị.", "fa-display"]
   ];
 
   return `
-    ${renderSectionHeader("Giao diện", "Chọn chế độ hiển thị cho khu vực quản trị.", "Local preference")}
-    <div class="settings-choice-grid" role="radiogroup" aria-label="Chế độ giao diện">
-      ${options.map(([value, label, description, icon]) => `
-        <label class="settings-choice ${mode === value ? "is-active" : ""}">
-          <input type="radio" name="themeMode" value="${value}" data-theme-mode ${mode === value ? "checked" : ""}>
-          <i class="fa-solid ${icon}" aria-hidden="true"></i>
-          <span><strong>${label}</strong><small>${description}</small></span>
-        </label>
-      `).join("")}
-    </div>
+    ${renderPageSectionIntro("Giao diện", "Chọn chế độ hiển thị của trang quản trị.")}
+    <section class="settings-section-card">
+      <div class="settings-choice-grid" role="radiogroup" aria-label="Chế độ giao diện">
+        ${options.map(([value, label, description, icon]) => `
+          <label class="settings-choice ${mode === value ? "is-active" : ""}">
+            <input type="radio" name="themeMode" value="${value}" data-theme-mode ${mode === value ? "checked" : ""}>
+            <span class="settings-choice-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span>
+            <span class="settings-choice-copy"><strong>${label}</strong><small>${description}</small></span>
+          </label>
+        `).join("")}
+      </div>
+    </section>
   `;
 }
 
 function renderNotificationsSection() {
   const options = [
-    ["newOrders", "Thông báo đơn hàng mới", "Nhận cảnh báo khi có đơn hàng mới."],
-    ["payments", "Thông báo thanh toán", "Nhận cảnh báo khi thanh toán thay đổi."],
-    ["lowStock", "Tồn kho thấp", "Nhận cảnh báo khi sản phẩm sắp hết."],
-    ["system", "Thông báo hệ thống", "Nhận cập nhật quan trọng trong trang quản trị."]
+    ["newOrders", "Đơn hàng mới", "Thông báo khi hệ thống nhận đơn hàng mới."],
+    ["payments", "Thanh toán", "Thông báo khi trạng thái thanh toán thay đổi."],
+    ["lowStock", "Tồn kho thấp", "Cảnh báo khi sản phẩm gần hết hàng."],
+    ["system", "Hệ thống", "Nhận cập nhật quan trọng trong trang quản trị."]
   ];
 
   return `
-    ${renderSectionHeader("Thông báo", "Tùy chọn cảnh báo hiển thị trong khu vực quản trị.", "Local preference")}
-    <div class="settings-switch-list">
-      ${options.map(([name, label, description]) => `
-        <label class="settings-toggle">
-          <span><strong>${label}</strong><small>${description}</small></span>
-          <input type="checkbox" name="${name}" data-notification-pref ${notificationDraft[name] ? "checked" : ""}>
-          <i aria-hidden="true"></i>
-        </label>
-      `).join("")}
-    </div>
-    <div class="settings-actions">
-      <button class="settings-secondary-button" type="button" data-settings-reset-notifications>Khôi phục</button>
-      <button class="settings-save-button" type="button" data-settings-save-notifications>
-        <i class="fa-regular fa-floppy-disk" aria-hidden="true"></i>
-        <span>Lưu thay đổi</span>
-      </button>
-    </div>
+    ${renderPageSectionIntro("Thông báo", "Tùy chọn cảnh báo hiển thị trong khu vực quản trị.")}
+    <section class="settings-section-card">
+      <div class="settings-switch-list">
+        ${options.map(([name, label, description]) => `
+          <label class="settings-toggle setting-row">
+            <span class="setting-copy"><strong>${label}</strong><small>${description}</small></span>
+            <input type="checkbox" name="${name}" data-notification-pref ${notificationDraft[name] ? "checked" : ""}>
+            <i aria-hidden="true"></i>
+          </label>
+        `).join("")}
+      </div>
+      <div class="settings-actions">
+        <button class="settings-secondary-button" type="button" data-settings-reset-notifications>Khôi phục</button>
+        <button class="settings-save-button" type="button" data-settings-save-notifications>
+          <i class="fa-regular fa-floppy-disk" aria-hidden="true"></i>
+          <span>Lưu thay đổi</span>
+        </button>
+      </div>
+    </section>
   `;
 }
 
 function renderSecuritySection() {
   return `
-    ${renderSectionHeader("Bảo mật", "Cập nhật mật khẩu đăng nhập cho tài khoản quản trị.", "Backend")}
-    <form class="settings-password-form" data-settings-password-form>
-      ${renderPasswordField("Mật khẩu hiện tại", "current_password", "current-password")}
-      ${renderPasswordField("Mật khẩu mới", "newPassword", "new-password")}
-      ${renderPasswordField("Xác nhận mật khẩu mới", "confirmPassword", "new-password")}
-      <div class="settings-form-message" data-settings-password-message></div>
-      <div class="settings-actions">
-        <button class="settings-save-button" type="submit" data-settings-password-submit>
-          <i class="fa-solid fa-key" aria-hidden="true"></i>
-          <span>Đổi mật khẩu</span>
-        </button>
-      </div>
-    </form>
+    ${renderPageSectionIntro("Bảo mật", "Cập nhật mật khẩu đăng nhập cho tài khoản quản trị.")}
+    <section class="settings-section-card">
+      <form class="settings-password-form" data-settings-password-form>
+        ${renderPasswordField("Mật khẩu hiện tại", "current_password", "current-password")}
+        ${renderPasswordField("Mật khẩu mới", "newPassword", "new-password")}
+        ${renderPasswordField("Xác nhận mật khẩu mới", "confirmPassword", "new-password")}
+        <div class="settings-form-message" data-settings-password-message></div>
+        <div class="settings-actions">
+          <button class="settings-save-button" type="submit" data-settings-password-submit>
+            <i class="fa-solid fa-key" aria-hidden="true"></i>
+            <span>Đổi mật khẩu</span>
+          </button>
+        </div>
+      </form>
+    </section>
   `;
 }
 
-function renderSectionHeader(title, description, pill) {
+function renderPageSectionIntro(title, description) {
   return `
     <div class="settings-content-header">
       <div>
         <p>${title}</p>
         <h2>${description}</h2>
       </div>
-      <span class="settings-pill">${pill}</span>
     </div>
   `;
 }

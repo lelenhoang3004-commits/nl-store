@@ -11,11 +11,6 @@ const BADGE_CONFIG = Object.freeze({
     title: (count) => `${count} s\u1ea3n ph\u1ea9m c\u1ea7n ki\u1ec3m tra t\u1ed3n kho`,
     aria: (count) => `${count} s\u1ea3n ph\u1ea9m c\u1ea7n ki\u1ec3m tra t\u1ed3n kho`
   },
-  inventory: {
-    key: "products_attention",
-    title: (count) => `${count} s\u1ea3n ph\u1ea9m c\u00f3 bi\u1ebfn th\u1ec3 h\u1ebft h\u00e0ng ho\u1eb7c s\u1eafp h\u1ebft`,
-    aria: (count) => `${count} s\u1ea3n ph\u1ea9m c\u00f3 bi\u1ebfn th\u1ec3 h\u1ebft h\u00e0ng ho\u1eb7c s\u1eafp h\u1ebft`
-  },
   orders: {
     key: "pending_orders",
     title: (count) => `${count} \u0111\u01a1n h\u00e0ng \u0111ang ch\u1edd x\u00e1c nh\u1eadn`,
@@ -36,7 +31,6 @@ const BADGE_CONFIG = Object.freeze({
 export const adminMenuItems = [
   { page: "dashboard", icon: "fa-chart-line", label: "Dashboard", permissions: [PERMISSIONS.DASHBOARD_VIEW] },
   { page: "products", icon: "fa-shirt", label: "Qu\u1ea3n l\u00fd s\u1ea3n ph\u1ea9m", badgeKey: "products", permissions: [PERMISSIONS.PRODUCT_VIEW] },
-  { page: "inventory", icon: "fa-warehouse", label: "Qu\u1ea3n l\u00fd t\u1ed3n kho", badgeKey: "inventory", permissions: [PERMISSIONS.INVENTORY_VIEW] },
   { page: "categories", icon: "fa-tags", label: "Qu\u1ea3n l\u00fd danh m\u1ee5c", permissions: [PERMISSIONS.CATEGORY_VIEW] },
   { page: "users", icon: "fa-users", label: "Qu\u1ea3n l\u00fd ng\u01b0\u1eddi d\u00f9ng", permissions: [PERMISSIONS.USER_VIEW] },
   { page: "orders", icon: "fa-box-open", label: "Qu\u1ea3n l\u00fd \u0111\u01a1n h\u00e0ng", badgeKey: "orders", permissions: [PERMISSIONS.ORDER_VIEW] },
@@ -68,7 +62,7 @@ export function createSidebar(activePage = "dashboard") {
         <strong>N&amp;L Store</strong>
         <span>${currentUser.role}</span>
       </div>
-      <button class="sidebar-collapse-button" type="button" aria-label="Thu gọn sidebar" data-sidebar-collapse>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu gá»n sidebar" data-sidebar-collapse>
         <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
       </button>
     </div>
@@ -99,7 +93,7 @@ function createGuestSidebar() {
 
     <div class="sidebar-guest-note">
       <span>Secure Management Portal</span>
-      <small>Đăng nhập để truy cập hệ thống quản trị.</small>
+      <small>ÄÄƒng nháº­p Ä‘á»ƒ truy cáº­p há»‡ thá»‘ng quáº£n trá»‹.</small>
     </div>
   `;
 }

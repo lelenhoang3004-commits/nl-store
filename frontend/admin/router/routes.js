@@ -19,7 +19,6 @@ import { createActivityTimelinePage, initActivityTimelinePage } from "../activit
 import { createAuditLogPage, initAuditLogPage } from "../audit-log/audit-log.js";
 import { createCategoriesPage, initCategoriesPage } from "../categories/categories.js";
 import { createDashboard, initDashboard } from "../dashboard/dashboard.js";
-import { createInventoryPage, initInventoryPage } from "../inventory/inventory.js";
 import { createOrdersPage, initOrdersPage } from "../orders/orders.js";
 import { createPaymentsPage, initPaymentsPage } from "../payments/payments.js";
 import { createProfilePage, initProfilePage } from "../profile/profile.js";
@@ -119,8 +118,8 @@ export const adminRoutes = [
   {
     path: "categories",
     aliases: ["category"],
-    title: "Quản lý danh mục",
-    breadcrumb: "Quản lý danh mục",
+    title: "Quáº£n lÃ½ danh má»¥c",
+    breadcrumb: "Quáº£n lÃ½ danh má»¥c",
     menuKey: "categories",
     requiresAuth: true,
     permissions: [PERMISSIONS.CATEGORY_VIEW],
@@ -130,8 +129,8 @@ export const adminRoutes = [
   {
     path: "products",
     aliases: ["product"],
-    title: "Quản lý sản phẩm",
-    breadcrumb: "Quản lý sản phẩm",
+    title: "Quáº£n lÃ½ sáº£n pháº©m",
+    breadcrumb: "Quáº£n lÃ½ sáº£n pháº©m",
     menuKey: "products",
     requiresAuth: true,
     permissions: [PERMISSIONS.PRODUCT_VIEW],
@@ -140,8 +139,8 @@ export const adminRoutes = [
   },
   {
     path: "products/:id",
-    title: "Chi tiết sản phẩm",
-    breadcrumb: "Chi tiết sản phẩm",
+    title: "Chi tiáº¿t sáº£n pháº©m",
+    breadcrumb: "Chi tiáº¿t sáº£n pháº©m",
     menuKey: "products",
     requiresAuth: true,
     permissions: [PERMISSIONS.PRODUCT_VIEW],
@@ -149,20 +148,10 @@ export const adminRoutes = [
     init: initProductsPage
   },
   {
-    path: "inventory",
-    title: "Quản lý tồn kho",
-    breadcrumb: "Quản lý tồn kho",
-    menuKey: "inventory",
-    requiresAuth: true,
-    permissions: [PERMISSIONS.INVENTORY_VIEW],
-    render: createInventoryPage,
-    init: initInventoryPage
-  },
-  {
     path: "users",
     aliases: ["user"],
-    title: "Quản lý người dùng",
-    breadcrumb: "Quản lý người dùng",
+    title: "Quáº£n lÃ½ ngÆ°á»i dÃ¹ng",
+    breadcrumb: "Quáº£n lÃ½ ngÆ°á»i dÃ¹ng",
     menuKey: "users",
     requiresAuth: true,
     permissions: [PERMISSIONS.USER_VIEW],
@@ -172,8 +161,8 @@ export const adminRoutes = [
   {
     path: "orders",
     aliases: ["order"],
-    title: "Quản lý đơn hàng",
-    breadcrumb: "Quản lý đơn hàng",
+    title: "Quáº£n lÃ½ Ä‘Æ¡n hÃ ng",
+    breadcrumb: "Quáº£n lÃ½ Ä‘Æ¡n hÃ ng",
     menuKey: "orders",
     requiresAuth: true,
     permissions: [PERMISSIONS.ORDER_VIEW],
@@ -182,8 +171,8 @@ export const adminRoutes = [
   },
   {
     path: "orders/:id",
-    title: "Chi tiết đơn hàng",
-    breadcrumb: "Chi tiết đơn hàng",
+    title: "Chi tiáº¿t Ä‘Æ¡n hÃ ng",
+    breadcrumb: "Chi tiáº¿t Ä‘Æ¡n hÃ ng",
     menuKey: "orders",
     requiresAuth: true,
     permissions: [PERMISSIONS.ORDER_VIEW],
@@ -193,8 +182,8 @@ export const adminRoutes = [
   {
     path: "payments",
     aliases: ["payment"],
-    title: "Quản lý thanh toán",
-    breadcrumb: "Quản lý thanh toán",
+    title: "Quáº£n lÃ½ thanh toÃ¡n",
+    breadcrumb: "Quáº£n lÃ½ thanh toÃ¡n",
     menuKey: "payments",
     requiresAuth: true,
     permissions: [PERMISSIONS.PAYMENT_VIEW],
@@ -204,8 +193,8 @@ export const adminRoutes = [
   {
     path: "vouchers",
     aliases: ["voucher"],
-    title: "Quản lý mã giảm giá",
-    breadcrumb: "Quản lý mã giảm giá",
+    title: "Quáº£n lÃ½ mÃ£ giáº£m giÃ¡",
+    breadcrumb: "Quáº£n lÃ½ mÃ£ giáº£m giÃ¡",
     menuKey: "vouchers",
     requiresAuth: true,
     permissions: [PERMISSIONS.VOUCHER_VIEW],
@@ -215,15 +204,15 @@ export const adminRoutes = [
     {
     path: "newsletter",
     aliases: ["emails", "email"],
-    title: "Đăng ký Email",
-    breadcrumb: "Đăng ký Email",
+    title: "ÄÄƒng kÃ½ Email",
+    breadcrumb: "ÄÄƒng kÃ½ Email",
     menuKey: "emails",
     requiresAuth: true,
     permissions: [PERMISSIONS.EMAIL_VIEW],
     render: createNewsletterPage,
     init: initNewsletterPage
   },
-  createListRoute("statistics", "Thống kê", PERMISSIONS.STATISTIC_VIEW, ["statistic"]),
+  createListRoute("statistics", "Thá»‘ng kÃª", PERMISSIONS.STATISTIC_VIEW, ["statistic"]),
   {
     path: "audit-log",
     aliases: ["audit"],
@@ -248,8 +237,8 @@ export const adminRoutes = [
   },
   {
     path: "profile",
-    title: "Hồ sơ quản trị",
-    breadcrumb: "Hồ sơ quản trị",
+    title: "Há»“ sÆ¡ quáº£n trá»‹",
+    breadcrumb: "Há»“ sÆ¡ quáº£n trá»‹",
     menuKey: null,
     requiresAuth: true,
     permissions: [],
@@ -259,8 +248,8 @@ export const adminRoutes = [
 
   {
     path: "settings",
-    title: "Cài đặt",
-    breadcrumb: "Cài đặt",
+    title: "CÃ i Ä‘áº·t",
+    breadcrumb: "CÃ i Ä‘áº·t",
     menuKey: "settings",
     requiresAuth: true,
     permissions: [PERMISSIONS.SETTING_VIEW],
@@ -297,6 +286,3 @@ export const adminRoutes = [
 ];
 
 export const DEFAULT_ADMIN_ROUTE = "dashboard";
-
-
-

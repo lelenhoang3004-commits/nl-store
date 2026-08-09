@@ -1,4 +1,4 @@
-﻿export const PERMISSIONS = Object.freeze({
+export const PERMISSIONS = Object.freeze({
   DASHBOARD_VIEW: "dashboard:view",
   CATEGORY_VIEW: "category:view",
   CATEGORY_CREATE: "category:create",
@@ -9,8 +9,6 @@
   PRODUCT_CREATE: "product:create",
   PRODUCT_UPDATE: "product:update",
   PRODUCT_DELETE: "product:delete",
-  INVENTORY_VIEW: "inventory:view",
-  INVENTORY_UPDATE: "inventory:update",
   USER_VIEW: "user:view",
   USER_UPDATE: "user:update",
   USER_MANAGE: "user:manage",
@@ -33,6 +31,3 @@
   STATISTIC_VIEW: "statistic:view",
   SETTING_VIEW: "setting:view"
 });
-
-
-
