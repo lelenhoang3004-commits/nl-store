@@ -96,27 +96,29 @@ function renderSecondarySummary(root, summary) {
   const target = root.querySelector("[data-dashboard-secondary]");
   if (!target) return;
   const items = [
-    ["Đơn hôm nay", summary.todayOrders, "fa-receipt"],
-    ["Đơn đã thanh toán", summary.paidOrders, "fa-wallet"],
-    ["Đơn chưa thanh toán", summary.unpaidOrders, "fa-clock"],
-    ["Khách hàng", summary.totalCustomers, "fa-users"],
-    ["Sản phẩm", summary.totalProducts, "fa-box"]
+    ["\u0110\u01a1n h\u00f4m nay", summary.todayOrders, "fa-receipt", "orders"],
+    ["\u0110\u01a1n \u0111\u00e3 thanh to\u00e1n", summary.paidOrders, "fa-wallet", "paid"],
+    ["\u0110\u01a1n ch\u01b0a thanh to\u00e1n", summary.unpaidOrders, "fa-clock", "unpaid"],
+    ["Kh\u00e1ch h\u00e0ng", summary.totalCustomers, "fa-users", "customers"],
+    ["S\u1ea3n ph\u1ea9m", summary.totalProducts, "fa-box", "products"]
   ];
   target.innerHTML = `
-    <div class="dashboard-quick-overview-heading">
-      <span>TỔNG QUAN VẬN HÀNH</span>
-      <strong>Đơn hàng / Khách hàng / Sản phẩm</strong>
-    </div>
-    <div class="dashboard-quick-stats">
-      ${items.map(([label, value, icon]) => `
-        <article class="dashboard-quick-stat">
-          <span class="dashboard-quick-icon secondary-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span>
-          <div>
-            <span>${label}</span>
-            <strong>${formatNumber(value)}</strong>
-          </div>
-        </article>
-      `).join("")}
+    <div class="dashboard-quick-overview">
+      <div class="dashboard-quick-overview-header">
+        <span>T\u1ed4NG QUAN V\u1eacN H\u00c0NH</span>
+        <strong>\u0110\u01a1n h\u00e0ng / Kh\u00e1ch h\u00e0ng / S\u1ea3n ph\u1ea9m</strong>
+      </div>
+      <div class="dashboard-quick-overview-grid">
+        ${items.map(([label, value, icon, tone]) => `
+          <article class="dashboard-quick-stat is-${tone}">
+            <span class="dashboard-quick-stat-icon" aria-hidden="true"><i class="fa-solid ${icon}"></i></span>
+            <div class="dashboard-quick-stat-content">
+              <span class="dashboard-quick-stat-label">${label}</span>
+              <strong class="dashboard-quick-stat-value">${formatNumber(value)}</strong>
+            </div>
+          </article>
+        `).join("")}
+      </div>
     </div>
   `;
 }
