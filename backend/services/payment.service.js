@@ -243,8 +243,19 @@ export class PaymentService extends BaseService {
       }
 
       const currentStatus = normalizeTransactionStatus(transaction.status);
-      if (currentStatus === PAYMENT_TRANSACTION_STATUS.PAID && normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID) {
-        throw new AppError("Giao dịch này đã được xác nhận thanh toán trước đó.", 409, "PAYMENT_ALREADY_PAID");
+      const isConfirmPaid = normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID;
+      const confirmedSource = String(options.confirmedSource || "").trim().toLowerCase();
+
+      if (isConfirmPaid && String(order.status || "").toLowerCase() === "cancelled") {
+        throw new AppError("Không thể xác nhận thanh toán cho đơn hàng đã hủy.", 409, "ORDER_CANCELLED_PAYMENT_CONFIRM_NOT_ALLOWED");
+      }
+
+      if (confirmedSource === "admin_cod" && !isCodPaymentTransaction(transaction)) {
+        throw new AppError("Chỉ có thể xác nhận thu tiền COD cho giao dịch COD.", 422, "PAYMENT_NOT_COD");
+      }
+
+      if (currentStatus === PAYMENT_TRANSACTION_STATUS.PAID && isConfirmPaid) {
+        return;
       }
 
       if (currentStatus === normalizedStatus) {
@@ -284,9 +295,7 @@ export class PaymentService extends BaseService {
       await this.repository.createOrderHistory({
         orderId: transaction.orderId,
         status: order.status || "pending",
-        note: normalizedStatus === PAYMENT_TRANSACTION_STATUS.PAID
-          ? `Thanh toán ${transaction.transactionCode || id} đã được admin xác nhận.`
-          : `Payment ${transaction.transactionCode || id} changed to ${normalizedStatus}.`,
+        note: buildPaymentOrderHistoryNote(transaction, normalizedStatus, id),
         changedBy
       }, connection);
       await this.notificationService.notifyAdmin({
@@ -702,6 +711,27 @@ function createPaymentTransactionCode() {
   return `PAY-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
+function isCodPaymentTransaction(transaction = {}) {
+  const method = String(transaction.method || transaction.paymentMethod || "").trim().toLowerCase();
+  const provider = String(transaction.provider || transaction.metadata?.paymentGuide?.provider || "").trim().toUpperCase();
+  return method === "cod" || provider === "COD";
+}
+
+function buildPaymentOrderHistoryNote(transaction, normalizedStatus, id) {
+  if (normalizedStatus !== PAYMENT_TRANSACTION_STATUS.PAID) {
+    return `Payment ${transaction.transactionCode || id} changed to ${normalizedStatus}.`;
+  }
+
+  if (isCodPaymentTransaction(transaction)) {
+    return `Đã xác nhận thanh toán COD\nAdmin xác nhận đã nhận ${formatVndAmount(transaction.amount)}.`;
+  }
+
+  return `Thanh toán ${transaction.transactionCode || id} đã được admin xác nhận.`;
+}
+
+function formatVndAmount(value) {
+  return `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+}
 function normalizeSupportedMethod(value) {
   const method = String(value || "").trim().toLowerCase();
   const supportedMethods = ["cod", "bank_transfer", "vnpay", "credit_card", "momo", "momo_personal_qr"];

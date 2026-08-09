@@ -432,3 +432,33 @@ body.theme-dark .admin-order-payment-confirm-close {
 
 @media (max-width: 1200px) { .admin-order-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-order-filters button { justify-self: start; } }
 @media (max-width: 700px) { .admin-order-filters { grid-template-columns: 1fr; } .admin-order-filters button { width: 100%; } .admin-order-table { min-width: 1060px; } }
+
+.admin-order-payment-confirm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px !important;
+  border: 1px solid #16a34a !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #22c55e, #15803d) !important;
+  color: #fff !important;
+  font-family: inherit;
+  font-size: .86rem;
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: 0 10px 20px rgba(22, 163, 74, .18);
+}
+
+.admin-order-payment-confirm-button:hover,
+.admin-order-payment-confirm-button:focus-visible {
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 12px 24px rgba(22, 163, 74, .24);
+}
+
+.admin-order-payment-method-badge.is-cod {
+  background: #15803d;
+}

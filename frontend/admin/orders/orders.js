@@ -208,7 +208,7 @@ function renderOrderDetail(detail) {
         <aside class="admin-order-detail-side">
           <article class="admin-order-card" id="order-status-actions"><h2>C\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i</h2>${canManage ? `<form data-order-status-form><select name="status" aria-label="Tr\u1ea1ng th\u00e1i \u0111\u01a1n h\u00e0ng" ${canUpdateStatus ? "" : "disabled"}>${statusOptions.map((option) => `<option value="${option.value}" ${option.selected ? "selected" : ""} ${option.disabled ? "disabled" : ""}>${orderStatusLabel(option.value)}</option>`).join("")}</select><textarea name="note" maxlength="500" placeholder="Ghi ch\u00fa c\u1eadp nh\u1eadt" ${canUpdateStatus ? "" : "disabled"}></textarea>${canUpdateStatus ? '<button type="submit">C\u1eadp nh\u1eadt</button>' : ""}</form>` : '<p>B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i \u0111\u01a1n h\u00e0ng.</p>'}${!canUpdateStatus ? '<p>Kh\u00f4ng c\u00f2n b\u01b0\u1edbc chuy\u1ec3n tr\u1ea1ng th\u00e1i h\u1ee3p l\u1ec7.</p>' : ""}${canCancel(order) && hasPermission(PERMISSIONS.ORDER_CANCEL) ? '<button class="admin-order-danger" type="button" data-detail-cancel>H\u1ee7y \u0111\u01a1n h\u00e0ng</button>' : ""}</article>
           ${renderPaymentSummary(order)}
-          <article class="admin-order-card"><h2>Giao dịch thanh toán</h2>${payments.length ? payments.map((payment) => renderPayment(payment, order.paymentStatus)).join("") : '<p>Chưa có giao dịch thanh toán</p>'}</article>
+          <article class="admin-order-card"><h2>Giao dịch thanh toán</h2>${payments.length ? payments.map((payment) => renderPayment(payment, order.paymentStatus, order.status)).join("") : '<p>Chưa có giao dịch thanh toán</p>'}</article>
         </aside>
       </div>
     </section>`;
@@ -262,15 +262,16 @@ function renderPaymentSummary(order) {
   return `<article class="admin-order-card"><h2>Tóm tắt thanh toán</h2><div class="admin-order-money"><p><span>Tạm tính</span><strong>${formatCurrency(order.subtotal)}</strong></p><p><span>Giảm giá</span><strong>${formatCurrency(order.discountTotal)}</strong></p><p><span>Phí vận chuyển</span><strong>${formatCurrency(order.shippingFee)}</strong></p><p><span>Thu&#7871; VAT (10%)</span><strong>&#272;&#227; g&#7891;m ${formatCurrency(order.taxTotal)}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(order.paymentMethod))}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(order.paymentStatus), order.paymentStatus)}</p><p><span>Đã thanh toán</span><strong>${formatCurrency(order.paidAmount)}</strong></p><p class="total"><span>Tổng tiền</span><strong>${formatCurrency(order.grandTotal)}</strong></p></div></article>`;
 }
 
-function renderPayment(payment, orderPaymentStatus) {
+function renderPayment(payment, orderPaymentStatus, orderStatus = detailState?.order?.status) {
   const method = String(payment.method || "").toLowerCase();
   const guide = payment.metadata?.paymentGuide || {};
   const providerCode = String(payment.provider || guide.provider || "").toUpperCase();
   const isPersonalMomo = isMomoPayment(payment);
   const isPersonalBank = providerCode === "BANK_PERSONAL_QR";
-  const isManualConfirmable = method === "bank_transfer" || isPersonalMomo || isPersonalBank;
+  const isCod = isCodPayment(payment);
+  const isManualConfirmable = method === "bank_transfer" || isPersonalMomo || isPersonalBank || isCod;
   const status = normalizePaymentStatus(payment.status);
-  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && isManualConfirmable && ["pending", "processing"].includes(status) && normalizePaymentStatus(orderPaymentStatus) !== "paid";
+  const canConfirm = hasPermission(PERMISSIONS.PAYMENT_MANAGE) && isManualConfirmable && ["pending", "processing", "unpaid"].includes(status) && normalizePaymentStatus(orderPaymentStatus) !== "paid" && normalizeOrderStatus(orderStatus) !== "cancelled";
   const extra = method === "bank_transfer"
     ? `<p><span>Nội dung chuyển khoản</span><strong>${escapeHtml(guide.transferContent || "?")}</strong></p><p><span>Khách báo lúc</span><strong>${escapeHtml(payment.metadata?.customerReportedPaymentAt || "?")}</strong></p>`
     : isPersonalMomo
@@ -278,13 +279,52 @@ function renderPayment(payment, orderPaymentStatus) {
       : method === "credit_card"
         ? `<p><span>Thương hiệu thẻ / 4 số cuối</span><strong>${escapeHtml([guide.cardBrand, guide.cardLast4].filter(Boolean).join(" / ") || "?")}</strong></p>`
         : "";
-  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Nhà cung cấp</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button type="button" data-confirm-payment="${payment.id}">Xác nhận đã nhận tiền</button>` : ""}</div>`;
+  return `<div class="admin-order-payment"><p><span>Mã giao dịch</span><strong>${escapeHtml(payment.transactionCode || "?")}</strong></p><p><span>Nhà cung cấp</span><strong>${escapeHtml(payment.provider || "?")}</strong></p><p><span>Phương thức</span><strong>${escapeHtml(paymentMethodLabel(payment.method))}</strong></p>${extra}<p><span>Số tiền</span><strong>${formatCurrency(payment.amount)}</strong></p><p><span>Trạng thái</span>${badge(paymentStatusLabel(payment.status), payment.status)}</p><p><span>Ngày thanh toán</span><strong>${payment.paidAt ? formatDate(payment.paidAt) : "—"}</strong></p>${canConfirm ? `<button class="admin-order-payment-confirm-button${isCod ? " is-cod" : ""}" type="button" data-confirm-payment="${payment.id}"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>X&#225;c nh&#7853;n &#273;&#227; nh&#7853;n ti&#7873;n</span></button>` : ""}</div>`;
 }
 
 function isMomoPayment(payment) {
   const provider = String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase();
   const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase();
   return method === "momo" || provider === "MOMO" || provider === "MOMO_PERSONAL_QR";
+}
+
+function isCodPayment(payment) {
+  const provider = String(payment?.provider || payment?.metadata?.paymentGuide?.provider || "").toUpperCase();
+  const method = String(payment?.method || payment?.paymentMethod || "").toLowerCase();
+  return method === "cod" || provider === "COD";
+}
+
+function getPaymentConfirmCopy(payment = {}) {
+  if (isCodPayment(payment)) {
+    return {
+      title: "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n?",
+      message: `B\u1ea1n x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ${formatCurrency(payment.amount)} t\u1eeb kh\u00e1ch h\u00e0ng cho \u0111\u01a1n h\u00e0ng n\u00e0y?`,
+      methodLabel: "COD",
+      note: `\u0110\u00e3 x\u00e1c nh\u1eadn thanh to\u00e1n COD\nAdmin x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ${formatCurrency(payment.amount)}.`,
+      source: "admin_cod",
+      success: "\u0110\u00e3 x\u00e1c nh\u1eadn thanh to\u00e1n COD th\u00e0nh c\u00f4ng"
+    };
+  }
+
+  if (isMomoPayment(payment)) {
+    return {
+      title: "X\u00e1c nh\u1eadn thanh to\u00e1n MoMo?",
+      message: "B\u1ea1n \u0111\u00e3 ki\u1ec3m tra v\u00e0 x\u00e1c nh\u1eadn c\u1eeda h\u00e0ng \u0111\u00e3 nh\u1eadn \u0111\u00fang s\u1ed1 ti\u1ec1n c\u1ee7a giao d\u1ecbch n\u00e0y.",
+      methodLabel: "MoMo",
+      note: "Admin x\u00e1c nh\u1eadn thanh to\u00e1n MoMo QR c\u00e1 nh\u00e2n.",
+      source: "admin_momo_personal_qr",
+      success: "\u0110\u00e3 x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n."
+    };
+  }
+
+  return {
+    title: "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n?",
+    message: "B\u1ea1n \u0111\u00e3 ki\u1ec3m tra v\u00e0 x\u00e1c nh\u1eadn c\u1eeda h\u00e0ng \u0111\u00e3 nh\u1eadn \u0111\u00fang s\u1ed1 ti\u1ec1n c\u1ee7a giao d\u1ecbch n\u00e0y.",
+    methodLabel: "Ng\u00e2n h\u00e0ng",
+    note: "Admin x\u00e1c nh\u1eadn c\u1eeda h\u00e0ng \u0111\u00e3 nh\u1eadn ti\u1ec1n chuy\u1ec3n kho\u1ea3n.",
+    source: "admin_manual_transfer",
+    success: "\u0110\u00e3 x\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n."
+  };
 }
 function initOrderDetail(root, orderId) {
   bindProductImageFallback(root);
@@ -318,13 +358,14 @@ function initOrderDetail(root, orderId) {
   root.querySelectorAll("[data-confirm-payment]").forEach((button) => button.addEventListener("click", async () => {
     const payment = detailState?.payments?.find((item) => String(item.id) === String(button.dataset.confirmPayment));
     button.disabled = true;
+    const copy = getPaymentConfirmCopy(payment);
     const confirmed = await openOrderPaymentConfirmDialog(payment, detailState?.order || {}, async () => {
       await apiClient.patch(`/payments/${button.dataset.confirmPayment}/status`, {
         status: "paid",
-        note: isMomoPayment(payment) ? "Admin xác nhận thanh toán MoMo QR cá nhân." : "Admin xác nhận cửa hàng đã nhận tiền chuyển khoản.",
-        confirmedSource: isMomoPayment(payment) ? "admin_momo_personal_qr" : "admin_manual_transfer"
+        note: copy.note,
+        confirmedSource: copy.source
       }, silentErrors());
-      notifySuccess("Đã xác nhận đã nhận tiền.");
+      notifySuccess(copy.success);
       await refreshOrderDetail(root, orderId);
       refreshAdminSidebarCounts();
     });
@@ -340,28 +381,29 @@ function openOrderPaymentConfirmDialog(payment = {}, order = {}, onConfirm = nul
     const overlay = document.createElement("div");
     overlay.className = "admin-order-modal admin-order-payment-confirm-modal is-visible";
     overlay.dataset.orderPaymentConfirmModal = "";
+    const copy = getPaymentConfirmCopy(payment);
     overlay.innerHTML = `
       <section class="admin-order-modal-dialog admin-order-payment-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="order-payment-confirm-title" tabindex="-1">
         <header class="admin-order-payment-confirm-header">
           <div>
-            <p class="admin-orders-eyebrow">XÁC NHẬN THANH TOÁN</p>
-            <h2 id="order-payment-confirm-title">Xác nhận thanh toán MoMo?</h2>
+            <p class="admin-orders-eyebrow">X&#193;C NH&#7852;N THANH TO&#193;N</p>
+            <h2 id="order-payment-confirm-title">${escapeHtml(copy.title)}</h2>
           </div>
-          <button class="admin-order-payment-confirm-close" type="button" data-payment-confirm-cancel aria-label="Đóng">×</button>
+          <button class="admin-order-payment-confirm-close" type="button" data-payment-confirm-cancel aria-label="\u0110\u00f3ng">�</button>
         </header>
         <div class="admin-order-payment-confirm-body">
-          <p class="admin-order-payment-confirm-message">Bạn đã kiểm tra và xác nhận cửa hàng đã nhận đúng số tiền của giao dịch này.</p>
+          <p class="admin-order-payment-confirm-message">${escapeHtml(copy.message)}</p>
           <div class="admin-order-payment-confirm-grid">
             ${paymentConfirmField("Mã đơn hàng", order.orderCode || payment.orderCode || "—")}
             ${paymentConfirmField("Mã giao dịch", payment.transactionCode || "—")}
             ${paymentConfirmField("Khách hàng", [order.customerName || payment.customerName || "—", order.customerCode || order.customer_code || payment.customerCode || payment.customer_code || ""].filter(Boolean).join("\n"))}
             ${paymentConfirmField("Số tiền", formatCurrency(payment.amount || order.grandTotal), "is-amount")}
-            ${paymentConfirmField("Phương thức", '<span class="admin-order-payment-method-badge">MoMo</span>', "is-method", true)}
+            ${paymentConfirmField("Ph\u01b0\u01a1ng th\u1ee9c", `<span class="admin-order-payment-method-badge${isCodPayment(payment) ? " is-cod" : ""}">${escapeHtml(copy.methodLabel)}</span>`, "is-method", true)}
           </div>
         </div>
         <footer class="admin-order-payment-confirm-actions">
-          <button class="admin-order-payment-confirm-secondary" type="button" data-payment-confirm-cancel>Hủy</button>
-          <button class="admin-order-payment-confirm-primary" type="button" data-payment-confirm-ok>Xác nhận đã nhận tiền</button>
+          <button class="admin-order-payment-confirm-secondary" type="button" data-payment-confirm-cancel>H&#7911;y</button>
+          <button class="admin-order-payment-confirm-primary" type="button" data-payment-confirm-ok>X&#225;c nh&#7853;n &#273;&#227; nh&#7853;n ti&#7873;n</button>
         </footer>
       </section>`;
     document.body.appendChild(overlay);
@@ -376,7 +418,7 @@ function openOrderPaymentConfirmDialog(payment = {}, order = {}, onConfirm = nul
     };
     const setLoading = (loading) => {
       buttons.forEach((button) => { button.disabled = loading; });
-      if (confirmButton) confirmButton.textContent = loading ? "Đang xác nhận..." : "Xác nhận đã nhận tiền";
+      if (confirmButton) confirmButton.textContent = loading ? "\u0110ang x\u00e1c nh\u1eadn..." : "X\u00e1c nh\u1eadn \u0111\u00e3 nh\u1eadn ti\u1ec1n";
     };
 
     overlay.addEventListener("click", (event) => {
