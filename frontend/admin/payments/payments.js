@@ -359,8 +359,8 @@ function setBusy(root, busy) { state.busy = busy; root?.querySelectorAll?.("butt
 function setModalBusy(busy) { activeModal?.querySelectorAll?.("button").forEach((element) => { element.disabled = busy; }); }
 function statusBadge(status) { const normalized = normalizePaymentStatus(status); return `<span class="admin-payment-badge is-${escapeHtml(normalized || "unknown")}">${escapeHtml(formatPaymentStatus(status))}</span>`; }
 function formatProviderLabel(provider) {
-  const key = String(provider || "").toUpperCase();
-  return ({ MOMO_PERSONAL_QR: "MoMo QR", BANK_PERSONAL_QR: "Chuy\u1ec3n kho\u1ea3n QR", COD: "COD", CREDIT_CARD: "Th\u1ebb t\u00edn d\u1ee5ng", MOMO: "MoMo" })[key] || provider || "-";
+  const key = String(provider || "").trim().toUpperCase();
+  return ({ MOMO_PERSONAL_QR: "MoMo QR", "MOMO QR": "MoMo QR", BANK_PERSONAL_QR: "Ng\u00e2n h\u00e0ng QR", BANK_QR: "Ng\u00e2n h\u00e0ng QR", BANK_TRANSFER_QR: "Ng\u00e2n h\u00e0ng QR", "CHUY\u1ec2N KHO\u1ea2N QR": "Ng\u00e2n h\u00e0ng QR", COD: "COD", CREDIT_CARD: "Th\u1ebb t\u00edn d\u1ee5ng", CREDIT_CARD_DEMO: "Th\u1ebb t\u00edn d\u1ee5ng", CARD: "Th\u1ebb t\u00edn d\u1ee5ng", MOMO: "MoMo" })[key] || provider || "-";
 }
 function formatCompactDate(value) {
   if (!value) return "-";
