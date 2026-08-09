@@ -20,6 +20,10 @@ class UserService extends BaseService {
     return this.client.upload(this.path("profile/avatar"), formData, options);
   }
 
+  changePassword(payload, options = {}) {
+    return this.client.put(this.path("profile/password"), payload, options);
+  }
+
   updateRole(id, payload, options = {}) {
     return this.client.patch(this.path(id, "role"), payload, options);
   }

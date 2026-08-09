@@ -6,7 +6,7 @@ const MOCK_ROLE_STORAGE_KEY = "fashion-admin-mock-role";
 
 export function getCurrentUser() {
   const authUser = getAuthenticatedUser();
-  const role = authUser?.role ?? ROLES.GUEST;
+  const role = normalizeRole(authUser?.role);
 
   return {
     id: authUser?.id ?? null,
@@ -35,15 +35,24 @@ export function getJwtPayloadPlaceholder() {
   return null;
 }
 
-
 function getUserPermissions(authUser, role) {
+  const rolePermissions = ROLE_PERMISSIONS[role] ?? [];
+
+  if (role === ROLES.ADMIN) {
+    return Array.from(new Set([
+      ...rolePermissions,
+      ...(Array.isArray(authUser?.permissions) ? authUser.permissions : [])
+    ]));
+  }
+
   if (Array.isArray(authUser?.permissions)) {
     return authUser.permissions;
   }
 
-  if (role === ROLES.ADMIN) {
-    return ROLE_PERMISSIONS[ROLES.ADMIN] ?? [];
-  }
+  return rolePermissions;
+}
 
-  return [];
+function normalizeRole(role) {
+  const normalizedRole = String(role || "").trim().toUpperCase();
+  return Object.values(ROLES).includes(normalizedRole) ? normalizedRole : ROLES.GUEST;
 }

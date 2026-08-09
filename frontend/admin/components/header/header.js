@@ -44,7 +44,7 @@ export function createHeader(activeLabel = "Dashboard") {
         <i class="fa-solid fa-expand" aria-hidden="true"></i>
       </button>
 
-      <button class="icon-button" type="button" aria-label="Chuyển dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuyển giao diện" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
 
@@ -107,7 +107,7 @@ function createGuestHeader(activeLabel = "Login") {
     </nav>
 
     <div class="header-actions admin-guest-actions">
-      <button class="icon-button" type="button" aria-label="Chuyển dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuyển giao diện" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
     </div>
