@@ -1954,3 +1954,257 @@ body:not(.theme-dark) .payment-total {
     text-align: left;
   }
 }
+
+/* Dashboard analytics 2x2 alignment: layout-only for the four middle cards. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(360px, 1fr);
+  grid-template-areas:
+    "revenue status"
+    "payment bestseller"
+    "orders orders";
+  gap: 16px 18px;
+  align-items: stretch;
+}
+
+.dashboard-grid > .revenue-card { grid-area: revenue; }
+.dashboard-grid > .status-card { grid-area: status; }
+.dashboard-grid > .payment-card { grid-area: payment; }
+.dashboard-grid > .top-products-card { grid-area: bestseller; }
+.dashboard-grid > .orders-card { grid-area: orders; }
+
+.dashboard-grid > .revenue-card,
+.dashboard-grid > .status-card,
+.dashboard-grid > .payment-card,
+.dashboard-grid > .top-products-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .035);
+}
+
+.dashboard-grid > .revenue-card .card-header,
+.dashboard-grid > .status-card .card-header,
+.dashboard-grid > .payment-card .card-header,
+.dashboard-grid > .top-products-card .card-header {
+  margin-bottom: 10px;
+}
+
+.dashboard-grid > .revenue-card .card-header h2,
+.dashboard-grid > .status-card .card-header h2,
+.dashboard-grid > .payment-card .card-header h2,
+.dashboard-grid > .top-products-card .card-header h2 {
+  font-size: .98rem;
+  line-height: 1.22;
+}
+
+.dashboard-grid > .revenue-card .card-header p,
+.dashboard-grid > .status-card .card-header p,
+.dashboard-grid > .payment-card .card-header p,
+.dashboard-grid > .top-products-card .card-header p {
+  margin-top: 4px;
+  font-size: .74rem;
+  line-height: 1.35;
+}
+
+.revenue-bars {
+  flex: 1;
+  gap: 12px;
+  min-height: 0;
+}
+
+.revenue-summary {
+  gap: 9px;
+}
+
+.revenue-summary article {
+  min-height: 62px;
+  padding: 10px 38px 10px 12px;
+  border-radius: 12px;
+}
+
+.revenue-summary strong {
+  margin-top: 4px;
+  font-size: .92rem;
+}
+
+.revenue-summary i {
+  right: 11px;
+  width: 26px;
+  height: 26px;
+}
+
+.revenue-bars-inner {
+  height: 204px;
+  gap: 8px;
+}
+
+.revenue-column {
+  grid-template-rows: 20px 1fr 20px;
+  flex-basis: 42px;
+  min-width: 36px;
+}
+
+.status-card .dashboard-stat-list,
+.payment-card .dashboard-stat-list {
+  flex: 1;
+  gap: 5px;
+}
+
+.status-row,
+.payment-row {
+  min-height: 40px;
+  padding-block: 6px;
+  border-radius: 0;
+}
+
+.status-row {
+  grid-template-columns: 28px minmax(104px, .9fr) minmax(78px, 1fr) 32px;
+  gap: 8px;
+}
+
+.payment-row {
+  grid-template-columns: 28px minmax(108px, .9fr) minmax(74px, 1fr) minmax(50px, auto) minmax(104px, auto);
+  gap: 8px;
+}
+
+.status-icon,
+.payment-icon {
+  width: 26px;
+  height: 26px;
+  font-size: .72rem;
+}
+
+.status-row .dashboard-progress,
+.payment-row .dashboard-progress {
+  height: 3px;
+}
+
+.status-total,
+.payment-total {
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 8px 11px;
+}
+
+.top-products-card .product-list {
+  flex: 1;
+  gap: 0;
+}
+
+.top-products-card .top-product-row {
+  grid-template-columns: 30px 42px minmax(0, 1fr) minmax(104px, max-content);
+  grid-template-areas:
+    "rank image info revenue"
+    "rank image progress revenue";
+  min-height: 62px;
+  gap: 4px 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.top-products-card .top-product-rank {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: .78rem;
+}
+
+.top-products-card .top-product-image {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+}
+
+.top-products-card .top-product-info strong {
+  font-size: .8rem;
+  line-height: 1.18;
+  -webkit-line-clamp: 1;
+}
+
+.top-products-card .top-product-info span,
+.top-products-card .top-product-info small {
+  margin-top: 3px;
+  font-size: .66rem;
+  line-height: 1.1;
+}
+
+.top-products-card .top-product-progress {
+  grid-template-columns: minmax(0, 1fr) 26px;
+  gap: 6px;
+  width: min(100%, 210px);
+}
+
+.top-products-card .top-product-progress span {
+  height: 3px;
+}
+
+.top-products-card .top-product-progress small {
+  min-width: 26px;
+  font-size: .62rem;
+}
+
+.top-products-card .top-product-revenue {
+  min-width: 104px;
+  max-width: 132px;
+  gap: 1px;
+}
+
+.top-products-card .top-product-revenue span {
+  font-size: .62rem;
+}
+
+.top-products-card .top-product-revenue strong {
+  font-size: .76rem;
+}
+
+.top-products-card .top-products-link {
+  min-height: 32px;
+  margin-top: 2px;
+  padding-top: 6px;
+  font-size: .76rem;
+}
+
+@media (max-width: 1199px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "revenue status"
+      "payment bestseller"
+      "orders orders";
+  }
+}
+
+@media (max-width: 899px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "revenue"
+      "status"
+      "payment"
+      "bestseller"
+      "orders";
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-grid {
+    gap: 14px;
+  }
+
+  .top-products-card .top-product-row {
+    grid-template-columns: 30px 42px minmax(0, 1fr);
+    grid-template-areas:
+      "rank image info"
+      "rank image revenue"
+      "rank image progress";
+    min-height: 68px;
+  }
+}
