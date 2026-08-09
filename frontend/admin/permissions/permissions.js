@@ -28,6 +28,5 @@ export const PERMISSIONS = Object.freeze({
   NEWSLETTER_UPDATE: "newsletter:update",
   NEWSLETTER_DELETE: "newsletter:delete",
   NEWSLETTER_MANAGE: "newsletter:manage",
-  STATISTIC_VIEW: "statistic:view",
   SETTING_VIEW: "setting:view"
 });

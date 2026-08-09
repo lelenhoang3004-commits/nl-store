@@ -28,21 +28,6 @@ import { createUsersPage, initUsersPage } from "../users/users.js";
 import { createVouchersPage, initVouchersPage } from "../vouchers/vouchers.js";
 import { createNewsletterPage, initNewsletterPage } from "../newsletter/newsletter.js";
 import { createSettingsPage, initSettingsPage } from "../settings/settings.js";
-import { createGenericAdminPage, initGenericAdminPage } from "./page-factory.js";
-
-function createListRoute(path, title, permission, aliases = []) {
-  return {
-    path,
-    aliases,
-    title,
-    breadcrumb: title,
-    menuKey: path,
-    requiresAuth: true,
-    permissions: [permission],
-    render: (context) => createGenericAdminPage(context.route),
-    init: initGenericAdminPage
-  };
-}
 
 export const adminRoutes = [
   {
@@ -212,7 +197,6 @@ export const adminRoutes = [
     render: createNewsletterPage,
     init: initNewsletterPage
   },
-  createListRoute("statistics", "Thá»‘ng kÃª", PERMISSIONS.STATISTIC_VIEW, ["statistic"]),
   {
     path: "audit-log",
     aliases: ["audit"],

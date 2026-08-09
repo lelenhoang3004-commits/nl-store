@@ -37,7 +37,6 @@ export const adminMenuItems = [
   { page: "payments", icon: "fa-credit-card", label: "Qu\u1ea3n l\u00fd thanh to\u00e1n", badgeKey: "payments", permissions: [PERMISSIONS.PAYMENT_VIEW] },
   { page: "vouchers", icon: "fa-ticket", label: "Qu\u1ea3n l\u00fd m\u00e3 gi\u1ea3m gi\u00e1", permissions: [PERMISSIONS.VOUCHER_VIEW] },
   { page: "emails", icon: "fa-envelope-open-text", label: "\u0110\u0103ng k\u00fd Email", badgeKey: "emails", permissions: [PERMISSIONS.EMAIL_VIEW] },
-  { page: "statistics", icon: "fa-chart-pie", label: "Th\u1ed1ng k\u00ea", permissions: [PERMISSIONS.STATISTIC_VIEW] },
   { page: "settings", icon: "fa-gear", label: "C\u00e0i \u0111\u1eb7t", permissions: [PERMISSIONS.SETTING_VIEW] }
 ];
 
