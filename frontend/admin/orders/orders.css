@@ -462,3 +462,14 @@ body.theme-dark .admin-order-payment-confirm-close {
 .admin-order-payment-method-badge.is-cod {
   background: #15803d;
 }
+
+/* Compact order list payment/status headers. */
+.admin-order-table { min-width: 1120px; }
+.admin-order-table th:nth-child(5),
+.admin-order-table td:nth-child(5) { width: 136px; }
+.admin-order-table th:nth-child(6),
+.admin-order-table td:nth-child(6),
+.admin-order-table th:nth-child(7),
+.admin-order-table td:nth-child(7) { width: 122px; }
+.admin-order-method-cell { max-width: 136px; }
+@media (max-width: 700px) { .admin-order-table { min-width: 1020px; } }
