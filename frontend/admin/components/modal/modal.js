@@ -204,26 +204,26 @@ function getCrudModalConfig(type, row, moduleName) {
       eyebrow: safeModuleName,
       title: `Thêm ${moduleName}`,
       body: formBody,
-      saveText: "L?u"
+      saveText: "Lưu"
     },
     edit: {
       eyebrow: safeModuleName,
       title: `Sửa ${safeRow.name ?? moduleName}`,
       body: formBody,
-      saveText: "L?u"
+      saveText: "Lưu"
     },
     view: {
       eyebrow: safeModuleName,
       title: `Chi tiết ${safeRow.name ?? moduleName}`,
       body: detailBody,
       showSave: false,
-      cancelText: "??ng"
+      cancelText: "Đóng"
     },
     delete: {
       eyebrow: safeModuleName,
       title: "Xác nhận xóa",
       body: deleteBody,
-      saveText: "X?a",
+      saveText: "Xóa",
       variant: "danger",
       successMessage: "Đã xác nhận xóa trên giao diện mẫu."
     }

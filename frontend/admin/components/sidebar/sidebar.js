@@ -61,7 +61,7 @@ export function createSidebar(activePage = "dashboard") {
         <strong>N&amp;L Store</strong>
         <span>${currentUser.role}</span>
       </div>
-      <button class="sidebar-collapse-button" type="button" aria-label="Thu gá»n sidebar" data-sidebar-collapse>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu gọn sidebar" data-sidebar-collapse>
         <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
       </button>
     </div>
@@ -92,7 +92,7 @@ function createGuestSidebar() {
 
     <div class="sidebar-guest-note">
       <span>Secure Management Portal</span>
-      <small>ÄÄƒng nháº­p Ä‘á»ƒ truy cáº­p há»‡ thá»‘ng quáº£n trá»‹.</small>
+      <small>Đăng nhập để truy cập hệ thống quản trị.</small>
     </div>
   `;
 }
