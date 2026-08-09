@@ -67,7 +67,7 @@ function renderTable(root) {
     id: item.id,
     name: item.name,
     slug: item.slug,
-    description: item.description || "-",
+    description: item.description || "�",
     productCount: item.productCount ?? item.product_count ?? 0,
     rawStatus: item.status,
     status: statusLabel(item.status),
@@ -75,83 +75,88 @@ function renderTable(root) {
   }));
 
   tableContainer.innerHTML = `
-    <section class="admin-category-table" aria-label="Danh sách danh mục">
-      <header class="admin-category-table-header">
-        <div>
-          <p class="admin-category-table-eyebrow">Danh mục sản phẩm</p>
-          <h2>Danh sách danh mục</h2>
-          <p class="admin-category-table-copy">Quản lý danh mục, trạng thái và số lượng sản phẩm trong mỗi nhóm.</p>
+    <section class="admin-category-table" aria-label="Danh s&#225;ch danh m&#7909;c">
+      <div class="admin-category-table-surface">
+        <header class="admin-category-table-header">
+          <div>
+            <h2>Danh s&#225;ch danh m&#7909;c</h2>
+            <p class="admin-category-table-copy">Qu&#7843;n l&#253; tr&#7841;ng th&#225;i v&#224; s&#7889; l&#432;&#7907;ng s&#7843;n ph&#7849;m trong m&#7895;i danh m&#7909;c.</p>
+          </div>
+          <div class="admin-category-table-meta">
+            <span><strong>${rows.length}</strong> danh m&#7909;c</span>
+          </div>
+        </header>
+        <div class="admin-category-toolbar">
+          <label class="admin-category-search">
+            <span>T&#236;m ki&#7871;m</span>
+            <span class="admin-category-control">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" placeholder="T&#234;n ho&#7863;c slug" value="${escapeHtml(state.query.search || "")}" data-category-search>
+            </span>
+          </label>
+          <label class="admin-category-filter">
+            <span>Tr&#7841;ng th&#225;i</span>
+            <span class="admin-category-control">
+              <i class="fa-solid fa-filter" aria-hidden="true"></i>
+              <select data-category-status-filter>
+                <option value="" ${!state.query.status ? "selected" : ""}>T&#7845;t c&#7843;</option>
+                <option value="active" ${state.query.status === "active" ? "selected" : ""}>&#272;ang hi&#7875;n th&#7883;</option>
+                <option value="inactive" ${state.query.status === "inactive" ? "selected" : ""}>T&#7841;m &#7849;n</option>
+              </select>
+            </span>
+          </label>
+          <button type="button" class="admin-category-refresh" data-category-refresh>
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            <span>L&#224;m m&#7899;i</span>
+          </button>
         </div>
-        <div class="admin-category-table-meta">
-          <span><strong>${rows.length}</strong> kết quả</span>
-        </div>
-      </header>
-      <div class="admin-category-toolbar">
-        <label class="admin-category-search">
-          <span>Tìm kiếm</span>
-          <span class="admin-category-control">
-            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-            <input type="search" placeholder="Tên hoặc slug" value="${escapeHtml(state.query.search || "")}" data-category-search>
-          </span>
-        </label>
-        <label class="admin-category-filter">
-          <span>Trạng thái</span>
-          <span class="admin-category-control">
-            <i class="fa-solid fa-filter" aria-hidden="true"></i>
-            <select data-category-status-filter>
-              <option value="" ${!state.query.status ? "selected" : ""}>Tất cả</option>
-              <option value="active" ${state.query.status === "active" ? "selected" : ""}>Đang hiển thị</option>
-              <option value="inactive" ${state.query.status === "inactive" ? "selected" : ""}>Tạm ẩn</option>
-            </select>
-          </span>
-        </label>
-        <button type="button" class="admin-category-refresh" data-category-refresh>
-          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-          <span>Làm mới</span>
-        </button>
-      </div>
-      <div class="admin-category-table-card">
-        <div class="admin-category-table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tên danh mục</th>
-                <th>Slug</th>
-                <th>Mô tả</th>
-                <th>Số sản phẩm</th>
-                <th>Trạng thái</th>
-                <th>Ngày cập nhật</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.length ? rows.map((row) => `
+        <div class="admin-category-table-card">
+          <div class="admin-category-table-scroll">
+            <table>
+              <thead>
                 <tr>
-                  <td class="admin-category-id">${escapeHtml(row.id)}</td>
-                  <td class="admin-category-name">${escapeHtml(row.name)}</td>
-                  <td><code class="admin-category-slug">${escapeHtml(row.slug)}</code></td>
-                  <td><span class="admin-category-description" title="${escapeHtml(row.description)}">${escapeHtml(row.description)}</span></td>
-                  <td>${escapeHtml(row.productCount)}</td>
-                  <td><span class="admin-category-status is-${escapeHtml(row.rawStatus === "active" ? "active" : "inactive")}">${escapeHtml(row.status)}</span></td>
-                  <td>${escapeHtml(row.updatedAt)}</td>
-                  <td>
-                    <div class="admin-category-actions">
-                      <button type="button" class="is-edit" data-category-edit="${row.id}" title="Sửa" aria-label="Sửa danh mục ${escapeHtml(row.name)}"><i class="fa-solid fa-pen-to-square"></i></button>
-                      <button type="button" class="is-toggle" data-category-toggle="${row.id}" title="${row.rawStatus === "active" ? "Ẩn" : "Hiện"}" aria-label="${row.rawStatus === "active" ? "Ẩn" : "Hiện"} danh mục ${escapeHtml(row.name)}"><i class="fa-solid ${row.rawStatus === "active" ? "fa-eye-slash" : "fa-eye"}"></i></button>
-                      <button type="button" class="is-delete" data-category-delete="${row.id}" title="Xóa" aria-label="Xóa danh mục ${escapeHtml(row.name)}"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                  </td>
+                  <th>ID</th>
+                  <th>T&#234;n danh m&#7909;c</th>
+                  <th>Slug</th>
+                  <th>M&#244; t&#7843;</th>
+                  <th>S&#7889; s&#7843;n ph&#7849;m</th>
+                  <th>Tr&#7841;ng th&#225;i</th>
+                  <th>Ng&#224;y c&#7853;p nh&#7853;t</th>
+                  <th>H&#224;nh &#273;&#7897;ng</th>
                 </tr>
-              `).join("") : `<tr><td colspan="8" class="admin-category-empty"><div class="admin-category-empty-card"><i class="fa-solid fa-folder-open" aria-hidden="true"></i><span>Chưa có danh mục nào.</span></div></td></tr>`}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${rows.length ? rows.map((row) => `
+                  <tr>
+                    <td class="admin-category-id">${escapeHtml(row.id)}</td>
+                    <td class="admin-category-name">${escapeHtml(row.name)}</td>
+                    <td><code class="admin-category-slug">${escapeHtml(row.slug)}</code></td>
+                    <td><span class="admin-category-description" title="${escapeHtml(row.description)}">${escapeHtml(row.description)}</span></td>
+                    <td><span class="admin-category-count">${escapeHtml(row.productCount)} s&#7843;n ph&#7849;m</span></td>
+                    <td><span class="admin-category-status is-${escapeHtml(row.rawStatus === "active" ? "active" : "inactive")}">${escapeHtml(row.status)}</span></td>
+                    <td><span class="admin-category-date">${row.updatedAt}</span></td>
+                    <td>
+                      <div class="admin-category-actions">
+                        <button type="button" class="is-edit" data-category-edit="${row.id}" title="S&#7917;a" aria-label="S&#7917;a danh m&#7909;c ${escapeHtml(row.name)}"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>S&#7917;a</span></button>
+                        <details class="admin-category-action-menu">
+                          <summary aria-label="M&#7903; th&#234;m h&#224;nh &#273;&#7897;ng cho ${escapeHtml(row.name)}"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></summary>
+                          <div class="admin-category-action-panel">
+                            <button type="button" class="is-toggle" data-category-toggle="${row.id}"><i class="fa-solid ${row.rawStatus === "active" ? "fa-eye-slash" : "fa-eye"}" aria-hidden="true"></i><span>${row.rawStatus === "active" ? "&#7848;n danh m&#7909;c" : "Hi&#7879;n danh m&#7909;c"}</span></button>
+                            <button type="button" class="is-delete" data-category-delete="${row.id}"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span>X&#243;a danh m&#7909;c</span></button>
+                          </div>
+                        </details>
+                      </div>
+                    </td>
+                  </tr>
+                `).join("") : `<tr><td colspan="8" class="admin-category-empty"><div class="admin-category-empty-card"><i class="fa-solid fa-folder-open" aria-hidden="true"></i><span>Ch&#432;a c&#243; danh m&#7909;c n&#224;o.</span></div></td></tr>`}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
   `;
 }
-
 function bindEvents(root) {
   root.addEventListener("input", (event) => {
     const searchInput = event.target.closest("[data-category-search]");
@@ -445,7 +450,8 @@ function statusLabel(status) {
 
 function formatDate(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN");
+  if (Number.isNaN(date.getTime())) return "-";
+  return `<time datetime="${escapeHtml(date.toISOString())}"><span>${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span><small>${date.toLocaleDateString("vi-VN")}</small></time>`;
 }
 
 function message(error) {
