@@ -14,7 +14,7 @@ export function normalizeAppError(error, context = {}) {
 
   if (error?.name === "AbortError") {
     return new AppError({
-      message: "Yeu cau qua thoi gian cho. Vui long thu lai.",
+      message: "Yêu cầu quá thời gian chờ. Vui lòng thử lại.",
       type: ERROR_TYPES.timeout,
       code: "REQUEST_TIMEOUT",
       cause: error,
@@ -24,7 +24,7 @@ export function normalizeAppError(error, context = {}) {
   }
 
   return new AppError({
-    message: error?.message ?? "Da co loi khong xac dinh.",
+    message: error?.message ?? "Đã có lỗi không xác định.",
     type: ERROR_TYPES.unknown,
     code: error?.code ?? "UNKNOWN_ERROR",
     details: context,
@@ -88,19 +88,19 @@ function getTypeFromApiError(error) {
 
 function getFriendlyMessage(error, type) {
   const messages = {
-    [ERROR_TYPES.validation]: "Du lieu chua hop le. Vui long kiem tra lai.",
-    [ERROR_TYPES.notFound]: "Khong tim thay tai nguyen yeu cau.",
-    [ERROR_TYPES.server]: "May chu dang gap su co. Vui long thu lai sau.",
-    [ERROR_TYPES.network]: "Khong the ket noi may chu. Kiem tra mang va thu lai.",
-    [ERROR_TYPES.timeout]: "Yeu cau qua thoi gian cho. Vui long thu lai.",
-    [ERROR_TYPES.upload]: "Upload that bai. Kiem tra dinh dang va dung luong file.",
-    [ERROR_TYPES.authentication]: "Phien dang nhap khong hop le hoac da het han.",
-    [ERROR_TYPES.authorization]: "Ban khong co quyen thuc hien thao tac nay.",
-    [ERROR_TYPES.database]: "He thong du lieu dang gap su co. Vui long thu lai sau.",
-    [ERROR_TYPES.api]: error.message || "API tra ve loi."
+    [ERROR_TYPES.validation]: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.",
+    [ERROR_TYPES.notFound]: "Không tìm thấy tài nguyên yêu cầu.",
+    [ERROR_TYPES.server]: "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
+    [ERROR_TYPES.network]: "Không thể kết nối máy chủ. Kiểm tra mạng và thử lại.",
+    [ERROR_TYPES.timeout]: "Yêu cầu quá thời gian chờ. Vui lòng thử lại.",
+    [ERROR_TYPES.upload]: "Upload thất bại. Kiểm tra định dạng và dung lượng file.",
+    [ERROR_TYPES.authentication]: "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.",
+    [ERROR_TYPES.authorization]: "Bạn không có quyền thực hiện thao tác này.",
+    [ERROR_TYPES.database]: "Hệ thống dữ liệu đang gặp sự cố. Vui lòng thử lại sau.",
+    [ERROR_TYPES.api]: error.message || "API trả về lỗi."
   };
 
-  return messages[type] ?? error.message ?? "Da co loi xay ra.";
+  return messages[type] ?? error.message ?? "Đã có lỗi xảy ra.";
 }
 
 function getDisplayMode(type, status) {

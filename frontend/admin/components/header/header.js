@@ -5,12 +5,12 @@ export function createHeader(activeLabel = "Dashboard") {
   if (!isAuthenticated()) return createGuestHeader(activeLabel);
 
   const user = getCurrentUser();
-  const displayName = user.name && user.name !== "Guest" ? user.name : "Qu?n tr? vi?n";
+  const displayName = user.name && user.name !== "Guest" ? user.name : "Quản trị viên";
   const displayEmail = user.email || "Chưa đăng nhập";
   const initials = createInitials(displayName);
   return `
     <div class="header-left">
-      <button class="icon-button menu-button" type="button" aria-label="M? menu" data-sidebar-toggle>
+      <button class="icon-button menu-button" type="button" aria-label="Mở menu" data-sidebar-toggle>
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
       </button>
       <a class="header-logo" href="#dashboard" data-page="dashboard" aria-label="N&amp;L Store Admin">
@@ -30,7 +30,7 @@ export function createHeader(activeLabel = "Dashboard") {
       <span data-breadcrumb-current>${activeLabel}</span>
     </nav>
 
-    <label class="header-search" aria-label="T?m ki?m">
+    <label class="header-search" aria-label="Tìm kiếm">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
       <input type="search" placeholder="Tìm kiếm sản phẩm, đơn hàng, khách hàng">
     </label>
@@ -40,16 +40,16 @@ export function createHeader(activeLabel = "Dashboard") {
         ${createNotificationCenterTemplate()}
       </div>
 
-      <button class="icon-button" type="button" aria-label="To?n m?n h?nh" data-fullscreen-toggle>
+      <button class="icon-button" type="button" aria-label="Toàn màn hình" data-fullscreen-toggle>
         <i class="fa-solid fa-expand" aria-hidden="true"></i>
       </button>
 
-      <button class="icon-button" type="button" aria-label="Chuy?n dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuyển dark mode" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
 
       <div class="header-popover">
-        <button class="admin-profile" type="button" aria-label="T?i kho?n qu?n tr?" data-dropdown-toggle="profile">
+        <button class="admin-profile" type="button" aria-label="Tài khoản quản trị" data-dropdown-toggle="profile">
           <span class="profile-avatar">${escapeHtml(initials)}</span>
           <span class="profile-copy">
             <strong>${escapeHtml(displayName)}</strong>
@@ -67,7 +67,7 @@ export function createHeader(activeLabel = "Dashboard") {
           </div>
           <a href="#settings" data-page="settings">
             <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
-            H? s? qu?n tr?
+            Hồ sơ quản trị
           </a>
           <a href="#settings" data-page="settings">
             <i class="fa-solid fa-gear" aria-hidden="true"></i>
@@ -86,7 +86,7 @@ export function createHeader(activeLabel = "Dashboard") {
 function createGuestHeader(activeLabel = "Login") {
   return `
     <div class="header-left">
-      <button class="icon-button menu-button" type="button" aria-label="M? menu" data-sidebar-toggle>
+      <button class="icon-button menu-button" type="button" aria-label="Mở menu" data-sidebar-toggle>
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
       </button>
       <a class="header-logo" href="#login" data-page="login" aria-label="N&amp;L Store Admin">
@@ -107,7 +107,7 @@ function createGuestHeader(activeLabel = "Login") {
     </nav>
 
     <div class="header-actions admin-guest-actions">
-      <button class="icon-button" type="button" aria-label="Chuy?n dark mode" data-theme-toggle>
+      <button class="icon-button" type="button" aria-label="Chuyển dark mode" data-theme-toggle>
         <i class="fa-solid fa-moon" aria-hidden="true"></i>
       </button>
     </div>

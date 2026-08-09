@@ -407,7 +407,7 @@ function openOrderPaymentConfirmDialog(payment = {}, order = {}, onConfirm = nul
             <p class="admin-orders-eyebrow">X&#193;C NH&#7852;N THANH TO&#193;N</p>
             <h2 id="order-payment-confirm-title">${escapeHtml(copy.title)}</h2>
           </div>
-          <button class="admin-order-payment-confirm-close" type="button" data-payment-confirm-cancel aria-label="\u0110\u00f3ng">×</button>
+          <button class="admin-order-payment-confirm-close" type="button" data-payment-confirm-cancel aria-label="\u0110\u00f3ng">Ã—</button>
         </header>
         <div class="admin-order-payment-confirm-body">
           <p class="admin-order-payment-confirm-message">${escapeHtml(copy.message)}</p>

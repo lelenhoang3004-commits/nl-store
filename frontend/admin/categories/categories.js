@@ -67,7 +67,7 @@ function renderTable(root) {
     id: item.id,
     name: item.name,
     slug: item.slug,
-    description: item.description || "—",
+    description: item.description || "â€”",
     productCount: item.productCount ?? item.product_count ?? 0,
     rawStatus: item.status,
     status: statusLabel(item.status),
@@ -284,7 +284,7 @@ async function openCategoryModal(root, category = null) {
               <input type="file" accept="image/*" data-category-image-file hidden>
               <div>
                 <button type="button" data-category-image-choose>Chon anh</button>
-                <button type="button" data-category-image-remove ${configuredImageUrl ? "" : "hidden"}>Xoa anh</button>
+                <button type="button" data-category-image-remove ${configuredImageUrl ? "" : "hidden"}>X?a ?nh</button>
               </div>
               <small data-category-image-status></small>
             </div>
@@ -400,7 +400,7 @@ function setCategoryImage(form, url, options = {}) {
       ? `<img src="${escapeHtml(resolveCategoryImageUrl(value))}" alt="" onerror="this.closest('[data-category-image-preview]').classList.remove('has-image');this.replaceWith(Object.assign(document.createElement('i'),{className:'fa-solid fa-image'}));">`
       : `<i class="fa-solid fa-image" aria-hidden="true"></i>`;
   }
-  if (!options.keepStatus && status) status.textContent = value ? "Anh san sang." : "Da xoa anh.";
+  if (!options.keepStatus && status) status.textContent = value ? "?nh s?n s?ng." : "?? x?a ?nh.";
 }
 
 function resolveCategoryImageUrl(url) {

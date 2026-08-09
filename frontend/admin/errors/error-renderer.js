@@ -50,16 +50,16 @@ export { ErrorRenderer };
 function createErrorBody(error) {
   return `
     <div class="modal-detail-grid">
-      <span>Loai loi</span><strong>${escapeHtml(error.type)}</strong>
-      <span>Ma loi</span><strong>${escapeHtml(error.code)}</strong>
+      <span>Loại lỗi</span><strong>${escapeHtml(error.type)}</strong>
+      <span>Mã lỗi</span><strong>${escapeHtml(error.code)}</strong>
       <span>HTTP Status</span><strong>${error.status || "N/A"}</strong>
-      <span>Thoi gian</span><strong>${escapeHtml(error.createdAt)}</strong>
+      <span>Thời gian</span><strong>${escapeHtml(error.createdAt)}</strong>
     </div>
     ${createErrorHint(error)}
     ${error.retry ? `
       <button class="modal-primary-button" type="button" data-global-error-retry>
         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-        <span>Retry</span>
+        <span>Thử lại</span>
       </button>
     ` : ""}
   `;
@@ -67,39 +67,39 @@ function createErrorBody(error) {
 
 function createErrorHint(error) {
   const hints = {
-    [ERROR_TYPES.authentication]: "Vui long dang nhap lai de tiep tuc phien lam viec.",
-    [ERROR_TYPES.authorization]: "Tai khoan hien tai chua du quyen cho thao tac nay.",
-    [ERROR_TYPES.server]: "Neu loi tiep dien, hay kiem tra log backend hoac trang thai API.",
-    [ERROR_TYPES.database]: "Loi lien quan tang du lieu. Can kiem tra ket noi MySQL/log backend.",
-    [ERROR_TYPES.network]: "Kiem tra ket noi mang hoac backend server.",
-    [ERROR_TYPES.timeout]: "Backend phan hoi cham hon timeout hien tai.",
-    [ERROR_TYPES.upload]: "Kiem tra dung luong, dinh dang file va thu lai.",
-    [ERROR_TYPES.notFound]: "Duong dan hoac tai nguyen khong ton tai.",
-    [ERROR_TYPES.validation]: "Kiem tra cac truong bat buoc va dinh dang du lieu."
+    [ERROR_TYPES.authentication]: "Vui lòng đăng nhập lại để tiếp tục phiên làm việc.",
+    [ERROR_TYPES.authorization]: "Tài khoản hiện tại chưa đủ quyền cho thao tác này.",
+    [ERROR_TYPES.server]: "Nếu lỗi tiếp diễn, hãy kiểm tra log backend hoặc trạng thái API.",
+    [ERROR_TYPES.database]: "Lỗi liên quan tầng dữ liệu. Cần kiểm tra kết nối MySQL/log backend.",
+    [ERROR_TYPES.network]: "Kiểm tra kết nối mạng hoặc backend server.",
+    [ERROR_TYPES.timeout]: "Backend phản hồi chậm hơn timeout hiện tại.",
+    [ERROR_TYPES.upload]: "Kiểm tra dung lượng, định dạng file và thử lại.",
+    [ERROR_TYPES.notFound]: "Đường dẫn hoặc tài nguyên không tồn tại.",
+    [ERROR_TYPES.validation]: "Kiểm tra các trường bắt buộc và định dạng dữ liệu."
   };
 
-  return `<p class="modal-danger-copy">${escapeHtml(hints[error.type] ?? "Vui long thu lai hoac kiem tra log he thong.")}</p>`;
+  return `<p class="modal-danger-copy">${escapeHtml(hints[error.type] ?? "Vui lòng thử lại hoặc kiểm tra log hệ thống.")}</p>`;
 }
 
 function getTitle(error) {
   const titles = {
-    [ERROR_TYPES.api]: "API Error",
-    [ERROR_TYPES.validation]: "Validation Error",
-    [ERROR_TYPES.notFound]: "404 Not Found",
-    [ERROR_TYPES.server]: "500 Server Error",
-    [ERROR_TYPES.network]: "Network Error",
+    [ERROR_TYPES.api]: "Lỗi API",
+    [ERROR_TYPES.validation]: "Lỗi dữ liệu",
+    [ERROR_TYPES.notFound]: "404 Không tìm thấy",
+    [ERROR_TYPES.server]: "500 Lỗi máy chủ",
+    [ERROR_TYPES.network]: "Lỗi mạng",
     [ERROR_TYPES.timeout]: "Timeout",
-    [ERROR_TYPES.upload]: "Upload Error",
-    [ERROR_TYPES.authentication]: "Authentication Error",
-    [ERROR_TYPES.authorization]: "Authorization Error",
-    [ERROR_TYPES.database]: "Database Error"
+    [ERROR_TYPES.upload]: "Lỗi upload",
+    [ERROR_TYPES.authentication]: "Lỗi xác thực",
+    [ERROR_TYPES.authorization]: "Lỗi phân quyền",
+    [ERROR_TYPES.database]: "Lỗi dữ liệu"
   };
 
-  return titles[error.type] ?? "System Error";
+  return titles[error.type] ?? "Lỗi hệ thống";
 }
 
 function getCancelText(error) {
-  return error.retry ? "Close" : "OK";
+  return error.retry ? "Đóng" : "OK";
 }
 
 function getModalVariant(error) {

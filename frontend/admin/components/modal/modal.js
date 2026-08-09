@@ -119,12 +119,12 @@ function wait(milliseconds) {
 
 function createModalTemplate(options) {
   const variantClass = options.variant ? ` modal-${options.variant}` : "";
-  const saveText = escapeHtml(options.saveText ?? "Save");
-  const cancelText = escapeHtml(options.cancelText ?? "Cancel");
+  const saveText = escapeHtml(options.saveText ?? "L?u");
+  const cancelText = escapeHtml(options.cancelText ?? "Hủy");
   const showSave = options.showSave !== false;
-  const eyebrow = escapeHtml(options.eyebrow ?? "Admin Modal");
-  const title = escapeHtml(options.title ?? "Modal Title");
-  const closeLabel = escapeHtml(options.closeLabel ?? "Close modal");
+  const eyebrow = escapeHtml(options.eyebrow ?? "Admin");
+  const title = escapeHtml(options.title ?? "Chi ti?t");
+  const closeLabel = escapeHtml(options.closeLabel ?? "??ng modal");
 
   return `
     <section class="modal-dialog${variantClass}" role="dialog" aria-modal="true" aria-labelledby="modal-title">

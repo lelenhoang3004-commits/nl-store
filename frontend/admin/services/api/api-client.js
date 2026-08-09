@@ -69,7 +69,7 @@ export class ApiClient {
     let loadingToken = null;
 
     if (requestConfig.showLoading !== false) {
-      loadingToken = showPageLoading(requestConfig.loadingMessage ?? "Dang xu ly yeu cau...");
+      loadingToken = showPageLoading(requestConfig.loadingMessage ?? "?ang x? l? y?u c?u...");
     }
 
     stateActions.startRequest(requestConfig.loadingMessage ?? "");

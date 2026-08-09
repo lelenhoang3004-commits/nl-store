@@ -118,8 +118,8 @@ function createConfirmTemplate(options) {
   const icon = toSafeClassToken(options.icon ?? "fa-triangle-exclamation", "fa-triangle-exclamation");
   const title = options.title ?? "Xác nhận thao tác";
   const message = options.message ?? "Bạn có chắc chắn muốn tiếp tục?";
-  const confirmText = escapeHtml(options.confirmText ?? "Confirm");
-  const cancelText = escapeHtml(options.cancelText ?? "Cancel");
+  const confirmText = escapeHtml(options.confirmText ?? "X?c nh?n");
+  const cancelText = escapeHtml(options.cancelText ?? "Hủy");
   const safeTitle = escapeHtml(title);
   const safeMessage = escapeHtml(message);
 
