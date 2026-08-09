@@ -68,7 +68,7 @@ export function createSidebar(activePage = "dashboard") {
         <strong>N&amp;L Store</strong>
         <span>${currentUser.role}</span>
       </div>
-      <button class="sidebar-collapse-button" type="button" aria-label="Thu g?n sidebar" data-sidebar-collapse>
+      <button class="sidebar-collapse-button" type="button" aria-label="Thu gọn sidebar" data-sidebar-collapse>
         <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
       </button>
     </div>

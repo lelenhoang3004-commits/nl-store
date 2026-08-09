@@ -111,7 +111,7 @@ function bindLayoutEvents() {
   });
   window.addEventListener("fashion-api:unauthorized", handleUnauthorizedApiResponse);
   window.addEventListener("fashion-api:forbidden", () => {
-    notifyError("B?n kh?ng c? quy?n truy c?p.");
+    notifyError("Bạn không có quyền truy cập.");
   });
 
   startSessionManager(sessionManagerCallbacks);
@@ -210,7 +210,7 @@ function toggleSidebarCollapse() {
 function updateSidebarCollapseButton(isCollapsed) {
   const button = document.querySelector("[data-sidebar-collapse]");
   if (!button) return;
-  const label = isCollapsed ? "M? r?ng sidebar" : "Thu g?n sidebar";
+  const label = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.setAttribute("aria-expanded", String(!isCollapsed));

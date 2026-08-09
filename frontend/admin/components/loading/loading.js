@@ -2,7 +2,7 @@ let pageLoadingToken = 0;
 let pageLoadingHideTimer = null;
 const activePageLoadingTokens = new Set();
 
-export function showPageLoading(message = "Đang tải nội dung...") {
+export function showPageLoading(message = "Đang xử lý yêu cầu...") {
   pageLoadingToken += 1;
   const token = pageLoadingToken;
   activePageLoadingTokens.add(token);

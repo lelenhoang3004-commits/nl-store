@@ -69,7 +69,7 @@ export class ApiClient {
     let loadingToken = null;
 
     if (requestConfig.showLoading !== false) {
-      loadingToken = showPageLoading(requestConfig.loadingMessage ?? "?ang x? l? y?u c?u...");
+      loadingToken = showPageLoading(requestConfig.loadingMessage ?? "Đang xử lý yêu cầu...");
     }
 
     stateActions.startRequest(requestConfig.loadingMessage ?? "");

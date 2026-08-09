@@ -119,12 +119,12 @@ function wait(milliseconds) {
 
 function createModalTemplate(options) {
   const variantClass = options.variant ? ` modal-${options.variant}` : "";
-  const saveText = escapeHtml(options.saveText ?? "L?u");
+  const saveText = escapeHtml(options.saveText ?? "Lưu");
   const cancelText = escapeHtml(options.cancelText ?? "Hủy");
   const showSave = options.showSave !== false;
   const eyebrow = escapeHtml(options.eyebrow ?? "Admin");
-  const title = escapeHtml(options.title ?? "Chi ti?t");
-  const closeLabel = escapeHtml(options.closeLabel ?? "??ng modal");
+  const title = escapeHtml(options.title ?? "Chi tiết");
+  const closeLabel = escapeHtml(options.closeLabel ?? "Đóng modal");
 
   return `
     <section class="modal-dialog${variantClass}" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -204,26 +204,26 @@ function getCrudModalConfig(type, row, moduleName) {
       eyebrow: safeModuleName,
       title: `Thêm ${moduleName}`,
       body: formBody,
-      saveText: "Save"
+      saveText: "L?u"
     },
     edit: {
       eyebrow: safeModuleName,
       title: `Sửa ${safeRow.name ?? moduleName}`,
       body: formBody,
-      saveText: "Save"
+      saveText: "L?u"
     },
     view: {
       eyebrow: safeModuleName,
       title: `Chi tiết ${safeRow.name ?? moduleName}`,
       body: detailBody,
       showSave: false,
-      cancelText: "Close"
+      cancelText: "??ng"
     },
     delete: {
       eyebrow: safeModuleName,
       title: "Xác nhận xóa",
       body: deleteBody,
-      saveText: "Delete",
+      saveText: "X?a",
       variant: "danger",
       successMessage: "Đã xác nhận xóa trên giao diện mẫu."
     }

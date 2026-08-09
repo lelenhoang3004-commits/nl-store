@@ -9,7 +9,7 @@ export class ApiError extends Error {
     isTimeout = false,
     isNetworkError = false
   } = {}) {
-    super(message ?? "API request failed");
+    super(message ?? "Kh?ng th? th?c hi?n y?u c?u API.");
     this.name = "ApiError";
     this.status = status;
     this.code = code;
@@ -27,14 +27,14 @@ export function normalizeApiError(error) {
 
   if (error?.name === "AbortError") {
     return new ApiError({
-      message: "Request timeout",
+      message: "Y?u c?u qu? th?i gian ch?.",
       code: "REQUEST_TIMEOUT",
       isTimeout: true
     });
   }
 
   return new ApiError({
-    message: error?.message ?? "Unknown API error",
+    message: error?.message ?? "C? l?i API kh?ng x?c ??nh.",
     code: "NETWORK_ERROR",
     details: error,
     isNetworkError: true

@@ -284,7 +284,7 @@ async function openCategoryModal(root, category = null) {
               <input type="file" accept="image/*" data-category-image-file hidden>
               <div>
                 <button type="button" data-category-image-choose>Chon anh</button>
-                <button type="button" data-category-image-remove ${configuredImageUrl ? "" : "hidden"}>X?a ?nh</button>
+                <button type="button" data-category-image-remove ${configuredImageUrl ? "" : "hidden"}>Xóa ảnh</button>
               </div>
               <small data-category-image-status></small>
             </div>
@@ -400,7 +400,7 @@ function setCategoryImage(form, url, options = {}) {
       ? `<img src="${escapeHtml(resolveCategoryImageUrl(value))}" alt="" onerror="this.closest('[data-category-image-preview]').classList.remove('has-image');this.replaceWith(Object.assign(document.createElement('i'),{className:'fa-solid fa-image'}));">`
       : `<i class="fa-solid fa-image" aria-hidden="true"></i>`;
   }
-  if (!options.keepStatus && status) status.textContent = value ? "?nh s?n s?ng." : "?? x?a ?nh.";
+  if (!options.keepStatus && status) status.textContent = value ? "Ảnh sẵn sàng." : "Đã xóa ảnh.";
 }
 
 function resolveCategoryImageUrl(url) {
