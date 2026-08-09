@@ -1174,3 +1174,200 @@
   overflow-x: auto;
   overflow-y: visible;
 }
+
+/* Category list card/action refinement. Presentation only. */
+.admin-category-table-surface {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
+  border-radius: 18px;
+  background: var(--color-card);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .055);
+}
+
+.admin-category-table-header {
+  padding: 17px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: var(--color-card);
+}
+
+.admin-category-table-header h2 {
+  margin: 0;
+}
+
+.admin-category-table-copy {
+  margin-bottom: 0;
+}
+
+.admin-category-table-meta {
+  min-height: 27px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 8%, #fff);
+  color: var(--color-primary);
+  font-size: .76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-category-toolbar {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: var(--color-card);
+}
+
+.admin-category-table-card {
+  border: 0;
+  border-radius: 0;
+  background: var(--color-card);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.admin-category-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.admin-category-table table {
+  width: 100%;
+  min-width: 1040px;
+  border: 0;
+  background: var(--color-card);
+}
+
+.admin-category-table th,
+.admin-category-table td {
+  padding-block: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+}
+
+.admin-category-table th {
+  height: 44px;
+  border-top: 0;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-card));
+}
+
+.admin-category-table tbody tr {
+  height: 50px;
+}
+
+.admin-category-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+}
+
+.admin-category-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-category-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-category-actions .is-edit,
+.admin-category-action-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 34px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: none;
+  transition: transform 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
+}
+
+.admin-category-actions .is-edit {
+  width: auto;
+  padding: 0 12px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-category-actions .is-edit i,
+.admin-category-action-menu > summary i {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.admin-category-action-menu > summary {
+  width: 34px;
+  padding: 0;
+  color: var(--color-muted);
+}
+
+.admin-category-actions .is-edit:hover,
+.admin-category-action-menu > summary:hover,
+.admin-category-action-menu[open] > summary {
+  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 7%, #fff);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.admin-category-action-panel {
+  border-radius: 10px;
+}
+
+@media (max-width: 1024px) {
+  .admin-category-table-surface {
+    border-radius: 16px;
+  }
+
+  .admin-category-table table {
+    min-width: 1020px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-category-table-surface {
+    border-radius: 14px;
+  }
+
+  .admin-category-table-header,
+  .admin-category-toolbar {
+    padding-inline: 14px;
+  }
+
+  .admin-category-table table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-category-table-surface {
+    border-radius: 13px;
+  }
+
+  .admin-category-actions .is-edit span {
+    display: inline;
+  }
+}
+
+/* Keep the unified card clipping while allowing action menus to breathe inside the table area. */
+.admin-category-table-card {
+  overflow: visible;
+}
+
+.admin-category-table-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+}
