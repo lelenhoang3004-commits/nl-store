@@ -102,7 +102,23 @@ function renderSecondarySummary(root, summary) {
     ["Khách hàng", summary.totalCustomers, "fa-users"],
     ["Sản phẩm", summary.totalProducts, "fa-box"]
   ];
-  target.innerHTML = `<div class="dashboard-kpi-group-title"><span>Đơn hàng / khách hàng / sản phẩm</span></div><div class="dashboard-kpi-items">${items.map(([label, value, icon]) => `<article><span class="secondary-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span><div><span>${label}</span><strong>${formatNumber(value)}</strong></div></article>`).join("")}</div>`;
+  target.innerHTML = `
+    <div class="dashboard-quick-overview-heading">
+      <span>TỔNG QUAN VẬN HÀNH</span>
+      <strong>Đơn hàng / Khách hàng / Sản phẩm</strong>
+    </div>
+    <div class="dashboard-quick-stats">
+      ${items.map(([label, value, icon]) => `
+        <article class="dashboard-quick-stat">
+          <span class="dashboard-quick-icon secondary-icon"><i class="fa-solid ${icon}" aria-hidden="true"></i></span>
+          <div>
+            <span>${label}</span>
+            <strong>${formatNumber(value)}</strong>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderSummary(root, summary) {
