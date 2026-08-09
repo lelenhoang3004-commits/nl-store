@@ -52,7 +52,7 @@ async function reload(root) {
     state.pagination = response.meta?.pagination || null;
     state.error = null;
   } catch (error) { state.vouchers = []; state.error = error; notifyError(message(error)); }
-  finally { state.busy = false; renderTable(root); renderPagination(root); }
+  finally { state.busy = false; renderVoucherSummary(root); renderTable(root); renderPagination(root); }
 }
 
 function normalizeVoucher(voucher = {}) {
@@ -75,6 +75,27 @@ function normalizeVoucher(voucher = {}) {
   };
 }
 
+function renderVoucherSummary(root) {
+  const summary = state.vouchers.reduce((acc, voucher) => {
+    const displayStatus = getDisplayStatus(voucher);
+    acc.total += 1;
+    acc.usage += Number(voucher.usedQuantity || 0);
+    if (displayStatus.key === "active") acc.active += 1;
+    if (displayStatus.key === "expired") acc.expired += 1;
+    return acc;
+  }, { total: 0, active: 0, expired: 0, usage: 0 });
+
+  setVoucherSummaryValue(root, "total", summary.total);
+  setVoucherSummaryValue(root, "active", summary.active);
+  setVoucherSummaryValue(root, "expired", summary.expired);
+  setVoucherSummaryValue(root, "usage", summary.usage);
+}
+
+function setVoucherSummaryValue(root, key, value) {
+  const target = root.querySelector(`[data-voucher-summary="${key}"]`);
+  if (target) target.textContent = formatNumber(value);
+}
+
 function renderTable(root) {
   const body = root.querySelector("[data-vouchers-body]");
   if (!body) return;
@@ -85,13 +106,32 @@ function renderTable(root) {
 
 function renderRow(voucher) {
   const displayStatus = getDisplayStatus(voucher);
+  const description = voucher.description ? `<small>${escapeHtml(voucher.description)}</small>` : "";
+  const typeLabel = voucher.discountType === "percentage" ? "Ph&#7847;n tr&#259;m" : "Ti&#7873;n c&#7889; &#273;&#7883;nh";
+  const discountValue = voucher.discountType === "percentage" ? `${escapeHtml(voucher.discountValue)}%` : formatCurrency(voucher.discountValue);
+  const toggleIcon = voucher.status === "active" ? "fa-toggle-on" : "fa-toggle-off";
+
   return `<tr>
-    <td class="admin-voucher-id">#${escapeHtml(voucher.id)}</td><td><strong class="admin-voucher-code" title="${escapeHtml(voucher.code)}">${escapeHtml(voucher.code)}</strong></td><td class="admin-voucher-name" title="${escapeHtml(voucher.name)}">${escapeHtml(voucher.name)}</td>
-    <td class="admin-voucher-type">${voucher.discountType === "percentage" ? "Phần trăm" : "Tiền cố định"}</td><td class="admin-voucher-value">${voucher.discountType === "percentage" ? `${escapeHtml(voucher.discountValue)}%` : formatCurrency(voucher.discountValue)}</td>
-    <td class="admin-voucher-money">${formatCurrency(voucher.minOrderAmount)}</td><td class="admin-voucher-money">${voucher.maxDiscountAmount == null ? "-" : formatCurrency(voucher.maxDiscountAmount)}</td>
-    <td>${usageCell(voucher)}</td><td class="admin-voucher-period" title="${escapeHtml(`${formatDate(voucher.startsAt)} -> ${formatDate(voucher.expiresAt)}`)}">${formatPeriod(voucher.startsAt, voucher.expiresAt)}</td>
+    <td class="admin-voucher-id">#${escapeHtml(voucher.id)}</td>
+    <td><strong class="admin-voucher-code" title="${escapeHtml(voucher.code)}">${escapeHtml(voucher.code)}</strong></td>
+    <td class="admin-voucher-name" title="${escapeHtml(voucher.name)}"><strong>${escapeHtml(voucher.name)}</strong>${description}</td>
+    <td class="admin-voucher-type">${typeLabel}</td>
+    <td class="admin-voucher-value">${discountValue}</td>
+    <td class="admin-voucher-money">${formatCurrency(voucher.minOrderAmount)}</td>
+    <td class="admin-voucher-money">${voucher.maxDiscountAmount == null ? "-" : formatCurrency(voucher.maxDiscountAmount)}</td>
+    <td>${usageCell(voucher)}</td>
+    <td class="admin-voucher-period" title="${escapeHtml(`${formatDate(voucher.startsAt)} -> ${formatDate(voucher.expiresAt)}`)}">${formatPeriod(voucher.startsAt, voucher.expiresAt)}</td>
     <td><span class="admin-voucher-status is-${escapeHtml(displayStatus.key)}">${escapeHtml(displayStatus.label)}</span></td>
-    <td><div class="admin-voucher-actions"><button data-voucher-action="edit" data-voucher-id="${escapeHtml(voucher.id)}" title="Sửa" aria-label="Sửa mã giảm giá"><i class="fa-solid fa-pen"></i></button><button data-voucher-action="toggle" data-voucher-id="${escapeHtml(voucher.id)}" title="Bật/tắt" aria-label="Bật/tắt mã giảm giá"><i class="fa-solid ${voucher.status === "active" ? "fa-toggle-on" : "fa-toggle-off"}"></i></button><button class="is-danger" data-voucher-action="delete" data-voucher-id="${escapeHtml(voucher.id)}" title="Xóa" aria-label="Xóa mã giảm giá"><i class="fa-solid fa-trash"></i></button></div></td>
+    <td><div class="admin-voucher-actions">
+      <button class="is-edit" data-voucher-action="edit" data-voucher-id="${escapeHtml(voucher.id)}" title="S&#7917;a" aria-label="S&#7917;a m&#227; gi&#7843;m gi&#225;"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>S&#7917;a</span></button>
+      <details class="admin-voucher-action-menu">
+        <summary title="T&#225;c v&#7909; kh&#225;c" aria-label="T&#225;c v&#7909; kh&#225;c"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></summary>
+        <div class="admin-voucher-action-panel">
+          <button type="button" data-voucher-action="toggle" data-voucher-id="${escapeHtml(voucher.id)}"><i class="fa-solid ${toggleIcon}" aria-hidden="true"></i><span>B&#7853;t/T&#7855;t</span></button>
+          <button type="button" class="is-danger" data-voucher-action="delete" data-voucher-id="${escapeHtml(voucher.id)}"><i class="fa-solid fa-trash" aria-hidden="true"></i><span>X&#243;a</span></button>
+        </div>
+      </details>
+    </div></td>
   </tr>`;
 }
 
@@ -103,20 +143,18 @@ function renderPagination(root) {
 }
 
 function usageCell(voucher) {
-  const total = voucher.quantity == null ? "∞" : String(voucher.quantity);
+  const total = voucher.quantity == null ? "\u221e" : String(voucher.quantity);
   const percent = voucher.quantity ? Math.min(100, Math.max(0, Number(voucher.usedQuantity || 0) / Number(voucher.quantity) * 100)) : 0;
   return `<div class="admin-voucher-usage"><span>${escapeHtml(voucher.usedQuantity)} / ${escapeHtml(total)}</span><i><b style="width:${percent}%"></b></i></div>`;
 }
 function formatPeriod(start, end) {
-  const startText = formatShortDate(start);
-  const endText = formatShortDate(end);
-  return `<span>${escapeHtml(startText)}</span><small>${escapeHtml(endText)}</small>`;
+  return `<div class="admin-voucher-date-range"><span>${formatDateParts(start)}</span><em aria-hidden="true">&#8594;</em><span>${formatDateParts(end)}</span></div>`;
 }
-function formatShortDate(value) {
-  if (!value) return "-";
+function formatDateParts(value) {
+  if (!value) return `<strong>-</strong>`;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return `${date.toLocaleDateString("vi-VN")} ${date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`;
+  if (Number.isNaN(date.getTime())) return `<strong>-</strong>`;
+  return `<strong>${escapeHtml(date.toLocaleDateString("vi-VN"))}</strong><small>${escapeHtml(date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }))}</small>`;
 }
 async function openVoucherModal(root, voucherSummary = null) {
   const editing = Boolean(voucherSummary?.id);
@@ -265,6 +303,7 @@ function normalizeDiscountType(value) { return String(value || "").trim().toLowe
 function getDisplayStatus(voucher) { const now = Date.now(); if (voucher.status !== "active") return { key: "inactive", label: "Tạm khóa" }; if (voucher.startsAt && new Date(voucher.startsAt).getTime() > now) return { key: "scheduled", label: "Chưa bắt đầu" }; if (voucher.expiresAt && new Date(voucher.expiresAt).getTime() < now) return { key: "expired", label: "Hết hạn" }; if (voucher.quantity !== null && Number(voucher.usedQuantity || 0) >= Number(voucher.quantity)) return { key: "soldout", label: "Hết lượt" }; return { key: "active", label: "Đang hoạt động" }; }
 function formatConditions(value) { if (!value) return ""; if (typeof value === "string") { try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; } } return JSON.stringify(value, null, 2); }
 function formatCurrency(value) { return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(Number(value || 0)); }
+function formatNumber(value) { return new Intl.NumberFormat("vi-VN").format(Number(value || 0)); }
 function formatDate(value) { if (!value) return "-"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("vi-VN"); }
 function toInputDate(value) { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return ""; return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
 function silent() { return { showErrorToast: false }; }

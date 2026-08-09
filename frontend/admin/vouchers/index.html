@@ -1,24 +1,54 @@
 <section class="admin-vouchers-page" aria-labelledby="admin-vouchers-title">
   <div class="admin-vouchers-hero">
     <div>
-      <p class="admin-vouchers-eyebrow">Khuyến mãi</p>
-      <h1 id="admin-vouchers-title">Quản lý mã giảm giá</h1>
-      <p>Tạo, chỉnh sửa và kiểm soát mã giảm giá dùng trong checkout.</p>
+      <p class="admin-vouchers-eyebrow">Khuy&#7871;n m&#227;i</p>
+      <h1 id="admin-vouchers-title">Qu&#7843;n l&#253; m&#227; gi&#7843;m gi&#225;</h1>
+      <p>T&#7841;o, ch&#7881;nh s&#7917;a v&#224; ki&#7875;m so&#225;t m&#227; gi&#7843;m gi&#225; d&#249;ng trong checkout.</p>
     </div>
-    <button type="button" class="admin-voucher-primary" data-voucher-create><i class="fa-solid fa-plus"></i> Thêm mã giảm giá</button>
+    <button type="button" class="admin-voucher-primary" data-voucher-create>
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>Th&#234;m m&#227; gi&#7843;m gi&#225;</span>
+    </button>
   </div>
 
+  <section class="admin-voucher-summary-grid" aria-label="T&#7893;ng quan m&#227; gi&#7843;m gi&#225;">
+    <article class="admin-voucher-summary-card is-total">
+      <span class="admin-voucher-summary-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
+      <div><span>T&#7893;ng m&#227;</span><strong data-voucher-summary="total">0</strong></div>
+    </article>
+    <article class="admin-voucher-summary-card is-active">
+      <span class="admin-voucher-summary-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+      <div><span>&#272;ang ho&#7841;t &#273;&#7897;ng</span><strong data-voucher-summary="active">0</strong></div>
+    </article>
+    <article class="admin-voucher-summary-card is-expired">
+      <span class="admin-voucher-summary-icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
+      <div><span>H&#7871;t h&#7841;n</span><strong data-voucher-summary="expired">0</strong></div>
+    </article>
+    <article class="admin-voucher-summary-card is-usage">
+      <span class="admin-voucher-summary-icon"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span>
+      <div><span>T&#7893;ng l&#432;&#7907;t s&#7917; d&#7909;ng</span><strong data-voucher-summary="usage">0</strong></div>
+    </article>
+  </section>
+
   <form class="admin-voucher-filters" data-voucher-filters>
-    <label><span>Tìm kiếm</span><input type="search" name="search" placeholder="Code hoặc tên mã"></label>
-    <label><span>Trạng thái</span><select name="status"><option value="">Tất cả</option><option value="active">hoạt động</option><option value="inactive">không hoạt động</option><option value="expired">hết hạn</option></select></label>
-    <button type="button" data-voucher-refresh>Làm mới</button>
+    <label>
+      <span>T&#236;m ki&#7871;m</span>
+      <span class="admin-voucher-control"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" name="search" placeholder="Code ho&#7863;c t&#234;n m&#227;"></span>
+    </label>
+    <label>
+      <span>Tr&#7841;ng th&#225;i</span>
+      <span class="admin-voucher-control"><i class="fa-solid fa-filter" aria-hidden="true"></i><select name="status"><option value="">T&#7845;t c&#7843;</option><option value="active">Ho&#7841;t &#273;&#7897;ng</option><option value="inactive">Kh&#244;ng ho&#7841;t &#273;&#7897;ng</option><option value="expired">H&#7871;t h&#7841;n</option></select></span>
+    </label>
+    <button type="button" data-voucher-refresh><i class="fa-solid fa-rotate-right" aria-hidden="true"></i><span>L&#224;m m&#7899;i</span></button>
   </form>
 
   <section class="admin-voucher-card">
     <div class="admin-voucher-table-wrap">
       <table class="admin-voucher-table">
-        <thead><tr><th>ID</th><th>Code</th><th>Tên mã</th><th>Loại giảm</th><th>Giá trị</th><th>Đơn tối thiểu</th><th>Giảm tối đa</th><th>Lượt dùng</th><th>Thời hạn</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
-        <tbody data-vouchers-body><tr><td colspan="11" class="admin-voucher-empty">Đang tải mã giảm giá...</td></tr></tbody>
+        <thead>
+          <tr><th>ID</th><th>Code</th><th>T&#234;n m&#227;</th><th>Lo&#7841;i gi&#7843;m</th><th>Gi&#225; tr&#7883;</th><th>&#272;&#417;n t&#7889;i thi&#7875;u</th><th>Gi&#7843;m t&#7889;i &#273;a</th><th>L&#432;&#7907;t d&#249;ng</th><th>Th&#7901;i h&#7841;n</th><th>Tr&#7841;ng th&#225;i</th><th>H&#224;nh &#273;&#7897;ng</th></tr>
+        </thead>
+        <tbody data-vouchers-body><tr><td colspan="11" class="admin-voucher-empty">&#272;ang t&#7843;i m&#227; gi&#7843;m gi&#225;...</td></tr></tbody>
       </table>
     </div>
     <footer class="admin-voucher-pagination" data-vouchers-pagination></footer>
