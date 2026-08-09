@@ -103,18 +103,18 @@ function renderSecondarySummary(root, summary) {
     ["S\u1ea3n ph\u1ea9m", summary.totalProducts, "fa-box", "products"]
   ];
   target.innerHTML = `
-    <div class="dashboard-quick-overview">
-      <div class="dashboard-quick-overview-header">
-        <span>T\u1ed4NG QUAN V\u1eacN H\u00c0NH</span>
-        <strong>\u0110\u01a1n h\u00e0ng / Kh\u00e1ch h\u00e0ng / S\u1ea3n ph\u1ea9m</strong>
+    <div class="dashboard-ops-overview">
+      <div class="dashboard-ops-overview__header">
+        <span class="dashboard-ops-overview__eyebrow">T\u1ed4NG QUAN V\u1eacN H\u00c0NH</span>
+        <strong class="dashboard-ops-overview__subtitle">\u0110\u01a1n h\u00e0ng / Kh\u00e1ch h\u00e0ng / S\u1ea3n ph\u1ea9m</strong>
       </div>
-      <div class="dashboard-quick-overview-grid">
+      <div class="dashboard-ops-overview__grid">
         ${items.map(([label, value, icon, tone]) => `
-          <article class="dashboard-quick-stat is-${tone}">
-            <span class="dashboard-quick-stat-icon" aria-hidden="true"><i class="fa-solid ${icon}"></i></span>
-            <div class="dashboard-quick-stat-content">
-              <span class="dashboard-quick-stat-label">${label}</span>
-              <strong class="dashboard-quick-stat-value">${formatNumber(value)}</strong>
+          <article class="dashboard-ops-stat is-${tone}">
+            <span class="dashboard-ops-stat__icon" aria-hidden="true"><i class="fa-solid ${icon}"></i></span>
+            <div class="dashboard-ops-stat__content">
+              <span class="dashboard-ops-stat__label">${label}</span>
+              <strong class="dashboard-ops-stat__value">${formatNumber(value)}</strong>
             </div>
           </article>
         `).join("")}
