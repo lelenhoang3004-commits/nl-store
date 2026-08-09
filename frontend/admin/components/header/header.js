@@ -8,6 +8,8 @@ export function createHeader(activeLabel = "Dashboard") {
   const displayName = user.name && user.name !== "Guest" ? user.name : "Quản trị viên";
   const displayEmail = user.email || "Chưa đăng nhập";
   const initials = createInitials(displayName);
+  const avatar = createAvatarMarkup(user.avatarUrl, initials, displayName);
+
   return `
     <div class="header-left">
       <button class="icon-button menu-button" type="button" aria-label="Mở menu" data-sidebar-toggle>
@@ -27,7 +29,7 @@ export function createHeader(activeLabel = "Dashboard") {
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <a href="#dashboard" data-page="dashboard">Admin</a>
       <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-      <span data-breadcrumb-current>${activeLabel}</span>
+      <span data-breadcrumb-current>${escapeHtml(activeLabel)}</span>
     </nav>
 
     <label class="header-search" aria-label="Tìm kiếm">
@@ -50,7 +52,7 @@ export function createHeader(activeLabel = "Dashboard") {
 
       <div class="header-popover">
         <button class="admin-profile" type="button" aria-label="Tài khoản quản trị" data-dropdown-toggle="profile">
-          <span class="profile-avatar">${escapeHtml(initials)}</span>
+          ${avatar}
           <span class="profile-copy">
             <strong>${escapeHtml(displayName)}</strong>
             <small>${escapeHtml(user.role)}</small>
@@ -59,7 +61,7 @@ export function createHeader(activeLabel = "Dashboard") {
         </button>
         <div class="dropdown-panel profile-panel" data-dropdown="profile">
           <div class="profile-card">
-            <span class="profile-avatar">${escapeHtml(initials)}</span>
+            ${avatar}
             <div>
               <strong>${escapeHtml(displayName)}</strong>
               <small>${escapeHtml(displayEmail)}</small>
@@ -113,12 +115,22 @@ function createGuestHeader(activeLabel = "Login") {
     </div>
   `;
 }
+
 export function updateBreadcrumb(label) {
   const current = document.querySelector("[data-breadcrumb-current]");
 
   if (current) {
     current.textContent = label;
   }
+}
+
+function createAvatarMarkup(avatarUrl, initials, displayName) {
+  const safeUrl = String(avatarUrl || "").trim();
+  if (safeUrl) {
+    return `<span class="profile-avatar has-image"><img src="${escapeHtml(safeUrl)}" alt="Avatar ${escapeHtml(displayName)}"></span>`;
+  }
+
+  return `<span class="profile-avatar">${escapeHtml(initials)}</span>`;
 }
 
 function createInitials(name) {

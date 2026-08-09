@@ -10,9 +10,10 @@ export function getCurrentUser() {
 
   return {
     id: authUser?.id ?? null,
-    name: authUser?.name ?? "Guest",
+    name: authUser?.name ?? authUser?.fullName ?? "Guest",
     email: authUser?.email ?? "",
     role,
+    avatarUrl: authUser?.avatarUrl ?? authUser?.avatar_url ?? "",
     permissions: getUserPermissions(authUser, role)
   };
 }

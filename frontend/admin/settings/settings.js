@@ -55,6 +55,12 @@ function bindSettingsEvents(root) {
   });
 
   root.addEventListener("click", (event) => {
+    const passwordToggle = event.target.closest("[data-password-toggle]");
+    if (passwordToggle) {
+      togglePasswordVisibility(passwordToggle);
+      return;
+    }
+
     if (event.target.closest("[data-settings-save-notifications]")) {
       saveNotificationPreferences(root);
     }
@@ -115,13 +121,7 @@ function renderGeneralSection() {
   ];
 
   return `
-    <div class="settings-content-header">
-      <div>
-        <p>Cài đặt chung</p>
-        <h2>Thông tin hệ thống</h2>
-      </div>
-      <span class="settings-pill">Chỉ hiển thị</span>
-    </div>
+    ${renderSectionHeader("Cài đặt chung", "Thông tin cơ bản của hệ thống quản trị.", "Chỉ hiển thị")}
     <div class="settings-info-list">
       ${rows.map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("")}
     </div>
@@ -131,25 +131,19 @@ function renderGeneralSection() {
 function renderAppearanceSection() {
   const mode = getStoredThemeMode();
   const options = [
-    ["system", "Theo hệ thống", "fa-display"],
-    ["light", "Sáng", "fa-sun"],
-    ["dark", "Tối", "fa-moon"]
+    ["light", "Giao diện sáng", "Nền sáng, dễ đọc trong môi trường văn phòng.", "fa-sun"],
+    ["dark", "Giao diện tối", "Giảm chói khi làm việc trong điều kiện thiếu sáng.", "fa-moon"],
+    ["system", "Theo hệ thống", "Tự đồng bộ với chế độ hiển thị của thiết bị.", "fa-display"]
   ];
 
   return `
-    <div class="settings-content-header">
-      <div>
-        <p>Giao diện</p>
-        <h2>Chế độ giao diện</h2>
-      </div>
-      <span class="settings-pill">Local preference</span>
-    </div>
+    ${renderSectionHeader("Giao diện", "Chọn chế độ hiển thị cho khu vực quản trị.", "Local preference")}
     <div class="settings-choice-grid" role="radiogroup" aria-label="Chế độ giao diện">
-      ${options.map(([value, label, icon]) => `
+      ${options.map(([value, label, description, icon]) => `
         <label class="settings-choice ${mode === value ? "is-active" : ""}">
           <input type="radio" name="themeMode" value="${value}" data-theme-mode ${mode === value ? "checked" : ""}>
           <i class="fa-solid ${icon}" aria-hidden="true"></i>
-          <span>${label}</span>
+          <span><strong>${label}</strong><small>${description}</small></span>
         </label>
       `).join("")}
     </div>
@@ -158,24 +152,18 @@ function renderAppearanceSection() {
 
 function renderNotificationsSection() {
   const options = [
-    ["newOrders", "Thông báo đơn hàng mới"],
-    ["payments", "Thông báo thanh toán"],
-    ["lowStock", "Thông báo tồn kho thấp"],
-    ["system", "Thông báo hệ thống"]
+    ["newOrders", "Thông báo đơn hàng mới", "Nhận cảnh báo khi có đơn hàng mới."],
+    ["payments", "Thông báo thanh toán", "Nhận cảnh báo khi thanh toán thay đổi."],
+    ["lowStock", "Tồn kho thấp", "Nhận cảnh báo khi sản phẩm sắp hết."],
+    ["system", "Thông báo hệ thống", "Nhận cập nhật quan trọng trong trang quản trị."]
   ];
 
   return `
-    <div class="settings-content-header">
-      <div>
-        <p>Thông báo</p>
-        <h2>Tùy chọn thông báo quản trị</h2>
-      </div>
-      <span class="settings-pill">Local preference</span>
-    </div>
-    <div class="settings-section-grid">
-      ${options.map(([name, label]) => `
+    ${renderSectionHeader("Thông báo", "Tùy chọn cảnh báo hiển thị trong khu vực quản trị.", "Local preference")}
+    <div class="settings-switch-list">
+      ${options.map(([name, label, description]) => `
         <label class="settings-toggle">
-          <span>${label}</span>
+          <span><strong>${label}</strong><small>${description}</small></span>
           <input type="checkbox" name="${name}" data-notification-pref ${notificationDraft[name] ? "checked" : ""}>
           <i aria-hidden="true"></i>
         </label>
@@ -193,17 +181,11 @@ function renderNotificationsSection() {
 
 function renderSecuritySection() {
   return `
-    <div class="settings-content-header">
-      <div>
-        <p>Bảo mật</p>
-        <h2>Đổi mật khẩu</h2>
-      </div>
-      <span class="settings-pill">Backend</span>
-    </div>
+    ${renderSectionHeader("Bảo mật", "Cập nhật mật khẩu đăng nhập cho tài khoản quản trị.", "Backend")}
     <form class="settings-password-form" data-settings-password-form>
-      <label>Mật khẩu hiện tại<input type="password" name="current_password" autocomplete="current-password" required></label>
-      <label>Mật khẩu mới<input type="password" name="newPassword" autocomplete="new-password" minlength="8" required></label>
-      <label>Xác nhận mật khẩu mới<input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" required></label>
+      ${renderPasswordField("Mật khẩu hiện tại", "current_password", "current-password")}
+      ${renderPasswordField("Mật khẩu mới", "newPassword", "new-password")}
+      ${renderPasswordField("Xác nhận mật khẩu mới", "confirmPassword", "new-password")}
       <div class="settings-form-message" data-settings-password-message></div>
       <div class="settings-actions">
         <button class="settings-save-button" type="submit" data-settings-password-submit>
@@ -212,6 +194,32 @@ function renderSecuritySection() {
         </button>
       </div>
     </form>
+  `;
+}
+
+function renderSectionHeader(title, description, pill) {
+  return `
+    <div class="settings-content-header">
+      <div>
+        <p>${title}</p>
+        <h2>${description}</h2>
+      </div>
+      <span class="settings-pill">${pill}</span>
+    </div>
+  `;
+}
+
+function renderPasswordField(label, name, autocomplete) {
+  return `
+    <label>
+      <span>${label}</span>
+      <span class="settings-password-control">
+        <input type="password" name="${name}" autocomplete="${autocomplete}" minlength="8" required>
+        <button type="button" aria-label="Hiện mật khẩu" data-password-toggle>
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+        </button>
+      </span>
+    </label>
   `;
 }
 
@@ -269,6 +277,17 @@ async function submitPasswordChange(root, form) {
     button.disabled = false;
     button.querySelector("span").textContent = "Đổi mật khẩu";
   }
+}
+
+function togglePasswordVisibility(button) {
+  const input = button.closest(".settings-password-control")?.querySelector("input");
+  const icon = button.querySelector("i");
+  if (!input || !icon) return;
+
+  const visible = input.type === "text";
+  input.type = visible ? "password" : "text";
+  button.setAttribute("aria-label", visible ? "Hiện mật khẩu" : "Ẩn mật khẩu");
+  icon.className = `fa-regular ${visible ? "fa-eye" : "fa-eye-slash"}`;
 }
 
 function updateNotificationActions(root) {
