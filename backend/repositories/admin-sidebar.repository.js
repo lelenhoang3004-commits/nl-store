@@ -42,7 +42,10 @@ export class AdminSidebarRepository extends BaseRepository {
         AND LOWER(pt.status) NOT IN ('paid', 'success', 'failed', 'cancelled', 'expired', 'refunded')
         AND (
           LOWER(pt.status) IN ('processing', 'customer_reported')
-          OR JSON_UNQUOTE(JSON_EXTRACT(pt.metadata, '$.customerReportedPaymentAt')) IS NOT NULL
+          OR JSON_UNQUOTE(CASE
+            WHEN JSON_VALID(pt.metadata) THEN JSON_EXTRACT(pt.metadata, '$.customerReportedPaymentAt')
+            ELSE NULL
+          END) IS NOT NULL
         )`
     );
     return Number(rows[0]?.total || 0);

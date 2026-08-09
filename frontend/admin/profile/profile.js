@@ -97,7 +97,7 @@ function renderProfile(root) {
             <h2 id="admin-profile-form-title">Hồ sơ quản trị</h2>
           </div>
         </div>
-        ${profileState.error ? `<div class="admin-profile-alert" role="alert">${escapeHtml(profileState.error)}</div>` : ""}
+        ${profileState.error ? `<div class="admin-profile-alert" role="alert"><span>${escapeHtml(profileState.error)}</span><button type="button" data-profile-retry>Thử lại</button></div>` : ""}
         <form class="admin-profile-form" data-admin-profile-form>
           <label>
             <span>Họ và tên</span>
@@ -145,11 +145,18 @@ function bindProfileForm(root) {
   };
 
   syncPasswordRequirement(form);
+  root.querySelector("[data-profile-retry]")?.addEventListener("click", () => loadProfile(root));
   form.addEventListener("input", syncDirtyState);
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     if (!hasFormChanged(form)) {
+      return;
+    }
+
+    const validationMessage = validateProfileForm(form);
+    if (validationMessage) {
+      notifyError(validationMessage);
       return;
     }
 
@@ -200,6 +207,31 @@ function hasFormChanged(form) {
   return current.fullName !== profileState.initialForm.fullName || current.phone !== profileState.initialForm.phone;
 }
 
+function validateProfileForm(form) {
+  const fullName = String(form.elements.fullName?.value || "").trim();
+  const phone = String(form.elements.phone?.value || "").trim();
+  const passwordRequired = Boolean(form.elements.current_password?.required);
+  const currentPassword = String(form.elements.current_password?.value || "");
+
+  if (!fullName) {
+    return "Họ và tên không được để trống.";
+  }
+
+  if (fullName.length > 120) {
+    return "Họ và tên không được vượt quá 120 ký tự.";
+  }
+
+  if (phone && !isValidVietnamPhone(phone)) {
+    return "Số điện thoại không hợp lệ.";
+  }
+
+  if (passwordRequired && !currentPassword) {
+    return "Vui lòng nhập mật khẩu hiện tại để đổi số điện thoại.";
+  }
+
+  return "";
+}
+
 function createProfilePayload(form) {
   const payload = {
     fullName: String(form.elements.fullName?.value || "").trim(),
@@ -229,6 +261,11 @@ function syncPasswordRequirement(form) {
   if (!phoneChanged) {
     input.value = "";
   }
+}
+
+function isValidVietnamPhone(value) {
+  const digits = String(value || "").replace(/[\s.-]/g, "");
+  return /^(0|\+84)(3|5|7|8|9)\d{8}$/.test(digits);
 }
 
 function createEditableSnapshot(profile) {
