@@ -174,7 +174,7 @@ async function loadCategoriesFromApi() {
 
     return categories.map(normalizeHomeCategory);
   } catch (error) {
-    console.error("Kh??ng t???i ???????c danh m???c t??? API:", error);
+    console.error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c danh m\u1ee5c t\u1eeb API:", error);
     return [];
   }
 }

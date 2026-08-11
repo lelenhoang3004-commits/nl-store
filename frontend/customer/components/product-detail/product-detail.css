@@ -207,28 +207,63 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  min-height: 36px;
-  padding: 0 11px;
-  border: 1px solid var(--color-border);
+  min-width: 36px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dbe4f0;
   border-radius: var(--radius-full);
+  color: #334155;
+  background: #f8fafc;
   cursor: pointer;
+  font-weight: var(--customer-font-semibold);
+  line-height: 1;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
-.product-detail-option:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(2,6,23,0.06); }
 
-/* Selected state when JS toggles `is-selected` */
+.product-detail-option.is-color {
+  min-height: 34px;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.product-detail-option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary) 54%, #dbe4f0);
+  background: color-mix(in srgb, var(--color-primary) 5%, #fff);
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.06);
+}
+
+.product-detail-option:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  outline-offset: 2px;
+}
+
 .product-detail-option.is-selected {
   border-color: var(--color-primary);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 12%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent));
-  color: var(--color-primary-contrast, #fff);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-/* Stronger visible selected for color swatches */
-.product-detail-option.is-color.is-selected i {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(2,6,23,0.12);
-  border-color: #fff;
+.product-detail-option.is-color.is-selected {
+  border-width: 2px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent), 0 8px 20px rgba(2, 6, 23, 0.07);
+}
+
+.product-detail-option:disabled {
+  border-color: #dbe4f0;
+  color: #64748b;
+  background: #f1f5f9;
+  opacity: 0.48;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  box-shadow: none;
+  transform: none;
 }
 
 .product-detail-option input {
@@ -238,12 +273,40 @@
 }
 
 .product-detail-option i {
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
-  border: 1px solid var(--color-border);
+  border: 1px solid #cbd5e1;
   border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
+.product-detail-option.is-light-swatch i {
+  background: #fff !important;
+  border-color: #cbd5e1;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(203, 213, 225, 0.7);
+}
+
+.product-detail-option.is-color.is-selected i {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 26%, transparent);
+  outline-offset: 2px;
+  transform: scale(1.02);
+}
+
+.product-detail-option-check {
+  display: none;
+  width: 14px;
+  min-width: 14px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.product-detail-option.is-color.is-selected .product-detail-option-check {
+  display: inline-block;
+}
 .product-detail-quantity {
   display: inline-flex;
   flex-direction: column;

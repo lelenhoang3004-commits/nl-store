@@ -102,7 +102,7 @@ function createProductDetailMarkup(product, relatedProducts = []) {
         <div class="product-detail-options">
           ${variants.length ? `
             ${colors.length ? `<div class="product-detail-option-group"><span>Màu sắc</span><div class="product-detail-option-list" data-variant-colors>
-              ${colors.map((color) => `<button class="product-detail-option is-color" type="button" data-variant-color="${escapeAttr(color.name)}"><i style="background:${escapeAttr(color.code || "#94a3b8")}"></i><span>${escapeHtml(color.name)}</span></button>`).join("")}
+              ${colors.map((color) => `<button class="product-detail-option is-color${isLightColorOption(color) ? " is-light-swatch" : ""}" type="button" data-variant-color="${escapeAttr(color.name)}"><i style="background:${escapeAttr(color.code || "#94a3b8")}"></i><span>${escapeHtml(color.name)}</span><span class="product-detail-option-check" aria-hidden="true">&#10003;</span></button>`).join("")}
             </div></div>` : ""}
             ${hasVariantSizes ? `<div class="product-detail-option-group"><span>${escapeHtml(variantLabels.sizeLabel)}</span><div class="product-detail-option-list" data-variant-sizes>${colors.length ? `<small>${escapeHtml(variantLabels.waitingLabel)}</small>` : createVariantSizeButtons(variants)}</div></div>` : ""}
           ` : `<div class="product-detail-option-group product-detail-no-variants"><p>Sản phẩm hiện chưa có biến thể.</p></div>`}
@@ -539,6 +539,12 @@ function getVariantColors(product = {}, variants = []) {
 function createVariantSizeButtons(variants = []) {
   const activeVariants = variants.filter((variant) => variant.status === "active" && String(variant.size || "").trim());
   return [...new Map(activeVariants.map((variant) => [variant.size, variant])).values()].map((variant) => `<button class="product-detail-option" type="button" data-variant-size="${escapeAttr(variant.size)}" ${Number(variant.stock) <= 0 ? "disabled" : ""}>${escapeHtml(variant.size)}${Number(variant.stock) <= 0 ? " · Hết hàng" : ""}</button>`).join("") || "<small>Không còn lựa chọn khả dụng.</small>";
+}
+
+function isLightColorOption(color = {}) {
+  const name = normalizeProductText(color.name);
+  const code = String(color.code || "").trim().toLowerCase();
+  return name.includes("trang") || ["#fff", "#ffffff", "white", "rgb(255,255,255)", "rgb(255, 255, 255)"].includes(code);
 }
 
 function normalizeProductText(value) {
