@@ -2851,6 +2851,59 @@ function validateCheckoutForm(form) {
   return { errors, isValid: Object.keys(errors).length === 0 };
 }
 
+
+function bindCheckoutVoucherEvents(container, checkoutSummary) {
+  const applyButton = container.querySelector("[data-checkout-voucher-apply]");
+  const input = container.querySelector("[data-checkout-voucher-input]");
+  const removeButton = container.querySelector("[data-checkout-voucher-remove]");
+
+  applyButton?.addEventListener("click", async () => {
+    if (applyButton.disabled) return;
+    const code = String(input?.value || "").trim().toUpperCase();
+
+    if (!code) {
+      layoutState.cartVoucher = { code: "", discountAmount: 0, status: "error", message: "Vui l\u00f2ng nh\u1eadp m\u00e3 gi\u1ea3m gi\u00e1." };
+      await renderCheckoutPage();
+      return;
+    }
+
+    applyButton.disabled = true;
+    applyButton.textContent = "\u0110ang ki\u1ec3m tra...";
+
+    try {
+      const response = await customerApi("/vouchers/validate", {
+        method: "POST",
+        auth: false,
+        body: { code, orderTotal: Number(checkoutSummary.selectedSubtotal || 0) }
+      });
+      const result = response.data || {};
+      layoutState.cartVoucher = {
+        code: result.code || code,
+        discountAmount: Number(result.discountAmount || 0),
+        status: "success",
+        message: `\u00c1p d\u1ee5ng th\u00e0nh c\u00f4ng! Gi\u1ea3m ${formatCurrency(result.discountAmount || 0)}.`
+      };
+      notifySuccess(layoutState.cartVoucher.message);
+    } catch (error) {
+      layoutState.cartVoucher = { code, discountAmount: 0, status: "error", message: getVoucherErrorMessage(error) };
+      notifyError(layoutState.cartVoucher.message);
+    }
+
+    await renderCheckoutPage();
+  });
+
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyButton?.click();
+    }
+  });
+
+  removeButton?.addEventListener("click", async () => {
+    layoutState.cartVoucher = { code: "", discountAmount: 0, status: "idle", message: "" };
+    await renderCheckoutPage();
+  });
+}
 function renderCheckoutFieldErrors(form) {
   form.querySelectorAll("[data-field-error]").forEach((element) => {
     element.textContent = "";
@@ -3032,6 +3085,7 @@ async function renderCheckoutPage() {
                 </div>
               `).join("")}
             </div>
+            ${renderCheckoutVoucherSection(checkoutSummary)}
             <div class="customer-checkout-summary-lines">
               <div><span>Tạm tính</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
               <div><span>Giảm giá</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
@@ -3103,6 +3157,31 @@ function renderCheckoutPaymentDetails(summary) {
     </div>`;
 }
 
+
+function renderCheckoutVoucherSection(checkoutSummary) {
+  const voucherSummary = checkoutSummary?.voucherSummary || getCartVoucherSummary(checkoutSummary?.selectedSubtotal || 0);
+  const isApplied = voucherSummary.status === "success" && voucherSummary.code;
+  const messageClass = voucherSummary.status === "success" ? "is-success" : voucherSummary.status === "error" ? "is-error" : "";
+
+  return `
+    <div class="customer-cart-voucher customer-checkout-voucher" data-checkout-voucher>
+      <div class="customer-cart-voucher-title">M&#227; gi&#7843;m gi&#225;</div>
+      ${isApplied ? `
+        <div class="customer-checkout-voucher-applied">
+          <strong>[${escapeHtml(voucherSummary.code)}]</strong>
+          <span>&#272;&#227; &#225;p d&#7909;ng</span>
+          <button type="button" aria-label="G&#7905; m&#227; gi&#7843;m gi&#225;" data-checkout-voucher-remove>&times;</button>
+        </div>
+      ` : `
+        <div class="customer-cart-voucher-input-row">
+          <input type="text" name="checkoutVoucher" value="${escapeHtml(layoutState.cartVoucher.code || "")}" placeholder="Nh&#7853;p m&#227; gi&#7843;m gi&#225;" data-checkout-voucher-input>
+          <button class="customer-button secondary customer-cart-voucher-button" type="button" data-checkout-voucher-apply>&#193;p d&#7909;ng</button>
+        </div>
+      `}
+      <div class="customer-cart-voucher-message ${messageClass}" data-checkout-voucher-message>${escapeHtml(voucherSummary.message || "Nh\u1eadp m\u00e3 \u0111\u1ec3 nh\u1eadn \u01b0u \u0111\u00e3i")}</div>
+    </div>
+  `;
+}
 function initCheckoutForm(container, checkoutSummary) {
   const form = container.querySelector("[data-checkout-form]");
   const submitButton = container.querySelector("[data-checkout-submit]");
@@ -3170,7 +3249,7 @@ function initCheckoutForm(container, checkoutSummary) {
     });
   });
   syncPaymentDetails();
-
+  bindCheckoutVoucherEvents(container, checkoutSummary);
   // Province selection - update wards and map
   provinceSelect?.addEventListener("change", () => {
     const provinceCode = provinceSelect.value;
