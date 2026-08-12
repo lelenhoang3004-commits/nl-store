@@ -117,6 +117,25 @@ export class CartService extends BaseService {
     return this.getCart(userId);
   }
 
+  async removeItems(userId, itemIds = []) {
+    const normalizedItemIds = [...new Set(itemIds.map((itemId) => Number(itemId)))];
+
+    if (!normalizedItemIds.length) {
+      throw new AppError("No cart items were selected.", 422, "CART_ITEM_IDS_REQUIRED");
+    }
+
+    const items = [];
+    for (const itemId of normalizedItemIds) {
+      items.push(await this.getOwnedItem(userId, itemId));
+    }
+
+    await withTransaction(async (connection) => {
+      await this.repository.deleteItems(items.map((item) => item.id), connection);
+    });
+
+    return this.getCart(userId);
+  }
+
   async updateItemSelection(userId, itemId, isSelected) {
     const item = await this.getOwnedItem(userId, itemId);
 

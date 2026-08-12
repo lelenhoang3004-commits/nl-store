@@ -44,6 +44,13 @@ export class CartController extends BaseController {
     }, "Cart item removed successfully.");
   });
 
+  deleteItems = asyncHandler(async (request, response) => {
+    const cart = await this.service.removeItems(request.user.id, request.body.itemIds);
+
+    return this.sendSuccess(response, {
+      cart
+    }, "Cart items removed successfully.");
+  });
   selectItem = asyncHandler(async (request, response) => {
     const cart = await this.service.updateItemSelection(request.user.id, request.params.itemId, request.body.isSelected);
 

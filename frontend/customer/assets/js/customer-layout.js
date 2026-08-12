@@ -1730,7 +1730,13 @@ async function renderCartPage() {
                 <input type="checkbox" data-cart-select-all ${selectedCount === items.length ? "checked" : ""}>
                 <span>Chọn tất cả (${items.length} sản phẩm)</span>
               </label>
-              <div class="customer-cart-toolbar-meta">${selectedCount}/${items.length} đang chọn</div>
+              <div class="customer-cart-toolbar-actions">
+                <div class="customer-cart-toolbar-meta">${selectedCount}/${items.length} &#273;ang ch&#7885;n</div>
+                <button class="customer-cart-bulk-delete" type="button" data-cart-remove-selected ${selectedCount ? "" : "disabled"}>
+                  <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                  <span>X&#243;a &#273;&#227; ch&#7885;n</span>
+                </button>
+              </div>
             </div>
             <div class="customer-cart-list">
               ${items.map((item) => `
@@ -1901,6 +1907,10 @@ function bindCartPageEvents() {
     });
   });
 
+  layoutState.main.querySelector("[data-cart-remove-selected]")?.addEventListener("click", async (event) => {
+    if (event.currentTarget.disabled) return;
+    await removeSelectedCartItemsWithConfirm();
+  });
   layoutState.main.querySelector("[data-cart-select-all]")?.addEventListener("change", async (event) => {
     await customerCart.selectAll(Boolean(event.target.checked));
     await renderCartPage();
@@ -2033,7 +2043,33 @@ async function removeCartItemWithConfirm(itemId) {
   });
 }
 
-function showCartConfirmModal({ title, message, onConfirm }) {
+
+async function removeSelectedCartItemsWithConfirm() {
+  const selectedItems = Array.isArray(layoutState.cart?.items) ? layoutState.cart.items.filter((item) => item.isSelected) : [];
+
+  if (!selectedItems.length) {
+    notifyError("Vui l\u00f2ng ch\u1ecdn \u00edt nh\u1ea5t m\u1ed9t s\u1ea3n ph\u1ea9m \u0111\u1ec3 x\u00f3a.");
+    return;
+  }
+
+  const count = selectedItems.length;
+  showCartConfirmModal({
+    title: "X\u00f3a s\u1ea3n ph\u1ea9m \u0111\u00e3 ch\u1ecdn?",
+    message: count === 1
+      ? "B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n x\u00f3a s\u1ea3n ph\u1ea9m \u0111\u00e3 ch\u1ecdn kh\u1ecfi gi\u1ecf h\u00e0ng?"
+      : `B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n x\u00f3a ${count} s\u1ea3n ph\u1ea9m \u0111\u00e3 ch\u1ecdn kh\u1ecfi gi\u1ecf h\u00e0ng?`,
+    confirmLabel: count === 1 ? "X\u00f3a s\u1ea3n ph\u1ea9m" : `X\u00f3a ${count} s\u1ea3n ph\u1ea9m`,
+    loadingLabel: "\u0110ang x\u00f3a...",
+    onConfirm: async () => {
+      const nextCart = await customerCart.removeItems(selectedItems.map((item) => item.id));
+      layoutState.cart = nextCart;
+      await renderCartPage();
+      notifySuccess(count === 1 ? "\u0110\u00e3 x\u00f3a 1 s\u1ea3n ph\u1ea9m kh\u1ecfi gi\u1ecf h\u00e0ng." : `\u0110\u00e3 x\u00f3a ${count} s\u1ea3n ph\u1ea9m kh\u1ecfi gi\u1ecf h\u00e0ng.`);
+    }
+  });
+}
+
+function showCartConfirmModal({ title, message, confirmLabel = "X\u00f3a", loadingLabel = "\u0110ang x\u00f3a...", onConfirm }) {
   const overlay = document.createElement("div");
   overlay.className = "customer-cart-modal-backdrop";
   overlay.innerHTML = `
@@ -2042,21 +2078,38 @@ function showCartConfirmModal({ title, message, onConfirm }) {
       <p>${escapeHtml(message)}</p>
       <div class="customer-cart-modal-actions">
         <button class="customer-button secondary" type="button" data-cart-modal-cancel>Hủy</button>
-        <button class="customer-button" type="button" data-cart-modal-confirm>Xóa</button>
+        <button class="customer-button" type="button" data-cart-modal-confirm>${escapeHtml(confirmLabel)}</button>
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
 
-  overlay.querySelector("[data-cart-modal-cancel]")?.addEventListener("click", () => overlay.remove());
-  overlay.querySelector("[data-cart-modal-confirm]")?.addEventListener("click", async () => {
-    overlay.remove();
-    await onConfirm?.();
+  let modalBusy = false;
+  overlay.querySelector("[data-cart-modal-cancel]")?.addEventListener("click", () => { if (!modalBusy) overlay.remove(); });
+  const confirmButton = overlay.querySelector("[data-cart-modal-confirm]");
+  const cancelButton = overlay.querySelector("[data-cart-modal-cancel]");
+
+  confirmButton?.addEventListener("click", async () => {
+    if (confirmButton.disabled) return;
+    modalBusy = true;
+    confirmButton.disabled = true;
+    if (cancelButton) cancelButton.disabled = true;
+    confirmButton.textContent = loadingLabel;
+    try {
+      await onConfirm?.();
+      overlay.remove();
+    } catch (error) {
+      modalBusy = false;
+      confirmButton.disabled = false;
+      if (cancelButton) cancelButton.disabled = false;
+      confirmButton.textContent = confirmLabel;
+      notifyError(error?.message || "Kh\u00f4ng th\u1ec3 x\u00f3a s\u1ea3n ph\u1ea9m kh\u1ecfi gi\u1ecf h\u00e0ng.");
+    }
   });
 
   overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
+    if (event.target === overlay && !modalBusy) {
       overlay.remove();
     }
   });

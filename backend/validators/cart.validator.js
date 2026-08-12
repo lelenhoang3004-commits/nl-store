@@ -60,6 +60,26 @@ export function validateCartSelectionRequest({ body }) {
   return createValidationResult(errors);
 }
 
+
+export function validateBulkDeleteCartItemsRequest({ body }) {
+  const errors = [];
+  const itemIds = Array.isArray(body?.itemIds) ? body.itemIds : [];
+
+  if (!itemIds.length) {
+    errors.push(createValidationError("itemIds", "itemIds must contain at least one cart item id.", "body", "CART_ITEM_IDS_REQUIRED"));
+    return createValidationResult(errors);
+  }
+
+  if (itemIds.length > 100) {
+    errors.push(createValidationError("itemIds", "itemIds must not exceed 100 items.", "body", "CART_ITEM_IDS_TOO_LARGE"));
+  }
+
+  itemIds.forEach((itemId, index) => {
+    errors.push(...validateId(itemId, { required: true, field: `itemIds.${index}`, location: "body" }).errors);
+  });
+
+  return createValidationResult(errors);
+}
 export function validateCheckoutRequest({ body }) {
   const errors = [];
   const address = body.shippingAddress || {};

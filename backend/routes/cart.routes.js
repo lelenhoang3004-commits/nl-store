@@ -8,6 +8,7 @@ import { authenticate } from "../middleware/authentication.middleware.js";
 import { validateRequest } from "../middleware/validate-request.middleware.js";
 import {
   validateAddCartItemRequest,
+  validateBulkDeleteCartItemsRequest,
   validateCheckoutRequest,
   validateCartSelectionRequest,
   validateUpdateCartItemRequest
@@ -22,6 +23,7 @@ router.get("/", cartController.show);
 router.post("/items", validateRequest(validateAddCartItemRequest), cartController.addItem);
 router.post("/checkout", validateRequest(validateCheckoutRequest), cartController.checkout);
 router.patch("/items/select-all", validateRequest(validateCartSelectionRequest), cartController.selectAll);
+router.delete("/items", validateRequest(validateBulkDeleteCartItemsRequest), cartController.deleteItems);
 router.patch("/items/:itemId", validateRequest(validateUpdateCartItemRequest), cartController.updateItem);
 router.delete("/items/:itemId", cartController.deleteItem);
 router.patch("/items/:itemId/select", validateRequest(validateCartSelectionRequest), cartController.selectItem);

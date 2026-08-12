@@ -36,6 +36,15 @@ export const customerCart = {
     return response.data.cart || createEmptyCart();
   },
 
+  async removeItems(itemIds) {
+    const response = await customerApi("/cart/items", {
+      method: "DELETE",
+      body: { itemIds }
+    });
+
+    return response.data.cart || createEmptyCart();
+  },
+
   async selectItem(itemId, isSelected) {
     const response = await customerApi(`/cart/items/${itemId}/select`, {
       method: "PATCH",
