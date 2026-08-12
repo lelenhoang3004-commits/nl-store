@@ -127,6 +127,8 @@
 .admin-product-form label.is-invalid input,.admin-product-form label.is-invalid select,.admin-product-form label.is-invalid textarea { border-color: var(--color-danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 16%, transparent); }
 .admin-product-form-error { display: none; min-height: 0; padding: 11px 13px; border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--color-danger) 9%, transparent); }
 .admin-product-form-error:not(:empty) { display: block; }
+.admin-product-form-error.is-success { border-color: #86efac; background: #f0fdf4; color: #15803d; }
+.admin-product-form-error.is-error { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
 .admin-product-form-footer {
   position: sticky;
   z-index: 3;

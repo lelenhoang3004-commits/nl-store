@@ -710,7 +710,12 @@ function openVariantModal(root, product) {
   }
 
   async function applyBulkStock(mode, trigger = null) {
-    const setBulkStatus = (textValue) => { if (bulkStatus) bulkStatus.textContent = textValue; };
+    const setBulkStatus = (textValue, type = "") => {
+      if (!bulkStatus) return;
+      bulkStatus.textContent = textValue;
+      bulkStatus.classList.remove("is-success", "is-error");
+      if (type) bulkStatus.classList.add(`is-${type}`);
+    };
     const originalLabel = trigger?.textContent || "Áp dụng";
     if (trigger) {
       trigger.disabled = true;
@@ -728,12 +733,12 @@ function openVariantModal(root, product) {
       if (failed.length) throw new Error(`${failed.length}/${results.length} biến thể cập nhật thất bại.`);
       notifySuccess("Cập nhật tồn kho thành công");
       refreshAdminSidebarCounts();
-      setBulkStatus("Cập nhật tồn kho thành công");
+      setBulkStatus("Cập nhật tồn kho thành công", "success");
       await renderVariants();
       if (root) renderRows(root);
     } catch (error) {
       const errorMessage = message(error);
-      setBulkStatus(errorMessage);
+      setBulkStatus(errorMessage, "error");
       notifyError(errorMessage);
     } finally {
       if (trigger) {
