@@ -4760,6 +4760,29 @@
   }
 }
 
+.auth-register-content .auth-field.is-invalid .auth-input-shell {
+  border-color: #ef4444;
+  background: rgba(254, 242, 242, 0.82);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.auth-register-content .auth-field.is-invalid .auth-input-shell:focus-within {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
+}
+
+.auth-register-content .auth-terms.is-invalid {
+  border-color: rgba(239, 68, 68, 0.72);
+  background: rgba(254, 242, 242, 0.72);
+}
+
+.auth-register-content .auth-terms small[data-field-error]:not(:empty) {
+  display: block;
+  width: 100%;
+  color: #dc2626;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
 /* Shared auth header alignment for Login and Register. */
 .auth-login-content .auth-login-heading,
 .auth-register-content .auth-register-heading {

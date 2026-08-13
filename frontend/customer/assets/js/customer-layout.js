@@ -1499,65 +1499,114 @@ function renderForgotPasswordPage() {
   }
 }
 const REGISTER_PASSWORD_HELP_TEXT = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
-const REGISTER_PASSWORD_ERROR_MESSAGE = "Mật khẩu chưa hợp lệ. Vui lòng kiểm tra lại các yêu cầu về mật khẩu.";
+const REGISTER_PASSWORD_ERROR_MESSAGE = "Mật khẩu chưa hợp lệ.";
 const REGISTER_PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^\dA-Za-z]).{8,}$/;
+const REGISTER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const REGISTER_PHONE_PATTERN = /^0(3|5|7|8|9)\d{8}$/;
+const REGISTER_FIELD_MESSAGES = Object.freeze({
+  fullNameRequired: "Vui lòng nhập họ và tên.",
+  fullNameInvalid: "Họ và tên chưa hợp lệ.",
+  phoneRequired: "Vui lòng nhập số điện thoại.",
+  phoneInvalid: "Số điện thoại chưa hợp lệ.",
+  phoneDuplicate: "Số điện thoại này đã được đăng ký.",
+  emailRequired: "Vui lòng nhập email.",
+  emailInvalid: "Email không đúng định dạng.",
+  emailDuplicate: "Email này đã được đăng ký.",
+  addressInvalid: "Vui lòng nhập địa chỉ đầy đủ hơn.",
+  confirmRequired: "Vui lòng xác nhận mật khẩu.",
+  confirmMismatch: "Mật khẩu xác nhận không khớp.",
+  termsRequired: "Vui lòng đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư.",
+  genericRegister: "Không thể đăng ký tài khoản lúc này. Vui lòng thử lại sau."
+});
 
-function isRegisterPasswordValid(password) {
-  return REGISTER_PASSWORD_PATTERN.test(String(password || ""));
+function isRegisterPasswordValid(password) { return REGISTER_PASSWORD_PATTERN.test(String(password || "")); }
+function normalizeRegisterPhone(phone) { return String(phone || "").replace(/[\s.-]/g, "").trim(); }
+function isRegisterAddressValid(address) {
+  const text = String(address || "").trim();
+  const meaningful = text.replace(/[^\p{L}\p{N}]/gu, "");
+  return meaningful.length >= 5 && /[\p{L}\p{N}]/u.test(meaningful);
 }
-
-function resetRegisterFieldErrors(form) {
-  form.querySelectorAll("[data-field-error]").forEach((node) => {
-    node.textContent = "";
-  });
-  const passwordHelp = form.querySelector("[data-register-password-help]");
-  if (passwordHelp) {
-    passwordHelp.textContent = REGISTER_PASSWORD_HELP_TEXT;
-    passwordHelp.removeAttribute("data-field-error");
-  }
-  form.querySelectorAll(".auth-input-shell input").forEach((input) => input.setCustomValidity(""));
+function ensureRegisterErrorNode(form, field) {
+  if (field === "password") return form.querySelector("[data-register-password-help]");
+  return form.querySelector(`[data-field-error="${CSS.escape(field)}"]`);
 }
-
-function setRegisterFieldError(form, field, message) {
-  const node = field === "password"
-    ? form.querySelector("[data-register-password-help]")
-    : form.querySelector(`[data-field-error="${CSS.escape(field)}"]`);
+function getRegisterFieldShell(form, field) {
   const input = form.elements[field];
-  if (node) {
-    if (field === "password") node.setAttribute("data-field-error", "password");
-    node.textContent = message;
-  }
-  if (input) {
-    input.setCustomValidity(message);
-    input.reportValidity?.();
-  }
-  showCustomerMessage(form, message);
+  return field === "acceptTerms" ? input?.closest(".auth-terms") || null : input?.closest(".auth-field") || null;
 }
-
-function getRegisterApiErrorMessage(error) {
-  const details = Array.isArray(error?.details) ? error.details : [];
-  const passwordError = details.find((item) => item?.field === "password" || String(item?.code || "").startsWith("PASSWORD_"));
-  if (passwordError) return REGISTER_PASSWORD_ERROR_MESSAGE;
-  const confirmError = details.find((item) => item?.field === "confirmPassword" || item?.code === "PASSWORD_CONFIRMATION_MISMATCH");
-  if (confirmError) return "Mật khẩu xác nhận không khớp.";
-  const fieldError = details.find((item) => item?.message);
-  if (fieldError) return fieldError.message;
-  return error?.message === "Validation failed." ? "Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại." : (error?.message || "Đăng ký thất bại.");
+function resetRegisterFieldErrors(form) {
+  form.querySelectorAll("[data-field-error]").forEach((node) => { node.textContent = ""; });
+  const passwordHelp = form.querySelector("[data-register-password-help]");
+  if (passwordHelp) { passwordHelp.textContent = REGISTER_PASSWORD_HELP_TEXT; passwordHelp.removeAttribute("data-field-error"); }
+  form.querySelectorAll(".is-invalid").forEach((node) => node.classList.remove("is-invalid"));
+  form.querySelectorAll(".auth-input-shell input, .auth-terms input").forEach((input) => { input.setCustomValidity(""); input.removeAttribute("aria-invalid"); });
+  form.querySelector("[data-auth-message]")?.setAttribute("hidden", "");
 }
-
+function clearRegisterFieldError(form, field) {
+  const node = ensureRegisterErrorNode(form, field), input = form.elements[field], shell = getRegisterFieldShell(form, field);
+  if (node) { node.textContent = field === "password" ? REGISTER_PASSWORD_HELP_TEXT : ""; if (field === "password") node.removeAttribute("data-field-error"); }
+  shell?.classList.remove("is-invalid"); input?.setCustomValidity(""); input?.removeAttribute("aria-invalid"); input?.removeAttribute("aria-describedby");
+}
+function setRegisterFieldError(form, field, message) {
+  const node = ensureRegisterErrorNode(form, field), input = form.elements[field], shell = getRegisterFieldShell(form, field);
+  if (node) { if (!node.id) node.id = `register-${field}-error`; if (field === "password") node.setAttribute("data-field-error", "password"); node.textContent = message; input?.setAttribute("aria-describedby", node.id); }
+  shell?.classList.add("is-invalid");
+  if (input) { input.setAttribute("aria-invalid", "true"); input.setCustomValidity(message); }
+}
+function getRegisterPayload(form) {
+  const data = new FormData(form);
+  return { fullName: String(data.get("fullName") || "").trim(), phone: normalizeRegisterPhone(data.get("phone")), address: String(data.get("address") || "").trim(), email: String(data.get("email") || "").trim(), password: String(data.get("password") || ""), confirmPassword: String(data.get("confirmPassword") || ""), acceptTerms: Boolean(data.get("acceptTerms")) };
+}
+function validateRegisterField(form, field, payload = null) {
+  const data = payload || getRegisterPayload(form);
+  if (field === "fullName") { if (!data.fullName) return REGISTER_FIELD_MESSAGES.fullNameRequired; if (data.fullName.length < 2 || !/[\p{L}]/u.test(data.fullName)) return REGISTER_FIELD_MESSAGES.fullNameInvalid; }
+  if (field === "phone") { if (!data.phone) return REGISTER_FIELD_MESSAGES.phoneRequired; if (!REGISTER_PHONE_PATTERN.test(data.phone)) return REGISTER_FIELD_MESSAGES.phoneInvalid; }
+  if (field === "email") { if (!data.email) return REGISTER_FIELD_MESSAGES.emailRequired; if (!REGISTER_EMAIL_PATTERN.test(data.email)) return REGISTER_FIELD_MESSAGES.emailInvalid; }
+  if (field === "address" && !isRegisterAddressValid(data.address)) return REGISTER_FIELD_MESSAGES.addressInvalid;
+  if (field === "password" && !isRegisterPasswordValid(data.password)) return REGISTER_PASSWORD_ERROR_MESSAGE;
+  if (field === "confirmPassword") { if (!data.confirmPassword) return REGISTER_FIELD_MESSAGES.confirmRequired; if (data.password !== data.confirmPassword) return REGISTER_FIELD_MESSAGES.confirmMismatch; }
+  if (field === "acceptTerms" && !data.acceptTerms) return REGISTER_FIELD_MESSAGES.termsRequired;
+  return "";
+}
+function validateRegisterForm(form, payload) {
+  const errors = {};
+  ["fullName", "phone", "address", "email", "password", "confirmPassword", "acceptTerms"].forEach((field) => { const message = validateRegisterField(form, field, payload); if (message) errors[field] = message; });
+  Object.entries(errors).forEach(([field, message]) => setRegisterFieldError(form, field, message));
+  return { isValid: Object.keys(errors).length === 0, errors };
+}
+function focusFirstRegisterError(form) {
+  const target = form.querySelector(".auth-field.is-invalid input, .auth-terms.is-invalid input");
+  target?.focus({ preventScroll: true }); target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+}
+function collectRegisterApiFieldErrors(error) {
+  const details = error?.details;
+  const detailList = Array.isArray(details) ? details : Object.entries(details || {}).flatMap(([field, messages]) => (Array.isArray(messages) ? messages : [messages]).map((message) => ({ field, message })));
+  const errors = {}, code = String(error?.code || ""), apiMessage = String(error?.message || "").toLowerCase();
+  const duplicateMessage = /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(apiMessage);
+  if (code === "USER_EMAIL_EXISTS" || (apiMessage.includes("email") && duplicateMessage)) errors.email = REGISTER_FIELD_MESSAGES.emailDuplicate;
+  if (code === "USER_PHONE_EXISTS" || (apiMessage.includes("phone") && duplicateMessage)) errors.phone = REGISTER_FIELD_MESSAGES.phoneDuplicate;
+  detailList.forEach((item) => {
+    const field = item?.field, itemCode = String(item?.code || ""), itemMessage = String(item?.message || "").toLowerCase();
+    if (field === "email" || itemCode === "USER_EMAIL_EXISTS" || itemCode === "INVALID_EMAIL") errors.email = itemCode === "USER_EMAIL_EXISTS" || /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.emailDuplicate : REGISTER_FIELD_MESSAGES.emailInvalid;
+    if (field === "phone" || itemCode === "USER_PHONE_EXISTS" || itemCode === "INVALID_PHONE") errors.phone = itemCode === "USER_PHONE_EXISTS" || /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.phoneDuplicate : REGISTER_FIELD_MESSAGES.phoneInvalid;
+    if (field === "fullName") errors.fullName = itemCode === "REQUIRED" ? REGISTER_FIELD_MESSAGES.fullNameRequired : REGISTER_FIELD_MESSAGES.fullNameInvalid;
+    if (field === "address") errors.address = REGISTER_FIELD_MESSAGES.addressInvalid;
+    if (field === "password" || (itemCode.startsWith("PASSWORD_") && itemCode !== "PASSWORD_CONFIRMATION_MISMATCH")) errors.password = REGISTER_PASSWORD_ERROR_MESSAGE;
+    if (field === "confirmPassword" || itemCode === "PASSWORD_CONFIRMATION_MISMATCH") errors.confirmPassword = REGISTER_FIELD_MESSAGES.confirmMismatch;
+    if (field === "acceptTerms") errors.acceptTerms = REGISTER_FIELD_MESSAGES.termsRequired;
+  });
+  return errors;
+}
 function showRegisterApiError(form, error) {
-  const details = Array.isArray(error?.details) ? error.details : [];
-  const detail = details.find((item) => item?.field === "password" || String(item?.code || "").startsWith("PASSWORD_"))
-    || details.find((item) => item?.field === "confirmPassword" || item?.code === "PASSWORD_CONFIRMATION_MISMATCH");
-  if (detail?.field === "password" || String(detail?.code || "").startsWith("PASSWORD_")) {
-    setRegisterFieldError(form, "password", REGISTER_PASSWORD_ERROR_MESSAGE);
-    return;
-  }
-  if (detail?.field === "confirmPassword" || detail?.code === "PASSWORD_CONFIRMATION_MISMATCH") {
-    setRegisterFieldError(form, "confirmPassword", "Mật khẩu xác nhận không khớp.");
-    return;
-  }
-  showCustomerMessage(form, getRegisterApiErrorMessage(error));
+  const fieldErrors = collectRegisterApiFieldErrors(error);
+  if (Object.keys(fieldErrors).length) { Object.entries(fieldErrors).forEach(([field, message]) => setRegisterFieldError(form, field, message)); focusFirstRegisterError(form); return; }
+  showCustomerMessage(form, REGISTER_FIELD_MESSAGES.genericRegister);
+}
+function bindRegisterLiveValidation(form) {
+  ["fullName", "phone", "address", "email", "password", "confirmPassword"].forEach((field) => {
+    form.elements[field]?.addEventListener("input", () => { const message = validateRegisterField(form, field); if (!message) clearRegisterFieldError(form, field); if (field === "password" && !validateRegisterField(form, "confirmPassword")) clearRegisterFieldError(form, "confirmPassword"); });
+  });
+  form.elements.acceptTerms?.addEventListener("change", () => { if (!validateRegisterField(form, "acceptTerms")) clearRegisterFieldError(form, "acceptTerms"); });
 }
 function renderRegisterPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page auth-register-page"><div class="customer-container"><article class="auth-card auth-register-card">
@@ -1571,7 +1620,7 @@ function renderRegisterPage() {
         <label class="auth-field auth-full"><span>Email</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></div><small data-field-error="email"></small></label>
         <label class="auth-field"><span>M&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="new-password" placeholder="&#205;t nh&#7845;t 8 k&#253; t&#7921;"></div><small data-register-password-help>Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</small></label>
         <label class="auth-field"><span>X&#225;c nh&#7853;n m&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nh&#7853;p l&#7841;i m&#7853;t kh&#7849;u"></div><small data-field-error="confirmPassword"></small></label>
-      </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>T&#244;i &#273;&#7891;ng &#253; v&#7899;i <a href="#terms">&#272;i&#7873;u kho&#7843;n s&#7917; d&#7909;ng</a> v&#224; <a href="#privacy">Ch&#237;nh s&#225;ch quy&#7873;n ri&#234;ng t&#432;</a></span></label>
+      </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>T&#244;i &#273;&#7891;ng &#253; v&#7899;i <a href="#terms">&#272;i&#7873;u kho&#7843;n s&#7917; d&#7909;ng</a> v&#224; <a href="#privacy">Ch&#237;nh s&#225;ch quy&#7873;n ri&#234;ng t&#432;</a></span><small data-field-error="acceptTerms"></small></label>
         <button class="customer-button auth-primary" type="submit"><span>&#272;&#259;ng k&#253;</span></button>${renderSocialButtons("ti&#7871;p t&#7909;c")}
         <p class="auth-switch">&#272;&#227; c&#243; t&#224;i kho&#7843;n? <a href="#login">&#272;&#259;ng nh&#7853;p</a></p>
       </form>
@@ -1579,11 +1628,11 @@ function renderRegisterPage() {
   </article></div></section>`;
   resetAuthRouteScroll();
   const root=layoutState.main; bindOAuthButtons(root);
-  root.querySelectorAll("[name=\"password\"], [name=\"confirmPassword\"]").forEach((input) => input.addEventListener("input", () => input.setCustomValidity("")));
-  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); resetRegisterFieldErrors(form);
-    const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
-    if(!isRegisterPasswordValid(payload.password)){setRegisterFieldError(form,"password",REGISTER_PASSWORD_ERROR_MESSAGE);return;}
-    if(payload.password!==payload.confirmPassword){setRegisterFieldError(form,"confirmPassword","Mật khẩu xác nhận không khớp.");return;}
+  const registerForm = root.querySelector("[data-register-form]");
+  if (registerForm) bindRegisterLiveValidation(registerForm);
+  registerForm?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,button=form.querySelector("button[type=submit]"); resetRegisterFieldErrors(form);
+    const payload=getRegisterPayload(form);
+    const validation=validateRegisterForm(form,payload); if(!validation.isValid){focusFirstRegisterError(form);return;}
     button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
     try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showRegisterApiError(form,error);}finally{button.disabled=false;button.innerHTML="<span>Đăng ký</span>";}
   });
