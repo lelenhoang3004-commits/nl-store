@@ -1508,10 +1508,10 @@ const REGISTER_FIELD_MESSAGES = Object.freeze({
   fullNameInvalid: "Họ và tên chưa hợp lệ.",
   phoneRequired: "Vui lòng nhập số điện thoại.",
   phoneInvalid: "Số điện thoại chưa hợp lệ.",
-  phoneDuplicate: "Số điện thoại này đã được đăng ký.",
+  phoneDuplicate: "Số điện thoại này đã được sử dụng.",
   emailRequired: "Vui lòng nhập email.",
   emailInvalid: "Email không đúng định dạng.",
-  emailDuplicate: "Email này đã được đăng ký.",
+  emailDuplicate: "Email này đã được sử dụng.",
   addressInvalid: "Vui lòng nhập địa chỉ đầy đủ hơn.",
   confirmRequired: "Vui lòng xác nhận mật khẩu.",
   confirmMismatch: "Mật khẩu xác nhận chưa khớp.",
@@ -1607,13 +1607,13 @@ function collectRegisterApiFieldErrors(error) {
   const details = error?.details;
   const detailList = Array.isArray(details) ? details : Object.entries(details || {}).flatMap(([field, messages]) => (Array.isArray(messages) ? messages : [messages]).map((message) => ({ field, message })));
   const errors = {}, code = String(error?.code || ""), apiMessage = String(error?.message || "").toLowerCase();
-  const duplicateMessage = /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(apiMessage);
+  const duplicateMessage = /(already|exist|registered|tồn tại|đã được sử dụng)/i.test(apiMessage);
   if (code === "USER_EMAIL_EXISTS" || (apiMessage.includes("email") && duplicateMessage)) errors.email = REGISTER_FIELD_MESSAGES.emailDuplicate;
   if (code === "USER_PHONE_EXISTS" || (apiMessage.includes("phone") && duplicateMessage)) errors.phone = REGISTER_FIELD_MESSAGES.phoneDuplicate;
   detailList.forEach((item) => {
     const field = item?.field, itemCode = String(item?.code || ""), itemMessage = String(item?.message || "").toLowerCase();
-    if (field === "email" || itemCode === "USER_EMAIL_EXISTS" || itemCode === "INVALID_EMAIL") errors.email = itemCode === "USER_EMAIL_EXISTS" || /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.emailDuplicate : REGISTER_FIELD_MESSAGES.emailInvalid;
-    if (field === "phone" || itemCode === "USER_PHONE_EXISTS" || itemCode === "INVALID_PHONE") errors.phone = itemCode === "USER_PHONE_EXISTS" || /(already|exist|registered|tồn tại|đã được đăng ký)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.phoneDuplicate : REGISTER_FIELD_MESSAGES.phoneInvalid;
+    if (field === "email" || itemCode === "USER_EMAIL_EXISTS" || itemCode === "INVALID_EMAIL") errors.email = itemCode === "USER_EMAIL_EXISTS" || /(already|exist|registered|tồn tại|đã được sử dụng)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.emailDuplicate : REGISTER_FIELD_MESSAGES.emailInvalid;
+    if (field === "phone" || itemCode === "USER_PHONE_EXISTS" || itemCode === "INVALID_PHONE") errors.phone = itemCode === "USER_PHONE_EXISTS" || /(already|exist|registered|tồn tại|đã được sử dụng)/i.test(itemMessage) ? REGISTER_FIELD_MESSAGES.phoneDuplicate : REGISTER_FIELD_MESSAGES.phoneInvalid;
     if (field === "fullName") errors.fullName = itemCode === "REQUIRED" ? REGISTER_FIELD_MESSAGES.fullNameRequired : REGISTER_FIELD_MESSAGES.fullNameInvalid;
     if (field === "address") errors.address = REGISTER_FIELD_MESSAGES.addressInvalid;
     if (field === "password" || (itemCode.startsWith("PASSWORD_") && itemCode !== "PASSWORD_CONFIRMATION_MISMATCH")) errors.password = REGISTER_PASSWORD_ERROR_MESSAGE;

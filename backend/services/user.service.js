@@ -24,6 +24,10 @@ const USER_QUERY_OPTIONS = Object.freeze({
   allowedFilterFields: ["role", "status"]
 });
 const MISSING_OPTIONAL_PROFILE_TABLE_CODES = new Set(["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR"]);
+const DUPLICATE_USER_MESSAGES = Object.freeze({
+  email: "Email này đã được sử dụng.",
+  phone: "Số điện thoại này đã được sử dụng."
+});
 
 export class UserService extends BaseService {
   constructor(repository = new UserRepository(), uploadService = new UploadService()) {
@@ -62,9 +66,14 @@ export class UserService extends BaseService {
   async createUser(payload) {
     const normalizedPayload = await this.normalizeUserPayload(payload, { requirePassword: true });
     await this.ensureUniqueEmail(normalizedPayload.email);
+    await this.ensureUniquePhone(normalizedPayload.phone);
 
-    const user = await this.repository.create(normalizedPayload);
-    return user.toJSON();
+    try {
+      const user = await this.repository.create(normalizedPayload);
+      return user.toJSON();
+    } catch (error) {
+      throw mapDuplicateUserConstraintError(error);
+    }
   }
 
   async updateUser(id, payload) {
@@ -487,7 +496,7 @@ export class UserService extends BaseService {
     const duplicatedUser = await this.repository.findByEmail(email, excludedId);
 
     if (duplicatedUser) {
-      throw new AppError("Email already exists.", 409, "USER_EMAIL_EXISTS");
+      throw createDuplicateUserError("email");
     }
   }
 
@@ -498,7 +507,7 @@ export class UserService extends BaseService {
     const duplicatedUser = await this.repository.findByPhone(phone, excludedId);
 
     if (duplicatedUser) {
-      throw new AppError("Phone already exists.", 409, "USER_PHONE_EXISTS");
+      throw createDuplicateUserError("phone");
     }
   }
 
@@ -680,7 +689,29 @@ function throwProfileTableError(error) {
 }
 
 export { USER_STATUS };
+function createDuplicateUserError(field) {
+  const code = field === "phone" ? "USER_PHONE_EXISTS" : "USER_EMAIL_EXISTS";
+  return new AppError(DUPLICATE_USER_MESSAGES[field], 409, code, [
+    { field, message: DUPLICATE_USER_MESSAGES[field], location: "body", code }
+  ]);
+}
 
+function mapDuplicateUserConstraintError(error) {
+  if (!isDuplicateEntryError(error)) return error;
 
+  const field = getDuplicateUserField(error);
+  return field ? createDuplicateUserError(field) : error;
+}
 
+function isDuplicateEntryError(error) {
+  const code = String(error?.code || error?.errno || "").toUpperCase();
+  const message = String(error?.sqlMessage || error?.message || "").toLowerCase();
+  return code === "ER_DUP_ENTRY" || code === "1062" || message.includes("duplicate entry");
+}
 
+function getDuplicateUserField(error) {
+  const text = `${error?.sqlMessage || ""} ${error?.message || ""}`.toLowerCase();
+  if (text.includes("uq_users_phone") || text.includes("users.phone") || text.includes("phone")) return "phone";
+  if (text.includes("users.email") || text.includes("for key 'email'") || text.includes('for key "email"') || text.includes("email")) return "email";
+  return null;
+}

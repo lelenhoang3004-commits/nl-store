@@ -23,7 +23,7 @@ export class AuthService extends BaseService {
   async register(payload) {
     const normalizedEmail = String(payload.email).trim().toLowerCase();
     if (await this.repository.findByEmail(normalizedEmail)) {
-      throw new AppError("Email đã tồn tại.", 409, "USER_EMAIL_EXISTS");
+      throw new AppError("Email này đã được sử dụng.", 409, "USER_EMAIL_EXISTS", [{ field: "email", message: "Email này đã được sử dụng.", location: "body", code: "USER_EMAIL_EXISTS" }]);
     }
     const user = await this.userService.createUser({
       email: normalizedEmail, fullName: String(payload.fullName).trim(), phone: normalizePhone(payload.phone),
@@ -281,7 +281,3 @@ function oauthConfig(provider) {
   };
   throw new AppError("OAuth provider không hợp lệ.", 400, "INVALID_OAUTH_PROVIDER");
 }
-
-
-
-
