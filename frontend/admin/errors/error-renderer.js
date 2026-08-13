@@ -1,5 +1,5 @@
 import { openModal } from "../components/modal/modal.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+
 import { ERROR_DISPLAY, ERROR_TYPES } from "./error-types.js";
 
 // Renders normalized errors through existing Toast and Modal components.

@@ -1,5 +1,5 @@
 import { setButtonLoading } from "../loading/loading.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
+import { notifyError, notifySuccess } from "../../../assets/js/notify.js";
 import { bindValidation, validateForm } from "../validation/validation.js";
 
 let activeModal = null;

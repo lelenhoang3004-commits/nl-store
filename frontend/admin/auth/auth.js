@@ -1,6 +1,6 @@
 import { setButtonLoading } from "../components/loading/loading.js";
 import { openModal } from "../components/modal/modal.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+import { notifyError, notifySuccess } from "../../assets/js/notify.js";
 import { bindValidation, validateForm } from "../components/validation/validation.js";
 import { getRememberedEmail, loginAdminAccount, logoutAdminAccount } from "./auth-session.js";
 

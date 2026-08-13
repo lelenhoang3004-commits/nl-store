@@ -1,4 +1,4 @@
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+import { notifyError, notifySuccess } from "../../assets/js/notify.js";
 import { activateModalUX } from "../components/modal/modal-ux.js";
 import { hasPermission } from "../permissions/access-control.js";
 import { PERMISSIONS } from "../permissions/permissions.js";

@@ -1,7 +1,7 @@
 import { createProductGrid, initProductGrid } from "../product-grid/product-grid.js";
 import { createButton, initButtons } from "../button/button.js";
 import { createBadge, initBadges } from "../badge/badge.js";
-import { createSkeletonGrid, createSkeleton, initSkeletons } from "../skeleton/skeleton.js";
+import { createSkeletonGrid, initSkeletons } from "../skeleton/skeleton.js";
 import { createEmptyState, initEmptyStates } from "../empty-state/empty-state.js";
 import { createSpinner } from "../loading/loading.js";
 import { createBanner, initBanners } from "../banner/banner.js";

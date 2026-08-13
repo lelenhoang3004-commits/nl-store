@@ -6,7 +6,7 @@ import { apiClient } from "../services/api/index.js";
 import { API_CONFIG } from "../services/api/api.config.js";
 import { orderService } from "../services/order.service.js";
 import { refreshAdminSidebarCounts } from "../components/sidebar/sidebar.js";
-import { formatOrderStatus, formatPaymentMethod, formatPaymentStatus, normalizeOrderStatus, normalizePaymentStatus } from "../utils/payment-formatters.js";
+import { formatPaymentMethod, formatPaymentStatus, normalizeOrderStatus, normalizePaymentStatus } from "../utils/payment-formatters.js";
 
 const API_ORIGIN = new URL(API_CONFIG.baseURL).origin;
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='100%25' height='100%25' fill='%23eef2f7'/%3E%3Ctext x='50%25' y='52%25' text-anchor='middle' fill='%2364748b' font-size='13'%3EKhông có ảnh%3C/text%3E%3C/svg%3E";

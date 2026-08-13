@@ -1,6 +1,6 @@
 import { confirmDialog } from "../confirm/confirm.js";
 import { openModal } from "../modal/modal.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
+import { notifyError, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
 
 const STORAGE_LIMIT_BYTES = 512 * 1024 * 1024;
 const initializedManagers = new WeakSet();

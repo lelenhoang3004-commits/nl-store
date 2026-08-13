@@ -1,5 +1,5 @@
 import { hidePageLoading, showPageLoading } from "../components/loading/loading.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+import { notifyError, notifySuccess } from "../../assets/js/notify.js";
 import { adminUserService } from "../services/admin-user.service.js";
 import { loadTemplate } from "../router/template-cache.js";
 

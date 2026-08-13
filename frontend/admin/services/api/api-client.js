@@ -9,7 +9,7 @@ import { handleDownloadResponse, handleResponse } from "./response-handler.js";
 import { retryRequest } from "./retry.service.js";
 import { tokenService } from "./token.service.js";
 import { stateActions } from "../../state/index.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
+import { notifyError } from "../../../assets/js/notify.js";
 import { logoutAdminAccount } from "../../auth/auth-session.js";
 
 // Single gateway for every backend request in the admin frontend.

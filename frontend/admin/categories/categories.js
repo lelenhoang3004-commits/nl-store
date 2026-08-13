@@ -1,6 +1,6 @@
 import { openModal } from "../components/modal/modal.js";
 import { showPageLoading, hidePageLoading } from "../components/loading/loading.js";
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+import { notifyError, notifySuccess } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { categoryService } from "../services/category.service.js";
 import { uploadService } from "../services/upload.service.js";

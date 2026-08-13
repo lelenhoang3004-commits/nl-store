@@ -1,4 +1,4 @@
-import { notifyError, notifyInfo, notifySuccess, notifyWarning } from "../../assets/js/notify.js";
+import { notifyError } from "../../assets/js/notify.js";
 import { loadTemplate } from "../router/template-cache.js";
 import { API_CONFIG } from "../services/api/api.config.js";
 import { dashboardService } from "../services/dashboard.service.js";
