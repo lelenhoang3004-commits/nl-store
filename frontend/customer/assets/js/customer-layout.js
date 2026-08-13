@@ -1498,6 +1498,67 @@ function renderForgotPasswordPage() {
     countdownTimer = window.setInterval(update, 1000);
   }
 }
+const REGISTER_PASSWORD_HELP_TEXT = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+const REGISTER_PASSWORD_ERROR_MESSAGE = "Mật khẩu chưa hợp lệ. Vui lòng kiểm tra lại các yêu cầu về mật khẩu.";
+const REGISTER_PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^\dA-Za-z]).{8,}$/;
+
+function isRegisterPasswordValid(password) {
+  return REGISTER_PASSWORD_PATTERN.test(String(password || ""));
+}
+
+function resetRegisterFieldErrors(form) {
+  form.querySelectorAll("[data-field-error]").forEach((node) => {
+    node.textContent = "";
+  });
+  const passwordHelp = form.querySelector("[data-register-password-help]");
+  if (passwordHelp) {
+    passwordHelp.textContent = REGISTER_PASSWORD_HELP_TEXT;
+    passwordHelp.removeAttribute("data-field-error");
+  }
+  form.querySelectorAll(".auth-input-shell input").forEach((input) => input.setCustomValidity(""));
+}
+
+function setRegisterFieldError(form, field, message) {
+  const node = field === "password"
+    ? form.querySelector("[data-register-password-help]")
+    : form.querySelector(`[data-field-error="${CSS.escape(field)}"]`);
+  const input = form.elements[field];
+  if (node) {
+    if (field === "password") node.setAttribute("data-field-error", "password");
+    node.textContent = message;
+  }
+  if (input) {
+    input.setCustomValidity(message);
+    input.reportValidity?.();
+  }
+  showCustomerMessage(form, message);
+}
+
+function getRegisterApiErrorMessage(error) {
+  const details = Array.isArray(error?.details) ? error.details : [];
+  const passwordError = details.find((item) => item?.field === "password" || String(item?.code || "").startsWith("PASSWORD_"));
+  if (passwordError) return REGISTER_PASSWORD_ERROR_MESSAGE;
+  const confirmError = details.find((item) => item?.field === "confirmPassword" || item?.code === "PASSWORD_CONFIRMATION_MISMATCH");
+  if (confirmError) return "Mật khẩu xác nhận không khớp.";
+  const fieldError = details.find((item) => item?.message);
+  if (fieldError) return fieldError.message;
+  return error?.message === "Validation failed." ? "Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại." : (error?.message || "Đăng ký thất bại.");
+}
+
+function showRegisterApiError(form, error) {
+  const details = Array.isArray(error?.details) ? error.details : [];
+  const detail = details.find((item) => item?.field === "password" || String(item?.code || "").startsWith("PASSWORD_"))
+    || details.find((item) => item?.field === "confirmPassword" || item?.code === "PASSWORD_CONFIRMATION_MISMATCH");
+  if (detail?.field === "password" || String(detail?.code || "").startsWith("PASSWORD_")) {
+    setRegisterFieldError(form, "password", REGISTER_PASSWORD_ERROR_MESSAGE);
+    return;
+  }
+  if (detail?.field === "confirmPassword" || detail?.code === "PASSWORD_CONFIRMATION_MISMATCH") {
+    setRegisterFieldError(form, "confirmPassword", "Mật khẩu xác nhận không khớp.");
+    return;
+  }
+  showCustomerMessage(form, getRegisterApiErrorMessage(error));
+}
 function renderRegisterPage() {
   layoutState.main.innerHTML = `<section class="customer-section auth-page auth-login-page auth-register-page"><div class="customer-container"><article class="auth-card auth-register-card">
     <div class="auth-register-content">
@@ -1508,7 +1569,7 @@ function renderRegisterPage() {
         <label class="auth-field"><span>S&#7889; &#273;i&#7879;n tho&#7841;i</span><div class="auth-input-shell"><i class="fa-solid fa-phone" aria-hidden="true"></i><input type="tel" name="phone" required autocomplete="tel" placeholder="0901234567"></div><small data-field-error="phone"></small></label>
         <label class="auth-field auth-full"><span>&#272;&#7883;a ch&#7881;</span><div class="auth-input-shell"><i class="fa-regular fa-map" aria-hidden="true"></i><input name="address" required autocomplete="street-address" placeholder="S&#7889; nh&#224;, &#273;&#432;&#7901;ng, ph&#432;&#7901;ng/x&#227;, t&#7881;nh/th&#224;nh"></div><small data-field-error="address"></small></label>
         <label class="auth-field auth-full"><span>Email</span><div class="auth-input-shell"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" required autocomplete="email" placeholder="email@example.com"></div><small data-field-error="email"></small></label>
-        <label class="auth-field"><span>M&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="new-password" placeholder="&#205;t nh&#7845;t 8 k&#253; t&#7921;"></div><small>M&#7853;t kh&#7849;u t&#7889;i thi&#7875;u 8 k&#253; t&#7921;.</small></label>
+        <label class="auth-field"><span>M&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="password" required autocomplete="new-password" placeholder="&#205;t nh&#7845;t 8 k&#253; t&#7921;"></div><small data-register-password-help>Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</small></label>
         <label class="auth-field"><span>X&#225;c nh&#7853;n m&#7853;t kh&#7849;u</span><div class="auth-input-shell"><i class="fa-solid fa-lock" aria-hidden="true"></i><input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Nh&#7853;p l&#7841;i m&#7853;t kh&#7849;u"></div><small data-field-error="confirmPassword"></small></label>
       </div><label class="auth-check auth-terms"><input type="checkbox" name="acceptTerms" required><span>T&#244;i &#273;&#7891;ng &#253; v&#7899;i <a href="#terms">&#272;i&#7873;u kho&#7843;n s&#7917; d&#7909;ng</a> v&#224; <a href="#privacy">Ch&#237;nh s&#225;ch quy&#7873;n ri&#234;ng t&#432;</a></span></label>
         <button class="customer-button auth-primary" type="submit"><span>&#272;&#259;ng k&#253;</span></button>${renderSocialButtons("ti&#7871;p t&#7909;c")}
@@ -1518,9 +1579,13 @@ function renderRegisterPage() {
   </article></div></section>`;
   resetAuthRouteScroll();
   const root=layoutState.main; bindOAuthButtons(root);
-  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
+  root.querySelectorAll("[name=\"password\"], [name=\"confirmPassword\"]").forEach((input) => input.addEventListener("input", () => input.setCustomValidity("")));
+  root.querySelector("[data-register-form]")?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,data=new FormData(form),button=form.querySelector("button[type=submit]"); resetRegisterFieldErrors(form);
     const payload={fullName:String(data.get("fullName")||"").trim(),phone:String(data.get("phone")||"").trim(),address:String(data.get("address")||"").trim(),email:String(data.get("email")||"").trim(),password:String(data.get("password")||""),confirmPassword:String(data.get("confirmPassword")||""),acceptTerms:Boolean(data.get("acceptTerms"))};
-    try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showCustomerMessage(form,error?.message||"Đăng ký thất bại.");}finally{button.disabled=false;button.innerHTML="<span>Đăng ký</span>";}
+    if(!isRegisterPasswordValid(payload.password)){setRegisterFieldError(form,"password",REGISTER_PASSWORD_ERROR_MESSAGE);return;}
+    if(payload.password!==payload.confirmPassword){setRegisterFieldError(form,"confirmPassword","Mật khẩu xác nhận không khớp.");return;}
+    button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
+    try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showRegisterApiError(form,error);}finally{button.disabled=false;button.innerHTML="<span>Đăng ký</span>";}
   });
 }
 
@@ -5072,5 +5137,3 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapCustomerWebsite();
 }
-
-

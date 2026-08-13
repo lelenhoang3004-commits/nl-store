@@ -6,6 +6,8 @@ import { createValidationError, createValidationResult, isEmpty, validateRequire
 
 const DEFAULT_MIN_LENGTH = 8;
 const DEFAULT_MAX_LENGTH = 72;
+export const STRONG_PASSWORD_MESSAGE = "Mật khẩu chưa hợp lệ. Vui lòng kiểm tra lại các yêu cầu về mật khẩu.";
+export const STRONG_PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^\dA-Za-z]).{8,}$/;
 
 export function validatePassword(value, options = {}) {
   const field = options.field || "password";
@@ -29,28 +31,33 @@ export function validatePassword(value, options = {}) {
 
   const password = String(value);
 
+  if (options.strong !== false && minLength === DEFAULT_MIN_LENGTH && !STRONG_PASSWORD_PATTERN.test(password)) {
+    errors.push(createValidationError(field, STRONG_PASSWORD_MESSAGE, location, "PASSWORD_POLICY_INVALID"));
+    return createValidationResult(errors);
+  }
+
   if (password.length < minLength) {
-    errors.push(createValidationError(field, `${field} must be at least ${minLength} characters.`, location, "PASSWORD_TOO_SHORT"));
+    errors.push(createValidationError(field, `Mật khẩu phải có ít nhất ${minLength} ký tự.`, location, "PASSWORD_TOO_SHORT"));
   }
 
   if (password.length > maxLength) {
-    errors.push(createValidationError(field, `${field} must not exceed ${maxLength} characters.`, location, "PASSWORD_TOO_LONG"));
+    errors.push(createValidationError(field, `Mật khẩu không được vượt quá ${maxLength} ký tự.`, location, "PASSWORD_TOO_LONG"));
   }
 
   if (options.strong !== false && !/[A-Z]/.test(password)) {
-    errors.push(createValidationError(field, `${field} must contain at least one uppercase letter.`, location, "PASSWORD_MISSING_UPPERCASE"));
+    errors.push(createValidationError(field, STRONG_PASSWORD_MESSAGE, location, "PASSWORD_MISSING_UPPERCASE"));
   }
 
   if (options.strong !== false && !/[a-z]/.test(password)) {
-    errors.push(createValidationError(field, `${field} must contain at least one lowercase letter.`, location, "PASSWORD_MISSING_LOWERCASE"));
+    errors.push(createValidationError(field, STRONG_PASSWORD_MESSAGE, location, "PASSWORD_MISSING_LOWERCASE"));
   }
 
   if (options.strong !== false && !/\d/.test(password)) {
-    errors.push(createValidationError(field, `${field} must contain at least one number.`, location, "PASSWORD_MISSING_NUMBER"));
+    errors.push(createValidationError(field, STRONG_PASSWORD_MESSAGE, location, "PASSWORD_MISSING_NUMBER"));
   }
 
   if (options.strong !== false && !/[^\dA-Za-z]/.test(password)) {
-    errors.push(createValidationError(field, `${field} must contain at least one special character.`, location, "PASSWORD_MISSING_SPECIAL"));
+    errors.push(createValidationError(field, STRONG_PASSWORD_MESSAGE, location, "PASSWORD_MISSING_SPECIAL"));
   }
 
   return createValidationResult(errors);
