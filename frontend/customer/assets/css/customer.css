@@ -4548,6 +4548,23 @@
   font-weight: var(--customer-font-semibold);
 }
 
+.auth-register-content .auth-password-field,
+.auth-register-content .auth-confirm-password-field {
+  grid-template-rows: minmax(20px, auto) 52px minmax(18px, auto);
+  align-content: start;
+}
+
+.auth-register-content .auth-password-field > span,
+.auth-register-content .auth-confirm-password-field > span {
+  align-self: end;
+  line-height: 1.35;
+}
+
+.auth-register-content .auth-password-field .auth-input-shell,
+.auth-register-content .auth-confirm-password-field .auth-input-shell {
+  min-height: 52px;
+  height: 52px;
+}
 .auth-register-content .auth-input-shell {
   min-height: 52px;
   display: grid;
