@@ -1514,7 +1514,7 @@ const REGISTER_FIELD_MESSAGES = Object.freeze({
   emailDuplicate: "Email này đã được đăng ký.",
   addressInvalid: "Vui lòng nhập địa chỉ đầy đủ hơn.",
   confirmRequired: "Vui lòng xác nhận mật khẩu.",
-  confirmMismatch: "Mật khẩu xác nhận không khớp.",
+  confirmMismatch: "Mật khẩu xác nhận chưa khớp.",
   termsRequired: "Vui lòng đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư.",
   genericRegister: "Không thể đăng ký tài khoản lúc này. Vui lòng thử lại sau."
 });
@@ -1538,20 +1538,45 @@ function resetRegisterFieldErrors(form) {
   form.querySelectorAll("[data-field-error]").forEach((node) => { node.textContent = ""; });
   const passwordHelp = form.querySelector("[data-register-password-help]");
   if (passwordHelp) { passwordHelp.textContent = REGISTER_PASSWORD_HELP_TEXT; passwordHelp.removeAttribute("data-field-error"); }
-  form.querySelectorAll(".is-invalid").forEach((node) => node.classList.remove("is-invalid"));
+  form.querySelectorAll(".is-invalid, .is-valid").forEach((node) => node.classList.remove("is-invalid", "is-valid"));
   form.querySelectorAll(".auth-input-shell input, .auth-terms input").forEach((input) => { input.setCustomValidity(""); input.removeAttribute("aria-invalid"); });
   form.querySelector("[data-auth-message]")?.setAttribute("hidden", "");
 }
 function clearRegisterFieldError(form, field) {
   const node = ensureRegisterErrorNode(form, field), input = form.elements[field], shell = getRegisterFieldShell(form, field);
   if (node) { node.textContent = field === "password" ? REGISTER_PASSWORD_HELP_TEXT : ""; if (field === "password") node.removeAttribute("data-field-error"); }
-  shell?.classList.remove("is-invalid"); input?.setCustomValidity(""); input?.removeAttribute("aria-invalid"); input?.removeAttribute("aria-describedby");
+  shell?.classList.remove("is-invalid", "is-valid"); input?.setCustomValidity(""); input?.removeAttribute("aria-invalid"); input?.removeAttribute("aria-describedby");
 }
 function setRegisterFieldError(form, field, message) {
   const node = ensureRegisterErrorNode(form, field), input = form.elements[field], shell = getRegisterFieldShell(form, field);
   if (node) { if (!node.id) node.id = `register-${field}-error`; if (field === "password") node.setAttribute("data-field-error", "password"); node.textContent = message; input?.setAttribute("aria-describedby", node.id); }
+  shell?.classList.remove("is-valid");
   shell?.classList.add("is-invalid");
   if (input) { input.setAttribute("aria-invalid", "true"); input.setCustomValidity(message); }
+}
+function setRegisterFieldValid(form, field) {
+  const node = ensureRegisterErrorNode(form, field), input = form.elements[field], shell = getRegisterFieldShell(form, field);
+  if (node) node.textContent = "";
+  shell?.classList.remove("is-invalid");
+  shell?.classList.add("is-valid");
+  input?.setCustomValidity("");
+  input?.removeAttribute("aria-invalid");
+  input?.removeAttribute("aria-describedby");
+}
+function updateRegisterConfirmState(form, options = {}) {
+  const password = String(form.elements.password?.value || "");
+  const confirmPassword = String(form.elements.confirmPassword?.value || "");
+  if (!confirmPassword) {
+    if (options.required) setRegisterFieldError(form, "confirmPassword", REGISTER_FIELD_MESSAGES.confirmRequired);
+    else clearRegisterFieldError(form, "confirmPassword");
+    return !options.required;
+  }
+  if (confirmPassword !== password) {
+    setRegisterFieldError(form, "confirmPassword", REGISTER_FIELD_MESSAGES.confirmMismatch);
+    return false;
+  }
+  setRegisterFieldValid(form, "confirmPassword");
+  return true;
 }
 function getRegisterPayload(form) {
   const data = new FormData(form);
@@ -1603,9 +1628,14 @@ function showRegisterApiError(form, error) {
   showCustomerMessage(form, REGISTER_FIELD_MESSAGES.genericRegister);
 }
 function bindRegisterLiveValidation(form) {
-  ["fullName", "phone", "address", "email", "password", "confirmPassword"].forEach((field) => {
-    form.elements[field]?.addEventListener("input", () => { const message = validateRegisterField(form, field); if (!message) clearRegisterFieldError(form, field); if (field === "password" && !validateRegisterField(form, "confirmPassword")) clearRegisterFieldError(form, "confirmPassword"); });
+  ["fullName", "phone", "address", "email"].forEach((field) => {
+    form.elements[field]?.addEventListener("input", () => { const message = validateRegisterField(form, field); if (!message) clearRegisterFieldError(form, field); });
   });
+  form.elements.password?.addEventListener("input", () => {
+    if (!validateRegisterField(form, "password")) clearRegisterFieldError(form, "password");
+    updateRegisterConfirmState(form);
+  });
+  form.elements.confirmPassword?.addEventListener("input", () => updateRegisterConfirmState(form));
   form.elements.acceptTerms?.addEventListener("change", () => { if (!validateRegisterField(form, "acceptTerms")) clearRegisterFieldError(form, "acceptTerms"); });
 }
 function renderRegisterPage() {
@@ -1632,7 +1662,7 @@ function renderRegisterPage() {
   if (registerForm) bindRegisterLiveValidation(registerForm);
   registerForm?.addEventListener("submit",async event=>{ event.preventDefault(); const form=event.currentTarget,button=form.querySelector("button[type=submit]"); resetRegisterFieldErrors(form);
     const payload=getRegisterPayload(form);
-    const validation=validateRegisterForm(form,payload); if(!validation.isValid){focusFirstRegisterError(form);return;}
+    const validation=validateRegisterForm(form,payload); if(!validation.isValid){if(validation.errors.confirmPassword) form.elements.confirmPassword?.focus({ preventScroll: true }); else focusFirstRegisterError(form); return;}
     button.disabled=true; button.innerHTML="<span class=\"customer-button-spinner\" aria-hidden=\"true\"></span><span>Đang đăng ký...</span>";
     try{await customerAuth.register(payload);notifySuccess("Đăng ký thành công. Vui lòng đăng nhập.");navigateToRoute("login");}catch(error){showRegisterApiError(form,error);}finally{button.disabled=false;button.innerHTML="<span>Đăng ký</span>";}
   });

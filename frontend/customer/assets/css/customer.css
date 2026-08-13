@@ -4760,6 +4760,16 @@
   }
 }
 
+.auth-register-content .auth-field.is-valid .auth-input-shell {
+  border-color: #22c55e;
+  background: rgba(240, 253, 244, 0.82);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.auth-register-content .auth-field.is-valid .auth-input-shell:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+}
 .auth-register-content .auth-field.is-invalid .auth-input-shell {
   border-color: #ef4444;
   background: rgba(254, 242, 242, 0.82);
