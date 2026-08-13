@@ -2968,14 +2968,16 @@
   background: #DCE4EF;
 }
 
-.auth-login-content .auth-social-grid {
+.auth-login-content .auth-social-grid,
+.auth-register-content .auth-social-grid {
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
 .auth-login-content .auth-social-button,
-.auth-login-content .auth-phone-button {
+.auth-login-content .auth-phone-button,
+.auth-register-content .auth-social-button {
   width: 100%;
   min-width: 0;
   min-height: 48px;
@@ -2999,14 +3001,17 @@
 }
 
 .auth-login-content .auth-social-button span:last-child,
-.auth-login-content .auth-phone-button span {
+.auth-login-content .auth-phone-button span,
+.auth-register-content .auth-social-button span:last-child {
   white-space: nowrap;
   min-width: 0;
   line-height: 1;
 }
 
 .auth-login-content .auth-social-button:hover,
-.auth-login-content .auth-phone-button:hover {
+.auth-login-content .auth-phone-button:hover,
+.auth-register-content .auth-social-button:hover,
+.auth-register-content .auth-social-button:focus-visible {
   border-color: rgba(35,78,143,.34);
   background: #EEF4FC;
 }
@@ -3022,7 +3027,8 @@
   flex-shrink: 0;
 }
 
-.auth-login-content .auth-social-icon {
+.auth-login-content .auth-social-icon,
+.auth-register-content .auth-social-icon {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
@@ -3080,7 +3086,8 @@
 }
 
 @media (max-width: 620px) {
-  .auth-login-content .auth-social-grid {
+  .auth-login-content .auth-social-grid,
+  .auth-register-content .auth-social-grid {
     grid-template-columns: 1fr;
   }
   .auth-login-content {
@@ -4330,7 +4337,8 @@
 }
 
 .auth-login-content .auth-social-button,
-.auth-login-content .auth-phone-button {
+.auth-login-content .auth-phone-button,
+.auth-register-content .auth-social-button {
   min-height: 48px;
   height: 48px;
   border-color: rgba(148, 163, 184, 0.32);
@@ -4343,7 +4351,9 @@
 .auth-login-content .auth-social-button:hover,
 .auth-login-content .auth-phone-button:hover,
 .auth-login-content .auth-social-button:focus-visible,
-.auth-login-content .auth-phone-button:focus-visible {
+.auth-login-content .auth-phone-button:focus-visible,
+.auth-register-content .auth-social-button:hover,
+.auth-register-content .auth-social-button:focus-visible {
   border-color: rgba(37, 99, 235, 0.28);
   background: rgba(239, 246, 255, 0.78);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
@@ -4704,32 +4714,6 @@
   background: rgba(148, 163, 184, 0.28);
 }
 
-.auth-register-content .auth-social-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.auth-register-content .auth-social-button,
-.auth-register-content .auth-phone-button {
-  min-height: 48px;
-  height: 48px;
-  border-color: rgba(148, 163, 184, 0.32);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--color-text);
-  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-}
-
-.auth-register-content .auth-social-button:hover,
-.auth-register-content .auth-phone-button:hover,
-.auth-register-content .auth-social-button:focus-visible,
-.auth-register-content .auth-phone-button:focus-visible {
-  border-color: rgba(37, 99, 235, 0.28);
-  background: rgba(239, 246, 255, 0.78);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
-  transform: translateY(-1px);
-  outline: none;
-}
 
 .auth-register-content .auth-switch {
   margin: 2px 0 0;
@@ -5204,16 +5188,6 @@
   font-size: 0.8rem;
 }
 
-.auth-register-content .auth-social-grid {
-  gap: 10px;
-}
-
-.auth-register-content .auth-social-button,
-.auth-register-content .auth-phone-button {
-  min-height: 44px;
-  height: 44px;
-  border-radius: 13px;
-}
 
 .auth-register-content .auth-switch {
   margin-top: 0;
