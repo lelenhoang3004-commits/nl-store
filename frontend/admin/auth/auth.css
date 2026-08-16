@@ -164,6 +164,18 @@
   transition: transform 160ms ease, background 160ms ease, color 160ms ease;
 }
 
+.auth-error-state .auth-inline-actions a.auth-primary-button,
+.auth-error-state .auth-inline-actions a.auth-primary-button:hover,
+.auth-error-state .auth-inline-actions a.auth-primary-button:focus,
+.auth-error-state .auth-inline-actions a.auth-primary-button:active,
+.auth-error-state .auth-inline-actions a.auth-primary-button:visited,
+.auth-error-state .auth-inline-actions a.auth-secondary-button,
+.auth-error-state .auth-inline-actions a.auth-secondary-button:hover,
+.auth-error-state .auth-inline-actions a.auth-secondary-button:focus,
+.auth-error-state .auth-inline-actions a.auth-secondary-button:active,
+.auth-error-state .auth-inline-actions a.auth-secondary-button:visited {
+  text-decoration: none;
+}
 .auth-primary-button {
   color: #ffffff;
   background: var(--color-primary);
