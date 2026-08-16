@@ -1,14 +1,12 @@
 import { createCustomerFooter } from "../../components/footer/footer.js?v=20260729-contact-update";
 import { createCustomerHeader, initCustomerHeader } from "../../components/header/header.js";
-import { initCustomerChatbot } from "../../components/chatbot/chatbot.js";
-import { createProductDetailPage, initProductDetailPage } from "../../components/product-detail/product-detail.js";
 import { createProductCard, initProductCard } from "../../components/product-card/product-card.js";
 import { createProductGrid, initProductGrid } from "../../components/product-grid/product-grid.js";
 import { createHomePage, initHomePage } from "../../home/home.js?v=20260730-hero-refresh";
 import { customerApi, customerAuth, showCustomerMessage } from "./customer-auth.js?v=20260717-cloudflare-pages";
+import { getCachedPublicJson } from "./public-catalog-cache.js";
 import { createEmptyCart, customerCart, getCartErrorMessage } from "./customer-cart.js";
 import { notifyError, notifySuccess, notifyWarning } from "../../../assets/js/notify.js";
-import { VIETNAM_ADMINISTRATIVE_2025, getWardsByProvince } from "../../../assets/data/vietnam-administrative-2025.js";
 import { SUPPORTED_CHECKOUT_PAYMENT_METHODS, formatOrderStatus, formatPaymentMethod, formatPaymentStatus } from "../../../admin/utils/payment-formatters.js";
 
 // Minimal, robust layout manager for customer site
@@ -78,6 +76,32 @@ import { SUPPORTED_CHECKOUT_PAYMENT_METHODS, formatOrderStatus, formatPaymentMet
     } catch (e) {}
   } catch (e) {}
 })();
+let vietnamAdministrativeModulePromise = null;
+
+async function getVietnamAdministrativeData() {
+  vietnamAdministrativeModulePromise ||= import("../../../assets/data/vietnam-administrative-2025.js");
+  return vietnamAdministrativeModulePromise;
+}
+
+async function findProvinceByCode(provinceCode) {
+  const { VIETNAM_ADMINISTRATIVE_2025 } = await getVietnamAdministrativeData();
+  return VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === String(provinceCode || ""));
+}
+let productDetailModulePromise = null;
+
+async function getProductDetailModule() {
+  productDetailModulePromise ||= import("../../components/product-detail/product-detail.js");
+  return productDetailModulePromise;
+}
+
+async function initCustomerChatbotLazy() {
+  try {
+    const { initCustomerChatbot } = await import("../../components/chatbot/chatbot.js");
+    initCustomerChatbot();
+  } catch (error) {
+    console.debug("[customer] chatbot module unavailable", error?.message || error);
+  }
+}
 const layoutState = {
   header: null,
   main: null,
@@ -273,32 +297,34 @@ function formatAddress(address = {}) {
   return parts.length ? parts.join(", ") : "Chưa cập nhật";
 }
 
-function loadProvinces(selectElement) {
+async function loadProvinces(selectElement) {
   if (!selectElement) return;
-  selectElement.innerHTML = `<option value="">Chọn tỉnh/thành</option>${VIETNAM_ADMINISTRATIVE_2025.map((province) => `<option value="${escapeHtml(province.code)}">${escapeHtml(province.name)}</option>`).join("")}`;
+  const { VIETNAM_ADMINISTRATIVE_2025 } = await getVietnamAdministrativeData();
+  selectElement.innerHTML = `<option value="">Ch&#7885;n t&#7881;nh/th&#224;nh</option>${VIETNAM_ADMINISTRATIVE_2025.map((province) => `<option value="${escapeHtml(province.code)}">${escapeHtml(province.name)}</option>`).join("")}`;
 }
 
-function loadWardsByProvince(selectElement, provinceCode) {
+async function loadWardsByProvince(selectElement, provinceCode) {
   if (!selectElement) return;
 
   if (!provinceCode) {
     selectElement.disabled = true;
-    selectElement.innerHTML = `<option value="">Chọn phường/xã/thị trấn</option>`;
+    selectElement.innerHTML = `<option value="">Ch&#7885;n ph&#432;&#7901;ng/x&#227;/th&#7883; tr&#7845;n</option>`;
     return;
   }
 
+  const { getWardsByProvince } = await getVietnamAdministrativeData();
   const wards = getWardsByProvince(provinceCode);
   selectElement.disabled = false;
-  selectElement.innerHTML = `<option value="">Chọn phường/xã/thị trấn</option>${wards.map((ward) => `<option value="${escapeHtml(ward.code)}">${escapeHtml(ward.name)}</option>`).join("")}`;
+  selectElement.innerHTML = `<option value="">Ch&#7885;n ph&#432;&#7901;ng/x&#227;/th&#7883; tr&#7845;n</option>${wards.map((ward) => `<option value="${escapeHtml(ward.code)}">${escapeHtml(ward.name)}</option>`).join("")}`;
 }
 
-function updateMapByAddress(mapIframe, detailAddress, provinceCode, wardCode) {
+async function updateMapByAddress(mapIframe, detailAddress, provinceCode, wardCode) {
   if (!mapIframe) return;
 
-  const province = VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === provinceCode);
+  const province = await findProvinceByCode(provinceCode);
   const ward = province?.wards.find((item) => item.code === wardCode);
-  const fullAddress = [detailAddress, ward?.name || "", province?.name || "", "Việt Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
-  const mapQuery = fullAddress || "Việt Nam";
+  const fullAddress = [detailAddress, ward?.name || "", province?.name || "", "Vi\u1ec7t Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
+  const mapQuery = fullAddress || "Vi\u1ec7t Nam";
   mapIframe.src = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`;
 }
 
@@ -319,7 +345,7 @@ function bootstrapCustomerWebsite() {
   }
 
   renderLayout();
-  initCustomerChatbot();
+  initCustomerChatbotLazy();
   bindGlobalEvents();
 
   // Initialize password visibility toggles and observe SPA content changes
@@ -807,18 +833,7 @@ function renderRoute() {
 
     if (route.startsWith('product-detail')) {
       currentRoute = hashPath || route;
-      const id = getRouteParam(window.location.hash);
-      layoutState.main.replaceChildren();
-      layoutState.main.innerHTML = createProductDetailPage(id);
-      const detailInit = initProductDetailPage(layoutState.main, id, {
-        onAddToCart: async (payload) => {
-          await handleAddToCartPayload(payload);
-        },
-        onBuyNow: (item) => {
-          startBuyNowCheckout(item);
-        }
-      });
-      Promise.resolve(detailInit).finally(syncWishlistToggleButtons);
+      renderProductDetailRoute(getRouteParam(window.location.hash));
       return;
     }
 
@@ -828,6 +843,25 @@ function renderRoute() {
   }
 }
 
+async function renderProductDetailRoute(id) {
+  try {
+    const { createProductDetailPage, initProductDetailPage } = await getProductDetailModule();
+    layoutState.main.replaceChildren();
+    layoutState.main.innerHTML = createProductDetailPage(id);
+    const detailInit = initProductDetailPage(layoutState.main, id, {
+      onAddToCart: async (payload) => {
+        await handleAddToCartPayload(payload);
+      },
+      onBuyNow: (item) => {
+        startBuyNowCheckout(item);
+      }
+    });
+    Promise.resolve(detailInit).finally(syncWishlistToggleButtons);
+  } catch (error) {
+    notifyError(error?.message || "Kh\u00f4ng th\u1ec3 t\u1ea3i chi ti\u1ebft s\u1ea3n ph\u1ea9m.");
+    renderHomeRoute();
+  }
+}
 function renderHomeRoute(sectionId = "") {
   const route = sectionId || 'home';
   currentRoute = route;
@@ -1016,8 +1050,8 @@ async function fetchCustomerCategoryPages() {
 }
 
 async function fetchCustomerCategoryPage(page = 1) {
-  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
-  return customerApi(`/categories?${query.toString()}`, { auth: false });
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc" });
+  return getCachedPublicJson(`${API_BASE_URL}/categories?${query.toString()}`, { ttlMs: CUSTOMER_CATEGORY_CACHE_TTL });
 }
 
 function normalizeCustomerCategory(category = {}) {
@@ -3364,13 +3398,14 @@ function initCheckoutForm(container, checkoutSummary) {
     }
   }
 
-  function setProvinceWards(provinceCode) {
+  async function setProvinceWards(provinceCode) {
+    const { getWardsByProvince } = await getVietnamAdministrativeData();
     currentWardList = getWardsByProvince(provinceCode);
     wardSearchInput.value = "";
     refreshWardOptions();
   }
 
-  loadProvinces(provinceSelect);
+  loadProvinces(provinceSelect).catch(() => {});
   refreshWardOptions();
 
   // Payment method selection
@@ -3401,14 +3436,14 @@ function initCheckoutForm(container, checkoutSummary) {
     layoutState.checkoutAddress.wardCode = "";
     wardSelect.value = "";
 
-    setProvinceWards(provinceCode);
-    updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, provinceCode, "");
+    setProvinceWards(provinceCode).catch(() => {});
+    updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, provinceCode, "").catch(() => {});
   });
 
   // Ward selection - update map
   wardSelect?.addEventListener("change", () => {
     layoutState.checkoutAddress.wardCode = wardSelect.value;
-    updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, layoutState.checkoutAddress.provinceCode, layoutState.checkoutAddress.wardCode);
+    updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, layoutState.checkoutAddress.provinceCode, layoutState.checkoutAddress.wardCode).catch(() => {});
   });
 
   wardSearchInput?.addEventListener("input", () => {
@@ -3424,7 +3459,7 @@ function initCheckoutForm(container, checkoutSummary) {
     }
 
     layoutState.checkoutAddress.mapUpdateTimer = setTimeout(() => {
-      updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, layoutState.checkoutAddress.provinceCode, layoutState.checkoutAddress.wardCode);
+      updateMapByAddress(mapIframe, layoutState.checkoutAddress.detailAddress, layoutState.checkoutAddress.provinceCode, layoutState.checkoutAddress.wardCode).catch(() => {});
     }, 500);
   });
 
@@ -3456,7 +3491,7 @@ function initCheckoutForm(container, checkoutSummary) {
       return;
     }
 
-    const province = VIETNAM_ADMINISTRATIVE_2025.find((p) => p.code === provinceCode);
+    const province = await findProvinceByCode(provinceCode);
     const ward = province?.wards.find((w) => w.code === wardCode);
     const fullAddress = [line1, ward?.name || "", province?.name || "", "Việt Nam"].filter(Boolean).join(", ").replace(/,\s*,/g, ",").trim();
 
@@ -4201,11 +4236,18 @@ function openProfileEditModal(user = {}) {
   bindPasswordTools(form);
   const provinceSelect = form.querySelector("[data-profile-province]");
   const wardSelect = form.querySelector("[data-profile-ward]");
-  loadProvinces(provinceSelect);
-  provinceSelect.value = address.provinceCode || "";
-  loadWardsByProvince(wardSelect, provinceSelect.value);
-  wardSelect.value = address.wardCode || "";
-  provinceSelect.addEventListener("change", () => loadWardsByProvince(wardSelect, provinceSelect.value));
+  loadProvinces(provinceSelect)
+    .then(() => {
+      provinceSelect.value = address.provinceCode || "";
+      return loadWardsByProvince(wardSelect, provinceSelect.value);
+    })
+    .then(() => {
+      wardSelect.value = address.wardCode || "";
+    })
+    .catch(() => {});
+  provinceSelect.addEventListener("change", () => {
+    loadWardsByProvince(wardSelect, provinceSelect.value).catch(() => {});
+  });
   modal.querySelector("[data-open-set-password]")?.addEventListener("click", () => {
     closeProfileModal(modal);
     openPasswordModal(user);
@@ -4222,7 +4264,7 @@ function openProfileEditModal(user = {}) {
 
 async function submitProfileEdit(form, currentUser, modal) {
   const data = new FormData(form);
-  const province = VIETNAM_ADMINISTRATIVE_2025.find((item) => item.code === String(data.get("provinceCode") || ""));
+  const province = await findProvinceByCode(data.get("provinceCode"));
   const ward = province?.wards.find((item) => item.code === String(data.get("wardCode") || ""));
   const nextAddress = {
     line1: String(data.get("line1") || "").trim(),

@@ -7,6 +7,7 @@ import { createBestSellerSection, initBestSellerSection } from "../components/be
 import { createCategoryShowcaseSection } from "../components/category-showcase/category-showcase.js";
 import { createBrandShowcaseSection, initBrandShowcaseSection } from "../components/brand-showcase/brand-showcase.js";
 import { createCustomerReviewsSection, initCustomerReviewsSection } from "../components/customer-reviews/customer-reviews.js";
+import { getCachedPublicJson } from "../assets/js/public-catalog-cache.js";
 
 const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
@@ -14,6 +15,8 @@ const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
     : "https://nl-store.onrender.com/api/v1"
 );
 const API_ORIGIN = globalThis.FASHION_API_ORIGIN ?? API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+const PUBLIC_PRODUCT_CACHE_TTL = 60 * 1000;
+const PUBLIC_CATEGORY_CACHE_TTL = 5 * 60 * 1000;
 
 const contentShape = {
   hero: {
@@ -130,9 +133,8 @@ function mapApiProduct(product = {}) {
 
 async function loadProductsFromApi() {
   try {
-    const query = new URLSearchParams({ page: "1", limit: "100", sortBy: "createdAt", sortOrder: "desc", _: String(Date.now()) });
-    const response = await fetch(`${API_BASE_URL}/products?${query.toString()}`, { cache: "no-store" });
-    const payload = await response.json();
+    const query = new URLSearchParams({ page: "1", limit: "100", sortBy: "createdAt", sortOrder: "desc" });
+    const payload = await getCachedPublicJson(`${API_BASE_URL}/products?${query.toString()}`, { ttlMs: PUBLIC_PRODUCT_CACHE_TTL });
 
     const products = getListFromApiPayload(payload, "products").map(mapApiProduct);
 
@@ -180,14 +182,8 @@ async function loadCategoriesFromApi() {
 }
 
 async function fetchCategoryPage(page = 1) {
-  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
-  const response = await fetch(`${API_BASE_URL}/categories?${query.toString()}`, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error(`Category API failed with status ${response.status}`);
-  }
-
-  return response.json();
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc" });
+  return getCachedPublicJson(`${API_BASE_URL}/categories?${query.toString()}`, { ttlMs: PUBLIC_CATEGORY_CACHE_TTL });
 }
 
 function normalizeHomeCategory(category = {}) {

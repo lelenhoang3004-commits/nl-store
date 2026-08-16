@@ -1,33 +1,50 @@
-import {
-  createChangePasswordPage,
-  createForbiddenPage,
-  createForgotPasswordPage,
-  createLockScreenPage,
-  createLoginPage,
-  createNotFoundAuthPage,
-  createResetPasswordPage,
-  createServerErrorPage,
-  createSessionExpiredPage,
-  initChangePasswordPage,
-  initForgotPasswordPage,
-  initLockScreenPage,
-  initLoginPage,
-  initResetPasswordPage,
-  initSessionExpiredPage
-} from "../auth/auth.js";
-import { createActivityTimelinePage, initActivityTimelinePage } from "../activity-timeline/activity-timeline.js";
-import { createAuditLogPage, initAuditLogPage } from "../audit-log/audit-log.js";
-import { createCategoriesPage, initCategoriesPage } from "../categories/categories.js";
-import { createDashboard, initDashboard } from "../dashboard/dashboard.js";
-import { createOrdersPage, initOrdersPage } from "../orders/orders.js";
-import { createPaymentsPage, initPaymentsPage } from "../payments/payments.js";
-import { createProfilePage, initProfilePage } from "../profile/profile.js";
 import { PERMISSIONS } from "../permissions/permissions.js";
-import { createProductsPage, initProductsPage } from "../products/products.js";
-import { createUsersPage, initUsersPage } from "../users/users.js";
-import { createVouchersPage, initVouchersPage } from "../vouchers/vouchers.js";
-import { createNewsletterPage, initNewsletterPage } from "../newsletter/newsletter.js";
-import { createSettingsPage, initSettingsPage } from "../settings/settings.js";
+
+function lazyRoute(loadModule, renderName, initName = "", mapRenderArgs = null) {
+  let modulePromise = null;
+  let moduleValue = null;
+
+  async function getModule() {
+    if (moduleValue) return moduleValue;
+    modulePromise ||= loadModule();
+    moduleValue = await modulePromise;
+    return moduleValue;
+  }
+
+  return {
+    async render(args) {
+      return (await getModule())[renderName](mapRenderArgs ? mapRenderArgs(args) : args);
+    },
+    init: initName ? (...args) => moduleValue?.[initName]?.(...args) : undefined
+  };
+}
+
+const auth = {
+  login: lazyRoute(() => import("../auth/auth.js"), "createLoginPage", "initLoginPage"),
+  forgotPassword: lazyRoute(() => import("../auth/auth.js"), "createForgotPasswordPage", "initForgotPasswordPage"),
+  resetPassword: lazyRoute(() => import("../auth/auth.js"), "createResetPasswordPage", "initResetPasswordPage"),
+  changePassword: lazyRoute(() => import("../auth/auth.js"), "createChangePasswordPage", "initChangePasswordPage"),
+  lockScreen: lazyRoute(() => import("../auth/auth.js"), "createLockScreenPage", "initLockScreenPage"),
+  sessionExpired: lazyRoute(() => import("../auth/auth.js"), "createSessionExpiredPage", "initSessionExpiredPage"),
+  forbidden: lazyRoute(() => import("../auth/auth.js"), "createForbiddenPage"),
+  notFound: lazyRoute(() => import("../auth/auth.js"), "createNotFoundAuthPage", "", ({ route }) => route),
+  serverError: lazyRoute(() => import("../auth/auth.js"), "createServerErrorPage")
+};
+
+const pages = {
+  activityTimeline: lazyRoute(() => import("../activity-timeline/activity-timeline.js"), "createActivityTimelinePage", "initActivityTimelinePage"),
+  auditLog: lazyRoute(() => import("../audit-log/audit-log.js"), "createAuditLogPage", "initAuditLogPage"),
+  categories: lazyRoute(() => import("../categories/categories.js"), "createCategoriesPage", "initCategoriesPage"),
+  dashboard: lazyRoute(() => import("../dashboard/dashboard.js"), "createDashboard", "initDashboard"),
+  orders: lazyRoute(() => import("../orders/orders.js"), "createOrdersPage", "initOrdersPage"),
+  payments: lazyRoute(() => import("../payments/payments.js"), "createPaymentsPage", "initPaymentsPage"),
+  profile: lazyRoute(() => import("../profile/profile.js"), "createProfilePage", "initProfilePage"),
+  products: lazyRoute(() => import("../products/products.js"), "createProductsPage", "initProductsPage"),
+  users: lazyRoute(() => import("../users/users.js"), "createUsersPage", "initUsersPage"),
+  vouchers: lazyRoute(() => import("../vouchers/vouchers.js"), "createVouchersPage", "initVouchersPage"),
+  newsletter: lazyRoute(() => import("../newsletter/newsletter.js"), "createNewsletterPage", "initNewsletterPage"),
+  settings: lazyRoute(() => import("../settings/settings.js"), "createSettingsPage", "initSettingsPage")
+};
 
 export const adminRoutes = [
   {
@@ -37,8 +54,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createLoginPage,
-    init: initLoginPage
+    render: auth.login.render,
+    init: auth.login.init
   },
   {
     path: "forgot-password",
@@ -47,8 +64,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createForgotPasswordPage,
-    init: initForgotPasswordPage
+    render: auth.forgotPassword.render,
+    init: auth.forgotPassword.init
   },
   {
     path: "reset-password",
@@ -57,8 +74,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createResetPasswordPage,
-    init: initResetPasswordPage
+    render: auth.resetPassword.render,
+    init: auth.resetPassword.init
   },
   {
     path: "change-password",
@@ -67,8 +84,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: true,
     permissions: [],
-    render: createChangePasswordPage,
-    init: initChangePasswordPage
+    render: auth.changePassword.render,
+    init: auth.changePassword.init
   },
   {
     path: "lock-screen",
@@ -77,8 +94,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createLockScreenPage,
-    init: initLockScreenPage
+    render: auth.lockScreen.render,
+    init: auth.lockScreen.init
   },
   {
     path: "session-expired",
@@ -87,8 +104,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createSessionExpiredPage,
-    init: initSessionExpiredPage
+    render: auth.sessionExpired.render,
+    init: auth.sessionExpired.init
   },
   {
     path: "dashboard",
@@ -97,8 +114,8 @@ export const adminRoutes = [
     menuKey: "dashboard",
     requiresAuth: true,
     permissions: [PERMISSIONS.DASHBOARD_VIEW],
-    render: createDashboard,
-    init: initDashboard
+    render: pages.dashboard.render,
+    init: pages.dashboard.init
   },
   {
     path: "categories",
@@ -108,8 +125,8 @@ export const adminRoutes = [
     menuKey: "categories",
     requiresAuth: true,
     permissions: [PERMISSIONS.CATEGORY_VIEW],
-    render: createCategoriesPage,
-    init: initCategoriesPage
+    render: pages.categories.render,
+    init: pages.categories.init
   },
   {
     path: "products",
@@ -119,8 +136,8 @@ export const adminRoutes = [
     menuKey: "products",
     requiresAuth: true,
     permissions: [PERMISSIONS.PRODUCT_VIEW],
-    render: createProductsPage,
-    init: initProductsPage
+    render: pages.products.render,
+    init: pages.products.init
   },
   {
     path: "products/:id",
@@ -129,8 +146,8 @@ export const adminRoutes = [
     menuKey: "products",
     requiresAuth: true,
     permissions: [PERMISSIONS.PRODUCT_VIEW],
-    render: createProductsPage,
-    init: initProductsPage
+    render: pages.products.render,
+    init: pages.products.init
   },
   {
     path: "users",
@@ -140,8 +157,8 @@ export const adminRoutes = [
     menuKey: "users",
     requiresAuth: true,
     permissions: [PERMISSIONS.USER_VIEW],
-    render: createUsersPage,
-    init: initUsersPage
+    render: pages.users.render,
+    init: pages.users.init
   },
   {
     path: "orders",
@@ -151,8 +168,8 @@ export const adminRoutes = [
     menuKey: "orders",
     requiresAuth: true,
     permissions: [PERMISSIONS.ORDER_VIEW],
-    render: createOrdersPage,
-    init: initOrdersPage
+    render: pages.orders.render,
+    init: pages.orders.init
   },
   {
     path: "orders/:id",
@@ -161,8 +178,8 @@ export const adminRoutes = [
     menuKey: "orders",
     requiresAuth: true,
     permissions: [PERMISSIONS.ORDER_VIEW],
-    render: createOrdersPage,
-    init: initOrdersPage
+    render: pages.orders.render,
+    init: pages.orders.init
   },
   {
     path: "payments",
@@ -172,8 +189,8 @@ export const adminRoutes = [
     menuKey: "payments",
     requiresAuth: true,
     permissions: [PERMISSIONS.PAYMENT_VIEW],
-    render: createPaymentsPage,
-    init: initPaymentsPage
+    render: pages.payments.render,
+    init: pages.payments.init
   },
   {
     path: "vouchers",
@@ -183,8 +200,8 @@ export const adminRoutes = [
     menuKey: "vouchers",
     requiresAuth: true,
     permissions: [PERMISSIONS.VOUCHER_VIEW],
-    render: createVouchersPage,
-    init: initVouchersPage
+    render: pages.vouchers.render,
+    init: pages.vouchers.init
   },
     {
     path: "newsletter",
@@ -194,8 +211,8 @@ export const adminRoutes = [
     menuKey: "emails",
     requiresAuth: true,
     permissions: [PERMISSIONS.EMAIL_VIEW],
-    render: createNewsletterPage,
-    init: initNewsletterPage
+    render: pages.newsletter.render,
+    init: pages.newsletter.init
   },
   {
     path: "audit-log",
@@ -205,8 +222,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: true,
     permissions: [PERMISSIONS.SETTING_VIEW],
-    render: createAuditLogPage,
-    init: initAuditLogPage
+    render: pages.auditLog.render,
+    init: pages.auditLog.init
   },
   {
     path: "activity-timeline",
@@ -216,8 +233,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: true,
     permissions: [PERMISSIONS.SETTING_VIEW],
-    render: createActivityTimelinePage,
-    init: initActivityTimelinePage
+    render: pages.activityTimeline.render,
+    init: pages.activityTimeline.init
   },
   {
     path: "profile",
@@ -226,8 +243,8 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: true,
     permissions: [],
-    render: createProfilePage,
-    init: initProfilePage
+    render: pages.profile.render,
+    init: pages.profile.init
   },
 
   {
@@ -237,8 +254,8 @@ export const adminRoutes = [
     menuKey: "settings",
     requiresAuth: true,
     permissions: [PERMISSIONS.SETTING_VIEW],
-    render: createSettingsPage,
-    init: initSettingsPage
+    render: pages.settings.render,
+    init: pages.settings.init
   },
   {
     path: "403",
@@ -247,7 +264,7 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createForbiddenPage
+    render: auth.forbidden.render
   },
   {
     path: "500",
@@ -256,7 +273,7 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: createServerErrorPage
+    render: auth.serverError.render
   },
   {
     path: "404",
@@ -265,7 +282,7 @@ export const adminRoutes = [
     menuKey: null,
     requiresAuth: false,
     permissions: [],
-    render: ({ route }) => createNotFoundAuthPage(route)
+    render: auth.notFound.render
   }
 ];
 

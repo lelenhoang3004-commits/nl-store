@@ -1,3 +1,5 @@
+import { getCachedPublicJson } from "../../assets/js/public-catalog-cache.js";
+
 const API_BASE_URL = globalThis.FASHION_API_BASE_URL ?? (
   ["localhost", "127.0.0.1"].includes(globalThis.location?.hostname)
     ? "http://localhost:5000/api/v1"
@@ -220,14 +222,8 @@ async function fetchAllCategoryPages() {
 }
 
 async function fetchCategoryPage(page = 1) {
-  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc", _: String(Date.now()) });
-  const response = await fetch(`${API_BASE_URL}/categories?${query.toString()}`, { cache: "no-store" });
-
-  if (!response.ok) {
-    throw new Error(`Category API failed with status ${response.status}`);
-  }
-
-  return response.json();
+  const query = new URLSearchParams({ page: String(page), limit: "100", sortBy: "sortOrder", sortOrder: "asc" });
+  return getCachedPublicJson(`${API_BASE_URL}/categories?${query.toString()}`, { ttlMs: CATEGORY_CACHE_TTL });
 }
 
 function getListFromApiPayload(payload, key = "items") {
