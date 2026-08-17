@@ -56,7 +56,7 @@ export function createHeroComponent(options = {}) {
       <div class="hero-track" data-hero-track>
         ${slides.map((slide, index) => `
           <article class="hero-slide hero-slide-${index + 1} ${index === 0 ? "is-active" : ""}" data-hero-slide data-slide-id="${slide.id}">
-            <img src="${slide.image}" alt="${slide.title}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" style="${createHeroImageStyle(slide)}">
+            <img src="${slide.image}" alt="${slide.title}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ""} style="${createHeroImageStyle(slide)}">
             <div class="hero-overlay"></div>
             <div class="hero-content customer-container">
               <div class="hero-copy">

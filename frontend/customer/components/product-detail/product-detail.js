@@ -65,7 +65,7 @@ function createProductDetailMarkup(product, relatedProducts = []) {
     <section class="premium-section product-detail" data-product-detail>
       <div class="product-detail-gallery">
         <div class="product-detail-main-image" data-product-zoom>
-          <img src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" loading="lazy" decoding="async" data-product-main-image data-product-image>
+          <img src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" loading="eager" decoding="async" fetchpriority="high" data-product-main-image data-product-image>
         </div>
         <div class="product-detail-thumbs" aria-label="Thư viện ảnh sản phẩm">
           ${images.map((image, index) => `
