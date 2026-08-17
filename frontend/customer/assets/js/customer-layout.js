@@ -2435,6 +2435,10 @@ function isCreditCardPaymentMethod(paymentMethod) {
   return normalizePaymentMethodValue(paymentMethod) === "credit_card";
 }
 
+function isPersistentQrPaymentMethod(paymentMethod) {
+  return ["bank_transfer", "momo"].includes(normalizePaymentMethodValue(paymentMethod));
+}
+
 function canChangePaymentMethod(payment = {}, guide = {}) {
   const status = getPaymentGuideStatus(payment, guide);
   const paid = String(payment?.paymentStatus || "").toLowerCase() === "paid" || String(payment?.actualTransactionStatus || payment?.transactionStatus || "").toLowerCase() === "paid";
@@ -2450,7 +2454,9 @@ function openOrderSuccessModal({ order = null, orderCode = "", paymentMethod = "
 
   const guide = paymentGuide || {};
   const isCreditCardDemo = isCreditCardPaymentMethod(paymentMethod);
-  const isCodPayment = normalizePaymentMethodValue(paymentMethod) === "cod";
+  const normalizedPaymentMethod = normalizePaymentMethodValue(paymentMethod);
+  const isCodPayment = normalizedPaymentMethod === "cod";
+  const isPersistentQrPayment = isPersistentQrPaymentMethod(normalizedPaymentMethod);
   const orderId = getOrderSuccessOrderId(order, guide, payment);
   const displayOrderCode = orderCode || order?.orderCode || order?.order_code || order?.id || "DON HANG";
   const isPersonalMomo = isMomoPersonalGuide(paymentMethod, guide);
@@ -2469,6 +2475,7 @@ function openOrderSuccessModal({ order = null, orderCode = "", paymentMethod = "
   const overlay = document.createElement("div");
   overlay.className = "customer-checkout-modal-backdrop";
   overlay.dataset.orderSuccessModal = "true";
+  overlay.dataset.persistentQrPayment = String(isPersistentQrPayment);
   overlay.innerHTML = `
     <div class="customer-checkout-modal customer-payment-result-modal" role="dialog" aria-modal="true">
       <button class="customer-payment-modal-close" type="button" aria-label="&#272;&#243;ng c&#7917;a s&#7893; thanh to&#225;n" data-payment-modal-close>&times;</button>
@@ -2495,7 +2502,9 @@ function openOrderSuccessModal({ order = null, orderCode = "", paymentMethod = "
 
   bindPaymentGuideActions(overlay);
   bindOrderSuccessModalEvents(overlay);
-  scheduleOrderSuccessAutoClose();
+  if (!isPersistentQrPayment) {
+    scheduleOrderSuccessAutoClose();
+  }
   return overlay;
 }
 
@@ -2531,17 +2540,22 @@ function clearOrderSuccessAutoClose() {
 }
 
 function bindOrderSuccessModalEvents(root) {
-  const close = () => redirectToOrders();
+  const isPersistentQrPayment = root?.dataset?.persistentQrPayment === "true";
+  const close = () => closeOrderSuccessModal({ clearTimer: true });
+  const viewOrder = () => redirectToOrders();
+
   root.querySelector("[data-payment-modal-close]")?.addEventListener("click", close);
-  root.querySelector("[data-order-success-view]")?.addEventListener("click", close);
+  root.querySelector("[data-order-success-view]")?.addEventListener("click", viewOrder);
+
   const onKeydown = (event) => {
-    if (event.key === "Escape" && document.body.contains(root)) close();
+    if (event.key === "Escape" && document.body.contains(root) && !isPersistentQrPayment) viewOrder();
     if (!document.body.contains(root)) document.removeEventListener("keydown", onKeydown);
   };
   layoutState.orderSuccessModal.keydownHandler = onKeydown;
   document.addEventListener("keydown", onKeydown);
+
   root.addEventListener("click", (event) => {
-    if (event.target === root) close();
+    if (event.target === root && !isPersistentQrPayment) viewOrder();
   });
 }
 
@@ -2973,6 +2987,9 @@ function bindPaymentGuideActions(root) {
       await customerApi(`/payments/transactions/${encodeURIComponent(id)}/customer-report`, { method: "POST" });
       notifySuccess("Đã ghi nhận thanh toán – đang chờ cửa hàng xác nhận.");
       button.textContent = "Đang chờ xác nhận";
+      if (root?.dataset?.orderSuccessModal === "true") {
+        closeOrderSuccessModal({ clearTimer: true });
+      }
     } catch (error) {
       button.disabled = false;
       notifyError(normalizePaymentActionError(error));
