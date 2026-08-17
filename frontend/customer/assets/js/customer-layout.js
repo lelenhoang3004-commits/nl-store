@@ -902,12 +902,15 @@ function getListFromApiPayload(payload, key = "items") {
   if (Array.isArray(payload?.products)) return payload.products;
   return [];
 }
+const CUSTOMER_PRODUCT_PAGE_SIZE = 8;
+
 async function renderProductListPage() {
   const hashQuery = (window.location.hash.split("?")[1] || "");
   const params = new URLSearchParams(hashQuery);
   const categorySlug = decodeURIComponent(params.get("category") || "").toLowerCase();
   const keywordKey = decodeURIComponent(params.get("keyword") || "").toLowerCase();
   const searchKeyword = normalizeSearchTerm(params.get("search") || "");
+  const currentPage = normalizeCustomerProductPage(params.get("page"));
   const legacyFilter = PRODUCT_MENU_FILTERS[keywordKey];
   let category = null;
   let title = searchKeyword ? `Kết quả tìm kiếm cho: ${searchKeyword}` : legacyFilter?.label || "Tất cả sản phẩm";
@@ -926,7 +929,11 @@ async function renderProductListPage() {
       title = category?.name || categorySlug;
     }
 
-    const query = new URLSearchParams({ status: "active", page: "1", limit: "100" });
+    const usesLegacyFallback = !searchKeyword && (Boolean(legacyFilter) || Boolean(categorySlug && !category?.id));
+    const requestPage = usesLegacyFallback ? 1 : currentPage;
+    const requestLimit = usesLegacyFallback ? 100 : CUSTOMER_PRODUCT_PAGE_SIZE;
+    const query = new URLSearchParams({ status: "active", page: String(requestPage), limit: String(requestLimit) });
+
     if (category?.id && !searchKeyword) {
       query.set("categoryId", String(category.id));
     } else if (legacyFilter && !searchKeyword) {
@@ -937,15 +944,27 @@ async function renderProductListPage() {
 
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
     const apiProducts = getListFromApiPayload(response, "products").filter(isActiveCustomerProduct);
-    const products = searchKeyword
-      ? apiProducts.filter((product) => matchesProductSearch(product, searchKeyword))
-      : categorySlug && !category?.id
+    const products = usesLegacyFallback
+      ? categorySlug && !category?.id
         ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
-        : legacyFilter
-          ? apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
-          : apiProducts;
+        : apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
+      : apiProducts;
+    const cards = uniqueCustomerProducts(products).map(mapApiProductForCard);
+    const pagination = getCustomerProductPagination(response);
+    const totalPages = usesLegacyFallback
+      ? Math.max(1, Math.ceil(cards.length / CUSTOMER_PRODUCT_PAGE_SIZE))
+      : Math.max(1, Number(pagination.totalPages || 1));
+    const totalItems = usesLegacyFallback
+      ? cards.length
+      : Number(pagination.totalItems ?? pagination.total ?? cards.length);
+    const renderPage = usesLegacyFallback ? currentPage : Number(pagination.page || currentPage);
 
-    if (!products.length) {
+    if (!usesLegacyFallback && !cards.length && totalItems > 0 && currentPage > totalPages) {
+      window.handleCustomerProductResultsPage(totalPages);
+      return;
+    }
+
+    if (!cards.length) {
       layoutState.main.innerHTML = renderPageShell(title, `
         <div class="customer-empty-state">
           <div class="customer-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
@@ -961,7 +980,6 @@ async function renderProductListPage() {
       return;
     }
 
-    const cards = uniqueCustomerProducts(products).map(mapApiProductForCard);
     window.__customerProductResults = cards;
     const resultHeading = searchKeyword ? `Kết quả tìm kiếm cho: ${escapeHtml(searchKeyword)}` : `Danh mục: ${escapeHtml(title)}`;
     layoutState.main.innerHTML = renderPageShell(title, `
@@ -970,10 +988,17 @@ async function renderProductListPage() {
           <div>
             <span class="ds-tag">${searchKeyword ? "TÌM KIẾM SẢN PHẨM" : "DANH MỤC SẢN PHẨM"}</span>
             <h1>${resultHeading}</h1>
-            <p>Tìm thấy ${products.length} sản phẩm phù hợp.</p>
+            <p>Tìm thấy ${totalItems} sản phẩm phù hợp.</p>
           </div>
         </div>
-        ${createProductGrid({ items: cards, page: 1, totalPages: Math.max(1, Math.ceil(cards.length / 8)), onPageChange: "handleCustomerProductResultsPage" })}
+        ${createProductGrid({
+          items: cards,
+          page: renderPage,
+          totalPages,
+          pageSize: CUSTOMER_PRODUCT_PAGE_SIZE,
+          onPageChange: "handleCustomerProductResultsPage",
+          serverPaginated: !usesLegacyFallback
+        })}
       </section>
     `, shellOptions);
     initProductGrid(layoutState.main);
@@ -995,6 +1020,18 @@ async function renderProductListPage() {
   }
 }
 
+function normalizeCustomerProductPage(value) {
+  const page = Number.parseInt(value, 10);
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function getCustomerProductPagination(response = {}) {
+  return response?.data?.pagination
+    || response?.data?.meta?.pagination
+    || response?.meta?.pagination
+    || response?.pagination
+    || {};
+}
 function getCustomerProductErrorMessage(error) {
   if (error?.status === 400 || error?.status === 422) {
     return "Không thể tìm kiếm sản phẩm với bộ lọc hiện tại. Vui lòng thử lại.";
@@ -1083,18 +1120,26 @@ function uniqueCustomerProducts(items = []) {
 }
 
 window.handleCustomerProductResultsPage = function handleCustomerProductResultsPage(page) {
-  const section = document.querySelector(".customer-product-results");
-  const current = section?.querySelector("[data-product-grid-shell]");
-  const items = window.__customerProductResults || [];
-  if (!section || !current) return;
-  current.outerHTML = createProductGrid({
-    items,
-    page,
-    totalPages: Math.max(1, Math.ceil(items.length / 8)),
-    onPageChange: "handleCustomerProductResultsPage"
-  });
-  initProductGrid(section);
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  const normalizedPage = normalizeCustomerProductPage(page);
+  const hash = window.location.hash || "#products";
+  const [rawPath, rawQuery = ""] = hash.slice(1).split("?");
+  const params = new URLSearchParams(rawQuery);
+
+  if (normalizedPage <= 1) {
+    params.delete("page");
+  } else {
+    params.set("page", String(normalizedPage));
+  }
+
+  const nextQuery = params.toString();
+  const nextHash = `#${rawPath || "products"}${nextQuery ? `?${nextQuery}` : ""}`;
+
+  if (window.location.hash === nextHash) {
+    renderProductListPage();
+    return;
+  }
+
+  window.location.hash = nextHash;
 };
 function isProductInCategory(product = {}, slug = "", category = null) {
   if (category?.id && String(product.categoryId ?? product.category_id ?? "") === String(category.id)) return true;

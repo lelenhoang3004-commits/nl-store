@@ -8,7 +8,8 @@ export function createProductGrid(options = {}) {
     page = 1,
     totalPages = null,
     pageSize = 8,
-    onPageChange = null
+    onPageChange = null,
+    serverPaginated = false
   } = options;
 
   if (loading) {
@@ -39,7 +40,9 @@ export function createProductGrid(options = {}) {
   const computedTotalPages = Math.max(1, Math.ceil(visibleItems.length / normalizedPageSize));
   const normalizedTotalPages = Math.max(1, Number(totalPages || computedTotalPages));
   const normalizedPage = Math.min(Math.max(1, Number(page || 1)), normalizedTotalPages);
-  const pageItems = visibleItems.slice((normalizedPage - 1) * normalizedPageSize, normalizedPage * normalizedPageSize);
+  const pageItems = serverPaginated
+    ? visibleItems
+    : visibleItems.slice((normalizedPage - 1) * normalizedPageSize, normalizedPage * normalizedPageSize);
 
   return `
     <section class="product-grid-shell" data-product-grid-shell>
