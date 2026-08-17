@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { CategoryRepository } from "../repositories/category.repository.js";
 import { ProductRepository } from "../repositories/product.repository.js";
 import { ProductVariantRepository } from "../repositories/product-variant.repository.js";
+import { ProductService } from "../services/product.service.js";
+import { validateProductListRequest } from "../validators/product.validator.js";
 
 const options = {
   search: { enabled: false, keyword: "" },
@@ -135,4 +137,119 @@ test("public product list tolerates unavailable optional variant schema", async 
 
   const variants = await repository.findByProductIds([1, 2], { customerOnly: true });
   assert.equal(variants.size, 0);
+});
+test("product list validates optional card projection view", () => {
+  assert.equal(validateProductListRequest({ query: {} }).isValid, true);
+  assert.equal(validateProductListRequest({ query: { view: "card" } }).isValid, true);
+
+  const result = validateProductListRequest({ query: { view: "full" } });
+  assert.equal(result.isValid, false);
+  assert.equal(result.errors.some((error) => error.code === "INVALID_PRODUCT_VIEW"), true);
+});
+
+test("product card projection selects lightweight columns only", async () => {
+  let capturedSql = "";
+  let capturedParams = [];
+  const repository = new ProductRepository({
+    getPool() {
+      return {
+        async execute(sql, params) {
+          capturedSql = sql;
+          capturedParams = params;
+          return [[{
+            id: 1,
+            name: "Card Product",
+            slug: "card-product",
+            sku: "CARD-1",
+            category_id: 2,
+            category_name: "Category",
+            price: "100000",
+            sale_price: null,
+            stock: 5,
+            sold: 3,
+            rating_average: "4.5",
+            status: "active",
+            thumbnail_url: "https://cdn.example/product-thumb.webp"
+          }], []];
+        }
+      };
+    }
+  });
+
+  const products = await repository.findAllCardProjection(options);
+
+  assert.equal(products.length, 1);
+  assert.equal(products[0].thumbnailUrl, "https://cdn.example/product-thumb.webp");
+  assert.equal(products[0].price, 100000);
+  assert.match(capturedSql, /p\.thumbnail_url/);
+  assert.doesNotMatch(capturedSql, /p\.description/);
+  assert.doesNotMatch(capturedSql, /p\.gallery_urls/);
+  assert.doesNotMatch(capturedSql, /p\.product_attributes/);
+  assert.deepEqual(capturedParams, ["active"]);
+});
+
+test("variant card counts use customer visibility filter", async () => {
+  let capturedSql = "";
+  let capturedParams = [];
+  const repository = new ProductVariantRepository({
+    getPool() {
+      return {
+        async execute(sql, params) {
+          capturedSql = sql;
+          capturedParams = params;
+          return [[{ product_id: 1, variant_count: 2 }], []];
+        }
+      };
+    }
+  });
+
+  const counts = await repository.countByProductIds([1, 2], { customerOnly: true });
+
+  assert.equal(counts.get(1), 2);
+  assert.equal(counts.has(2), false);
+  assert.match(capturedSql, /status = 'active'/);
+  assert.deepEqual(capturedParams, [1, 2]);
+});
+
+test("product service card projection omits heavy fields and attaches variant counts", async () => {
+  const repository = {
+    async findAllCardProjection() {
+      return [{
+        id: 1,
+        name: "Card Product",
+        slug: "card-product",
+        sku: "CARD-1",
+        categoryId: 2,
+        categoryName: "Category",
+        price: 100000,
+        salePrice: null,
+        stock: 5,
+        sold: 3,
+        ratingAverage: 4.5,
+        status: "active",
+        thumbnailUrl: "https://cdn.example/product-thumb.webp"
+      }];
+    },
+    async countAll() {
+      return 1;
+    }
+  };
+  const variantRepository = {
+    async countByProductIds(productIds, options) {
+      assert.deepEqual(productIds, [1]);
+      assert.deepEqual(options, { customerOnly: true });
+      return new Map([[1, 2]]);
+    }
+  };
+  const service = new ProductService(repository, {}, {}, variantRepository);
+
+  const result = await service.getProducts({ view: "card", status: "active", page: 1, limit: 8 });
+  const product = result.products[0];
+
+  assert.equal(product.variantCount, 2);
+  assert.equal(product.hasVariants, true);
+  assert.equal("description" in product, false);
+  assert.equal("galleryUrls" in product, false);
+  assert.equal("variants" in product, false);
+  assert.equal(result.meta.pagination.totalItems, 1);
 });

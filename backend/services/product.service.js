@@ -39,6 +39,23 @@ export class ProductService extends BaseService {
   async getProducts(query) {
     const options = parseQueryOptions(query, PRODUCT_QUERY_OPTIONS);
     await this.expandCategoryFilter(options);
+    if (query.view === "card") {
+      const [products, totalItems] = await Promise.all([
+        this.repository.findAllCardProjection(options),
+        this.repository.countAll(options)
+      ]);
+      const variantCounts = await this.variantRepository.countByProductIds(products.map((product) => product.id), { customerOnly: true });
+      return {
+        products: products.map((product) => attachCardProjection(product, variantCounts.get(Number(product.id)) || 0)),
+        meta: {
+          pagination: createPaginationMeta(options.pagination, totalItems),
+          search: options.search,
+          sort: options.sort,
+          filter: options.filter
+        }
+      };
+    }
+
     const [products, totalItems] = await Promise.all([
       this.repository.findAll(options),
       this.repository.countAll(options)
@@ -293,6 +310,14 @@ function normalizeProductAttributes(value) {
 }
 
 export { PRODUCT_STATUS };
+
+function attachCardProjection(product, variantCount = 0) {
+  return {
+    ...product,
+    variantCount,
+    hasVariants: variantCount > 0
+  };
+}
 
 function attachVariants(product, variants) {
   const items = variants.map((variant) => variant.toJSON());

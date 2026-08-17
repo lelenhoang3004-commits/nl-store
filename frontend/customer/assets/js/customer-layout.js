@@ -942,6 +942,10 @@ async function renderProductListPage() {
       query.set("search", searchKeyword);
     }
 
+    if (!usesLegacyFallback) {
+      query.set("view", "card");
+    }
+
     const response = await customerApi(`/products?${query.toString()}`, { auth: false });
     const apiProducts = getListFromApiPayload(response, "products").filter(isActiveCustomerProduct);
     const products = usesLegacyFallback

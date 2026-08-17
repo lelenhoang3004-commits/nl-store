@@ -53,6 +53,10 @@ export function validateProductListRequest({ query }) {
     errors.push(createValidationError("priceMin", "priceMin must be less than or equal to priceMax.", "query", "INVALID_PRICE_RANGE"));
   }
 
+  if (!isEmpty(query.view) && query.view !== "card") {
+    errors.push(createValidationError("view", "view must be card when provided.", "query", "INVALID_PRODUCT_VIEW"));
+  }
+
   return mergeValidationResults([
     validatePagination(query),
     createValidationResult(errors)

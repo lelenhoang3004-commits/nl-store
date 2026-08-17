@@ -47,6 +47,27 @@ const PRODUCT_SELECT = `
   LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
 `;
 
+const PRODUCT_CARD_SELECT = `
+  SELECT
+    p.id,
+    p.name,
+    p.slug,
+    p.sku,
+    p.category_id,
+    c.name AS category_name,
+    p.price,
+    p.sale_price,
+    p.stock,
+    p.sold,
+    p.rating_average,
+    p.status,
+    p.thumbnail_url
+  FROM products p
+  LEFT JOIN categories c ON c.id = p.category_id AND c.deleted_at IS NULL
+`;
+
+const PRODUCT_CARD_SELECT_WITHOUT_RATING = PRODUCT_CARD_SELECT
+  .replace("    p.rating_average,", "    4.8 AS rating_average,");
 const PRODUCT_SELECT_WITHOUT_RATING_COUNT = PRODUCT_SELECT
   .replace("    p.rating_count,", "    0 AS rating_count,");
 
@@ -142,6 +163,51 @@ export class ProductRepository extends BaseRepository {
     return rows.map((row) => new Product(row));
   }
 
+  async findAllCardProjection(options) {
+    const startedAt = Date.now();
+    const { whereSql, params } = this.buildWhereClause(options);
+    const sortColumn = SORT_COLUMNS[options.sort.field] || SORT_COLUMNS.createdAt;
+    const sortDirection = options.sort.direction === "asc" ? "ASC" : "DESC";
+    const { limit, offset } = normalizePagination(options.pagination);
+    const suffixSql = `${whereSql}
+      ORDER BY ${sortColumn} ${sortDirection}
+      LIMIT ${limit} OFFSET ${offset}`;
+
+    let rows;
+    try {
+      [rows] = await this.execute(`${PRODUCT_CARD_SELECT}\n${suffixSql}`, params);
+    } catch (error) {
+      if (!isMissingColumnError(error, "rating_average")) throw error;
+      logger.warn("Products schema is missing rating_average; using card projection rating default.", {
+        repository: "ProductRepository",
+        code: error.code,
+        sqlMessage: error.sqlMessage
+      });
+      [rows] = await this.execute(`${PRODUCT_CARD_SELECT_WITHOUT_RATING}\n${suffixSql}`, params);
+    }
+
+    logger.sql("Product card projection query executed.", {
+      repository: "ProductRepository",
+      operation: "findAllCardProjection",
+      durationMs: Date.now() - startedAt
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      sku: row.sku,
+      categoryId: row.category_id ?? null,
+      categoryName: row.category_name ?? null,
+      price: Number(row.price || 0),
+      salePrice: row.sale_price === null || row.sale_price === undefined ? null : Number(row.sale_price),
+      stock: Number(row.stock || 0),
+      sold: Number(row.sold || 0),
+      ratingAverage: row.rating_average === null || row.rating_average === undefined ? null : Number(row.rating_average),
+      status: row.status,
+      thumbnailUrl: row.thumbnail_url || null
+    }));
+  }
   async executeProductSelect(suffixSql, params, connection = null) {
     try {
       const [rows] = await this.execute(`${PRODUCT_SELECT}\n${suffixSql}`, params, connection);

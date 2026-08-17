@@ -85,6 +85,31 @@ export class ProductVariantRepository extends BaseRepository {
     }
   }
 
+  async countByProductIds(productIds, { customerOnly = false } = {}) {
+    if (!productIds.length) return new Map();
+
+    try {
+      await this.ensureSchema();
+      const placeholders = productIds.map(() => "?").join(",");
+      const [rows] = await this.client.getPool().execute(
+        `SELECT product_id, COUNT(*) AS variant_count FROM product_variants WHERE product_id IN (${placeholders}) AND deleted_at IS NULL ${customerOnly ? "AND status = 'active'" : ""} GROUP BY product_id`,
+        productIds
+      );
+      return rows.reduce((map, row) => {
+        map.set(Number(row.product_id), Number(row.variant_count || 0));
+        return map;
+      }, new Map());
+    } catch (error) {
+      if (!isOptionalVariantSchemaError(error)) throw error;
+
+      logger.warn("Product variants are unavailable; returning zero variant counts.", {
+        code: error.code,
+        sqlMessage: error.sqlMessage,
+        message: error.message
+      });
+      return new Map();
+    }
+  }
   async findById(id, { connection = null, forUpdate = false } = {}) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
