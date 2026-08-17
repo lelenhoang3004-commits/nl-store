@@ -3659,6 +3659,26 @@ function isPaymentActionable(status) {
   return ["pending", "unpaid", "processing", "expired", "failed"].includes(String(status || "").toLowerCase());
 }
 
+function canCustomerOpenQrPayment(order = {}) {
+  const paymentMethod = String(order.paymentMethod || "").trim().toLowerCase();
+  const orderStatus = String(order.status || "").trim().toLowerCase();
+  const paymentStatus = String(order.paymentStatus || "").trim().toLowerCase();
+  const paidAmount = Number(order.paidAmount || 0);
+  const transactions = Array.isArray(order.transactions) ? order.transactions : [];
+  const qrMethods = new Set(["bank_transfer", "momo"]);
+  const closedOrderStatuses = new Set(["cancelled", "refunded", "completed"]);
+  const paidStatuses = new Set(["paid", "success", "completed", "succeeded", "refunded"]);
+  const hasSuccessfulPayment = transactions.some((transaction) => (
+    ["paid", "success", "completed", "succeeded"].includes(String(transaction.status || "").trim().toLowerCase())
+  ));
+
+  return qrMethods.has(paymentMethod)
+    && !closedOrderStatuses.has(orderStatus)
+    && !paidStatuses.has(paymentStatus)
+    && paidAmount <= 0
+    && !hasSuccessfulPayment;
+}
+
 function bindOrderPaymentButtons(root) {
   root.querySelectorAll("[data-order-payment-open]").forEach((button) => {
     button.addEventListener("click", () => openOrderPaymentModal(button.dataset.orderPaymentOpen));
@@ -3758,6 +3778,7 @@ async function renderOrdersPage() {
       const statusBadge = createStatusBadge(status.label, status.variant);
       const paymentBadge = createStatusBadge(paymentStatus.label, paymentStatus.variant);
       const detailHref = `#orders/${encodeURIComponent(order.id || "")}`;
+      const canOpenQrPayment = canCustomerOpenQrPayment(order);
 
       return `
         <article class="customer-order-history-card">
@@ -3783,6 +3804,7 @@ async function renderOrdersPage() {
           </div>
           <div class="customer-order-history-actions">
             <a class="customer-button secondary" href="${detailHref}">Xem chi tiết</a>
+            ${canOpenQrPayment ? `<button class="customer-button" type="button" data-order-payment-open="${escapeHtml(order.id || "")}">Thanh to&#225;n ngay</button>` : ""}
             <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
           </div>
         </article>
@@ -3801,6 +3823,7 @@ async function renderOrdersPage() {
         ${orderCards}
       </div>
     `);
+    bindOrderPaymentButtons(layoutState.main);
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
       <div class="customer-empty-state">
@@ -3856,6 +3879,7 @@ async function renderOrderDetailPage(orderId) {
     const transactionStatus = transaction ? normalizePaymentTransactionStatus(transaction.status) : null;
     const timelineItems = history.length ? history : [{ status: order.status, note: "Đơn hàng đã được tạo", createdAt: order.createdAt }];
     const canCancel = canCustomerCancelOrder(order);
+    const canOpenQrPayment = canCustomerOpenQrPayment(order);
 
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
       <div class="customer-order-detail-shell">
@@ -3876,6 +3900,7 @@ async function renderOrderDetailPage(orderId) {
             <section class="customer-order-panel">
               <div class="customer-order-actions">
                 <a class="customer-button secondary" href="#orders">Quay lại</a>
+                ${canOpenQrPayment ? `<button class="customer-button" type="button" data-order-payment-open="${escapeHtml(order.id || orderId)}">Thanh to&#225;n ngay</button>` : ""}
                 <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
                 ${canCancel ? `<button class="customer-button secondary" type="button" data-order-cancel="${escapeHtml(order.id || orderId)}">H&#7911;y &#273;&#417;n</button>` : ""}
               </div>
@@ -3955,6 +3980,7 @@ async function renderOrderDetailPage(orderId) {
         </div>
       </div>
     `);
+    bindOrderPaymentButtons(layoutState.main);
     bindCustomerOrderCancel(layoutState.main, order.id || orderId);
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `

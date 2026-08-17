@@ -296,14 +296,21 @@ export class UserService extends BaseService {
     if (!user) {
       throw new AppError("User was not found.", 404, "USER_NOT_FOUND");
     }
+
     await this.ensureCurrentPassword(user, payload.current_password, userId);
+
     if (payload.newPassword !== payload.confirmPassword) {
-      throw new AppError("Xác nhận mật khẩu không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
+      throw new AppError("Xác nhận mật khẩu mới không khớp.", 422, "PASSWORD_CONFIRMATION_MISMATCH");
     }
+
+    const reusedCurrentPassword = await bcrypt.compare(payload.newPassword, user.password_hash);
+    if (reusedCurrentPassword) {
+      throw new AppError("Mật khẩu mới phải khác mật khẩu hiện tại.", 409, "PASSWORD_REUSED");
+    }
+
     const updatedUser = await this.repository.updatePasswordHash(userId, await hashPassword(payload.newPassword));
     return { changed: true, user: updatedUser.toJSON() };
   }
-
   async setPassword(userId, payload = {}) {
     const user = await this.repository.findByIdWithAuth(userId);
     if (!user) {

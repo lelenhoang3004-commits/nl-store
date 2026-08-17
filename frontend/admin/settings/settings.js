@@ -257,14 +257,30 @@ function resetNotificationPreferences(root) {
 async function submitPasswordChange(root, form) {
   const message = root.querySelector("[data-settings-password-message]");
   const button = root.querySelector("[data-settings-password-submit]");
+  const buttonLabel = button?.querySelector("span");
   const payload = {
-    current_password: form.elements.current_password.value,
-    newPassword: form.elements.newPassword.value,
-    confirmPassword: form.elements.confirmPassword.value
+    current_password: String(form.elements.current_password.value || ""),
+    newPassword: String(form.elements.newPassword.value || ""),
+    confirmPassword: String(form.elements.confirmPassword.value || "")
   };
 
-  if (!payload.current_password || !payload.newPassword || !payload.confirmPassword) {
-    showPasswordMessage(message, "Vui lòng nhập đầy đủ thông tin.", true);
+  if (!payload.current_password) {
+    showPasswordMessage(message, "Vui lòng nhập mật khẩu hiện tại.", true);
+    return;
+  }
+
+  if (!payload.newPassword) {
+    showPasswordMessage(message, "Vui lòng nhập mật khẩu mới.", true);
+    return;
+  }
+
+  if (!payload.confirmPassword) {
+    showPasswordMessage(message, "Vui lòng xác nhận mật khẩu mới.", true);
+    return;
+  }
+
+  if (payload.newPassword === payload.current_password) {
+    showPasswordMessage(message, "Mật khẩu mới phải khác mật khẩu hiện tại.", true);
     return;
   }
 
@@ -273,27 +289,49 @@ async function submitPasswordChange(root, form) {
     return;
   }
 
+  if (!isStrongSettingsPassword(payload.newPassword)) {
+    showPasswordMessage(message, "Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.", true);
+    return;
+  }
+
   button.disabled = true;
-  button.querySelector("span").textContent = "Đang lưu";
+  if (buttonLabel) buttonLabel.textContent = "Đang xử lý...";
   showPasswordMessage(message, "", false);
 
   try {
     await userService.changePassword(payload);
     form.reset();
-    showPasswordMessage(message, "Đã đổi mật khẩu.", false);
-    notifySuccess("Đã đổi mật khẩu.");
+    showPasswordMessage(message, "Đổi mật khẩu thành công.", false);
+    notifySuccess("Đổi mật khẩu thành công.");
   } catch (error) {
-    const text = error?.status === 403
-      ? "Mật khẩu hiện tại không đúng."
-      : "Không thể đổi mật khẩu. Vui lòng thử lại.";
+    const text = getPasswordChangeErrorMessage(error);
     showPasswordMessage(message, text, true);
     notifyError(text);
   } finally {
     button.disabled = false;
-    button.querySelector("span").textContent = "Đổi mật khẩu";
+    if (buttonLabel) buttonLabel.textContent = "Đổi mật khẩu";
   }
 }
 
+function isStrongSettingsPassword(password) {
+  return /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^\dA-Za-z]).{8,}$/.test(password);
+}
+
+function getPasswordChangeErrorMessage(error) {
+  if (error?.code === "CURRENT_PASSWORD_INVALID" || error?.status === 401) {
+    return "Mật khẩu hiện tại không chính xác.";
+  }
+  if (error?.code === "PASSWORD_REUSED" || error?.status === 409) {
+    return "Mật khẩu mới phải khác mật khẩu hiện tại.";
+  }
+  if (error?.code === "PASSWORD_CONFIRMATION_MISMATCH") {
+    return "Xác nhận mật khẩu mới không khớp.";
+  }
+  if (error?.code === "PASSWORD_POLICY_INVALID" || error?.code === "PASSWORD_TOO_SHORT") {
+    return error.message || "Mật khẩu mới không hợp lệ.";
+  }
+  return "Không thể đổi mật khẩu. Vui lòng thử lại.";
+}
 function togglePasswordVisibility(button) {
   const input = button.closest(".settings-password-control")?.querySelector("input");
   const icon = button.querySelector("i");
