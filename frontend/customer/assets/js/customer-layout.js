@@ -3080,18 +3080,20 @@ function bindCheckoutVoucherEvents(container, checkoutSummary) {
   const input = container.querySelector("[data-checkout-voucher-input]");
   const removeButton = container.querySelector("[data-checkout-voucher-remove]");
 
-  applyButton?.addEventListener("click", async () => {
+  applyButton?.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     if (applyButton.disabled) return;
     const code = String(input?.value || "").trim().toUpperCase();
 
     if (!code) {
-      layoutState.cartVoucher = { code: "", discountAmount: 0, status: "error", message: "Vui l\u00f2ng nh\u1eadp m\u00e3 gi\u1ea3m gi\u00e1." };
-      await renderCheckoutPage();
+      layoutState.cartVoucher = { code: "", discountAmount: 0, status: "error", message: "Vui lòng nhập mã giảm giá." };
+      refreshCheckoutVoucherSummary(container, checkoutSummary);
       return;
     }
 
     applyButton.disabled = true;
-    applyButton.textContent = "\u0110ang ki\u1ec3m tra...";
+    applyButton.textContent = "Đang kiểm tra...";
 
     try {
       const response = await customerApi("/vouchers/validate", {
@@ -3104,28 +3106,61 @@ function bindCheckoutVoucherEvents(container, checkoutSummary) {
         code: result.code || code,
         discountAmount: Number(result.discountAmount || 0),
         status: "success",
-        message: `\u00c1p d\u1ee5ng th\u00e0nh c\u00f4ng! Gi\u1ea3m ${formatCurrency(result.discountAmount || 0)}.`
+        message: `Áp dụng thành công! Giảm ${formatCurrency(result.discountAmount || 0)}.`
       };
       notifySuccess(layoutState.cartVoucher.message);
     } catch (error) {
       layoutState.cartVoucher = { code, discountAmount: 0, status: "error", message: getVoucherErrorMessage(error) };
       notifyError(layoutState.cartVoucher.message);
+    } finally {
+      refreshCheckoutVoucherSummary(container, checkoutSummary);
     }
-
-    await renderCheckoutPage();
   });
 
   input?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
+      event.stopPropagation();
       applyButton?.click();
     }
   });
 
-  removeButton?.addEventListener("click", async () => {
+  removeButton?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     layoutState.cartVoucher = { code: "", discountAmount: 0, status: "idle", message: "" };
-    await renderCheckoutPage();
+    refreshCheckoutVoucherSummary(container, checkoutSummary);
   });
+}
+
+function refreshCheckoutVoucherSummary(container, checkoutSummary) {
+  const nextSummary = getCheckoutSummary(checkoutSummary.items || []);
+  Object.assign(checkoutSummary, nextSummary, {
+    checkoutMode: checkoutSummary.checkoutMode,
+    buyNowItems: checkoutSummary.buyNowItems || []
+  });
+
+  const voucherNode = container.querySelector("[data-checkout-voucher]");
+  if (voucherNode) {
+    voucherNode.outerHTML = renderCheckoutVoucherSection(checkoutSummary);
+  }
+
+  updateTextContent(container.querySelector("[data-checkout-discount]"), formatCurrency(checkoutSummary.discountAmount));
+  updateTextContent(container.querySelector("[data-checkout-vat]"), `Đã gồm ${formatCurrency(checkoutSummary.vatAmount)}`);
+  updateTextContent(container.querySelector("[data-checkout-shipping]"), formatShippingFee(checkoutSummary.shippingFee));
+  updateTextContent(container.querySelector("[data-checkout-total]"), formatCurrency(checkoutSummary.grandTotal));
+
+  const hintNode = container.querySelector("[data-checkout-free-shipping]");
+  if (hintNode) {
+    hintNode.hidden = !(checkoutSummary.freeShippingRemaining > 0);
+    updateTextContent(hintNode.querySelector("span"), `Mua thêm ${formatCurrency(checkoutSummary.freeShippingRemaining)} để được miễn phí vận chuyển`);
+  }
+
+  bindCheckoutVoucherEvents(container, checkoutSummary);
+}
+
+function updateTextContent(node, value) {
+  if (node) node.textContent = value;
 }
 function renderCheckoutFieldErrors(form) {
   form.querySelectorAll("[data-field-error]").forEach((element) => {
@@ -3311,14 +3346,14 @@ async function renderCheckoutPage() {
             ${renderCheckoutVoucherSection(checkoutSummary)}
             <div class="customer-checkout-summary-lines">
               <div><span>Tạm tính</span><strong>${formatCurrency(checkoutSummary.selectedSubtotal)}</strong></div>
-              <div><span>Giảm giá</span><strong>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
-              <div><span>Thu&#7871; VAT (10%)</span><strong>&#272;&#227; g&#7891;m ${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
-              <div><span>Phí vận chuyển</span><strong>${formatShippingFee(checkoutSummary.shippingFee)}</strong></div>
-              ${checkoutSummary.freeShippingRemaining > 0 ? `<div class="customer-checkout-free-shipping-hint"><span>Mua thêm ${formatCurrency(checkoutSummary.freeShippingRemaining)} để được miễn phí vận chuyển</span></div>` : ""}
+              <div><span>Giảm giá</span><strong data-checkout-discount>${formatCurrency(checkoutSummary.discountAmount)}</strong></div>
+              <div><span>Thu&#7871; VAT (10%)</span><strong data-checkout-vat>&#272;&#227; g&#7891;m ${formatCurrency(checkoutSummary.vatAmount)}</strong></div>
+              <div><span>Phí vận chuyển</span><strong data-checkout-shipping>${formatShippingFee(checkoutSummary.shippingFee)}</strong></div>
+              <div class="customer-checkout-free-shipping-hint" data-checkout-free-shipping ${checkoutSummary.freeShippingRemaining > 0 ? "" : "hidden"}><span>${checkoutSummary.freeShippingRemaining > 0 ? `Mua thêm ${formatCurrency(checkoutSummary.freeShippingRemaining)} để được miễn phí vận chuyển` : ""}</span></div>
             </div>
             <div class="customer-checkout-total">
               <span>Tổng thanh toán</span>
-              <strong>${formatCurrency(checkoutSummary.grandTotal)}</strong>
+              <strong data-checkout-total>${formatCurrency(checkoutSummary.grandTotal)}</strong>
             </div>
             <button class="customer-button customer-checkout-submit" type="submit" data-checkout-submit form="checkout-form" disabled>Đặt hàng và thanh toán</button>
           </aside>
