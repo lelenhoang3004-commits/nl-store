@@ -11,23 +11,59 @@ window.normalizeImageUrl = function normalizeImageUrl(value) {
 
   return url;
 };
+
+window.getImageDerivativeUrl = function getImageDerivativeUrl(value, type = "thumbnail") {
+  const original = window.normalizeImageUrl(value);
+  if (!original || original === window.FASHION_IMAGE_PLACEHOLDER) return original;
+  if (original.startsWith("data:") || original.startsWith("blob:")) return original;
+  const suffix = type === "medium" ? "medium" : "thumb";
+
+  try {
+    const url = new URL(original, window.location.href);
+    if (!url.pathname.includes("/products/")) return original;
+    const nextPath = url.pathname.replace(/\.(png|jpe?g|webp)$/i, `-${suffix}.webp`);
+    if (nextPath === url.pathname) return original;
+    url.pathname = nextPath;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return original;
+  }
+};
 window.initializeProductImages = function initializeProductImages(root = document) {
   const images = root.querySelectorAll?.("img[data-product-image-src], img[data-gallery-image-src]") || [];
   const loadImage = (image) => {
     const source = image.dataset.productImageSrc || image.dataset.galleryImageSrc;
     if (!source) return;
-    image.src = window.normalizeImageUrl(source);
+    const original = window.normalizeImageUrl(source);
+    const derivative = image.dataset.productImageDerivative;
+    const preferred = derivative ? window.getImageDerivativeUrl(original, derivative) : original;
+    if (preferred !== original) image.dataset.productImageFallbackSrc = original;
+    image.src = preferred;
     image.removeAttribute("data-product-image-src");
     image.removeAttribute("data-gallery-image-src");
   };
 
   images.forEach((image) => {
-    image.loading = "lazy";
+    image.loading = image.getAttribute("loading") || "lazy";
     image.decoding = "async";
     image.addEventListener("error", () => {
+      if (image.dataset.productImageFallbackApplied === "true") {
+        image.removeAttribute("data-product-image-fallback-applied");
+        return;
+      }
+      const fallback = image.dataset.productImageFallbackSrc;
+      if (fallback && image.src !== fallback) {
+        image.dataset.productImageFallbackApplied = "true";
+        image.removeAttribute("data-product-image-fallback-src");
+        image.src = fallback;
+        return;
+      }
       image.removeAttribute("data-product-image-src");
+      image.removeAttribute("data-gallery-image-src");
       image.src = window.FASHION_IMAGE_PLACEHOLDER;
-    }, { once: true });
+    });
 
     if (!("IntersectionObserver" in window)) {
       loadImage(image);
@@ -49,6 +85,13 @@ window.addEventListener("error", (event) => {
   const image = event.target;
   if (!(image instanceof HTMLImageElement) || !image.matches("[data-product-image]")) return;
   if (image.src === window.FASHION_IMAGE_PLACEHOLDER) return;
+  const fallback = image.dataset.productImageFallbackSrc;
+  if (fallback && image.src !== fallback) {
+    image.dataset.productImageFallbackApplied = "true";
+    image.removeAttribute("data-product-image-fallback-src");
+    image.src = fallback;
+    return;
+  }
   image.removeAttribute("data-product-image-src");
   image.removeAttribute("data-gallery-image-src");
   image.src = window.FASHION_IMAGE_PLACEHOLDER;

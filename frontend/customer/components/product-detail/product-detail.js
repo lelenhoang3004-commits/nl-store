@@ -65,12 +65,12 @@ function createProductDetailMarkup(product, relatedProducts = []) {
     <section class="premium-section product-detail" data-product-detail>
       <div class="product-detail-gallery">
         <div class="product-detail-main-image" data-product-zoom>
-          <img src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" loading="eager" decoding="async" fetchpriority="high" data-product-main-image data-product-image>
+          <img src="${escapeAttr(globalThis.getImageDerivativeUrl?.(images[0], "medium") || images[0])}" data-product-image-fallback-src="${escapeAttr(images[0])}" alt="${escapeAttr(product.name)}" loading="eager" decoding="async" fetchpriority="high" data-product-main-image data-product-image>
         </div>
         <div class="product-detail-thumbs" aria-label="Thư viện ảnh sản phẩm">
           ${images.map((image, index) => `
             <button class="product-detail-thumb ${index === 0 ? "is-active" : ""}" type="button" data-product-thumb="${escapeAttr(image)}" aria-label="Ảnh ${index + 1}">
-              <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}" loading="lazy" decoding="async" data-product-image>
+              <img src="${globalThis.FASHION_IMAGE_PLACEHOLDER}" data-product-image-src="${escapeAttr(image)}" alt="${escapeAttr(product.name)} ${index + 1}" loading="lazy" decoding="async" data-product-image-derivative="thumbnail" data-product-image>
             </button>
           `).join("")}
         </div>
@@ -261,10 +261,12 @@ function initProductDetailInteractions(root, product, options = {}) {
       selectedImageUrl = button.dataset.productThumb || selectedImageUrl;
       const thumbnail = button.querySelector("img[data-product-image-src]");
       if (thumbnail) {
-        thumbnail.src = globalThis.normalizeImageUrl?.(thumbnail.dataset.productImageSrc) ?? thumbnail.dataset.productImageSrc;
+        thumbnail.dataset.productImageFallbackSrc = globalThis.normalizeImageUrl?.(thumbnail.dataset.productImageSrc) ?? thumbnail.dataset.productImageSrc;
+        thumbnail.src = globalThis.getImageDerivativeUrl?.(thumbnail.dataset.productImageSrc, "thumbnail") || thumbnail.dataset.productImageFallbackSrc;
         thumbnail.removeAttribute("data-product-image-src");
       }
-      mainImage.src = selectedImageUrl;
+      mainImage.dataset.productImageFallbackSrc = selectedImageUrl;
+      mainImage.src = globalThis.getImageDerivativeUrl?.(selectedImageUrl, "medium") || selectedImageUrl;
     });
   });
 

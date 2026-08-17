@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import path from "node:path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 import { appConfig } from "../config/app.config.js";
 import { BaseService } from "./base.service.js";
 import { AppError } from "../utils/app-error.util.js";
@@ -16,6 +17,12 @@ const UPLOAD_FOLDERS = Object.freeze({
   files: appConfig.uploadFilePath,
   temp: appConfig.uploadTempPath
 });
+
+const IMAGE_DERIVATIVES = Object.freeze({
+  thumbnail: { suffix: "thumb", width: 480 },
+  medium: { suffix: "medium", width: 1000 }
+});
+const WEBP_QUALITY = 84;
 
 const LEGACY_UPLOAD_LOST_MESSAGE = "Ảnh cũ đã mất, vui lòng tải lại ảnh.";
 
@@ -36,13 +43,8 @@ export class UploadService extends BaseService {
 
     const extension = normalizeImageExtension(file);
     const objectKey = createR2ObjectKey(extension);
-    await this.s3Client.send(new PutObjectCommand({
-      Bucket: appConfig.r2BucketName,
-      Key: objectKey,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      CacheControl: "public, max-age=31536000, immutable"
-    }));
+    await this.uploadR2Object(objectKey, file.buffer, file.mimetype);
+    const derivatives = await this.createImageDerivatives(file, objectKey);
 
     const url = createR2PublicUrl(objectKey);
 
@@ -58,7 +60,10 @@ export class UploadService extends BaseService {
       size: file.size,
       folder: "images",
       extension,
-      url
+      url,
+      thumbnailUrl: derivatives.thumbnail?.url || null,
+      mediumUrl: derivatives.medium?.url || null,
+      derivatives
     };
   }
 
@@ -68,6 +73,50 @@ export class UploadService extends BaseService {
       uploaded.push(await this.createUploadedImagePayload(file));
     }
     return uploaded;
+  }
+
+  async uploadR2Object(objectKey, body, contentType) {
+    await this.s3Client.send(new PutObjectCommand({
+      Bucket: appConfig.r2BucketName,
+      Key: objectKey,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable"
+    }));
+  }
+
+  async createImageDerivatives(file, originalObjectKey) {
+    const derivatives = {};
+
+    for (const [name, config] of Object.entries(IMAGE_DERIVATIVES)) {
+      try {
+        const buffer = await sharp(file.buffer, { failOn: "none" })
+          .rotate()
+          .resize({ width: config.width, withoutEnlargement: true })
+          .webp({ quality: WEBP_QUALITY })
+          .toBuffer();
+        const objectKey = createDerivativeObjectKey(originalObjectKey, config.suffix);
+        await this.uploadR2Object(objectKey, buffer, "image/webp");
+        derivatives[name] = {
+          objectKey,
+          fileName: path.basename(objectKey),
+          mimeType: "image/webp",
+          size: buffer.length,
+          width: config.width,
+          url: createR2PublicUrl(objectKey)
+        };
+      } catch (error) {
+        logger.warn("Image derivative generation failed; original upload remains available.", {
+          derivative: name,
+          originalName: file.originalname,
+          objectKey: originalObjectKey,
+          message: error?.message
+        });
+        derivatives[name] = null;
+      }
+    }
+
+    return derivatives;
   }
 
   createUploadedFilePayload(file, folder) {
@@ -183,6 +232,12 @@ function createR2Client() {
 function createR2ObjectKey(extension) {
   const folder = String(appConfig.r2Folder || "products").replace(/^\/+|\/+$/g, "") || "products";
   return `${folder}/${Date.now()}-${crypto.randomUUID()}${extension}`;
+}
+
+
+function createDerivativeObjectKey(originalObjectKey, suffix) {
+  const parsed = path.parse(originalObjectKey);
+  return `${parsed.dir ? `${parsed.dir}/` : ""}${parsed.name}-${suffix}.webp`;
 }
 
 function createR2PublicUrl(objectKey) {

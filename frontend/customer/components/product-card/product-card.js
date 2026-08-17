@@ -60,8 +60,8 @@ export function createProductCard(product) {
             <span class="${badgeClass}">${escapeHtml(badgeText)}</span>
             ${item.discount ? `<span class="product-discount">-${escapeHtml(item.discount)}%</span>` : ""}
           </span>
-          <img class="product-media-image primary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">
-          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.hoverImage)}" alt="${escapeHtml(item.imageAlt || item.name)} alternate" loading="lazy" decoding="async" data-product-image onerror="this.src='${fallbackImage}';this.classList.add('is-fallback');">` : ""}
+          <img class="product-media-image primary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.name)}" loading="lazy" decoding="async" data-product-image-derivative="thumbnail" data-product-image>
+          ${item.hoverImage ? `<img class="product-media-image secondary-image" src="${fallbackImage}" data-product-image-src="${escapeHtml(item.hoverImage)}" alt="${escapeHtml(item.imageAlt || item.name)} alternate" loading="lazy" decoding="async" data-product-image-derivative="thumbnail" data-product-image>` : ""}
         </a>
         <div class="product-card-actions" aria-label="Hành động sản phẩm">
           <button class="icon-pill product-action-btn ${item.isWishlist ? "is-active" : ""}" type="button" aria-label="Thêm vào yêu thích" data-wishlist-toggle="${item.id}">
