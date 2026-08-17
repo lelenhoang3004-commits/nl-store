@@ -56,6 +56,8 @@ function bindSettingsEvents(root) {
   root.addEventListener("click", (event) => {
     const passwordToggle = event.target.closest("[data-password-toggle]");
     if (passwordToggle) {
+      event.preventDefault();
+      event.stopPropagation();
       togglePasswordVisibility(passwordToggle);
       return;
     }
