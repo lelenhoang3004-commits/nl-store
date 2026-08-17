@@ -156,6 +156,43 @@ export class CartRepository extends BaseRepository {
     return rows[0] ? new Product(rows[0]) : null;
   }
 
+  async findProductsByIds(productIds) {
+    const ids = uniquePositiveIds(productIds);
+    if (!ids.length) return new Map();
+
+    const placeholders = ids.map(() => "?").join(",");
+    const [rows] = await this.client.getPool().execute(
+      `SELECT
+        id,
+        name,
+        slug,
+        sku,
+        category_id,
+        brand,
+        short_description,
+        description,
+        price,
+        sale_price,
+        stock,
+        sold,
+        status,
+        thumbnail_url,
+        gallery_urls,
+        tags,
+        created_at,
+        updated_at
+      FROM products
+      WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
+      ids
+    );
+
+    return rows.reduce((map, row) => {
+      const product = new Product(row);
+      map.set(Number(product.id), product);
+      return map;
+    }, new Map());
+  }
+
   async findItemByVariantKey(cartId, variantKey, connection = null) {
     await this.ensureSchema();
     const executor = connection || this.client.getPool();
@@ -485,4 +522,9 @@ export class CartRepository extends BaseRepository {
 
     return rows[0] ? new Order(rows[0]) : null;
   }
+}
+function uniquePositiveIds(ids = []) {
+  return [...new Set(ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0))];
 }

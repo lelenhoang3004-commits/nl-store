@@ -26,33 +26,38 @@ export class CartService extends BaseService {
 
     if (cart) {
       const payload = cart.toJSON();
-      // Attach current stock information for each cart item to help frontend validation
-      for (const item of payload.items) {
-        if (item.variantId) {
-          const variant = await this.variantRepository.findById(item.variantId);
-          item.variantStock = variant ? Number(variant.stock || 0) : 0;
-        } else {
-          const product = await this.repository.findProductById(item.productId);
-          item.productStock = product ? Number(product.stock || 0) : 0;
-        }
-      }
-
+      await this.attachCurrentStock(payload.items);
       return payload;
     }
 
     await this.repository.createActiveCart(userId);
     cart = await this.repository.findActiveCartByUserId(userId);
     const payload = cart.toJSON();
-    for (const item of payload.items) {
+    await this.attachCurrentStock(payload.items);
+    return payload;
+  }
+
+  async attachCurrentStock(items = []) {
+    if (!items.length) return;
+
+    const variantIds = uniquePositiveIds(items.map((item) => item.variantId));
+    const productIds = uniquePositiveIds(items
+      .filter((item) => !item.variantId)
+      .map((item) => item.productId));
+    const [variantMap, productMap] = await Promise.all([
+      this.variantRepository.findByIds(variantIds),
+      this.repository.findProductsByIds(productIds)
+    ]);
+
+    for (const item of items) {
       if (item.variantId) {
-        const variant = await this.variantRepository.findById(item.variantId);
+        const variant = variantMap.get(Number(item.variantId));
         item.variantStock = variant ? Number(variant.stock || 0) : 0;
       } else {
-        const product = await this.repository.findProductById(item.productId);
+        const product = productMap.get(Number(item.productId));
         item.productStock = product ? Number(product.stock || 0) : 0;
       }
     }
-    return payload;
   }
 
   async addItem(userId, payload) {
@@ -548,6 +553,11 @@ export function calculateCheckoutTotals({ subtotal = 0, discountTotal = 0 } = {}
     shippingFee,
     grandTotal
   };
+}
+function uniquePositiveIds(ids) {
+  return [...new Set(ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0))];
 }
 function normalizeRequiredString(value, message, code) {
   const normalizedValue = String(value || "").trim();

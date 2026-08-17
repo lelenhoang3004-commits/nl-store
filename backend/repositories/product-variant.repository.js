@@ -92,6 +92,22 @@ export class ProductVariantRepository extends BaseRepository {
     return rows[0] ? new ProductVariant(rows[0]) : null;
   }
 
+  async findByIds(ids, { connection = null } = {}) {
+    const variantIds = uniquePositiveIds(ids);
+    if (!variantIds.length) return new Map();
+
+    await this.ensureSchema();
+    const executor = connection || this.client.getPool();
+    const placeholders = variantIds.map(() => "?").join(",");
+    const [rows] = await executor.execute(`${SELECT} WHERE id IN (${placeholders}) AND deleted_at IS NULL`, variantIds);
+
+    return rows.reduce((map, row) => {
+      const variant = new ProductVariant(row);
+      map.set(Number(variant.id), variant);
+      return map;
+    }, new Map());
+  }
+
   async findBySku(sku, excludedId = null) {
     await this.ensureSchema();
     const params = [sku];
@@ -215,4 +231,9 @@ function isOptionalVariantSchemaError(error) {
     "ER_DBACCESS_DENIED_ERROR",
     "ER_SPECIFIC_ACCESS_DENIED_ERROR"
   ]).has(error?.code);
+}
+function uniquePositiveIds(ids = []) {
+  return [...new Set(ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0))];
 }
