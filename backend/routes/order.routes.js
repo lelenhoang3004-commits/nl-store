@@ -51,6 +51,11 @@ router.patch(
   validateRequest(validateOrderIdRequest),
   orderController.cancelMyOrder
 );
+router.patch(
+  "/my/:id/received",
+  validateRequest(validateOrderIdRequest),
+  orderController.confirmMyOrderReceived
+);
 router.get(
   "/my/:id",
   validateRequest(validateOrderIdRequest),

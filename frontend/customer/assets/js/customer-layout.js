@@ -3779,6 +3779,7 @@ async function renderOrdersPage() {
       const paymentBadge = createStatusBadge(paymentStatus.label, paymentStatus.variant);
       const detailHref = `#orders/${encodeURIComponent(order.id || "")}`;
       const canOpenQrPayment = canCustomerOpenQrPayment(order);
+      const canConfirmReceived = canCustomerConfirmReceived(order);
 
       return `
         <article class="customer-order-history-card">
@@ -3805,6 +3806,7 @@ async function renderOrdersPage() {
           <div class="customer-order-history-actions">
             <a class="customer-button secondary" href="${detailHref}">Xem chi tiết</a>
             ${canOpenQrPayment ? `<button class="customer-button" type="button" data-order-payment-open="${escapeHtml(order.id || "")}">Thanh to&#225;n ngay</button>` : ""}
+            ${canConfirmReceived ? `<button class="customer-button" type="button" data-order-received="${escapeHtml(order.id || "")}">Đã nhận hàng</button>` : ""}
             <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
           </div>
         </article>
@@ -3824,6 +3826,7 @@ async function renderOrdersPage() {
       </div>
     `);
     bindOrderPaymentButtons(layoutState.main);
+    bindCustomerOrderReceived(layoutState.main);
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Đơn hàng", `
       <div class="customer-empty-state">
@@ -3880,6 +3883,7 @@ async function renderOrderDetailPage(orderId) {
     const timelineItems = history.length ? history : [{ status: order.status, note: "Đơn hàng đã được tạo", createdAt: order.createdAt }];
     const canCancel = canCustomerCancelOrder(order);
     const canOpenQrPayment = canCustomerOpenQrPayment(order);
+    const canConfirmReceived = canCustomerConfirmReceived(order);
 
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
       <div class="customer-order-detail-shell">
@@ -3901,6 +3905,7 @@ async function renderOrderDetailPage(orderId) {
               <div class="customer-order-actions">
                 <a class="customer-button secondary" href="#orders">Quay lại</a>
                 ${canOpenQrPayment ? `<button class="customer-button" type="button" data-order-payment-open="${escapeHtml(order.id || orderId)}">Thanh to&#225;n ngay</button>` : ""}
+                ${canConfirmReceived ? `<button class="customer-button" type="button" data-order-received="${escapeHtml(order.id || orderId)}">Đã nhận hàng</button>` : ""}
                 <a class="customer-button" href="#home">Tiếp tục mua sắm</a>
                 ${canCancel ? `<button class="customer-button secondary" type="button" data-order-cancel="${escapeHtml(order.id || orderId)}">H&#7911;y &#273;&#417;n</button>` : ""}
               </div>
@@ -3981,6 +3986,7 @@ async function renderOrderDetailPage(orderId) {
       </div>
     `);
     bindOrderPaymentButtons(layoutState.main);
+    bindCustomerOrderReceived(layoutState.main, order.id || orderId);
     bindCustomerOrderCancel(layoutState.main, order.id || orderId);
   } catch (error) {
     layoutState.main.innerHTML = renderPageShell("Chi tiết đơn hàng", `
@@ -3996,6 +4002,10 @@ async function renderOrderDetailPage(orderId) {
   }
 }
 
+
+function canCustomerConfirmReceived(order = {}) {
+  return String(order.status || "").trim().toLowerCase() === "shipping";
+}
 
 function canCustomerCancelOrder(order = {}) {
   const orderStatus = String(order.status || "").trim().toLowerCase();
@@ -4018,6 +4028,82 @@ function canCustomerCancelOrder(order = {}) {
   return allowedStatuses.has(orderStatus) && !paidStatuses.has(paymentStatus) && paidAmount <= 0 && !hasSuccessfulPayment;
 }
 
+function bindCustomerOrderReceived(root, orderId = null) {
+  root?.querySelectorAll("[data-order-received]").forEach((trigger) => {
+    if (trigger.dataset.customerReceivedBound === "true") return;
+    trigger.dataset.customerReceivedBound = "true";
+    trigger.addEventListener("click", (event) => {
+      const id = event.currentTarget.dataset.orderReceived || orderId;
+      openCustomerOrderReceivedModal(id);
+    });
+  });
+}
+
+function openCustomerOrderReceivedModal(orderId) {
+  if (!orderId) return;
+  closeCustomerOrderReceivedModal();
+  const overlay = document.createElement("div");
+  overlay.className = "customer-checkout-modal-backdrop";
+  overlay.dataset.orderReceivedModal = "true";
+  overlay.innerHTML = `
+    <div class="customer-cart-modal" role="dialog" aria-modal="true" aria-labelledby="customer-order-received-title">
+      <h3 id="customer-order-received-title">Xác nhận đã nhận hàng</h3>
+      <p>Bạn xác nhận đã nhận được đơn hàng này?</p>
+      <div class="customer-cart-modal-actions">
+        <button class="customer-button secondary" type="button" data-order-received-close>Hủy</button>
+        <button class="customer-button" type="button" data-order-received-confirm="${escapeHtml(orderId)}">Xác nhận</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.body.classList.add("modal-open", "customer-modal-open");
+  document.body.style.overflow = "hidden";
+  overlay.querySelector("[data-order-received-close]")?.addEventListener("click", closeCustomerOrderReceivedModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeCustomerOrderReceivedModal();
+  });
+  overlay.querySelector("[data-order-received-confirm]")?.addEventListener("click", handleCustomerOrderReceivedConfirm);
+}
+
+function closeCustomerOrderReceivedModal() {
+  document.querySelectorAll(".customer-checkout-modal-backdrop[data-order-received-modal]").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open", "customer-modal-open");
+  document.body.style.overflow = "";
+}
+
+async function handleCustomerOrderReceivedConfirm(event) {
+  const button = event.currentTarget;
+  const orderId = button.dataset.orderReceivedConfirm || "";
+  if (!orderId || button.disabled) return;
+
+  button.disabled = true;
+  const previousText = button.innerHTML;
+  button.innerHTML = `<span class="customer-button-spinner"></span>Đang xác nhận...`;
+
+  try {
+    await customerApi(`/orders/my/${encodeURIComponent(orderId)}/received`, { method: "PATCH" });
+    closeCustomerOrderReceivedModal();
+    notifySuccess("Xác nhận nhận hàng thành công.");
+    if (normalizeRoute(window.location.hash) === "orders" && (window.location.hash || "").includes("/")) {
+      await renderOrderDetailPage(orderId);
+    } else {
+      await renderOrdersPage();
+    }
+  } catch (error) {
+    button.disabled = false;
+    button.innerHTML = previousText;
+    const status = Number(error?.status || error?.statusCode || 0);
+    if (status === 401 || status === 403) {
+      notifyError("Bạn không có quyền xác nhận đơn hàng này.");
+      return;
+    }
+    if (status === 409) {
+      notifyError("Chỉ đơn hàng đang giao mới có thể xác nhận đã nhận hàng.");
+      return;
+    }
+    notifyError(error?.message || "Không thể xác nhận nhận hàng. Vui lòng thử lại.");
+  }
+}
 function bindCustomerOrderCancel(root, orderId) {
   const trigger = root?.querySelector("[data-order-cancel]");
   if (!trigger || trigger.dataset.customerCancelBound === "true") return;

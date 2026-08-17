@@ -287,6 +287,37 @@ export class OrderService extends BaseService {
 
     return this.getCustomerOrderById(id, customerId);
   }
+  async confirmCustomerOrderReceived(id, customerId) {
+    await withTransaction(async (connection) => {
+      const order = await this.repository.findByIdForUpdate(id, connection);
+      if (!order) {
+        throw new AppError("Order was not found.", 404, "ORDER_NOT_FOUND");
+      }
+      if (String(order.customerId) !== String(customerId)) {
+        throw new AppError("You are not allowed to update this order.", 403, "ORDER_FORBIDDEN");
+      }
+
+      const normalizedStatus = String(order.status || "").trim().toLowerCase();
+      if (normalizedStatus === ORDER_STATUS.COMPLETED) {
+        return;
+      }
+      if (normalizedStatus !== ORDER_STATUS.SHIPPING) {
+        throw new AppError("Only shipping orders can be confirmed as received.", 409, "ORDER_RECEIVE_CONFIRMATION_NOT_ALLOWED", {
+          currentStatus: order.status
+        });
+      }
+
+      await this.repository.updateStatus(id, { status: ORDER_STATUS.COMPLETED }, connection);
+      await this.repository.addHistory(id, {
+        status: ORDER_STATUS.COMPLETED,
+        note: "Customer confirmed order received.",
+        changedBy: customerId
+      }, connection);
+    });
+
+    return this.getCustomerOrderById(id, customerId);
+  }
+
   async deleteOrder(id) {
     await this.getOrderById(id);
 
