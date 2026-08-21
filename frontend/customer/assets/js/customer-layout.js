@@ -925,31 +925,54 @@ async function renderProductListPage() {
 
   try {
     if (categorySlug && !searchKeyword) {
-      category = await getCustomerCategoryBySlug(categorySlug);
+      try {
+        category = await getCustomerCategoryBySlug(categorySlug);
+      } catch (error) {
+        console.warn("[products] Unable to map category slug; using legacy product filter", error);
+        category = null;
+      }
       title = category?.name || categorySlug;
     }
 
-    const usesLegacyFallback = !searchKeyword && (Boolean(legacyFilter) || Boolean(categorySlug && !category?.id));
-    const requestPage = usesLegacyFallback ? 1 : currentPage;
-    const requestLimit = usesLegacyFallback ? 100 : CUSTOMER_PRODUCT_PAGE_SIZE;
-    const query = new URLSearchParams({ status: "active", page: String(requestPage), limit: String(requestLimit) });
+    let usesLegacyFallback = !searchKeyword && (Boolean(legacyFilter) || Boolean(categorySlug && !category?.id));
+    const buildProductQuery = (useFallback = usesLegacyFallback) => {
+      const requestPage = useFallback ? 1 : currentPage;
+      const requestLimit = useFallback ? 100 : CUSTOMER_PRODUCT_PAGE_SIZE;
+      const nextQuery = new URLSearchParams({ status: "active", page: String(requestPage), limit: String(requestLimit) });
 
-    if (category?.id && !searchKeyword) {
-      query.set("categoryId", String(category.id));
-    } else if (legacyFilter && !searchKeyword) {
-      query.set("search", [...legacyFilter.keywords, keywordKey].join("|"));
-    } else if (searchKeyword) {
-      query.set("search", searchKeyword);
+      if (!useFallback && category?.id && !searchKeyword) {
+        nextQuery.set("categoryId", String(category.id));
+      } else if (legacyFilter && !searchKeyword) {
+        nextQuery.set("search", [...legacyFilter.keywords, keywordKey].join("|"));
+      } else if (searchKeyword) {
+        nextQuery.set("search", searchKeyword);
+      }
+
+      if (!useFallback) {
+        nextQuery.set("view", "card");
+      }
+
+      return nextQuery;
+    };
+
+    let query = buildProductQuery();
+    let response;
+    try {
+      response = await customerApi(`/products?${query.toString()}`, { auth: false });
+    } catch (error) {
+      if (!searchKeyword && categorySlug && category?.id) {
+        console.warn("[products] Category product request failed; using legacy product filter", error);
+        usesLegacyFallback = true;
+        query = buildProductQuery(true);
+        response = await customerApi(`/products?${query.toString()}`, { auth: false });
+      } else {
+        throw error;
+      }
     }
 
-    if (!usesLegacyFallback) {
-      query.set("view", "card");
-    }
-
-    const response = await customerApi(`/products?${query.toString()}`, { auth: false });
     const apiProducts = getListFromApiPayload(response, "products").filter(isActiveCustomerProduct);
     const products = usesLegacyFallback
-      ? categorySlug && !category?.id
+      ? categorySlug
         ? apiProducts.filter((product) => isProductInCategory(product, categorySlug, category))
         : apiProducts.filter((product) => matchesProductMenuFilter(product, legacyFilter))
       : apiProducts;
