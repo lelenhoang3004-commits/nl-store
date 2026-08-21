@@ -479,20 +479,34 @@ async function refreshOrderDetail(root, orderId) {
   }
 }
 
+function renderStatusJumpFlow(transitionPath = []) {
+  return transitionPath.map((status, index) => {
+    const label = orderStatusLabel(status);
+    const connector = index < transitionPath.length - 1 ? '<span class="admin-order-status-jump-arrow" aria-hidden="true">&#8594;</span>' : '';
+    return `<span class="admin-order-status-jump-node"><span class="admin-order-status-jump-step is-${escapeHtml(status)}">${escapeHtml(label)}</span>${connector}</span>`;
+  }).join("");
+}
+
 function openStatusJumpConfirmDialog(transitionPath = []) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className = "admin-order-modal is-visible";
     overlay.dataset.orderStatusJumpModal = "";
+    const destinationLabel = orderStatusLabel(transitionPath[transitionPath.length - 1] || "");
     overlay.innerHTML = `
-      <section class="admin-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="status-jump-title" tabindex="-1">
-        <header><div><p class="admin-orders-eyebrow">C\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i</p><h2 id="status-jump-title">X\u00e1c nh\u1eadn chuy\u1ec3n tr\u1ea1ng th\u00e1i</h2></div><button type="button" aria-label="\u0110\u00f3ng" data-status-jump-cancel>\u00d7</button></header>
-        <div>
-          <p>\u0110\u01a1n h\u00e0ng s\u1ebd t\u1ef1 \u0111\u1ed9ng ho\u00e0n t\u1ea5t c\u00e1c tr\u1ea1ng th\u00e1i trung gian:</p>
-          <p><strong>${transitionPath.map(orderStatusLabel).join(" \u2192 ")}.</strong></p>
-          <p>B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n ti\u1ebfp t\u1ee5c?</p>
+      <section class="admin-order-modal-dialog admin-order-status-jump-dialog" role="dialog" aria-modal="true" aria-labelledby="status-jump-title" tabindex="-1">
+        <header class="admin-order-status-jump-header"><div><p class="admin-orders-eyebrow">C&#7852;P NH&#7852;T TR&#7840;NG TH&#193;I</p><h2 id="status-jump-title">X&#225;c nh&#7853;n chuy&#7875;n tr&#7841;ng th&#225;i</h2></div><button type="button" aria-label="&#272;&#243;ng" data-status-jump-cancel>&#215;</button></header>
+        <div class="admin-order-status-jump-body">
+          <div class="admin-order-status-jump-notice">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <p>&#272;&#417;n h&#224;ng s&#7869; t&#7921; &#273;&#7897;ng chuy&#7875;n qua c&#225;c tr&#7841;ng th&#225;i trung gian tr&#432;&#7899;c khi ho&#224;n t&#7845;t.</p>
+          </div>
+          <div class="admin-order-status-jump-flow" aria-label="Lu&#7891;ng tr&#7841;ng th&#225;i &#273;&#417;n h&#224;ng">
+            ${renderStatusJumpFlow(transitionPath)}
+          </div>
+          <p class="admin-order-status-jump-confirm-copy">B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n chuy&#7875;n &#273;&#417;n h&#224;ng &#273;&#7871;n tr&#7841;ng th&#225;i <strong>${escapeHtml(destinationLabel)}</strong>?</p>
         </div>
-        <footer><button type="button" data-status-jump-cancel>H\u1ee7y</button><button type="button" class="is-primary" data-status-jump-confirm>X\u00e1c nh\u1eadn</button></footer>
+        <footer class="admin-order-status-jump-actions"><button type="button" data-status-jump-cancel>H&#7911;y</button><button type="button" class="is-primary" data-status-jump-confirm>X&#225;c nh&#7853;n</button></footer>
       </section>`;
     document.body.appendChild(overlay);
     document.body.classList.add("modal-open");
@@ -508,7 +522,6 @@ function openStatusJumpConfirmDialog(transitionPath = []) {
     overlay.querySelector("[data-status-jump-confirm]")?.focus({ preventScroll: true });
   });
 }
-
 function openCancelModal(orderId, onSuccess) {
   closeCancelModal();
   const overlay = document.createElement("div");
