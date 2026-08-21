@@ -2545,21 +2545,20 @@ function clearOrderSuccessAutoClose() {
 
 function bindOrderSuccessModalEvents(root) {
   const isPersistentQrPayment = root?.dataset?.persistentQrPayment === "true";
-  const close = () => closeOrderSuccessModal({ clearTimer: true });
-  const viewOrder = () => redirectToOrders();
+  const closeAndViewOrder = () => redirectToOrders();
 
-  root.querySelector("[data-payment-modal-close]")?.addEventListener("click", close);
-  root.querySelector("[data-order-success-view]")?.addEventListener("click", viewOrder);
+  root.querySelector("[data-payment-modal-close]")?.addEventListener("click", closeAndViewOrder);
+  root.querySelector("[data-order-success-view]")?.addEventListener("click", closeAndViewOrder);
 
   const onKeydown = (event) => {
-    if (event.key === "Escape" && document.body.contains(root) && !isPersistentQrPayment) viewOrder();
+    if (event.key === "Escape" && document.body.contains(root) && !isPersistentQrPayment) closeAndViewOrder();
     if (!document.body.contains(root)) document.removeEventListener("keydown", onKeydown);
   };
   layoutState.orderSuccessModal.keydownHandler = onKeydown;
   document.addEventListener("keydown", onKeydown);
 
   root.addEventListener("click", (event) => {
-    if (event.target === root && !isPersistentQrPayment) viewOrder();
+    if (event.target === root && !isPersistentQrPayment) closeAndViewOrder();
   });
 }
 
@@ -2992,7 +2991,7 @@ function bindPaymentGuideActions(root) {
       notifySuccess("Đã ghi nhận thanh toán – đang chờ cửa hàng xác nhận.");
       button.textContent = "Đang chờ xác nhận";
       if (root?.dataset?.orderSuccessModal === "true") {
-        closeOrderSuccessModal({ clearTimer: true });
+        redirectToOrders();
       }
     } catch (error) {
       button.disabled = false;
